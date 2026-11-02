@@ -636,7 +636,7 @@ function buildPermitAuditHtml(audit: PermitFeeAudit): string {
 
 function buildBidChecklistHtml(parcel: Parcel): string {
   return `<section class="rfq" aria-labelledby="rfq-heading">
-          <h2 id="rfq-heading">Contractor Bid-Leveling Checklist &middot; Builder RFQ Sheet</h2>
+          <h2 id="rfq-heading">Scope Checklist &middot; Builder RFQ Sheet</h2>
           <p>${escapeHtml(parcel.address)}, ${escapeHtml(parcel.city)}. Give this sheet to three builders. Ask each to mark every line as included, excluded or an allowance, and to price it, so the quotes cover the same job.</p>
           <div class="table-scroll">
             <table aria-label="Scope items to compare across three builders">

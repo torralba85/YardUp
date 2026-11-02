@@ -1,8 +1,8 @@
 /**
- * Contractor bid-leveling checklist (builder RFQ sheet) recorded in the paid
- * Certificate of Feasibility: the scope items California ADU quotes most
- * often leave out, so a homeowner can ask three builders to price the same
- * job.
+ * Scope Checklist (builder RFQ sheet) recorded in the paid Certificate of
+ * Feasibility: the scope items California ADU quotes most often leave out, so
+ * a homeowner can ask three builders to price the same job without subjective
+ * price verdicts.
  *
  * @module certificate-bid-checklist
  */
@@ -15,6 +15,9 @@ export interface BidScopeItem {
   /** What to ask each builder, naming the usual exclusion. */
   ask: string;
 }
+
+/** Alias for {@link BidScopeItem} using the neutral Scope Checklist naming. */
+export type ScopeChecklistItem = BidScopeItem;
 
 /** Comparison columns on the printed sheet. */
 export const BID_LEVELING_BUILDERS = ["Builder A", "Builder B", "Builder C"] as const;
@@ -85,3 +88,6 @@ export const BID_LEVELING_CHECKLIST: readonly BidScopeItem[] = [
     ask: "Who schedules final inspection and handles the certificate of occupancy and new address?",
   },
 ];
+
+/** Neutral alias for {@link BID_LEVELING_CHECKLIST}. */
+export const SCOPE_CHECKLIST: readonly ScopeChecklistItem[] = BID_LEVELING_CHECKLIST;

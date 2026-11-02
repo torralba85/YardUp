@@ -299,10 +299,11 @@ describe("CertificatePanel", () => {
   describe("paywall offer", () => {
     beforeEach(() => { mocks.access.purchased = false; });
 
-    it("shows blurred decision metrics instead of revealing the analysis", () => {
+    it("shows unblurred baseline metrics while keeping financed cash flow locked", () => {
       const { container } = render(<CertificatePanel {...createProps()} />);
-      expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(4);
-      for (const value of ["16,605", "231,000", "289,000", "15.7"]) expect(container.innerHTML).not.toContain(value);
+      expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);
+      expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
+      expect(screen.getByText(`${result.paybackYears} yrs`)).toBeInTheDocument();
       expect(screen.queryByText("Methodology & data sources")).not.toBeInTheDocument();
     });
 
@@ -311,7 +312,7 @@ describe("CertificatePanel", () => {
       for (const text of ["Rear setback", "4 ranked risks to verify", "6-stage permit path", "12–18 week typical approval timeline"]) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
-      expect(screen.getByText(/local permit steps, items to verify, a builder bid checklist, and a site plan PDF/)).toBeInTheDocument();
+      expect(screen.getByText(/local permit steps, items to verify, a scope checklist, and a site plan PDF/)).toBeInTheDocument();
     });
 
     it("uses one transaction CTA for the blurred preview", async () => {

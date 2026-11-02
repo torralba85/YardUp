@@ -378,8 +378,7 @@ export default function CertificatePanel({
         <p className="lf-kicker text-lot-orange-ink">{eyebrow}</p>
         <h2 className="lf-section-heading mt-2 text-lot-ink">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lot-stone">
-          See what could drive the numbers for this property, with a financial model and
-          planning breakdown you can share with builders.
+          Will rent cover your loan payment, and is your builder&apos;s scope complete? Unlock your financing cash flow model, itemized cost allowances, scope checklist, and site plan PDF.
         </p>
       </div>
 
@@ -422,6 +421,12 @@ export default function CertificatePanel({
         certificateUnlocked={purchased}
         feeJurisdiction={feeJurisdiction}
       />
+
+      {!purchased && (
+        <p className="text-center text-xs leading-5 text-lot-stone">
+          Preliminary algorithmic planning estimate; does not constitute a municipal building permit, zoning warranty, or architectural certification.
+        </p>
+      )}
 
       {purchased && (
         <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">

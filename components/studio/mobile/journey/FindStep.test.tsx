@@ -1,4 +1,4 @@
-﻿import { render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { parcelPresets } from "@/lib/feasibility";
@@ -76,5 +76,47 @@ describe("FindStep", () => {
     expect(secondButton).toHaveAttribute("aria-checked", "true");
     expect(secondButton).toHaveAttribute("tabindex", "0");
     expect(firstButton).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("shows 'See a San Diego example' when the input is empty, selects coyote-brush, and calls onReveal", async () => {
+    const user = userEvent.setup();
+    const onReveal = vi.fn();
+    const onSubmitText = vi.fn();
+    const onPresetSelect = vi.fn();
+    render(
+      <FindStep
+        {...defaultProps}
+        onPresetSelect={onPresetSelect}
+        onReveal={onReveal}
+        onSubmitText={onSubmitText}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /We only use your address to fetch lot geometry and zoning rules\. We don't save your address or contact you unless you create an account\./i,
+      ),
+    ).toBeInTheDocument();
+
+    const cta = screen.getByRole("button", { name: "See a San Diego example" });
+    await user.click(cta);
+    expect(onPresetSelect).toHaveBeenCalledWith("coyote-brush");
+    expect(onReveal).toHaveBeenCalledTimes(1);
+    expect(onSubmitText).not.toHaveBeenCalled();
+  });
+
+  it("changes CTA to 'Check my address' when text is typed and submits the typed query", async () => {
+    const user = userEvent.setup();
+    const onReveal = vi.fn();
+    const onSubmitText = vi.fn();
+    render(<FindStep {...defaultProps} onReveal={onReveal} onSubmitText={onSubmitText} />);
+
+    const input = screen.getByRole("searchbox", { name: /search property address/i });
+    await user.type(input, "5124 35th St, San Diego, CA");
+
+    const cta = screen.getByRole("button", { name: "Check my address" });
+    await user.click(cta);
+    expect(onSubmitText).toHaveBeenCalledWith("5124 35th St, San Diego, CA");
+    expect(onReveal).not.toHaveBeenCalled();
   });
 });

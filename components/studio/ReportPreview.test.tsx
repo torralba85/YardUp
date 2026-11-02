@@ -228,7 +228,7 @@ describe("ReportPreview certificate packet", () => {
 
   it("prints a 12-line RFQ sheet with a checkbox per builder", () => {
     renderPacket();
-    const sheet = screen.getByRole("heading", { name: "Contractor bid-leveling checklist" }).closest("section")!;
+    const sheet = screen.getByRole("heading", { name: "Scope Checklist" }).closest("section")!;
     expect(sheet.className).toMatch(/print:break-before-page/);
     expect(within(sheet).getAllByRole("rowheader")).toHaveLength(12);
     expect(within(sheet).getAllByRole("checkbox")).toHaveLength(36);

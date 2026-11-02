@@ -149,7 +149,7 @@ export interface FeasibilityResult {
 }
 
 /**
- * Built-in demo parcels (Seattle, Portland, Austin) used when no live parcel
+ * Built-in demo parcels (Seattle, Portland, Austin, San Diego) used when no live parcel
  * API key is configured. The first entry is the default fallback.
  */
 export const parcelPresets: ParcelPreset[] = [

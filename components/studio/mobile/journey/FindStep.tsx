@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { parcelPresets } from "@/lib/feasibility";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
@@ -39,9 +40,16 @@ export default function FindStep({
   onPresetSelect,
   onReveal,
 }: FindStepProps) {
+  const [queryText, setQueryText] = useState("");
+  const [userPickedPreset, setUserPickedPreset] = useState(false);
+  const trimmedQuery = queryText.trim();
+  const hasQuery = trimmedQuery.length > 0;
   const { groupProps, getRadioProps } = useRadioGroup({
     value: selectedPresetId ?? "",
-    onChange: onPresetSelect,
+    onChange: (id) => {
+      setUserPickedPreset(true);
+      onPresetSelect(id);
+    },
     values: parcelPresets.map((p) => p.id),
   });
 
@@ -60,7 +68,14 @@ export default function FindStep({
       </p>
 
       <div className="mt-5">
-        <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} />
+        <AddressSearch
+          onSelect={onSelect}
+          onSubmitText={onSubmitText}
+          onQueryChange={setQueryText}
+        />
+        <p className="mt-2 text-xs leading-5 text-lot-stone">
+          We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
+        </p>
         {parcelLoading && (
           <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
             <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
@@ -106,9 +121,18 @@ export default function FindStep({
           size="lg"
           fullWidth
           rightIcon={<ArrowRight size={16} />}
-          onClick={onReveal}
+          onClick={() => {
+            if (hasQuery) {
+              onSubmitText(trimmedQuery);
+            } else {
+              if (!userPickedPreset && selectedPresetId !== "coyote-brush") {
+                onPresetSelect("coyote-brush");
+              }
+              onReveal();
+            }
+          }}
         >
-          Reveal my backyard&rsquo;s potential
+          {hasQuery ? "Check my address" : "See a San Diego example"}
         </Button>
       </div>
     </section>

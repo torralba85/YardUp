@@ -3,15 +3,20 @@ import {
   BID_CHECKLIST_PREVIEW_COUNT,
   BID_LEVELING_BUILDERS,
   BID_LEVELING_CHECKLIST,
+  SCOPE_CHECKLIST,
 } from "./certificate-bid-checklist";
 
-describe("bid-leveling checklist", () => {
+describe("scope checklist (builder RFQ sheet)", () => {
   it("lists 12 distinct scope items with a question for each builder", () => {
-    expect(BID_LEVELING_CHECKLIST).toHaveLength(12);
-    expect(new Set(BID_LEVELING_CHECKLIST.map((item) => item.id)).size).toBe(12);
-    for (const item of BID_LEVELING_CHECKLIST) {
+    expect(SCOPE_CHECKLIST).toBe(BID_LEVELING_CHECKLIST);
+    expect(SCOPE_CHECKLIST).toHaveLength(12);
+    expect(new Set(SCOPE_CHECKLIST.map((item) => item.id)).size).toBe(12);
+    for (const item of SCOPE_CHECKLIST) {
       expect(item.title.length).toBeGreaterThan(0);
       expect(item.ask).toMatch(/\?$/);
+      expect(item).not.toHaveProperty("verdict");
+      expect(item.title).not.toMatch(/overpriced|below market|fair price/i);
+      expect(item.ask).not.toMatch(/overpriced|below market|fair price/i);
     }
   });
 

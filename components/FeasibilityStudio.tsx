@@ -1328,6 +1328,23 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onBack={previousStep ? () => window.history.back() : undefined}
           onStepSelect={setJourneyStep}
         >
+          {parcelMode === "preset" && journeyStep !== "find" && (
+            <div
+              data-testid="demo-mode-banner"
+              className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-5 py-2.5 text-xs text-lot-ink"
+            >
+              <span className="font-semibold">
+                Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
+              </span>
+              <button
+                type="button"
+                onClick={() => setJourneyStep("find")}
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              >
+                Evaluate My Lot
+              </button>
+            </div>
+          )}
           {stepContent}
         </MobileJourney>
         <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
@@ -1428,6 +1445,23 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         // clipped the overflow, so neither pane could scroll to its last controls.
         className="flex min-h-0 flex-1 flex-col outline-none"
       >
+        {parcelMode === "preset" && activeStep !== "lot" && (
+          <div
+            data-testid="demo-mode-banner"
+            className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-6 py-2.5 text-xs text-lot-ink"
+          >
+            <span className="font-semibold">
+              Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
+            </span>
+            <button
+              type="button"
+              onClick={handleChangeAddress}
+              className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            >
+              Evaluate My Lot
+            </button>
+          </div>
+        )}
         {showsVerdictBand && certificateUnlocked && (
           <FeasibilityVerdictBand
             parcel={activeParcel}
@@ -1820,6 +1854,9 @@ function LotStep({
         </p>
         <div className="mt-5 max-w-xl">
           <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
+          <p className="mt-2 text-xs leading-5 text-lot-stone">
+            We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
+          </p>
           {parcelLoading && (
             <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
               <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />

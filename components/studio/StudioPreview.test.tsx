@@ -11,19 +11,31 @@ import { defaultPose } from "@/lib/scenario-design";
 const result = calculateFeasibility(getParcelById("coyote-brush"), defaultAduConfig, defaultFinancialAssumptions);
 
 describe("free certificate preview", () => {
-  it("shows the rent range and blurred placeholders without putting paid figures in the markup", () => {
+  it("shows rent range, build cost, annual net income, and payback unblurred while locking financed cash flow", () => {
     const onUnlock = vi.fn();
     const { container } = render(<EstimateSummaryPanel parcelName="San Diego demo" result={result}
       feasibilityStatus="review_needed" onGenerateReport={onUnlock} reportCtaLabel="Unlock certificate — $29" />);
     expect(screen.getByText("$2,335–$2,919")).toBeInTheDocument();
-    for (const value of ["18,914", "231,000", "289,000", "13.3", "32.5%"]) {
-      expect(container.innerHTML).not.toContain(value);
-    }
-    expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(4);
+    expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
+    expect(screen.getByText("$19K /yr")).toBeInTheDocument();
+    expect(screen.getByText("13.3 yrs")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Estimated construction range\. Excludes site grading, utility trenching, municipal impact fees, and architectural soft costs\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);
     expect(screen.queryByText(/review needed/i)).not.toBeInTheDocument();
     expect(screen.getByText(/not permit approval or guaranteed income/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Unlock certificate — $29" }));
     expect(onUnlock).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders '—' for payback period when annual net income is non-positive or payback is non-finite", () => {
+    const nonPositive = { ...result, annualNoi: 0, paybackYears: Number.POSITIVE_INFINITY };
+    render(<StudioPreview result={nonPositive} onUnlock={vi.fn()} />);
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByText(/Infinity/i)).not.toBeInTheDocument();
   });
 
   it("keeps an actual placement conflict visible before purchase", () => {

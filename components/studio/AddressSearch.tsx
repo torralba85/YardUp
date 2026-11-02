@@ -37,6 +37,8 @@ export interface AddressSearchProps {
   onSubmitText?: (query: string) => void;
   /** Optional callback fired whenever the real-time validation state updates. */
   onValidationChange?: (validation: AddressValidationResult | null) => void;
+  /** Optional callback fired whenever the user's raw text input changes. */
+  onQueryChange?: (query: string) => void;
   /** Placeholder text for the input. */
   placeholder?: string;
   /** Whether the input is disabled. */
@@ -113,6 +115,7 @@ export default function AddressSearch({
   onSelect,
   onSubmitText,
   onValidationChange,
+  onQueryChange,
   placeholder = "Search property address…",
   disabled = false,
   autoFocusSignal,
@@ -293,6 +296,7 @@ export default function AddressSearch({
   async function pickSuggestion(suggestion: AddressSuggestion) {
     selectedValueRef.current = suggestion.text;
     setInputValue(suggestion.text);
+    onQueryChange?.(suggestion.text);
     setSuggestions([]);
     setSuggestionsOpen(false);
     setActiveIndex(-1);
@@ -337,6 +341,7 @@ export default function AddressSearch({
           if (!validation.deliverable) {
             selectedValueRef.current = formattedAddress;
             setInputValue(formattedAddress);
+            onQueryChange?.(formattedAddress);
             inputRef.current?.focus();
             return;
           }
@@ -344,6 +349,7 @@ export default function AddressSearch({
           selectedValueRef.current = formattedAddress;
           resolvedValueRef.current = formattedAddress;
           setInputValue(formattedAddress);
+          onQueryChange?.(formattedAddress);
           recordAddressSearchSubmission("places", user ? "signed_in" : "guest");
           onSelect({
             lat: place.location.lat(),
@@ -494,6 +500,7 @@ export default function AddressSearch({
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
+          onQueryChange?.(e.target.value);
           setActiveIndex(-1);
         }}
         onKeyDown={handleKeyDown}
@@ -612,6 +619,7 @@ export default function AddressSearch({
                     const standardized = activeValidation.standardizedSuggestion!;
                     selectedValueRef.current = standardized;
                     setInputValue(standardized);
+                    onQueryChange?.(standardized);
                     const updatedValidation: AddressValidationResult = {
                       ...activeValidation,
                       status: "deliverable",

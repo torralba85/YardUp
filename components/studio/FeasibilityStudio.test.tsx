@@ -729,7 +729,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByTestId("mobile-journey")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Journey progress" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
 
     // Reveal 2 · Earn — the money payoff with a confidence teaser.
     expect(
@@ -771,7 +771,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     } as unknown as MediaQueryList)));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(
       await screen.findByRole("button", { name: /Fine-tune dimensions & assumptions/i }),
@@ -832,7 +832,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(stepButton(/Certificate/));
 
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
-    expect(screen.getByText("Annual net income locked in the certificate")).toBeInTheDocument();
+    expect(screen.getByText("Financed cash flow locked in the certificate")).toBeInTheDocument();
 
     // A guest sees the price on the purchase CTA (the account step comes
     // after), and the paid report does not open.
@@ -978,7 +978,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     } as unknown as MediaQueryList)));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
@@ -1016,7 +1016,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     // Walk the full journey to Act, pushing a real history entry per reveal.
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
@@ -1051,7 +1051,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     // Walk forward to Check, pushing find -> earn -> shape -> check.
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
@@ -1114,7 +1114,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     // Advance the journey one step: pushes a new entry for "earn", burying
     // the (possibly now-stateless) launch entry beneath it.
-    fireEvent.click(screen.getByRole("button", { name: /Reveal my backyard/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
     expect(
       await screen.findByRole("heading", { name: /Your backyard could earn/i }),
     ).toBeInTheDocument();

@@ -65,8 +65,9 @@ describe("calculateFeasibility", () => {
     expect(result.paybackYears).toBeGreaterThan(0);
   });
 
-  it("exposes a parcel preset for every documented option", () => {
-    expect(parcelPresets.length).toBeGreaterThanOrEqual(3);
+  it("exposes a parcel preset for every documented option including San Diego (coyote-brush)", () => {
+    expect(parcelPresets.length).toBeGreaterThanOrEqual(4);
+    expect(getParcelById("coyote-brush").city).toContain("San Diego, CA");
     parcelPresets.forEach((preset) => {
       expect(preset.lotArea).toBeGreaterThan(0);
       expect(preset.expectedRent.conservative).toBeGreaterThan(0);

@@ -692,7 +692,7 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
     >
       <p className="lf-dataprint text-lot-orange-ink">Builder RFQ sheet · {parcelName}</p>
       <h3 id="certificate-bid-checklist-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
-        Contractor bid-leveling checklist
+        Scope Checklist
       </h3>
       <p className="mt-2 max-w-2xl text-xs leading-5 text-lot-stone">
         Give this sheet to three builders. Ask each to mark every line as included, excluded or an
