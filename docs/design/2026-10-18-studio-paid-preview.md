@@ -12,6 +12,18 @@ This is a Studio presentation boundary. The deterministic engine still runs in t
 
 Implementation: `components/studio/StudioPreview.tsx`, `components/FeasibilityStudio.tsx`, and `components/studio/CertificatePanel.tsx`. Regression coverage includes free/purchased component tests and `e2e/studio-paid-preview.spec.ts` for desktop and mobile.
 
+## Boundary moved - November 1, 2026
+
+`3e090cd` (the funnel and certificate activation, design in
+`docs/designs/lotfoundry-funnel-certificate-activation.md`) moves build cost, annual net income and
+simple payback into the free preview, rounded (for the San Diego demo, `$231K–$289K`, `$19K /yr` and `13.3 yrs`) and followed by a
+note on what the construction range excludes. Financed monthly cash flow stays locked, along with the
+exact figures, readiness and the detailed planning breakdown. The certificate is now pitched as
+whether rent covers the loan payment and whether a builder's scope is complete. The mobile Find CTA
+reads "See a San Diego example" with an empty field and "Check my address" once one is typed. A demo
+lot the visitor picked, or one that arrived by a `?parcel=` link, is kept and named on the CTA
+("See the Seattle example"). The e2e specs were aligned with this on the same date.
+
 ## Email capture placement - October 20, 2026
 
 Andrew chose a collapsed secondary action below the Certificate offer. The flow is

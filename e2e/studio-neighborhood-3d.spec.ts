@@ -126,7 +126,7 @@ test.describe("Studio Neighborhood 3D", () => {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
       if (width < 1024) {
-        await page.getByRole("button", { name: /reveal my backyard/i }).click();
+        await page.getByRole("button", { name: "See a San Diego example" }).click();
         await page.getByRole("button", { name: /shape your adu/i }).click();
       }
       await expect(credits).toBeVisible({ timeout: 60_000 });

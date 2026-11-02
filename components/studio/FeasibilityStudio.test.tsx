@@ -1113,8 +1113,9 @@ describe("FeasibilityStudio (guided spine)", () => {
     const launchEntryState = window.history.state as { lfJourneyStep?: string } | null;
 
     // Advance the journey one step: pushes a new entry for "earn", burying
-    // the (possibly now-stateless) launch entry beneath it.
-    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
+    // the (possibly now-stateless) launch entry beneath it. The CTA names the
+    // lot picked above rather than promising San Diego.
+    fireEvent.click(screen.getByRole("button", { name: "See the Portland example" }));
     expect(
       await screen.findByRole("heading", { name: /Your backyard could earn/i }),
     ).toBeInTheDocument();

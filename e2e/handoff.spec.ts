@@ -49,7 +49,9 @@ test.describe("landing → studio handoff", () => {
     ).toBeVisible({ timeout: 15000 });
     // The demo rent range stays available after the failed lookup.
     await expect(preview).toContainText("Estimated monthly rent");
-    await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
+    // Since the 2026-11-01 funnel change only financed cash flow stays locked;
+    // build cost, net income and payback are free.
+    await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(1);
     // Privacy: the typed address never reaches the URL.
     expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
