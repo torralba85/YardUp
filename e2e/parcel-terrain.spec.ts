@@ -49,7 +49,7 @@ test("demo terrain never invents ground elevations", async ({ page, viewport }) 
   await page.route("**/api/parcel-terrain", async (route) => { requested = true; await route.abort(); });
   await page.goto("/studio?parcel=oak-street");
   if (viewport && viewport.width < 1024) {
-    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: "See the Seattle example" }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
   }
   await page.getByRole("radio", { name: "Terrain", exact: true }).click();
