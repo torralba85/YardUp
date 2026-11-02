@@ -23,9 +23,9 @@ const baseUrl = CANONICAL_ORIGIN;
  * their published versions.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-10-30",
-  "/studio": "2026-10-30",
-  "/about": "2026-10-21",
+  "/": "2026-11-01",
+  "/studio": "2026-11-01",
+  "/about": "2026-11-01",
   "/help": "2026-10-21",
   "/feedback": "2026-10-21",
   "/privacy": CURRENT_LEGAL_CONSENT.privacyVersion,
