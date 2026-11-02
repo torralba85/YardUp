@@ -267,7 +267,7 @@ Everything is inside `@media (prefers-reduced-motion: no-preference)`.
 | Image crossfade | `opacity 650ms ease` |
 | Entrance — copy | `settle-in 700ms both` |
 | Entrance — visual | `settle-in 900ms 100ms both` |
-| Landing hero camera | `scale(1.14 → 1)` over 2.6s, then one 26s drift to `scale(1.06)`, which holds. Transform only: the photograph is the LCP element |
+| Landing hero camera | `scale(1.14 → 1)` over 2.6s, then one 2.2s drift to `scale(1.06)`, which holds. Transform only; all automatic camera motion ends within 4.8s. The h1 is the measured LCP element |
 | Landing wordmark | each line rises out of its own mask, `translateY(108%) → 0`, 1100ms, lines 110ms apart |
 | Landing hero h1 | `rise-in` (`translateY(14px) → 0`), 1000ms, transform only. It is the LCP element (Chrome counts the full-bleed photo as background), and opacity or a blur filter holds LCP until the animation ends |
 | Landing header | opacity fade, 800ms after 200ms. No translate: a sub-pixel offset measured the 44px home target at 43.99px on a 2.75× phone |

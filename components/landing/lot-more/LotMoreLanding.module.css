@@ -276,7 +276,7 @@
   min-height: 100vh;
   min-height: 100svh;
   max-height: 1180px;
-  padding: 128px 6% 64px;
+  padding: 128px 6% 144px;
   color: var(--chalk);
   background: var(--ink);
 }
@@ -1310,7 +1310,7 @@
     animation: camera-settle 2600ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .heroPhoto {
-    animation: camera-drift 26s 2600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+    animation: camera-drift 2200ms 2600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
   }
   .header {
     animation: header-in 800ms 200ms ease-out both;
@@ -1341,7 +1341,7 @@
       opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
       transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .reveal:not(.revealIn) {
+  .reveal:not(.revealIn):not(:focus-within) {
     opacity: 0;
     transform: translateY(32px);
   }
@@ -2373,7 +2373,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .footprintPolygon {
-    animation: cad-dash 18s linear infinite;
+    animation: cad-dash 4s linear 1;
   }
   .metricMeter > span {
     transition: width 300ms cubic-bezier(0.32, 0.72, 0, 1);
@@ -2710,5 +2710,38 @@
   }
   .hero .addressForm {
     margin-top: 14px;
+  }
+}
+
+/* Keep the task ahead of the oversized brand on the shortest phones. */
+@media (max-width: 380px) and (max-height: 620px) {
+  .hero .heroKicker {
+    display: none;
+  }
+  .hero .heroDisplay {
+    font-size: 32px;
+    line-height: 1;
+    margin: 6px 0 10px;
+  }
+  .hero .displayLine,
+  .hero .displayLine > span {
+    display: inline-block;
+  }
+  .hero .heroLead {
+    font-size: 24px;
+  }
+  .hero .heroDescription {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+@media (min-width: 801px) and (max-height: 800px) {
+  .hero {
+    padding-top: 110px;
+  }
+  .hero .heroDisplay {
+    font-size: clamp(76px, 8vw, 110px);
+    margin: 12px 0 18px;
   }
 }

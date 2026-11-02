@@ -35,7 +35,13 @@ test.describe("A lot more landing", () => {
     const search = new URL(page.url()).searchParams;
     expect(Array.from(search.values()).join(" ")).not.toContain(SAMPLE_LIVE_PARCEL.address);
     expect(search.has("q")).toBe(false);
-    if (isMobile) await page.getByRole("button", { name: "Shape your ADU" }).click();
+    if (isMobile) {
+      // Analytics-enabled builds retain the visitor's unanswered consent
+      // banner across this handoff. Resolve it before using the Studio footer.
+      const consent = page.getByRole("region", { name: "Cookie consent" });
+      if (await consent.isVisible()) await consent.getByRole("button", { name: "Decline" }).click();
+      await page.getByRole("button", { name: "Shape your ADU" }).click();
+    }
     await expect(page.locator("canvas").first()).toBeVisible({ timeout: 15_000 });
   });
 

@@ -58,3 +58,32 @@ typography, composition, colour, media, motion, mobile, copy, polish). Three thi
   consent-banner layout tests run.
 - Screenshot review at 1440×900, 1280×720 and 390×844, including the pinned stage at 12%, 50% and 90% of
   its travel. Evidence: [`evidence/cinematic-landing/`](./evidence/cinematic-landing/).
+
+## UI/UX audit follow-up (2026-11-01)
+
+The cinematic composition, photo scrims, glass forms, model narrative and explicit
+estimate labels are retained. Audit fixes:
+
+- At 320 x 568 the large two-line brand displaced the primary action behind consent.
+  Below 381px wide and 621px tall, a compact single-line brand prioritizes address entry.
+- Automatic hero motion now finishes within 4.8 seconds; the decorative footprint
+  dash runs once for four seconds, instead of looping indefinitely.
+- Keyboard focus reveals a section immediately, without waiting for its viewport trigger.
+- The model pinning responds to reduced-motion changes and short viewport resizes
+  without a reload. This also handles a phone keyboard reducing available height.
+
+Regression coverage: `e2e/cinematic-audit.spec.ts` and consent-banner layout checks
+at 390 x 844, 390 x 664 and 320 x 568. Final verification recorded in the PR audit commit.
+
+Audit screenshots: [320px phone](evidence/cinematic-landing/audit-phone.png) and
+[1440px desktop](evidence/cinematic-landing/audit-desktop.png). The desktop hero
+also reserves more bottom space; short desktop viewports use a smaller wordmark.
+Review criteria included the [Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines).
+
+Validation: lint, TypeScript and the production build passed; full Vitest passed
+292 files / 2,839 tests (4 files / 85 tests intentionally skipped). Focused landing
+coverage passed 67 tests. Production desktop/mobile browser coverage initially
+passed 70 tests with 3 intentional skips; one mobile handoff test was intercepted
+by the unanswered Studio consent banner. That test now declines consent before
+using the Studio footer, with dedicated landing consent-layout checks kept intact.
+The corrected mobile handoff passed its focused production rerun (1/1).
