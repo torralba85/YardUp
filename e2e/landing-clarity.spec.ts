@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("landing explains the tool before address entry and keeps the mobile app link after the preview", async ({
+test("landing explains the tool before address entry, then shows the model, with the app link at the close", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
@@ -10,8 +10,12 @@ test("landing explains the tool before address entry and keeps the mobile app li
     /See what could fit, compare estimated build costs/,
   );
   const address = hero.getByLabel("Property address", { exact: true });
-  const illustration = hero.locator("figure");
-  const app = hero.getByRole("link", { name: "Get it on Google Play" });
+  // Since the cinematic hero (2026-11-01) the parcel illustration lives in the
+  // model section after the hero, and the Play badge closes the page.
+  const illustration = page.locator("#the-model figure");
+  const closing = page.locator('[aria-labelledby="closing-title"]');
+  const closingAddress = closing.getByLabel("Property address", { exact: true });
+  const app = closing.getByRole("link", { name: "Get it on Google Play" });
   const widths =
     testInfo.project.name === "mobile-chromium"
       ? [320, 390, 800]
@@ -34,9 +38,13 @@ test("landing explains the tool before address entry and keeps the mobile app li
       expect(submitBox!.y + submitBox!.height).toBeLessThan(844);
     }
     if (width <= 800) {
-      const visualBox = await illustration.boundingBox();
+      const heroBox = await hero.boundingBox();
+      expect((await illustration.boundingBox())!.y).toBeGreaterThanOrEqual(
+        heroBox!.y + heroBox!.height,
+      );
+      const closingInputBox = await closingAddress.boundingBox();
       expect((await app.boundingBox())!.y).toBeGreaterThanOrEqual(
-        visualBox!.y + visualBox!.height,
+        closingInputBox!.y + closingInputBox!.height,
       );
     }
   }
