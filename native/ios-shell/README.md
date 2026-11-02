@@ -28,3 +28,15 @@ a StoreKit configuration file for sandbox tests.
 
 Signing, App Store Connect listing, tax/banking, and review credentials are
 human-only. See `{SCRATCH}/human-gates.md` and `docs/store-deployment-readiness.md`.
+
+## Interface
+- `LotFoundryStoreBridge.js:main` - Executable entrypoint / script
+
+## Invariants
+- None
+
+## Side Effects
+- None
+
+## Verification
+- Run: `npm test`

@@ -200,3 +200,19 @@ rules before adding the secrets.
 
 These are not Play App Signing key credentials. Google retains the App Signing
 private key; the workflow needs only the upload key that Play Console accepts.
+
+## Interface
+- None
+
+### Subdirectories
+- [app](./app/README.md) - Native mobile application wrapper, build configuration, and bridge for android/app.
+- [scripts](./scripts/README.md) - Native mobile application wrapper, build configuration, and bridge for android/scripts.
+
+## Invariants
+- None
+
+## Side Effects
+- None
+
+## Verification
+- Run: `npm test`

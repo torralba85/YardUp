@@ -1,0 +1,253 @@
+# server
+
+## Overview
+Domain modeling, utility functions, and calculation engines for server.
+
+## Interface
+- `active-checkout-sessions.ts:CheckoutPurchaseType` - Type Definition
+- `active-checkout-sessions.ts:ActiveCheckoutSession` - TypeScript Interface
+- `active-checkout-sessions.ts:ReserveActiveCheckoutInput` - TypeScript Interface
+- `active-checkout-sessions.ts:ActiveCheckoutKey` - Type Definition
+- `active-checkout-sessions.ts:reserveActiveCheckout` - Exported Function
+- `active-checkout-sessions.ts:replaceExpiredActiveCheckout` - Exported Function
+- `active-checkout-sessions.ts:saveActiveCheckoutSession` - Exported Function
+- `active-checkout-sessions.ts:rotateFailedActiveCheckout` - Exported Function
+- `address-match.ts:StreetAddress` - TypeScript Interface
+- `address-match.ts:SitusFieldNames` - TypeScript Interface
+- `address-match.ts:SitusRecord` - TypeScript Interface
+- `address-match.ts:SitusVerdict` - Type Definition
+- `address-match.ts:SitusComparison` - TypeScript Interface
+- `address-match.ts:US_STATE_NAMES` - Re-exported symbol
+- `address-match.ts:normalizeCity` - Exported Function
+- `address-match.ts:delimitStreetAddress` - Exported Function
+- `address-match.ts:StreetAddressParse` - TypeScript Interface
+- `address-match.ts:parseStreetAddressWithConfidence` - Exported Function
+- `address-match.ts:parseStreetAddress` - Exported Function
+- `address-match.ts:sameStreet` - Exported Function
+- `address-match.ts:enrichStreetAddress` - Exported Function
+- `address-match.ts:situsOutFields` - Exported Function
+- `address-match.ts:readSitusRecord` - Exported Function
+- `address-match.ts:readSitusAddress` - Exported Function
+- `address-match.ts:compareSitus` - Exported Function
+- `ai-pipeline.ts:AIToolHandler` - TypeScript Interface
+- `ai-pipeline.ts:AIInputValidation` - Type Definition
+- `ai-pipeline.ts:AIPanelDefinition` - TypeScript Interface
+- `ai-pipeline.ts:AIPipelineDeps` - TypeScript Interface
+- `ai-pipeline.ts:cleanJsonText` - Exported Function
+- `ai-pipeline.ts:runAgentic` - Exported Function
+- `ai-pipeline.ts:createAIPanelRoute` - Exported Function
+- `ai-pipeline.ts:executeTool` - Exported Function
+- `ai-rate-limit.ts:RateLimitOptions` - TypeScript Interface
+- `ai-rate-limit.ts:OpenAIProviderRateLimitError` - Exported Class
+- `ai-rate-limit.ts:checkAIRateLimit` - Exported Function
+- `ai-rate-limit.ts:consumeOpenAIProviderQuota` - Exported Function
+- `ai-rate-limit.ts:resetOpenAIProviderQuotaForTests` - Exported Function
+- `ai-route-errors.ts:AIRouteErrorMessages` - TypeScript Interface
+- `ai-route-errors.ts:createAIRouteErrorResponse` - Exported Function
+- `api-auth.ts:requireApiAuth` - Exported Function
+- `app-check.ts:APP_CHECK_HEADER` - Exported constant / variable
+- `app-check.ts:AppCheckVerdict` - Type Definition
+- `app-check.ts:verifyLimitedUseAppCheck` - Exported Function
+- `attom-parcel.ts:withAttomAddressEvidence` - Exported Function
+- `attom.ts:AttomLookup` - TypeScript Interface
+- `attom.ts:canLookUpAttomAddress` - Exported Function
+- `attom.ts:fetchAttomAddress` - Exported Function
+- `building-footprints.ts:BuildingFootprintResult` - TypeScript Interface
+- `building-footprints.ts:fetchBuildingFootprint` - Exported Function
+- `census-geocode.ts:CensusLocation` - TypeScript Interface
+- `census-geocode.ts:fetchCensusLocation` - Exported Function
+- `certificate-purchases.ts:purchaseId` - Re-exported symbol
+- `certificate-purchases.ts:GrantCertificateInput` - TypeScript Interface
+- `certificate-purchases.ts:grantCertificate` - Exported Function
+- `certificate-purchases.ts:hasCertificate` - Exported Function
+- `checkout-origin.ts:resolveCheckoutOrigin` - Exported Function
+- `county-parcels.ts:ADDRESS_STAGE_TIMEOUT_MS` - Exported constant / variable
+- `county-parcels.ts:ADDRESS_MATCH_RADIUS_FT` - Exported constant / variable
+- `county-parcels.ts:SitusEndpoint` - TypeScript Interface
+- `county-parcels.ts:CountyGisSource` - TypeScript Interface
+- `county-parcels.ts:COUNTY_GIS_SOURCES` - Exported constant / variable
+- `county-parcels.ts:CountyParcelResult` - TypeScript Interface
+- `county-parcels.ts:CountyParcelLookup` - TypeScript Interface
+- `county-parcels.ts:fetchCountyParcel` - Exported Function
+- `county-parcels.ts:fetchCountyParcelWithDiagnostics` - Exported Function
+- `county-parcels.ts:addressStageDeadline` - Exported Function
+- `county-parcels.ts:PointAddressCheck` - TypeScript Interface
+- `county-parcels.ts:verifyParcelAddressAtPoint` - Exported Function
+- `county-parcels.ts:AddressParcelResult` - TypeScript Interface
+- `county-parcels.ts:AddressParcelLookup` - TypeScript Interface
+- `county-parcels.ts:fetchCountyParcelByAddress` - Exported Function
+- `feedback-rate-limit.ts:checkFeedbackRateLimit` - Exported Function
+- `feedback-rate-limit.ts:resetFeedbackRateLimitBuckets` - Exported Function
+- `fire-hazard-zones.ts:FireHazardLayer` - TypeScript Interface
+- `fire-hazard-zones.ts:FIRE_HAZARD_LAYERS` - Exported constant / variable
+- `fire-hazard-zones.ts:fetchFireHazardZone` - Exported Function
+- `firebase-admin.ts:getAdminApp` - Exported Function
+- `firebase-admin.ts:getAdminDb` - Exported Function
+- `geocode-candidate-picker.ts:PICK_CONFIDENCE_THRESHOLD` - Exported constant / variable
+- `geocode-candidate-picker.ts:PICK_PROBABILITY_MARGIN_THRESHOLD` - Exported constant / variable
+- `geocode-candidate-picker.ts:isGeocodePickerEnabled` - Exported Function
+- `geocode-candidate-picker.ts:pickGeocodeCandidate` - Exported Function
+- `geocode-query.ts:stripUnitDesignators` - Exported Function
+- `guest-request.ts:isGuestRequest` - Exported Function
+- `guide-claim-check.ts:GuideClaim` - TypeScript Interface
+- `guide-claim-check.ts:splitSentences` - Exported Function
+- `guide-claim-check.ts:claimsFromGuide` - Exported Function
+- `guide-claim-check.ts:claimsFromCostPage` - Exported Function
+- `guide-claim-check.ts:claimsFromStateBaseline` - Exported Function
+- `guide-claim-check.ts:PASSAGES_PER_CLAIM` - Exported constant / variable
+- `guide-claim-check.ts:CLAIM_CHECK_TIMEOUT_MS` - Exported constant / variable
+- `guide-claim-check.ts:Relation` - Type Definition
+- `guide-claim-check.ts:buildClaimRequest` - Exported Function
+- `guide-claim-check.ts:PassageJudgment` - TypeScript Interface
+- `guide-claim-check.ts:ClaimJudgment` - TypeScript Interface
+- `guide-claim-check.ts:readClaimAnswers` - Exported Function
+- `guide-claim-check.ts:checkClaim` - Exported Function
+- `guide-claim-check.ts:CLAIM_POLICY` - Exported constant / variable
+- `guide-claim-check.ts:ClaimPolicy` - Type Definition
+- `guide-claim-check.ts:ClaimVerdict` - Type Definition
+- `guide-claim-check.ts:VERDICT_ORDER` - Exported constant / variable
+- `guide-claim-check.ts:verdictFor` - Exported Function
+- `guide-claim-check.ts:ClaimResult` - TypeScript Interface
+- `guide-claim-check.ts:renderReport` - Exported Function
+- `guide-claim-sources.ts:SourceDocument` - TypeScript Interface
+- `guide-claim-sources.ts:SourcePassage` - TypeScript Interface
+- `guide-claim-sources.ts:VAULT_DOCUMENTS` - Exported constant / variable
+- `guide-claim-sources.ts:sourcesForGuide` - Exported Function
+- `guide-claim-sources.ts:hasLocalSources` - Exported Function
+- `guide-claim-sources.ts:buildPassages` - Exported Function
+- `guide-claim-sources.ts:tokenize` - Exported Function
+- `guide-claim-sources.ts:PassageIndex` - Exported Class
+- `lead-unlocks.ts:unlockId` - Exported Function
+- `lead-unlocks.ts:GrantLeadUnlockInput` - TypeScript Interface
+- `lead-unlocks.ts:grantLeadUnlock` - Exported Function
+- `lead-unlocks.ts:isLeadUnlocked` - Exported Function
+- `openai.ts:OpenAIFunctionCall` - TypeScript Interface
+- `openai.ts:OpenAIResponseShape` - TypeScript Interface
+- `openai.ts:OpenAIConfigError` - Exported Class
+- `openai.ts:OpenAIProviderError` - Exported Class
+- `openai.ts:createOpenAIResponse` - Exported Function
+- `openai.ts:extractResponseText` - Exported Function
+- `openai.ts:extractGeneratedImageBase64` - Exported Function
+- `openai.ts:extractFunctionCalls` - Exported Function
+- `parcel-location.ts:extractRegridLocation` - Exported Function
+- `parcel-location.ts:inferStateFromCountySource` - Exported Function
+- `parcel-location.ts:stripStatewideLabel` - Exported Function
+- `parcel-terrain.ts:fetchParcelTerrain` - Exported Function
+- `permit-rules.ts:PermitTrack` - TypeScript Interface
+- `permit-rules.ts:PermitStageBenchmark` - TypeScript Interface
+- `permit-rules.ts:parseStateCode` - Exported Function
+- `permit-rules.ts:lookupPermitTracks` - Exported Function
+- `permit-rules.ts:getStageBenchmarks` - Exported Function
+- `play-rtdn.ts:PRODUCT_TYPE_SUBSCRIPTION` - Exported constant / variable
+- `play-rtdn.ts:PRODUCT_TYPE_ONE_TIME` - Exported constant / variable
+- `play-rtdn.ts:REFUND_TYPE_FULL` - Exported constant / variable
+- `play-rtdn.ts:REFUND_TYPE_QUANTITY_PARTIAL` - Exported constant / variable
+- `play-rtdn.ts:ONE_TIME_PRODUCT_PURCHASED` - Exported constant / variable
+- `play-rtdn.ts:ONE_TIME_PRODUCT_CANCELED` - Exported constant / variable
+- `play-rtdn.ts:VoidedPurchaseNotification` - TypeScript Interface
+- `play-rtdn.ts:OneTimeProductNotification` - TypeScript Interface
+- `play-rtdn.ts:DeveloperNotification` - TypeScript Interface
+- `play-rtdn.ts:DecodedRtdn` - TypeScript Interface
+- `play-rtdn.ts:DecodeRtdnResult` - Type Definition
+- `play-rtdn.ts:decodeRtdnEnvelope` - Exported Function
+- `play-rtdn.ts:asOneTimeVoid` - Exported Function
+- `purchase-token-hash.ts:purchaseTokenHash` - Exported Function
+- `rate-limit.ts:getRateLimitClientKey` - Exported Function
+- `rate-limit.ts:resolveRateLimitKey` - Exported Function
+- `rate-limit.ts:createRateLimitResponse` - Exported Function
+- `rate-limit.ts:checkRateLimit` - Exported Function
+- `rate-limit.ts:resetRateLimitBuckets` - Exported Function
+- `request-validation.ts:parseCoordinateParams` - Exported Function
+- `scenario-email-rate-limit.ts:checkScenarioEmailRateLimit` - Exported Function
+- `scenario-email-rate-limit.ts:resetScenarioEmailRateLimitBuckets` - Exported Function
+- `store-purchases.ts:PurchaseGrant` - TypeScript Interface
+- `store-purchases.ts:VerifyPurchaseInput` - TypeScript Interface
+- `store-purchases.ts:VerifyPurchaseResult` - Type Definition
+- `store-purchases.ts:StorePurchaseVerifier` - TypeScript Interface
+- `store-purchases.ts:createDefaultStoreVerifier` - Exported Function
+- `store-purchases.ts:verifyAndGrantPurchase` - Exported Function
+- `store-receipt-verifiers.ts:AppleVerifyInput` - TypeScript Interface
+- `store-receipt-verifiers.ts:GoogleVerifyInput` - TypeScript Interface
+- `store-receipt-verifiers.ts:ReceiptVerifyOk` - Type Definition
+- `store-receipt-verifiers.ts:ReceiptVerifyResult` - Type Definition
+- `store-receipt-verifiers.ts:parseDemoReceiptToken` - Exported Function
+- `store-receipt-verifiers.ts:verifyAppleSignedTransaction` - Exported Function
+- `store-receipt-verifiers.ts:verifyGooglePlayPurchase` - Exported Function
+- `stripe-errors.ts:describeStripeError` - Exported Function
+- `stripe-idempotency.ts:createStripeIdempotencyKey` - Exported Function
+- `stripe-payment-guard.ts:hasExpectedPayment` - Exported Function
+- `studio-scenario-email.ts:scenarioHeadlineNumbers` - Exported Function
+- `studio-scenario-email.ts:renderScenarioEmail` - Exported Function
+- `studio-scenario-email.ts:SendScenarioEmailResult` - TypeScript Interface
+- `studio-scenario-email.ts:ScenarioEmailMessage` - Type Definition
+- `studio-scenario-email.ts:RESEND_SEND_TIMEOUT_MS` - Exported constant / variable
+- `studio-scenario-email.ts:dispatchScenarioEmail` - Exported Function
+- `typesafe.ts:DEFAULT_MODEL` - Exported constant / variable
+- `typesafe.ts:TypeSafeChoiceQuestion` - TypeScript Interface
+- `typesafe.ts:TypeSafeChoiceAnswer` - TypeScript Interface
+- `typesafe.ts:TypeSafeNoulQuestion` - TypeScript Interface
+- `typesafe.ts:TypeSafeNoulAnswer` - TypeScript Interface
+- `typesafe.ts:TypeSafeQuestion` - Type Definition
+- `typesafe.ts:TypeSafeAnswer` - Type Definition
+- `typesafe.ts:TypeSafeUsage` - TypeScript Interface
+- `typesafe.ts:TypeSafeResponse` - TypeScript Interface
+- `typesafe.ts:TypeSafeConfigError` - Exported Class
+- `typesafe.ts:TypeSafeProviderError` - Exported Class
+- `typesafe.ts:isTypeSafeConfigured` - Exported Function
+- `typesafe.ts:askTypeSafe` - Exported Function
+- `voided-purchases.ts:purchaseTokenHash` - Re-exported symbol
+- `voided-purchases.ts:StoredGrant` - TypeScript Interface
+- `voided-purchases.ts:VoidRemediationPlan` - TypeScript Interface
+- `voided-purchases.ts:VoidRemediationInput` - TypeScript Interface
+- `voided-purchases.ts:planVoidRemediation` - Exported Function
+- `voided-purchases.ts:ApplyVoidOutcome` - Type Definition
+- `voided-purchases.ts:findGrantForVoid` - Exported Function
+- `voided-purchases.ts:VoidRemediationPlanner` - Type Definition
+- `voided-purchases.ts:applyVoidedPurchase` - Exported Function
+- `zoning-classifier.ts:ZONING_CONFIDENCE_THRESHOLD` - Exported constant / variable
+- `zoning-classifier.ts:ZONING_PROBABILITY_MARGIN_THRESHOLD` - Exported constant / variable
+- `zoning-classifier.ts:ZONING_CLASSES` - Exported constant / variable
+- `zoning-classifier.ts:ZoningClass` - Type Definition
+- `zoning-classifier.ts:ZoningInput` - TypeScript Interface
+- `zoning-classifier.ts:ZoningJudgment` - TypeScript Interface
+- `zoning-classifier.ts:ClassifyOutcome` - Type Definition
+- `zoning-classifier.ts:ZoningClassification` - TypeScript Interface
+- `zoning-classifier.ts:clearZoningCache` - Exported Function
+- `zoning-classifier.ts:classifyZoning` - Exported Function
+- `zoning-classifier.ts:JevResidential` - Type Definition
+- `zoning-classifier.ts:jevResidential` - Exported Function
+- `zoning-classifier.ts:ResidentialAgreement` - Type Definition
+- `zoning-classifier.ts:residentialAgreement` - Exported Function
+- `zoning-classifier.ts:isZoningShadowEnabled` - Exported Function
+- `zoning-classifier.ts:shadowClassifyZoning` - Exported Function
+- `zoning-heuristics.ts:deriveMaxCoverage` - Exported Function
+- `zoning-labeled-cases.ts:LabeledZoningCase` - TypeScript Interface
+- `zoning-labeled-cases.ts:acceptedClasses` - Exported Function
+- `zoning-labeled-cases.ts:LABELED_ZONING_CASES` - Exported constant / variable
+
+### Subdirectories
+- [market](<./market/README.md>) - Server-only business logic, OpenAI orchestration, and secure operations for market.
+- [panels](<./panels/README.md>) - Server-only business logic, OpenAI orchestration, and secure operations for panels.
+
+## Invariants
+- `ai-pipeline.ts:JSON.parse` - Schema / validation invariant
+- `ai-pipeline.ts:throw` - new OpenAIProviderError(`OpenAI output was incomplete (${reason}).`)
+- `ai-pipeline.ts:throw` - new OpenAIProviderError("OpenAI returned no final output.")
+- `ai-pipeline.ts:throw` - new OpenAIProviderError(`Required tool "${nextRequiredTool}" is not configured.`
+- `ai-pipeline.ts:throw` - new OpenAIProviderError( `OpenAI did not call required tool "${nextRequiredTool}
+- `ai-rate-limit.ts:throw` - err
+- `ai-rate-limit.ts:throw` - new OpenAIProviderRateLimitError( 503, 60, "AI rate limiting is temporarily unav
+- `ai-rate-limit.ts:throw` - new OpenAIProviderRateLimitError( 429, secondsUntil(memoryProviderBucket.resetAt
+
+## Side Effects
+- `attom.ts:fetch` - External call or state mutation
+- `building-footprints.ts:fetch` - External call or state mutation
+- `census-geocode.ts:fetch` - External call or state mutation
+- `county-parcels.ts:fetchCountyParcelWithDiagnostics` - External call or state mutation
+- `county-parcels.ts:fetch` - External call or state mutation
+- `county-parcels.ts:fetchSitusFeatures` - External call or state mutation
+- `county-parcels.ts:fetched.features.filter` - External call or state mutation
+- `fire-hazard-zones.ts:fetch` - External call or state mutation
+
+## Verification
+- Run: `npm test`

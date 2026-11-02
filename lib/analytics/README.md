@@ -1,0 +1,123 @@
+# analytics
+
+## Overview
+Domain modeling, utility functions, and calculation engines for analytics.
+
+## Interface
+- `adsConversion.ts:GOOGLE_ADS_ID` - Exported constant / variable
+- `adsConversion.ts:GOOGLE_ADS_PURCHASE_SEND_TO` - Exported constant / variable
+- `adsConversion.ts:TrackPurchaseInput` - TypeScript Interface
+- `adsConversion.ts:trackPurchase` - Exported Function
+- `consent.ts:CONSENT_STORAGE_KEY` - Exported constant / variable
+- `consent.ts:CONSENT_VERSION` - Exported constant / variable
+- `consent.ts:CONSENT_CHANGE_EVENT` - Exported constant / variable
+- `consent.ts:INTERNAL_ANALYTICS_MARKER` - Exported constant / variable
+- `consent.ts:isAnalyticsSuppressed` - Exported Function
+- `consent.ts:ConsentDecision` - Type Definition
+- `consent.ts:ConsentState` - Type Definition
+- `consent.ts:readConsent` - Exported Function
+- `consent.ts:writeConsent` - Exported Function
+- `consent.ts:clearConsent` - Exported Function
+- `consent.ts:subscribeToConsent` - Exported Function
+- `entry-source.ts:stashEntrySource` - Exported Function
+- `entry-source.ts:consumeEntrySource` - Exported Function
+- `entry-source.ts:clearEntrySource` - Exported Function
+- `events.ts:AppSurface` - Type Definition
+- `events.ts:DeviceMode` - Type Definition
+- `events.ts:AuthState` - Type Definition
+- `events.ts:ParcelMode` - Type Definition
+- `events.ts:ParcelSource` - Type Definition
+- `events.ts:FeasibilityStatus` - Type Definition
+- `events.ts:LotSizeBucket` - Type Definition
+- `events.ts:AduSqftBucket` - Type Definition
+- `events.ts:LatencyBucket` - Type Definition
+- `events.ts:ReportFormat` - Type Definition
+- `events.ts:PurchaseType` - Type Definition
+- `events.ts:AnalyticsPurchaseChannel` - Type Definition
+- `events.ts:BuilderMatchBucket` - Type Definition
+- `events.ts:LookupResult` - Type Definition
+- `events.ts:EntrySource` - Type Definition
+- `events.ts:SearchMode` - Type Definition
+- `events.ts:RoofStyle` - Type Definition
+- `events.ts:Finish` - Type Definition
+- `events.ts:TriageStatus` - Type Definition
+- `events.ts:AccessStatus` - Type Definition
+- `events.ts:ProjectValueBucket` - Type Definition
+- `events.ts:MatchReasonCountBucket` - Type Definition
+- `events.ts:UnlockMode` - Type Definition
+- `events.ts:AuthMethod` - Type Definition
+- `events.ts:AuthMode` - Type Definition
+- `events.ts:AuthSurface` - Type Definition
+- `events.ts:AuthPromptSource` - Type Definition
+- `events.ts:AuthErrorBucket` - Type Definition
+- `events.ts:getLotSizeBucket` - Exported Function
+- `events.ts:getAduSqftBucket` - Exported Function
+- `events.ts:getLatencyBucket` - Exported Function
+- `events.ts:getBuilderMatchBucket` - Exported Function
+- `events.ts:getMatchReasonCountBucket` - Exported Function
+- `events.ts:getProjectValueBucket` - Exported Function
+- `events.ts:mapFeasibilityVerdict` - Exported Function
+- `events.ts:mapPurchaseChannel` - Exported Function
+- `events.ts:mapParcelSource` - Exported Function
+- `events.ts:extractStateCode` - Exported Function
+- `events.ts:trackStudioOpened` - Exported Function
+- `events.ts:getAuthErrorBucket` - Exported Function
+- `events.ts:trackAuthPromptShown` - Exported Function
+- `events.ts:trackSignupStarted` - Exported Function
+- `events.ts:trackSignupSucceeded` - Exported Function
+- `events.ts:trackSignupFailed` - Exported Function
+- `events.ts:trackAddressSearchSubmitted` - Exported Function
+- `events.ts:recordAddressSearchSubmission` - Exported Function
+- `events.ts:trackParcelLookupCompleted` - Exported Function
+- `events.ts:ParcelLookupTracker` - TypeScript Interface
+- `events.ts:startParcelLookupTracking` - Exported Function
+- `events.ts:trackFeasibilityResultViewed` - Exported Function
+- `events.ts:trackAduDesignCommitted` - Exported Function
+- `events.ts:trackScenarioSaved` - Exported Function
+- `events.ts:trackReportOpened` - Exported Function
+- `events.ts:trackReportExported` - Exported Function
+- `events.ts:trackCertificatePaywallViewed` - Exported Function
+- `events.ts:trackCertificateCheckoutStarted` - Exported Function
+- `events.ts:trackCertificateCheckoutRedirected` - Exported Function
+- `events.ts:trackCertificateCheckoutCancelled` - Exported Function
+- `events.ts:trackCertificatePurchase` - Exported Function
+- `events.ts:trackBuilderMatchesViewed` - Exported Function
+- `events.ts:trackBuilderConnectionSubmitted` - Exported Function
+- `events.ts:trackBuilderLeadPreviewViewed` - Exported Function
+- `events.ts:trackBuilderUnlockCheckoutStarted` - Exported Function
+- `events.ts:trackBuilderLeadUnlocked` - Exported Function
+- `gtag.ts:getMeasurementId` - Exported Function
+- `gtag.ts:isAnalyticsConfigured` - Exported Function
+- `gtag.ts:sanitizePath` - Exported Function
+- `gtag.ts:sanitizeReferrer` - Exported Function
+- `gtag.ts:disableAnalytics` - Exported Function
+- `gtag.ts:enableAnalytics` - Exported Function
+- `gtag.ts:pageview` - Exported Function
+- `gtag.ts:trackEvent` - Exported Function
+- `gtag.ts:GTAG_READY_EVENT` - Exported constant / variable
+- `gtag.ts:clearAnalyticsCookies` - Exported Function
+- `lead-unlock-tracking.ts:_resetLeadUnlockDedupeForTesting` - Exported Function
+- `lead-unlock-tracking.ts:recordPendingLeadUnlockAttempt` - Exported Function
+- `lead-unlock-tracking.ts:clearPendingLeadUnlock` - Exported Function
+- `lead-unlock-tracking.ts:reconcilePendingLeadUnlock` - Exported Function
+- `lead-unlock-tracking.ts:recordInPlaceLeadUnlock` - Exported Function
+- `use-consent.ts:ConsentSnapshot` - Type Definition
+- `use-consent.ts:useConsent` - Exported Function
+
+## Invariants
+- `consent.ts:JSON.parse` - Schema / validation invariant
+- `entry-source.ts:JSON.parse` - Schema / validation invariant
+- `lead-unlock-tracking.ts:JSON.parse` - Schema / validation invariant
+
+## Side Effects
+- `adsConversion.ts:window.gtag` - External call or state mutation
+- `consent.ts:window.sessionStorage.getItem` - External call or state mutation
+- `consent.ts:window.gtag` - External call or state mutation
+- `consent.ts:window.localStorage.getItem` - External call or state mutation
+- `consent.ts:window.localStorage.setItem` - External call or state mutation
+- `consent.ts:window.localStorage.removeItem` - External call or state mutation
+- `entry-source.ts:window.sessionStorage.setItem` - External call or state mutation
+- `entry-source.ts:window.sessionStorage.getItem` - External call or state mutation
+
+## Verification
+- Run: `npm test`

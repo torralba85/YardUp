@@ -159,3 +159,30 @@ Operating documentation is maintained in the [`docs/`](docs/README.md) directory
 Copyright © 2026 Andrew Torralba. All rights reserved. This repository is source-available
 under the [LotFoundry Evaluation License](LICENSE); it is not an open-source license
 and does not grant redistribution or commercial use.
+
+## Subdirectories & System Boundaries
+- [app](./app/README.md): Component package providing domain logic and interface implementations for app.
+- [brand](./brand/README.md): Brand asset generation and render scripts.
+- [components](./components/README.md): Component package providing domain logic and interface implementations for components.
+- [content](./content/README.md): Component package providing domain logic and interface implementations for content.
+- [functions](./functions/README.md): Firebase Cloud Functions serverless entrypoint and HTTP backend triggers.
+- [hooks](./hooks/README.md): Custom React state, layout, and event hooks.
+- [lib](./lib/README.md): Component package providing domain logic and interface implementations for lib.
+- [native](./native/README.md): Component package providing domain logic and interface implementations for native.
+- [public](./public/README.md): Static web application assets and service worker runtime.
+- [remotion](./remotion/README.md): Component package providing domain logic and interface implementations for remotion.
+- [scripts](./scripts/README.md): Component package providing domain logic and interface implementations for scripts.
+- [utils](./utils/README.md): Component package providing domain logic and interface implementations for utils.
+
+## Global Invariants
+- Deterministic feasibility calculation: zoning, setbacks, and financial formulas must remain purely mathematical and deterministic; AI outputs cannot override arithmetic calculations.
+- Design system strictness: ground is Chalk (#F5F5F0), primary ink is Carbon (#161616), signal is Orange (#FF5B24). Never use orange text on chalk.
+- Auth & Consent invariants: photo uploads and marketing leads require explicit opt-in consent receipts versioned per legal consent standards.
+
+## Global Side Effects
+- Firebase Firestore: persists user scenario documents, profiles, and legal consent receipts.
+- Stripe Payments: creates checkout sessions and verifies webhook events for lead unlocks and certificate purchases.
+- OpenAI Responses API: multimodal photo inspection and structured zoning summary brief generation.
+
+## System Verification
+- Run: `npm test`

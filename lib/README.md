@@ -1,0 +1,693 @@
+# lib
+
+## Overview
+Component package providing domain logic and interface implementations for lib.
+
+## Interface
+- `account-settings.ts:AccountCapabilities` - TypeScript Interface
+- `account-settings.ts:getAccountCapabilities` - Exported Function
+- `account-settings.ts:validateDisplayName` - Exported Function
+- `account-settings.ts:validatePassword` - Exported Function
+- `account-settings.ts:validateEmail` - Exported Function
+- `address-handoff.ts:stashAddressQuery` - Exported Function
+- `address-handoff.ts:peekAddressQuery` - Exported Function
+- `address-handoff.ts:consumeAddressQuery` - Exported Function
+- `address-validation.ts:GMP_SOLUTION_ATTRIBUTION_ID` - Exported constant / variable
+- `address-validation.ts:ValidationGranularity` - Type Definition
+- `address-validation.ts:AddressComponentSummary` - TypeScript Interface
+- `address-validation.ts:AddressValidationResult` - TypeScript Interface
+- `address-validation.ts:ClientAddressReadiness` - TypeScript Interface
+- `address-validation.ts:PlacesAddressComponentLike` - TypeScript Interface
+- `address-validation.ts:PlacesValidationInput` - TypeScript Interface
+- `address-validation.ts:evaluateClientInputReadiness` - Exported Function
+- `address-validation.ts:extractPlacesComponents` - Exported Function
+- `address-validation.ts:evaluatePlacesAddress` - Exported Function
+- `address-validation.ts:GoogleAddressValidationPayload` - TypeScript Interface
+- `address-validation.ts:evaluateGoogleAddressValidationResponse` - Exported Function
+- `adu-materials.ts:ProceduralTextures` - TypeScript Interface
+- `adu-materials.ts:generateFinishTextures` - Exported Function
+- `adu-materials.ts:createDataTexture` - Exported Function
+- `adu-materials.ts:generateRoofTextures` - Exported Function
+- `adu-materials.ts:createAduMaterial` - Exported Function
+- `adu-materials.ts:createRoofMaterial` - Exported Function
+- `adu-materials.ts:createDoorMaterial` - Exported Function
+- `adu-materials.ts:createWindowGlassMaterial` - Exported Function
+- `adu-materials.ts:createTrimMaterial` - Exported Function
+- `adu-materials.ts:disposeMaterial` - Exported Function
+- `adu-mesh-data.ts:GABLE_OVERHANG_FT` - Exported constant / variable
+- `adu-mesh-data.ts:SHED_NOMINAL_RISE_FT` - Exported constant / variable
+- `adu-mesh-data.ts:SHED_RUN_ALLOWANCE_FT` - Exported constant / variable
+- `adu-mesh-data.ts:SHED_THICKNESS_FT` - Exported constant / variable
+- `adu-mesh-data.ts:SHED_WIDTH_OVERHANG_FT` - Exported constant / variable
+- `adu-mesh-data.ts:FLAT_CAP_RISE_FT` - Exported constant / variable
+- `adu-mesh-data.ts:FLAT_OVERHANG_FT` - Exported constant / variable
+- `adu-mesh-data.ts:TEXTURE_TILE_SIZE_FT` - Exported constant / variable
+- `adu-mesh-data.ts:MeshData` - TypeScript Interface
+- `adu-mesh-data.ts:AduMeshData` - TypeScript Interface
+- `adu-mesh-data.ts:getShedUnderside` - Exported Function
+- `adu-mesh-data.ts:DOOR_WIDTH_FT` - Exported constant / variable
+- `adu-mesh-data.ts:DOOR_HEIGHT_FT` - Exported constant / variable
+- `adu-mesh-data.ts:WINDOW_WIDTH_FT` - Exported constant / variable
+- `adu-mesh-data.ts:WINDOW_HEIGHT_FT` - Exported constant / variable
+- `adu-mesh-data.ts:CASING_FT` - Exported constant / variable
+- `adu-mesh-data.ts:MULLION_FT` - Exported constant / variable
+- `adu-mesh-data.ts:buildAduMeshData` - Exported Function
+- `adu-setbacks.ts:CALIFORNIA_ADU_SIDE_REAR_CAP_FT` - Exported constant / variable
+- `adu-setbacks.ts:SAN_DIEGO_NO_SETBACK_MAX_HEIGHT_FT` - Exported constant / variable
+- `adu-setbacks.ts:SAN_DIEGO_FIRE_ZONE_SETBACK_FT` - Exported constant / variable
+- `adu-setbacks.ts:AduSetbackRule` - Type Definition
+- `adu-setbacks.ts:AduSetbacks` - TypeScript Interface
+- `adu-setbacks.ts:AduFootprint` - Type Definition
+- `adu-setbacks.ts:aduSetbacks` - Exported Function
+- `adu-setbacks.ts:withAduSetbacks` - Exported Function
+- `adu-setbacks.ts:aduSetbackNote` - Exported Function
+- `advisor-intake.ts:buildAdvisorIntake` - Exported Function
+- `advisor-intake.ts:buildIntakeScenarioJson` - Exported Function
+- `ai-api.ts:AIRequestError` - Exported Class
+- `ai-api.ts:requestProjectBrief` - Exported Function
+- `ai-api.ts:requestADUConcept` - Exported Function
+- `ai-api.ts:requestParcelInsights` - Exported Function
+- `ai-project-brief.ts:AIProjectBriefSource` - TypeScript Interface
+- `ai-project-brief.ts:buildAIProjectBriefInput` - Exported Function
+- `ai-project-brief.ts:createAIProjectBriefKey` - Exported Function
+- `ai-types.ts:AIRiskLevel` - Type Definition
+- `ai-types.ts:AIParcelRisk` - TypeScript Interface
+- `ai-types.ts:AIParcelInsights` - TypeScript Interface
+- `ai-types.ts:AIParcelInsightsInput` - TypeScript Interface
+- `ai-types.ts:AIADUConcept` - TypeScript Interface
+- `ai-types.ts:AIPermitStage` - TypeScript Interface
+- `ai-types.ts:AIProjectBrief` - TypeScript Interface
+- `ai-types.ts:AIProjectBriefInput` - TypeScript Interface
+- `ai-types.ts:AIProjectBriefPreview` - TypeScript Interface
+- `ai-types.ts:AIProjectBriefResponse` - Type Definition
+- `app-check-token.ts:limitedUseAppCheckToken` - Exported Function
+- `app-store-links.ts:ANDROID_PACKAGE_NAME` - Exported constant / variable
+- `app-store-links.ts:GOOGLE_PLAY_URL` - Exported constant / variable
+- `app-store-links.ts:playStoreCityUrl` - Exported Function
+- `auth-context.tsx:CURRENT_LEGAL_CONSENT` - Re-exported symbol
+- `auth-context.tsx:LegalConsent` - Re-exported symbol
+- `auth-context.tsx:UserProfile` - TypeScript Interface
+- `auth-context.tsx:SocialSignInResult` - Type Definition
+- `auth-context.tsx:SOCIAL_REDIRECT_KEY` - Exported constant / variable
+- `auth-context.tsx:AuthProvider` - Exported Function
+- `auth-context.tsx:useAuth` - Exported Function
+- `auth-errors.ts:getAuthErrorMessage` - Exported Function
+- `auth-errors.ts:getAuthErrorCode` - Exported Function
+- `auth-providers.ts:isAppleSignInEnabled` - Exported Function
+- `builder-checkout-return.ts:BuilderCheckoutReturn` - Type Definition
+- `builder-checkout-return.ts:readBuilderCheckoutReturn` - Exported Function
+- `builder-checkout-return.ts:hasBuilderCheckoutReturnMarkers` - Exported Function
+- `builder-checkout-return.ts:stripBuilderCheckoutReturnMarkers` - Exported Function
+- `builder-checkout-return.ts:isBuilderCheckoutConfirmed` - Exported Function
+- `builder-metrics.ts:BuilderMetrics` - TypeScript Interface
+- `builder-metrics.ts:computeBuilderMetrics` - Exported Function
+- `canonical-origin.ts:CANONICAL_ORIGIN` - Exported constant / variable
+- `certificate-bid-checklist.ts:BidScopeItem` - TypeScript Interface
+- `certificate-bid-checklist.ts:BID_LEVELING_BUILDERS` - Exported constant / variable
+- `certificate-bid-checklist.ts:BID_CHECKLIST_PREVIEW_COUNT` - Exported constant / variable
+- `certificate-bid-checklist.ts:BID_LEVELING_CHECKLIST` - Exported constant / variable
+- `certificate-checkout.ts:CertificateCheckoutError` - Exported Class
+- `certificate-checkout.ts:CertificateCheckoutOutcome` - Type Definition
+- `certificate-checkout.ts:StartCertificateCheckoutInput` - TypeScript Interface
+- `certificate-checkout.ts:startCertificateCheckout` - Exported Function
+- `certificate-key.ts:CertificateKeyParcel` - TypeScript Interface
+- `certificate-key.ts:certificateKey` - Exported Function
+- `certificate-permit-audit.ts:IMPACT_FEE_EXEMPT_MAX_SQFT` - Exported constant / variable
+- `certificate-permit-audit.ts:SCHOOL_FEE_EXEMPT_BELOW_SQFT` - Exported constant / variable
+- `certificate-permit-audit.ts:STATE_DETACHED_HEIGHT_FLOOR_FT` - Exported constant / variable
+- `certificate-permit-audit.ts:FeeJurisdiction` - Type Definition
+- `certificate-permit-audit.ts:feeJurisdiction` - Exported Function
+- `certificate-permit-audit.ts:ImpactFeeThreshold` - TypeScript Interface
+- `certificate-permit-audit.ts:assessImpactFeeThreshold` - Exported Function
+- `certificate-permit-audit.ts:proportionalFeeSharePercent` - Exported Function
+- `certificate-permit-audit.ts:AuditTone` - Type Definition
+- `certificate-permit-audit.ts:AuditLine` - TypeScript Interface
+- `certificate-permit-audit.ts:AuditSource` - TypeScript Interface
+- `certificate-permit-audit.ts:PermitFeeAudit` - TypeScript Interface
+- `certificate-permit-audit.ts:permitAuditTitle` - Exported Function
+- `certificate-permit-audit.ts:permitAuditPreviewLines` - Exported Function
+- `certificate-permit-audit.ts:buildPermitFeeAudit` - Exported Function
+- `certificate-pricing.ts:CERTIFICATE_PRICE_CENTS` - Exported constant / variable
+- `certificate-pro-forma.ts:FinancingScenario` - TypeScript Interface
+- `certificate-pro-forma.ts:FINANCING_SCENARIOS` - Exported constant / variable
+- `certificate-pro-forma.ts:calculateMonthlyPayment` - Exported Function
+- `certificate-pro-forma.ts:maxPrincipalForPayment` - Exported Function
+- `certificate-pro-forma.ts:principalPaidInFirstYear` - Exported Function
+- `certificate-pro-forma.ts:ScenarioCashFlow` - TypeScript Interface
+- `certificate-pro-forma.ts:CashFlowProForma` - TypeScript Interface
+- `certificate-pro-forma.ts:buildCashFlowProForma` - Exported Function
+- `certificate-pro-forma.ts:leadScenario` - Exported Function
+- `certificate-pro-forma.ts:financingTermsLabel` - Exported Function
+- `certificate-pro-forma.ts:formatOperatingShare` - Exported Function
+- `certificate-pro-forma.ts:formatSignedCurrency` - Exported Function
+- `certificate-pro-forma.ts:formatSignedRange` - Exported Function
+- `certificate-pro-forma.ts:formatCurrencyRange` - Exported Function
+- `certificate-pro-forma.ts:ProFormaRow` - TypeScript Interface
+- `certificate-pro-forma.ts:proFormaTableRows` - Exported Function
+- `certificate-pro-forma.ts:proFormaSummary` - Exported Function
+- `certificate-pro-forma.ts:proFormaFootnote` - Exported Function
+- `certificate-purchase-intent.ts:rememberCapturedEmail` - Exported Function
+- `certificate-purchase-intent.ts:readCapturedEmail` - Exported Function
+- `certificate-purchase-intent.ts:PURCHASE_INTENT_TTL_MS` - Exported constant / variable
+- `certificate-purchase-intent.ts:rememberCertificatePurchaseIntent` - Exported Function
+- `certificate-purchase-intent.ts:hasCertificatePurchaseIntent` - Exported Function
+- `certificate-purchase-intent.ts:clearCertificatePurchaseIntent` - Exported Function
+- `certificate-purchases-id.ts:purchaseId` - Exported Function
+- `certificate-recovery.ts:CertificateGrant` - TypeScript Interface
+- `certificate-recovery.ts:CertificateAccess` - TypeScript Interface
+- `certificate-recovery.ts:CertificateReturnIntent` - TypeScript Interface
+- `certificate-recovery.ts:CertificateRecovery` - TypeScript Interface
+- `certificate-recovery.ts:useCertificateRecovery` - Exported Function
+- `cesium-ground-snap.ts:GROUND_SNAP_MAX_ATTEMPTS` - Exported constant / variable
+- `cesium-ground-snap.ts:GROUND_SNAP_BASE_DELAY_MS` - Exported constant / variable
+- `cesium-ground-snap.ts:GROUND_SNAP_MAX_DELAY_MS` - Exported constant / variable
+- `cesium-ground-snap.ts:GROUND_SNAP_MIN_PLAUSIBLE_M` - Exported constant / variable
+- `cesium-ground-snap.ts:GROUND_SNAP_MAX_PLAUSIBLE_M` - Exported constant / variable
+- `cesium-ground-snap.ts:GROUND_SNAP_REFINE_THRESHOLD_M` - Exported constant / variable
+- `cesium-ground-snap.ts:GroundSnapStatus` - Type Definition
+- `cesium-ground-snap.ts:GroundSnapResult` - TypeScript Interface
+- `cesium-ground-snap.ts:GroundSnapScene` - TypeScript Interface
+- `cesium-ground-snap.ts:GroundSnapCesiumModule` - TypeScript Interface
+- `cesium-ground-snap.ts:GroundSnapOptions` - TypeScript Interface
+- `cesium-ground-snap.ts:isPlausibleGroundHeight` - Exported Function
+- `cesium-ground-snap.ts:groundSnapDelayMs` - Exported Function
+- `cesium-ground-snap.ts:shouldRefineGround` - Exported Function
+- `cesium-ground-snap.ts:sampleGroundHeight` - Exported Function
+- `cesium-loader.ts:CESIUM_VERSION` - Exported constant / variable
+- `cesium-loader.ts:CESIUM_CDN_BASE` - Exported constant / variable
+- `cesium-loader.ts:resetCesiumLoaderForTesting` - Exported Function
+- `cesium-loader.ts:loadCesium` - Exported Function
+- `cesium-photoreal-diagnostics.ts:PHOTOREAL_ERROR_EVENT` - Exported constant / variable
+- `cesium-photoreal-diagnostics.ts:REDACTED` - Exported constant / variable
+- `cesium-photoreal-diagnostics.ts:MAX_SANITIZED_MESSAGE_LENGTH` - Exported constant / variable
+- `cesium-photoreal-diagnostics.ts:PhotorealErrorCategory` - Type Definition
+- `cesium-photoreal-diagnostics.ts:PhotorealErrorReport` - TypeScript Interface
+- `cesium-photoreal-diagnostics.ts:categorizePhotorealError` - Exported Function
+- `cesium-photoreal-diagnostics.ts:sanitizePhotorealErrorMessage` - Exported Function
+- `cesium-photoreal-diagnostics.ts:buildPhotorealErrorReport` - Exported Function
+- `cesium-photoreal-diagnostics.ts:PhotorealErrorReporter` - Type Definition
+- `cesium-photoreal-diagnostics.ts:setPhotorealErrorReporter` - Exported Function
+- `cesium-photoreal-diagnostics.ts:reportPhotorealError` - Exported Function
+- `cesium-photoreal.ts:GOOGLE_PHOTOREAL_ION_ASSET_ID` - Exported constant / variable
+- `cesium-photoreal.ts:PHOTOREAL_CACHE_BYTES` - Exported constant / variable
+- `cesium-photoreal.ts:PHOTOREAL_CACHE_OVERFLOW_BYTES` - Exported constant / variable
+- `cesium-photoreal.ts:PHOTOREAL_MAX_SCREEN_SPACE_ERROR` - Exported constant / variable
+- `cesium-photoreal.ts:PhotorealRoute` - Type Definition
+- `cesium-photoreal.ts:PhotorealCredentials` - TypeScript Interface
+- `cesium-photoreal.ts:PhotorealTilesetResult` - TypeScript Interface
+- `cesium-photoreal.ts:PhotorealCesiumModule` - TypeScript Interface
+- `cesium-photoreal.ts:readPhotorealCredentialsFromEnv` - Exported Function
+- `cesium-photoreal.ts:selectPhotorealStartupRoute` - Exported Function
+- `cesium-photoreal.ts:photorealUnavailableReason` - Exported Function
+- `cesium-photoreal.ts:describePhotorealRoute` - Exported Function
+- `cesium-photoreal.ts:createGoogleDirectTileset` - Exported Function
+- `cesium-photoreal.ts:createGoogleIonTileset` - Exported Function
+- `cesium-photoreal.ts:loadPhotorealTileset` - Exported Function
+- `checkout-attempt.ts:CHECKOUT_ATTEMPT_TTL_MS` - Exported constant / variable
+- `checkout-attempt.ts:getCheckoutAttemptId` - Exported Function
+- `checkout-attempt.ts:clearCheckoutAttemptId` - Exported Function
+- `checkout-return.ts:CHECKOUT_RETURN_PARAM` - Exported constant / variable
+- `checkout-return.ts:CHECKOUT_CANCELLED` - Exported constant / variable
+- `checkout-return.ts:CHECKOUT_RETURNED` - Exported constant / variable
+- `checkout-return.ts:CERTIFICATE_OPEN` - Exported constant / variable
+- `credit-pack-checkout.ts:CreditPackCheckoutOutcome` - Type Definition
+- `credit-pack-checkout.ts:startCreditPackCheckout` - Exported Function
+- `credit-pack-checkout.ts:clearCreditPackCheckoutAttempts` - Exported Function
+- `credit-packs.ts:CREDIT_PACK_PRICES_CENTS` - Exported constant / variable
+- `credit-packs.ts:CreditPackSize` - Type Definition
+- `credit-packs.ts:formatUsdCents` - Exported Function
+- `credit-packs.ts:isCreditPackSize` - Exported Function
+- `data-evidence.ts:EvidenceStatus` - Type Definition
+- `data-evidence.ts:EvidenceConfidence` - Type Definition
+- `data-evidence.ts:EvidenceSource` - TypeScript Interface
+- `data-evidence.ts:DataEvidence` - TypeScript Interface
+- `data-evidence.ts:ProviderOutcome` - Type Definition
+- `data-evidence.ts:ProviderAttempt` - TypeScript Interface
+- `design-tokens.ts:COLOR` - Exported constant / variable
+- `estimated-parcel.ts:EstimatedParcel` - TypeScript Interface
+- `estimated-parcel.ts:extractStateAbbrev` - Exported Function
+- `estimated-parcel.ts:buildEstimatedParcel` - Exported Function
+- `feasibility-verdict.ts:VerdictLevel` - Type Definition
+- `feasibility-verdict.ts:ConstraintStatus` - Type Definition
+- `feasibility-verdict.ts:ConstraintGroup` - Type Definition
+- `feasibility-verdict.ts:ConstraintItem` - TypeScript Interface
+- `feasibility-verdict.ts:FeasibilitySummary` - TypeScript Interface
+- `feasibility-verdict.ts:buildableArea` - Exported Function
+- `feasibility-verdict.ts:VerdictTone` - TypeScript Interface
+- `feasibility-verdict.ts:verdictTone` - Exported Function
+- `feasibility-verdict.ts:statusTone` - Exported Function
+- `feasibility-verdict.ts:summarizeFeasibility` - Exported Function
+- `feasibility.ts:Parcel` - Re-exported symbol
+- `feasibility.ts:RoofStyle` - Type Definition
+- `feasibility.ts:ExteriorFinish` - Type Definition
+- `feasibility.ts:RentScenario` - Type Definition
+- `feasibility.ts:ParcelPreset` - TypeScript Interface
+- `feasibility.ts:ADUConfig` - TypeScript Interface
+- `feasibility.ts:FinancialAssumptions` - TypeScript Interface
+- `feasibility.ts:FeasibilityResult` - TypeScript Interface
+- `feasibility.ts:parcelPresets` - Exported constant / variable
+- `feasibility.ts:footprintOptions` - Exported constant / variable
+- `feasibility.ts:defaultAduConfig` - Exported constant / variable
+- `feasibility.ts:defaultFinancialAssumptions` - Exported constant / variable
+- `feasibility.ts:roofLabels` - Exported constant / variable
+- `feasibility.ts:finishLabels` - Exported constant / variable
+- `feasibility.ts:finishColors` - Exported constant / variable
+- `feasibility.ts:getParcelById` - Exported Function
+- `feasibility.ts:configForFootprint` - Exported Function
+- `feasibility.ts:calculateFeasibility` - Exported Function
+- `feasibility.ts:formatCurrency` - Exported Function
+- `feasibility.ts:formatCompactCurrency` - Exported Function
+- `feedback.ts:FEEDBACK_CATEGORIES` - Exported constant / variable
+- `feedback.ts:FeedbackCategory` - Type Definition
+- `feedback.ts:FeedbackValue` - TypeScript Interface
+- `feedback.ts:FeedbackValidation` - Type Definition
+- `feedback.ts:validateFeedback` - Exported Function
+- `feedback.ts:isFeedbackHoneypotTripped` - Exported Function
+- `fence-transforms.ts:computeFenceTransforms` - Exported Function
+- `finance.ts:FinanceResult` - TypeScript Interface
+- `finance.ts:ConstructionBudget` - TypeScript Interface
+- `finance.ts:constructionBudgetNote` - Exported constant / variable
+- `finance.ts:constructionBudgetRows` - Exported Function
+- `finance.ts:MarketAdjustments` - TypeScript Interface
+- `finance.ts:ROOF_PREMIUM_PER_SQFT` - Exported constant / variable
+- `finance.ts:OPENINGS_ALLOWANCE` - Exported constant / variable
+- `finance.ts:COST_RANGE_FACTORS` - Exported constant / variable
+- `finance.ts:calculateFinance` - Exported Function
+- `fire-hazard.ts:FIRE_HAZARD_ZONES` - Exported constant / variable
+- `fire-hazard.ts:parcelFireHazard` - Exported Function
+- `fire-hazard.ts:parcelFireZone` - Exported Function
+- `fire-hazard.ts:isHighFireZone` - Exported Function
+- `fire-hazard.ts:fireZoneLabel` - Exported Function
+- `firebase.ts:initAppCheck` - Exported Function
+- `firebase.ts:getClientAppCheck` - Exported Function
+- `firebase.ts:auth` - Exported constant / variable
+- `firebase.ts:db` - Exported constant / variable
+- `firebase.ts:ai` - Exported constant / variable
+- `firebase.ts:app` - Re-exported symbol
+- `geocode-api.ts:GeocodeMatch` - TypeScript Interface
+- `geocode-api.ts:GeocodeResult` - TypeScript Interface
+- `geocode-api.ts:GeocodeError` - Exported Class
+- `geocode-api.ts:geocodeAddress` - Exported Function
+- `geoid.ts:resetGeoidForTesting` - Exported Function
+- `geoid.ts:setGeoidModuleForTesting` - Exported Function
+- `geoid.ts:ensureGeoidReady` - Exported Function
+- `geoid.ts:isGeoidReady` - Exported Function
+- `geoid.ts:geoidHeightMeters` - Exported Function
+- `geoid.ts:orthometricToEllipsoidal` - Exported Function
+- `geoid.ts:ellipsoidalToMslMeters` - Exported Function
+- `geoid.ts:metersToFeet` - Exported Function
+- `geoid.ts:formatGroundElevation` - Exported Function
+- `guest-lookup.ts:GUEST_LOOKUP_LIMIT` - Exported constant / variable
+- `guest-lookup.ts:guestLookupsRemaining` - Exported Function
+- `guest-lookup.ts:canGuestLookup` - Exported Function
+- `guest-lookup.ts:consumeGuestLookup` - Exported Function
+- `guest-lookup.ts:resetGuestLookups` - Exported Function
+- `haptics.ts:HapticEvent` - Type Definition
+- `haptics.ts:HAPTIC_PATTERNS` - Exported constant / variable
+- `haptics.ts:canVibrate` - Exported Function
+- `haptics.ts:haptic` - Exported Function
+- `inspiration-data.ts:InspirationItem` - TypeScript Interface
+- `inspiration-data.ts:inspirationItems` - Exported constant / variable
+- `inspiration-data.ts:configForInspirationItem` - Exported Function
+- `landing-demo.ts:LandingDemo` - TypeScript Interface
+- `landing-demo.ts:landingDemos` - Exported constant / variable
+- `landing-demo.ts:LandingCity` - Type Definition
+- `landing-demo.ts:landingScenarios` - Exported Function
+- `landing-stages.ts:HeroStageId` - Type Definition
+- `landing-stages.ts:HeroStage` - TypeScript Interface
+- `landing-stages.ts:HERO_STAGES` - Exported constant / variable
+- `landing-stages.ts:clamp01` - Exported Function
+- `landing-stages.ts:lerp` - Exported Function
+- `landing-stages.ts:stageFromProgress` - Exported Function
+- `landing-stages.ts:localStageProgress` - Exported Function
+- `landing-stages.ts:HeroNumberKind` - Type Definition
+- `landing-stages.ts:formatHeroNumber` - Exported Function
+- `lead-unlock-api.ts:LeadUnlockError` - Exported Class
+- `lead-unlock-api.ts:UnlockOutcome` - Type Definition
+- `lead-unlock-api.ts:leadUnlockPayLabel` - Exported Function
+- `lead-unlock-api.ts:leadUnlockSecureNote` - Exported Function
+- `lead-unlock-api.ts:startLeadUnlock` - Exported Function
+- `lead-unlock-api.ts:reportBadLead` - Exported Function
+- `lead-unlock-pricing.ts:LEAD_UNLOCK_PRICE_CENTS` - Exported constant / variable
+- `legal-consent.ts:CURRENT_LEGAL_CONSENT` - Exported constant / variable
+- `legal-consent.ts:LegalConsent` - Type Definition
+- `live-parcel-acquisition.ts:LiveParcelLookup` - Type Definition
+- `live-parcel-acquisition.ts:acquireLiveParcel` - Exported Function
+- `map-utils.ts:latLngToPixel` - Exported Function
+- `map-utils.ts:boundingBox` - Exported Function
+- `marketplace-firestore.ts:fetchBuilderProfile` - Exported Function
+- `marketplace-firestore.ts:fetchBuilderLedger` - Exported Function
+- `marketplace-firestore.ts:saveBuilderProfile` - Exported Function
+- `marketplace-firestore.ts:fetchActiveBuilders` - Exported Function
+- `marketplace-firestore.ts:createConnectionRequest` - Exported Function
+- `marketplace-firestore.ts:fetchBuilderInbox` - Exported Function
+- `marketplace-firestore.ts:fetchUnlockedContact` - Exported Function
+- `marketplace-firestore.ts:updateBuilderResponse` - Exported Function
+- `marketplace-types.ts:ServiceArea` - TypeScript Interface
+- `marketplace-types.ts:BuilderProfile` - TypeScript Interface
+- `marketplace-types.ts:BuilderDirectoryProfile` - TypeScript Interface
+- `marketplace-types.ts:BuilderLedgerEntry` - TypeScript Interface
+- `marketplace-types.ts:OwnerContact` - TypeScript Interface
+- `marketplace-types.ts:ConnectionSnapshot` - TypeScript Interface
+- `marketplace-types.ts:AdvisorIntake` - TypeScript Interface
+- `marketplace-types.ts:LeadPreview` - TypeScript Interface
+- `marketplace-types.ts:ConnectionRequest` - TypeScript Interface
+- `marketplace-types.ts:UnlockedLeadContact` - TypeScript Interface
+- `marketplace-types.ts:BuilderResponseStatus` - Type Definition
+- `marketplace-types.ts:BuilderResponse` - TypeScript Interface
+- `marketplace-types.ts:BuilderInboxItem` - TypeScript Interface
+- `marketplace.ts:OwnerContactFormInput` - TypeScript Interface
+- `marketplace.ts:OwnerContactValidation` - Type Definition
+- `marketplace.ts:normalizeServiceArea` - Exported Function
+- `marketplace.ts:parseParcelCityState` - Exported Function
+- `marketplace.ts:getMatchedBuilders` - Exported Function
+- `marketplace.ts:validateOwnerContact` - Exported Function
+- `marketplace.ts:buildConnectionSnapshot` - Exported Function
+- `marketplace.ts:bucketBuildBand` - Exported Function
+- `marketplace.ts:bucketRentBand` - Exported Function
+- `marketplace.ts:extractZip` - Exported Function
+- `marketplace.ts:buildLeadPreview` - Exported Function
+- `member-session-hint.ts:rememberMemberSession` - Exported Function
+- `member-session-hint.ts:forgetMemberSession` - Exported Function
+- `member-session-hint.ts:subscribeMemberSession` - Exported Function
+- `member-session-hint.ts:hasMemberSessionHint` - Exported Function
+- `mobile-journey.ts:MobileJourneyStep` - Type Definition
+- `mobile-journey.ts:MobileJourneyStepMeta` - TypeScript Interface
+- `mobile-journey.ts:MobileJourneyStepState` - Type Definition
+- `mobile-journey.ts:DerivedJourneyStep` - TypeScript Interface
+- `mobile-journey.ts:MOBILE_JOURNEY_STEPS` - Exported constant / variable
+- `mobile-journey.ts:journeyIndex` - Exported Function
+- `mobile-journey.ts:nextJourneyStep` - Exported Function
+- `mobile-journey.ts:prevJourneyStep` - Exported Function
+- `mobile-journey.ts:JourneyStateInput` - TypeScript Interface
+- `mobile-journey.ts:deriveJourneySteps` - Exported Function
+- `neighborhood-camera.ts:Vec3` - TypeScript Interface
+- `neighborhood-camera.ts:CameraPose` - TypeScript Interface
+- `neighborhood-camera.ts:EnuFrame` - TypeScript Interface
+- `neighborhood-camera.ts:NeighborhoodCameraStep` - Type Definition
+- `neighborhood-camera.ts:ROTATE_STEP_DEG` - Exported constant / variable
+- `neighborhood-camera.ts:TILT_STEP_DEG` - Exported constant / variable
+- `neighborhood-camera.ts:ZOOM_STEP_FRACTION` - Exported constant / variable
+- `neighborhood-camera.ts:MIN_CAMERA_HEIGHT_M` - Exported constant / variable
+- `neighborhood-camera.ts:MAX_CAMERA_HEIGHT_M` - Exported constant / variable
+- `neighborhood-camera.ts:MAX_DISTANCE_FROM_PROPERTY_M` - Exported constant / variable
+- `neighborhood-camera.ts:MIN_PITCH_DEG` - Exported constant / variable
+- `neighborhood-camera.ts:MAX_PITCH_DEG` - Exported constant / variable
+- `neighborhood-camera.ts:RECENTER_HEIGHT_M` - Exported constant / variable
+- `neighborhood-camera.ts:RECENTER_PITCH_DEG` - Exported constant / variable
+- `neighborhood-camera.ts:headingDeg` - Exported Function
+- `neighborhood-camera.ts:pitchDeg` - Exported Function
+- `neighborhood-camera.ts:viewTarget` - Exported Function
+- `neighborhood-camera.ts:CameraStepPlan` - Type Definition
+- `neighborhood-camera.ts:planCameraStep` - Exported Function
+- `neighborhood-camera.ts:applyCameraStep` - Exported Function
+- `neighborhood-camera.ts:recenterPose` - Exported Function
+- `neighborhood-camera.ts:enuFrameFromMatrix` - Exported Function
+- `neighborhood-camera.ts:poseToLocal` - Exported Function
+- `neighborhood-camera.ts:poseToWorld` - Exported Function
+- `og-images.ts:SITE_OG_IMAGE` - Exported constant / variable
+- `og-images.ts:LANDING_OG_IMAGE` - Exported constant / variable
+- `og-images.ts:pageOpenGraph` - Exported Function
+- `parcel-api.ts:ParcelFetchError` - Exported Class
+- `parcel-api.ts:fetchParcel` - Exported Function
+- `parcel-confidence.ts:parcelConfidence` - Exported Function
+- `parcel-confidence.ts:parcelDataNotice` - Exported Function
+- `parcel-context.tsx:ParcelMode` - Type Definition
+- `parcel-context.tsx:AnyParcel` - Type Definition
+- `parcel-context.tsx:useParcel` - Exported Function
+- `parcel-context.tsx:ParcelProvider` - Exported Function
+- `parcel-geometry.ts:FT_PER_DEG_LAT` - Exported constant / variable
+- `parcel-geometry.ts:LotDimensions` - TypeScript Interface
+- `parcel-geometry.ts:modeledSetbackAreaSqft` - Exported Function
+- `parcel-geometry.ts:orientedLotDimensions` - Exported Function
+- `parcel-geometry.ts:estimateLotDimensions` - Exported Function
+- `parcel-geometry.ts:polygonAreaSqft` - Exported Function
+- `parcel-geometry.ts:ringContainsPoint` - Exported Function
+- `parcel-geometry.ts:polygonContainsPoint` - Exported Function
+- `parcel-geometry.ts:distanceToPolygonFt` - Exported Function
+- `parcel-geometry.ts:interiorPoint` - Exported Function
+- `parcel-handoff.ts:stashInitialParcel` - Exported Function
+- `parcel-handoff.ts:peekInitialParcel` - Exported Function
+- `parcel-handoff.ts:clearInitialParcel` - Exported Function
+- `parcel-terrain.ts:TERRAIN_GRID_SIZE` - Exported constant / variable
+- `parcel-terrain.ts:FEET_PER_METER` - Exported constant / variable
+- `parcel-terrain.ts:TERRAIN_SOURCE_URL` - Exported constant / variable
+- `parcel-terrain.ts:TerrainGrid` - TypeScript Interface
+- `parcel-terrain.ts:ParcelTerrain` - TypeScript Interface
+- `parcel-terrain.ts:createTerrainGrid` - Exported Function
+- `parcel-terrain.ts:insideTerrainParcel` - Exported Function
+- `parcel-terrain.ts:terrainTriangles` - Exported Function
+- `parcel-terrain.ts:terrainHeightFeet` - Exported Function
+- `parcel-terrain.ts:terrainFootprint` - Exported Function
+- `parcel-types.ts:ParcelEvidenceField` - Type Definition
+- `parcel-types.ts:ParcelDataQuality` - TypeScript Interface
+- `parcel-types.ts:Parcel` - TypeScript Interface
+- `parcel-types.ts:LiveParcelData` - TypeScript Interface
+- `parcel-types.ts:FireHazardZone` - Type Definition
+- `parcel-types.ts:ParcelFireHazard` - TypeScript Interface
+- `parcel-types.ts:GeoJsonPolygon` - TypeScript Interface
+- `placement-evidence.ts:PlacementEvidenceStatus` - TypeScript Interface
+- `placement-evidence.ts:describePlacementWithEvidence` - Exported Function
+- `placement-search.ts:findBestFitPose` - Exported Function
+- `placement-validation.ts:PLACEMENT_TOLERANCE_FT` - Exported constant / variable
+- `placement-validation.ts:REVIEW_SEPARATION_FT` - Exported constant / variable
+- `placement-validation.ts:buildSetbackEnvelope` - Exported Function
+- `placement-validation.ts:EnvelopeFitStatus` - Type Definition
+- `placement-validation.ts:HouseClearanceStatus` - Type Definition
+- `placement-validation.ts:PlacementStatus` - Type Definition
+- `placement-validation.ts:PlacementReason` - TypeScript Interface
+- `placement-validation.ts:RotatePoseCommand` - TypeScript Interface
+- `placement-validation.ts:RotateAlternative` - TypeScript Interface
+- `placement-validation.ts:PlacementResult` - TypeScript Interface
+- `placement-validation.ts:PlacementInput` - TypeScript Interface
+- `placement-validation.ts:validatePlacement` - Exported Function
+- `placement-validation.ts:PlacementFitStatus` - TypeScript Interface
+- `placement-validation.ts:describePlacement` - Exported Function
+- `purchased-certificates.ts:PurchasedCertificate` - TypeScript Interface
+- `purchased-certificates.ts:formatCertKeyFallback` - Exported Function
+- `purchased-certificates.ts:fetchUserPurchasedCertificates` - Exported Function
+- `purchased-certificates.ts:buildStudioUrlForCertificate` - Exported Function
+- `purchased-certificates.ts:useUserPurchasedCertificates` - Exported Function
+- `radio-navigation.ts:radioIndex` - Exported Function
+- `regulations-data.ts:JurisdictionId` - Type Definition
+- `regulations-data.ts:Citation` - TypeScript Interface
+- `regulations-data.ts:RegulationGuide` - TypeScript Interface
+- `regulations-data.ts:regulationGuides` - Exported constant / variable
+- `regulations-data.ts:inferJurisdiction` - Exported Function
+- `report.ts:ReportStyleMatchConcept` - TypeScript Interface
+- `report.ts:ReportInput` - TypeScript Interface
+- `report.ts:makeCertificateSerial` - Exported Function
+- `report.ts:buildReportText` - Exported Function
+- `report.ts:buildReportHtml` - Exported Function
+- `report.ts:buildReportCsv` - Exported Function
+- `report.ts:downloadBlob` - Exported Function
+- `safe-url.ts:getSafeCitationHref` - Exported Function
+- `sample-certificate.ts:sampleCertificateResponse` - Exported Function
+- `saved-scenarios.ts:isValidAduConfig` - Re-exported symbol
+- `saved-scenarios.ts:isValidFinancialAssumptions` - Re-exported symbol
+- `saved-scenarios.ts:STORAGE_KEY` - Exported constant / variable
+- `saved-scenarios.ts:SavedScenarioStyleMatch` - TypeScript Interface
+- `saved-scenarios.ts:SavedScenario` - TypeScript Interface
+- `saved-scenarios.ts:SavedScenarioStore` - TypeScript Interface
+- `saved-scenarios.ts:isValidLiveParcelData` - Exported Function
+- `saved-scenarios.ts:normalizeLiveParcel` - Exported Function
+- `saved-scenarios.ts:isValidProjectBrief` - Exported Function
+- `saved-scenarios.ts:isValidStyleMatchConcept` - Exported Function
+- `saved-scenarios.ts:normalizeProjectBrief` - Exported Function
+- `saved-scenarios.ts:normalizeStyleMatchConcept` - Exported Function
+- `saved-scenarios.ts:isValidSavedScenario` - Exported Function
+- `saved-scenarios.ts:migrateSavedScenario` - Exported Function
+- `saved-scenarios.ts:createSavedScenarioStore` - Exported Function
+- `scenario-design.ts:SCENARIO_VERSION` - Exported constant / variable
+- `scenario-design.ts:HEIGHT_CONVENTION` - Exported constant / variable
+- `scenario-design.ts:CommittedDesign` - TypeScript Interface
+- `scenario-design.ts:isRecord` - Exported constant / variable
+- `scenario-design.ts:isValidAduConfig` - Exported Function
+- `scenario-design.ts:isValidFinancialAssumptions` - Exported Function
+- `scenario-design.ts:isValidPose` - Exported Function
+- `scenario-design.ts:defaultPose` - Exported constant / variable
+- `scenario-design.ts:migrateDesign` - Exported Function
+- `scenario-email.ts:isPlainPlaceText` - Exported Function
+- `scenario-email.ts:parseEmailScenario` - Exported Function
+- `scenario-restoration.ts:ProjectBriefState` - TypeScript Interface
+- `scenario-restoration.ts:calculateScenarioFeasibility` - Exported Function
+- `scenario-restoration.ts:restoreScenario` - Exported Function
+- `scenario-share-url.ts:validLayoutToken` - Exported Function
+- `scenario-share-url.ts:buildScenarioShareUrl` - Exported Function
+- `scenario-share-url.ts:isAllowedScenarioUrl` - Exported Function
+- `scenario-url.ts:ScenarioState` - TypeScript Interface
+- `scenario-url.ts:defaultScenarioState` - Exported constant / variable
+- `scenario-url.ts:parseScenarioParams` - Exported Function
+- `scenario-url.ts:serializeScenarioParams` - Exported Function
+- `scenario-url.ts:isNonDefaultScenario` - Exported Function
+- `scenario-url.ts:mergeScenarioPartial` - Exported Function
+- `scenarios-firestore.ts:fetchSavedScenarios` - Exported Function
+- `scenarios-firestore.ts:saveSavedScenario` - Exported Function
+- `scenarios-firestore.ts:deleteSavedScenario` - Exported Function
+- `scene-camera-fit.ts:SceneView` - Type Definition
+- `scene-camera-fit.ts:CameraFitParams` - TypeScript Interface
+- `scene-camera-fit.ts:boundsCorners` - Exported Function
+- `scene-camera-fit.ts:calculateCameraFit` - Exported Function
+- `scene-drag.ts:DragController` - Exported Class
+- `scene-lighting.ts:getIllustrativeSunPosition` - Exported Function
+- `scene-lighting.ts:formatPreviewHour` - Exported Function
+- `scene-lighting.ts:LightingPresetId` - Type Definition
+- `scene-lighting.ts:LightingPreset` - TypeScript Interface
+- `scene-lighting.ts:LIGHTING_PRESETS` - Exported constant / variable
+- `scene-lighting.ts:getLightingPreset` - Exported Function
+- `scene-model-fixtures.ts:rectPolygon` - Exported Function
+- `scene-model-fixtures.ts:irregularPolygon` - Exported Function
+- `scene-model-fixtures.ts:demoPresets` - Exported constant / variable
+- `scene-model-fixtures.ts:rotatedLiveParcel` - Exported constant / variable
+- `scene-model-fixtures.ts:irregularLiveParcel` - Exported constant / variable
+- `scene-model-fixtures.ts:fallbackLiveParcel` - Exported constant / variable
+- `scene-model-fixtures.ts:oversizeAduConfig` - Exported constant / variable
+- `scene-model-fixtures.ts:zeroAreaAduConfig` - Exported constant / variable
+- `scene-model-fixtures.ts:invalidCoordinatesParcel` - Exported constant / variable
+- `scene-model-fixtures.ts:degeneratePolygon` - Exported constant / variable
+- `scene-model-fixtures.ts:invalidSetbackParcel` - Exported constant / variable
+- `scene-model.ts:GeometrySource` - Type Definition
+- `scene-model.ts:ExistingAreaBasis` - Type Definition
+- `scene-model.ts:LocalPoint` - TypeScript Interface
+- `scene-model.ts:Pose2D` - TypeScript Interface
+- `scene-model.ts:LocalBounds` - TypeScript Interface
+- `scene-model.ts:SLAB_DATUM_FT` - Exported constant / variable
+- `scene-model.ts:Footprint` - TypeScript Interface
+- `scene-model.ts:rectangleCorners` - Exported Function
+- `scene-model.ts:ParcelOutline` - TypeScript Interface
+- `scene-model.ts:buildParcelOutline` - Exported Function
+- `scene-model.ts:buildExistingHouseFootprint` - Exported Function
+- `scene-model.ts:ExistingHouseSceneModel` - TypeScript Interface
+- `scene-model.ts:EXISTING_HOUSE_ROOF_OVERHANG_FT` - Exported constant / variable
+- `scene-model.ts:buildExistingHouseSceneModel` - Exported Function
+- `scene-model.ts:buildAduFootprint` - Exported Function
+- `scene-model.ts:RoofGeometry` - TypeScript Interface
+- `scene-model.ts:HeightModel` - TypeScript Interface
+- `scene-model.ts:buildAduHeightModel` - Exported Function
+- `scene-model.ts:AduSceneModel` - TypeScript Interface
+- `scene-model.ts:buildAduSceneModel` - Exported Function
+- `scene-model.ts:CoverageSummary` - TypeScript Interface
+- `scene-model.ts:computeCoverageSummary` - Exported Function
+- `scene-model.ts:SceneOrigin` - TypeScript Interface
+- `scene-model.ts:buildSceneOrigin` - Exported Function
+- `scene-model.ts:GeodeticAnchor` - TypeScript Interface
+- `scene-model.ts:projectGeodeticToLocal` - Exported Function
+- `scene-model.ts:projectLocalToGeodetic` - Exported Function
+- `scene-model.ts:projectPolygonToLocal` - Exported Function
+- `scene-model.ts:SceneModel` - TypeScript Interface
+- `scene-model.ts:buildSceneModel` - Exported Function
+- `scene-quality.ts:SceneQuality` - Type Definition
+- `scene-quality.ts:SCENE_QUALITY` - Exported constant / variable
+- `site-fit.ts:getSnapToFitPose` - Exported Function
+- `site-fit.ts:getScenePlacement` - Exported Function
+- `site-fit.ts:getDefaultAduPose` - Exported Function
+- `site-fit.ts:SiteFitCapacityStatus` - TypeScript Interface
+- `site-fit.ts:AduPlacementBounds` - TypeScript Interface
+- `site-fit.ts:getAduPlacementBounds` - Exported Function
+- `site-fit.ts:getSiteFitCapacityStatus` - Exported Function
+- `social-links.ts:SOCIAL_LINKS` - Exported constant / variable
+- `social-links.ts:SOCIAL_URLS` - Exported constant / variable
+- `social-links.ts:DIRECTORY_LINKS` - Exported constant / variable
+- `social-links.ts:DIRECTORY_URLS` - Exported constant / variable
+- `splat-registry.ts:CURATED_SPLAT_SCENES` - Exported constant / variable
+- `splat-registry.ts:getSplatSceneForParcel` - Exported Function
+- `splat-registry.ts:hasSplatSceneForParcel` - Exported Function
+- `splat-registry.ts:getRegisteredSplatParcelIds` - Exported Function
+- `splat-scene.ts:SplatTransform` - TypeScript Interface
+- `splat-scene.ts:DEFAULT_SPLAT_TRANSFORM` - Exported constant / variable
+- `splat-scene.ts:isValidSplatTransform` - Exported Function
+- `splat-scene.ts:SplatSource` - TypeScript Interface
+- `splat-scene.ts:SplatSceneDefinition` - TypeScript Interface
+- `splat-scene.ts:MAX_LOCAL_SPLAT_BYTES` - Exported constant / variable
+- `splat-scene.ts:MAX_WORKBENCH_SPLATS` - Exported constant / variable
+- `splat-scene.ts:validateLocalSplat` - Exported Function
+- `splat-scene.ts:createSplatDepthFixture` - Exported Function
+- `stripe.ts:LEAD_UNLOCK_PRICE_CENTS` - Re-exported symbol
+- `stripe.ts:isStripeConfigured` - Exported Function
+- `stripe.ts:getStripe` - Exported Function
+- `studio-enhancements-store.ts:UtilityPoint` - TypeScript Interface
+- `studio-enhancements-store.ts:UtilityEstimate` - TypeScript Interface
+- `studio-enhancements-store.ts:StudioEnhancementsState` - TypeScript Interface
+- `studio-enhancements-store.ts:getStudioEnhancementsSnapshot` - Exported Function
+- `studio-enhancements-store.ts:updateStudioParcel` - Exported Function
+- `studio-enhancements-store.ts:updateStudioDesign` - Exported Function
+- `studio-enhancements-store.ts:setUtilityAnchor` - Exported Function
+- `studio-enhancements-store.ts:setUtilityEstimate` - Exported Function
+- `studio-enhancements-store.ts:registerSitePlanCapture` - Exported Function
+- `studio-enhancements-store.ts:useStudioEnhancements` - Exported Function
+- `studio-measurement.ts:MeasurementMetadata` - TypeScript Interface
+- `studio-measurement.ts:WebGLSnapshot` - TypeScript Interface
+- `studio-measurement.ts:MeasurementOptions` - TypeScript Interface
+- `studio-measurement.ts:StudioMeasurementCollector` - Exported Class
+- `studio-measurement.ts:MeasurementReport` - Type Definition
+- `studio-plates.ts:StudioPlate` - Type Definition
+- `studio-plates.ts:PlateMeta` - TypeScript Interface
+- `studio-plates.ts:PLATES` - Exported constant / variable
+- `studio-plates.ts:PlateTick` - Type Definition
+- `studio-plates.ts:verdictTick` - Exported Function
+- `studio-plates.ts:derivePlateStatuses` - Exported Function
+- `studio-steps.ts:StudioStep` - Type Definition
+- `studio-steps.ts:StudioStepMeta` - TypeScript Interface
+- `studio-steps.ts:DerivedStep` - TypeScript Interface
+- `studio-steps.ts:STUDIO_STEPS` - Exported constant / variable
+- `studio-steps.ts:StepStateInput` - TypeScript Interface
+- `studio-steps.ts:deriveStepStates` - Exported Function
+- `style-match-photo.ts:STYLE_MATCH_ACCEPTED_TYPES` - Exported constant / variable
+- `style-match-photo.ts:STYLE_MATCH_ACCEPT` - Exported constant / variable
+- `style-match-photo.ts:PreparedStyleMatchPhoto` - TypeScript Interface
+- `style-match-photo.ts:DecodedStyleMatchImage` - TypeScript Interface
+- `style-match-photo.ts:StyleMatchPhotoRuntime` - TypeScript Interface
+- `style-match-photo.ts:PrepareStyleMatchPhotoOptions` - TypeScript Interface
+- `style-match-photo.ts:prepareStyleMatchPhoto` - Exported Function
+- `style-match-photo.ts:isAcceptedStyleMatchPhoto` - Exported Function
+- `style-match-photo.ts:fitImageWithin` - Exported Function
+- `typical-market.ts:TYPICAL_MARKET` - Exported constant / variable
+- `us-states.ts:US_STATE_NAMES` - Exported constant / variable
+- `us-states.ts:normalizeStateCode` - Exported Function
+- `use-builder-inbox-view.ts:InboxFilter` - Type Definition
+- `use-builder-inbox-view.ts:useBuilderInboxView` - Exported Function
+- `use-journey-history.ts:JOURNEY_STEP_STATE_KEY` - Exported constant / variable
+- `use-journey-history.ts:JourneyHistoryControls` - TypeScript Interface
+- `use-journey-history.ts:useJourneyHistory` - Exported Function
+- `use-media-query.ts:useMediaQuery` - Exported Function
+- `use-scene-drag.ts:useSceneDrag` - Exported Function
+- `utils.ts:cn` - Exported Function
+- `webgl.ts:isWebGLAvailable` - Exported Function
+- `zoning-designation.ts:ResidentialZoningCheck` - Type Definition
+- `zoning-designation.ts:normalizeZoningDesignation` - Exported Function
+- `zoning-designation.ts:residentialZoningCode` - Exported Function
+- `zoning-designation.ts:estimatedZoningCoverage` - Exported Function
+- `zoning.ts:CALIFORNIA_PROTECTED_ADU_SQFT` - Exported constant / variable
+- `zoning.ts:CapacityBasis` - Type Definition
+- `zoning.ts:ZoningResult` - TypeScript Interface
+- `zoning.ts:calculateZoning` - Exported Function
+
+### Subdirectories
+- [adu](<./adu/README.md>) - Domain modeling, utility functions, and calculation engines for adu.
+- [analytics](<./analytics/README.md>) - Domain modeling, utility functions, and calculation engines for analytics.
+- [commerce](<./commerce/README.md>) - Domain modeling, utility functions, and calculation engines for commerce.
+- [market](<./market/README.md>) - Domain modeling, utility functions, and calculation engines for market.
+- [server](<./server/README.md>) - Domain modeling, utility functions, and calculation engines for server.
+
+## Invariants
+- `ai-api.ts:throw` - new AIRequestError(await readError(res))
+- `ai-api.ts:throw` - new AIRequestError("Sign in to generate an AI style-match concept.")
+- `ai-api.ts:throw` - new AIRequestError("Your sign-in could not be verified. Please sign in again.")
+- `ai-api.ts:throw` - new AIRequestError("Sign in to generate AI parcel insights.")
+- `ai-api.ts:JSON.parse` - Schema / validation invariant
+- `ai-api.ts:throw` - new AIRequestError("AI is unavailable right now. Please try again.")
+- `auth-context.tsx:JSON.parse` - Schema / validation invariant
+- `auth-context.tsx:throw` - error
+
+## Side Effects
+- `address-handoff.ts:window.sessionStorage.setItem` - External call or state mutation
+- `address-handoff.ts:window.sessionStorage.removeItem` - External call or state mutation
+- `address-handoff.ts:window.sessionStorage.getItem` - External call or state mutation
+- `ai-api.ts:fetch` - External call or state mutation
+- `auth-context.tsx:window.sessionStorage.setItem` - External call or state mutation
+- `auth-context.tsx:window.sessionStorage.getItem` - External call or state mutation
+- `auth-context.tsx:window.sessionStorage.removeItem` - External call or state mutation
+- `auth-context.tsx:setDoc` - External call or state mutation
+
+## Verification
+- Run: `npm test`
