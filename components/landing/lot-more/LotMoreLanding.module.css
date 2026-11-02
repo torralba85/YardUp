@@ -38,6 +38,7 @@
   font-size: 16px;
   line-height: 1.6;
   overflow: clip;
+  position: relative;
 }
 .page * {
   box-sizing: border-box;
@@ -108,8 +109,14 @@
 .page svg {
   flex-shrink: 0;
 }
+/* The header floats over the hero photograph: chalk type, a chalk hairline,
+   and an inverse (chalk) call to action. */
 .header {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -117,7 +124,18 @@
   max-width: 1680px;
   margin: 0 auto;
   padding: 18px 6%;
-  border-bottom: 1px solid var(--line);
+  color: var(--chalk);
+  border-bottom: 1px solid color-mix(in srgb, var(--chalk) 18%, transparent);
+}
+.header :is(button, a, summary):focus-visible {
+  outline-color: var(--chalk);
+}
+.header .headerCta {
+  background: var(--chalk);
+  color: var(--ink) !important;
+}
+.header .headerCta:hover {
+  background: var(--line);
 }
 .brand {
   display: inline-flex;
@@ -244,22 +262,65 @@
 .mobileMenu {
   display: none;
 }
+/* Cinematic hero: a full-bleed photograph of the orange backyard home under a
+   directional carbon scrim, the wordmark and address form on the calm left,
+   and the engine's sample result anchored bottom-right. */
 .hero {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: 42% 54%;
-  column-gap: 4%;
-  grid-template-areas: "copy art" "app art";
-  grid-template-rows: auto min-content;
-  max-width: 1680px;
-  margin: 0 auto;
-  padding: 24px 6% 24px;
-  min-height: 0;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  grid-template-areas: "copy aside";
+  align-items: end;
+  column-gap: 6%;
+  min-height: 100vh;
+  min-height: 100svh;
+  max-height: 1180px;
+  padding: 128px 6% 64px;
+  color: var(--chalk);
+  background: var(--ink);
+}
+.heroMedia {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.heroMedia::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ink) 84%, transparent) 0%, color-mix(in srgb, var(--ink) 58%, transparent) 34%, transparent 66%),
+    linear-gradient(0deg, color-mix(in srgb, var(--ink) 74%, transparent) 0%, transparent 44%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ink) 52%, transparent) 0%, transparent 24%);
+}
+.heroPhoto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 46%;
 }
 .heroCopy {
   grid-area: copy;
   position: relative;
   z-index: 1;
+  max-width: 640px;
+}
+.heroAside {
+  grid-area: aside;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+.heroCredit {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--chalk) 72%, transparent);
 }
 .heroKicker {
   font-size: 13px;
@@ -280,29 +341,40 @@
 }
 .hero .heroDisplay {
   font-family: var(--font-lot-display), Arial, sans-serif;
-  font-size: clamp(62px, 8.5vw, 126px);
+  font-size: clamp(76px, 10.2vw, 156px);
   font-weight: 600;
   letter-spacing: -0.075em;
-  line-height: 0.84;
-  margin: 16px 0 16px;
+  line-height: 0.82;
+  margin: 22px 0 26px;
 }
 .orange {
   color: var(--orange);
 }
+/* One mask per wordmark line. The padding/negative margin pair gives the
+   glyphs room above and below the 0.82 line box without moving them. */
+.displayLine {
+  display: block;
+  overflow: hidden;
+  padding: 0.08em 0.06em 0.06em;
+  margin: -0.08em -0.06em -0.06em;
+}
+.displayLine > span {
+  display: block;
+}
 .hero .heroLead {
-  font-family: var(--font-lot-body), Arial, sans-serif;
+  font-family: var(--font-lot-display), Arial, sans-serif;
 }
 .heroLead {
-  font-size: 22px;
-  line-height: 1.3;
-  letter-spacing: -0.035em;
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
   font-weight: 500;
 }
 .heroDescription {
-  max-width: 400px;
-  font-size: 16px;
-  color: var(--ink);
-  margin-top: 10px !important;
+  max-width: 440px;
+  font-size: 17px;
+  color: color-mix(in srgb, var(--chalk) 82%, transparent);
+  margin-top: 12px !important;
   line-height: 1.55;
 }
 .addressForm {
@@ -1230,11 +1302,80 @@
      mobile. Animate transform only here so the heading paints on the first
      frame and still settles into place. .heroVisual is not the LCP candidate,
      so it keeps the full fade. */
-  .heroCopy {
-    animation: rise-in 700ms both;
+  /* The h1 is the LCP element (Chrome treats the full-bleed photograph as a
+     background), so it animates transform only: opacity or a filter holds
+     LCP until the animation ends. The header fades without moving, so its
+     44px targets measure whole at every device pixel ratio. */
+  .heroMedia {
+    animation: camera-settle 2600ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .heroVisual {
-    animation: settle-in 900ms 100ms both;
+  .heroPhoto {
+    animation: camera-drift 26s 2600ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+  .header {
+    animation: header-in 800ms 200ms ease-out both;
+  }
+  .hero .heroKicker {
+    animation: settle-in 800ms 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .displayLine > span {
+    animation: line-rise 1100ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .displayLine + .displayLine > span {
+    animation-delay: 230ms;
+  }
+  .hero .heroLead {
+    animation: rise-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero .heroDescription {
+    animation: settle-in 900ms 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero .addressForm {
+    animation: settle-in 900ms 580ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .heroAside {
+    animation: settle-in 1000ms 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .reveal {
+    transition:
+      opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal:not(.revealIn) {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  @keyframes camera-settle {
+    from {
+      transform: scale(1.14);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  @keyframes camera-drift {
+    from {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.06) translate3d(-1.2%, -0.6%, 0);
+    }
+  }
+  @keyframes header-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes line-rise {
+    from {
+      transform: translateY(108%);
+    }
+    to {
+      transform: none;
+    }
   }
   .page summary svg {
     transition: transform 200ms;
@@ -1299,13 +1440,11 @@
     display: none;
   }
   .hero {
-    grid-template-columns: 44% 52%;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
     column-gap: 4%;
-    padding-top: 28px;
-    min-height: 0;
   }
   .hero .heroDisplay {
-    font-size: 9vw;
+    font-size: 9.6vw;
   }
   .heroVisual {
     margin-left: 0;
@@ -1367,13 +1506,14 @@
     align-items: center;
     justify-content: center;
     background: transparent;
+    color: inherit;
     width: 44px;
     height: 44px;
-    border: 1px solid var(--line);
+    border: 1px solid color-mix(in srgb, var(--chalk) 42%, transparent);
     border-radius: var(--radius-control, 3px);
   }
   .menuButton:hover {
-    background: var(--line);
+    background: color-mix(in srgb, var(--chalk) 14%, transparent);
   }
   .mobileMenu {
     display: flex;
@@ -1384,9 +1524,13 @@
     left: 0;
     right: 0;
     background: var(--chalk);
+    color: var(--ink);
     padding: 15px 6%;
     border-bottom: 1px solid var(--line);
     box-shadow: 0 12px 16px var(--color-lot-shadow-menu);
+  }
+  .mobileMenu :is(a, button):focus-visible {
+    outline-color: var(--orange-ink);
   }
   .mobileMenu a {
     padding: 14px 0;
@@ -1394,19 +1538,36 @@
     align-items: center;
     justify-content: space-between;
   }
+  /* Phones: the copy flows from the top so the address form clears the
+     consent bar on a first visit; the sample result follows it. */
   .hero {
-    display: flex;
-    flex-direction: column;
-    padding: 28px 6% 24px;
-    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "copy" "aside";
+    align-items: start;
+    align-content: space-between;
+    row-gap: 36px;
+    max-height: none;
+    padding: 100px 6% 32px;
+  }
+  .heroMedia::after {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--ink) 80%, transparent) 0%, color-mix(in srgb, var(--ink) 66%, transparent) 46%, color-mix(in srgb, var(--ink) 38%, transparent) 70%, color-mix(in srgb, var(--ink) 82%, transparent) 100%);
+  }
+  .heroPhoto {
+    object-position: 70% 50%;
+  }
+  .heroAside {
     align-items: stretch;
   }
+  .heroCredit {
+    align-self: flex-start;
+  }
   .hero .heroDisplay {
-    font-size: clamp(72px, 16vw, 120px);
-    margin: 16px 0 16px;
+    font-size: clamp(76px, 17vw, 132px);
+    margin: 16px 0 18px;
   }
   .heroLead {
-    font-size: 22px;
+    font-size: clamp(26px, 5vw, 34px);
   }
   .heroDescription {
     max-width: 430px;
@@ -1584,36 +1745,13 @@
     font-size: 22px;
   }
   .hero {
-    padding-top: 20px;
-  }
-  .heroCopy {
-    display: contents;
-  }
-  .heroKicker {
-    order: 0;
-  }
-  .hero .heroDisplay {
-    order: 1;
-  }
-  .heroLead {
-    order: 2;
+    padding-top: 92px;
   }
   .hero .addressForm {
-    order: 4;
-    margin-top: 14px;
-  }
-  .sampleResult {
-    order: 5;
-    align-self: stretch;
+    margin-top: 16px;
   }
   .sampleFigures dd {
     font-size: 22px;
-  }
-  .heroVisual {
-    order: 6;
-  }
-  .heroDescription {
-    order: 3;
   }
   .header {
     gap: 12px;
@@ -1636,14 +1774,14 @@
     display: none;
   }
   .hero .heroDisplay {
-    font-size: 18vw;
-    margin: 12px 0 12px;
+    font-size: 21vw;
+    margin: 14px 0 16px;
   }
   .heroKicker {
     font-size: 11px;
   }
   .heroLead {
-    font-size: 22px;
+    font-size: 26px;
   }
   .heroDescription {
     font-size: 16px;
@@ -2283,3 +2421,294 @@
   }
 }
 
+/* Cinematic hero: glass surfaces over the photograph. One material, reused
+   for the address bar and the sample result. */
+.hero :is(button, a, input, summary):focus-visible {
+  outline-color: var(--chalk);
+}
+.hero .fieldLabel {
+  color: color-mix(in srgb, var(--chalk) 86%, transparent);
+}
+.hero .addressForm {
+  margin-top: 26px;
+  max-width: 540px;
+}
+.hero .inputRow {
+  padding: 6px;
+  border-color: color-mix(in srgb, var(--chalk) 34%, transparent);
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+.hero .inputRow input {
+  color: var(--chalk);
+  font-size: 15px;
+}
+.hero .inputRow input::placeholder {
+  color: color-mix(in srgb, var(--chalk) 68%, transparent);
+}
+.hero .inputRow:focus-within {
+  box-shadow: 0 0 0 2px var(--chalk);
+}
+.hero .formNote {
+  color: color-mix(in srgb, var(--chalk) 74%, transparent);
+}
+.hero .formError {
+  color: var(--chalk);
+}
+.hero .sampleResult {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 0;
+  padding: 16px 18px 8px;
+  border: 1px solid color-mix(in srgb, var(--chalk) 22%, transparent);
+  background: color-mix(in srgb, var(--ink) 46%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 32%, transparent);
+  color: var(--chalk);
+}
+.hero .sampleResult:hover {
+  border-color: color-mix(in srgb, var(--chalk) 62%, transparent);
+}
+.hero .sampleKicker,
+.hero .sampleFigures dt,
+.hero .sampleFigures dd small {
+  color: color-mix(in srgb, var(--chalk) 72%, transparent);
+}
+.hero .sampleFigures {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 8px 18px;
+}
+.hero .sampleFigures dd {
+  font-size: 21px;
+}
+.hero .sampleCta {
+  border-top-color: color-mix(in srgb, var(--chalk) 22%, transparent);
+  text-wrap: balance;
+}
+
+/* The model: a pinned stage where scroll walks the parcel from today to the
+   possibility. Without the pin (reduced motion, short screens, no script)
+   it is an ordinary section driven by the scene picker. */
+.story {
+  position: relative;
+  background: var(--chalk);
+  padding: 0 6%;
+  border-bottom: 1px solid var(--line);
+}
+.storyStage {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 6%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 112px 0 96px;
+}
+.story[data-pinned="true"] {
+  height: 340vh;
+  height: 340svh;
+}
+.story[data-pinned="true"] .storyStage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  padding: 64px 0 28px;
+}
+.storyCopy h2 {
+  margin: 22px 0 34px;
+  font-size: clamp(38px, 3.9vw, 60px);
+}
+.storyChapters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.storyChapters li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.storyChapters li > span {
+  padding-top: 5px;
+  color: var(--stone);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.storyChapters h3 {
+  color: var(--stone);
+  font-size: 22px;
+}
+.storyChapters p {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  color: var(--stone);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.storyChapters li[aria-current="step"] > span {
+  color: var(--orange-ink);
+}
+.storyChapters li[aria-current="step"] h3 {
+  color: var(--ink);
+}
+.storyChapters li[aria-current="step"] p {
+  max-height: 6em;
+  margin-top: 6px;
+  opacity: 1;
+  visibility: visible;
+}
+.storyRail {
+  position: relative;
+  height: 2px;
+  margin-top: 28px;
+  background: var(--line);
+}
+.storyRail > span {
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  transform: scaleX(var(--story-progress, 0));
+  transform-origin: left;
+}
+.story:not([data-pinned="true"]) .storyRail {
+  display: none;
+}
+.story .heroVisual {
+  grid-area: auto;
+}
+/* The renders sit on a warm cream that multiply turned into a visible box on
+   chalk. Darken keeps the model and drops the cream; the edge mask fades the
+   rest. In the 16:10 canvas a render spans 3.1–96.9% of the width and its
+   slab 6.6–94.7%, so the fade only touches the cream margin and the tail of
+   the cast shadow, which the render crops at its right edge. */
+.story .parcelCanvas {
+  mix-blend-mode: darken;
+}
+.story .parcelImage {
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 3.2%, var(--ink) 6%, var(--ink) 94.8%, transparent 96.9%),
+    linear-gradient(180deg, transparent 0%, var(--ink) 3%, var(--ink) 97%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 3.2%, var(--ink) 6%, var(--ink) 94.8%, transparent 96.9%),
+    linear-gradient(180deg, transparent 0%, var(--ink) 3%, var(--ink) 97%, transparent 100%);
+  mask-composite: intersect;
+}
+.story[data-pinned="true"] .parcelCanvas {
+  width: min(100%, calc((100vh - 330px) * 1.6));
+  width: min(100%, calc((100svh - 330px) * 1.6));
+  margin-inline: auto;
+  transform: scale(calc(0.94 + var(--story-progress, 1) * 0.08));
+  transform-origin: 50% 62%;
+}
+.readoutSlot {
+  min-height: 84px;
+}
+
+/* The Play badge now closes the page, on the orange ground. */
+.closing .appDownload {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding-top: 26px;
+}
+.closing .appDownload > span {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .storyChapters p {
+    transition:
+      max-height 450ms cubic-bezier(0.32, 0.72, 0, 1),
+      opacity 450ms ease,
+      visibility 450ms;
+  }
+  .storyChapters h3,
+  .storyChapters li > span {
+    transition: color 450ms ease;
+  }
+}
+
+@media (max-width: 1150px) {
+  .storyStage {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+    gap: 4%;
+  }
+}
+
+@media (max-width: 800px) {
+  .storyStage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 68px 0 56px;
+  }
+  /* The pinned phone stage must clear the sticky address bar (~84px). */
+  .story[data-pinned="true"] .storyStage {
+    align-content: start;
+    gap: 14px;
+    padding: 28px 0 96px;
+  }
+  .story[data-pinned="true"] .artHeader {
+    display: none;
+  }
+  .story[data-pinned="true"] .maquetteReadoutBody {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .storyCopy h2 {
+    margin: 12px 0 14px;
+  }
+  /* A pinned phone shows one chapter at a time to keep the stage on screen. */
+  .story[data-pinned="true"] .storyChapters li:not([aria-current="step"]) {
+    display: none;
+  }
+  .storyChapters li {
+    padding: 14px 0;
+  }
+  .storyChapters h3 {
+    font-size: 20px;
+  }
+  .storyRail {
+    margin-top: 14px;
+  }
+  .readoutSlot {
+    min-height: 92px;
+  }
+  .hero .sampleFigures {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .closing .appDownload {
+    justify-content: flex-start;
+  }
+}
+/* Short phones (an iPhone 13 shows 390x664 with browser bars): the address
+   form must still clear the consent bar on a first visit. */
+@media (max-width: 800px) and (max-height: 720px) {
+  .hero {
+    padding-top: 82px;
+  }
+  .hero .heroDisplay {
+    font-size: 18vw;
+    margin: 10px 0 12px;
+  }
+  .hero .heroDescription {
+    margin-top: 8px !important;
+  }
+  .hero .addressForm {
+    margin-top: 14px;
+  }
+}

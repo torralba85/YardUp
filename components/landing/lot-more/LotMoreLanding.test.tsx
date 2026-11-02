@@ -84,7 +84,11 @@ describe("landing address handoff", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
-    expect(screen.getByText(/A LOT\s*MORE/).tagName).toBe("P");
+    // The display is one paragraph whose lines are separate spans (each rises
+    // out of its own mask), so match the paragraph's whole text.
+    expect(
+      screen.getByText((_, element) => element?.tagName === "P" && /^A LOT\s*MORE\.$/.test(element.textContent ?? "")),
+    ).toBeVisible();
   });
 
   it("opens the sample on its estimates page", () => {

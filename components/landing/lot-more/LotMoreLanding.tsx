@@ -142,7 +142,9 @@ export function LotMoreLanding({
     hasMemberSessionHint,
     () => false,
   );
+  const pageRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
+  const storyRef = useRef<HTMLElement>(null);
   const closingRef = useRef<HTMLElement>(null);
   const pendingAddress = useRef("");
   const submitButton = useRef<HTMLButtonElement | null>(null);
@@ -175,6 +177,22 @@ export function LotMoreLanding({
       detail: "Preserves existing yard sightlines and calculates remaining allowable impervious coverage.",
       x: "34%",
       y: "46%",
+    },
+  ];
+
+  // One chapter per parcel scene; scroll (or the scene picker) advances them.
+  const storyChapters = [
+    {
+      title: "Start with what’s there.",
+      detail: "Your house, your yard, and the lines local rules draw around them.",
+    },
+    {
+      title: "Find what fits.",
+      detail: "Setbacks, separation and lot coverage, checked as you place a backyard home.",
+    },
+    {
+      title: "Price the possibility.",
+      detail: "Build cost, rent and payback for a 600 sq ft concept, with every assumption in view.",
     },
   ];
 
@@ -241,6 +259,79 @@ export function LotMoreLanding({
     if (closingRef.current) observer.observe(closingRef.current);
     update();
     return () => observer.disconnect();
+  }, []);
+
+  // The model section pins its stage and lets scroll walk the parcel from
+  // today to the possibility. Only with motion allowed and room for the
+  // stage: otherwise the section stays in normal flow and the scene picker
+  // alone drives it. Crossing a third of the travel changes the scene, so a
+  // scene picked by hand holds until the visitor scrolls into another band.
+  useEffect(() => {
+    const section = storyRef.current;
+    if (!section || typeof window.matchMedia !== "function") return;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference) and (min-height: 700px)").matches) return;
+    section.dataset.pinned = "true";
+    let frame = 0;
+    let band = -1;
+    const update = () => {
+      frame = 0;
+      const rect = section.getBoundingClientRect();
+      const travel = rect.height - window.innerHeight;
+      const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
+      section.style.setProperty("--story-progress", progress.toFixed(4));
+      const next = progress < 0.34 ? 0 : progress < 0.67 ? 1 : 2;
+      if (next !== band) {
+        band = next;
+        setScene(next);
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      delete section.dataset.pinned;
+      section.style.removeProperty("--story-progress");
+    };
+  }, []);
+
+  // Sections below the model rise into place once, as they enter the view.
+  // The hidden state is only applied after this runs, so a page without
+  // JavaScript, or with reduced motion, shows everything at rest.
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page || typeof window.matchMedia !== "function" || typeof IntersectionObserver !== "function") return;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) return;
+    const targets = Array.from(
+      page.querySelectorAll<HTMLElement>(
+        [styles.howSection, styles.numbersSection, styles.reportSection, styles.faqSection, styles.closing]
+          .map((name) => `.${name} > *`)
+          .join(", "),
+      ),
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add(styles.revealIn);
+          observer.unobserve(entry.target);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
+    );
+    for (const target of targets) {
+      target.classList.add(styles.reveal);
+      observer.observe(target);
+    }
+    return () => {
+      observer.disconnect();
+      for (const target of targets) target.classList.remove(styles.reveal, styles.revealIn);
+    };
   }, []);
 
   function submit(event: FormEvent<HTMLFormElement>, id: string) {
@@ -332,7 +423,7 @@ export function LotMoreLanding({
 
   return (
     <>
-      <div className={styles.page} data-theme="a-lot-more">
+      <div ref={pageRef} className={styles.page} data-theme="a-lot-more">
         <header
           className={styles.header}
           onKeyDown={(event) => {
@@ -422,15 +513,39 @@ export function LotMoreLanding({
             aria-label="Explore your lot"
             id="start"
           >
+            <div className={styles.heroMedia}>
+              {/* Full-bleed photograph under a carbon scrim. It paints on the
+                  first frame (only its transform animates), so it stays a
+                  fast LCP element. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className={styles.heroPhoto}
+                src="/landing/a-lot-more/backyard-life.webp"
+                srcSet="/landing/a-lot-more/backyard-life-mobile.webp 768w, /landing/a-lot-more/backyard-life.webp 1536w"
+                sizes="100vw"
+                width={1536}
+                height={1024}
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                alt="Illustrative concept of an orange backyard home with full-height glazing and a timber deck in a planted garden"
+              />
+            </div>
             <div className={styles.heroCopy}>
               <p className={styles.heroKicker}>
                 <span />
                 {city === "seattle" ? "Small homes. Big possibility." : `${demo.city} ADU feasibility · see what fits your lot`}
               </p>
+              {/* Each line rises out of its own mask, in reading order. */}
               <p className={styles.heroDisplay}>
-                A LOT
-                <br />
-                MORE<span className={styles.orange}>.</span>
+                <span className={styles.displayLine}>
+                  <span>A LOT</span>
+                </span>{" "}
+                <span className={styles.displayLine}>
+                  <span>
+                    MORE<span className={styles.orange}>.</span>
+                  </span>
+                </span>
               </p>
               <h1 className={styles.heroLead}>Explore an ADU on your lot in 3D.</h1>
               <p className={styles.heroDescription}>
@@ -438,9 +553,11 @@ export function LotMoreLanding({
                 rental potential.
               </p>
               {addressForm("hero")}
+            </div>
+            <div className={styles.heroAside}>
               {/* A real engine result, one tap from the address box. A cold
                   visitor who is not ready to type an address can still see
-                  what the studio produces, which the illustration alone
+                  what the studio produces, which the photograph alone
                   does not show. */}
               <Link
                 className={styles.sampleResult}
@@ -484,191 +601,220 @@ export function LotMoreLanding({
                   <ArrowRight size={17} aria-hidden="true" />
                 </span>
               </Link>
+              <p className={styles.heroCredit}>Illustrative backyard home concept</p>
             </div>
-            <figure className={styles.heroVisual} data-ui>
-              <div className={styles.artHeader}>
-                <span>ILLUSTRATIVE CONCEPT · SCALE 1:100</span>
-                <span>LOT — 001 / ORTHO 3D</span>
-              </div>
-              <div className={styles.parcelCanvas} data-scene={scene}>
-                {/* Pre-sized local WebP variants keep the hero useful before JS. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={styles.parcelImage}
-                  src="/landing/a-lot-more/parcel-after.webp"
-                  srcSet="/landing/a-lot-more/parcel-after-mobile.webp 768w, /landing/a-lot-more/parcel-after.webp 1536w"
-                  sizes="(max-width: 800px) 100vw, 60vw"
-                  width={1536}
-                  height={1024}
-                  fetchPriority="high"
-                  loading="eager"
-                  decoding="async"
-                  alt="Illustrative miniature lot with an existing house and an orange backyard home"
-                />
-                {/* Each layer describes its own picture (Bing flags an empty alt);
-                    the live figcaption announces which scene is showing. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className={`${styles.parcelImage} ${styles.beforeImage}`}
-                  src="/landing/a-lot-more/parcel-before.webp"
-                  srcSet="/landing/a-lot-more/parcel-before-mobile.webp 768w, /landing/a-lot-more/parcel-before.webp 1536w"
-                  sizes="(max-width: 800px) 100vw, 60vw"
-                  width={1536}
-                  height={1024}
-                  loading="lazy"
-                  alt="Illustrative miniature lot with an existing house and an empty yard"
-                />
-                <svg
-                  className={styles.cadGridOverlay}
-                  viewBox="0 0 1536 1024"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  {/* Precision corner registration ticks */}
-                  <path
-                    d="M64 96V64H96 M1472 96V64H1440 M64 928V960H96 M1472 928V960H1440"
-                    stroke={COLOR["lot-stone"]}
-                    strokeWidth="2"
-                    strokeOpacity="0.55"
-                  />
-                  {/* Subtle parcel survey boundary */}
-                  <path
-                    d="M270 560 L785 375 L1295 620 L765 865 Z"
-                    stroke={COLOR["lot-stone"]}
-                    strokeWidth="1.5"
-                    strokeDasharray="6 8"
-                    strokeOpacity="0.45"
-                  />
-                </svg>
-                <svg
-                  className={styles.footprintOverlay}
-                  viewBox="0 0 1536 1024"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  {/* Outer setback clearance envelope */}
-                  <path
-                    d="m745 568 295-84 202 114-275 130Z"
-                    stroke={COLOR["lot-ink"]}
-                    strokeWidth="2"
-                    strokeDasharray="6 6"
-                    strokeOpacity="0.65"
-                  />
-                  {/* Proposed ADU footprint with animated stroke */}
-                  <path
-                    className={styles.footprintPolygon}
-                    d="m800 578 250-70 166 94-231 110Z"
-                    fill={COLOR["lot-orange"]}
-                    fillOpacity={0.22}
-                    stroke={COLOR["lot-orange"]}
-                    strokeWidth="5"
-                    strokeDasharray="14 10"
-                  />
-                  {/* Architectural dimension ticks */}
-                  <line
-                    x1="800"
-                    y1="556"
-                    x2="1050"
-                    y2="486"
-                    stroke={COLOR["lot-ink"]}
-                    strokeWidth="2"
-                  />
-                  <circle cx="800" cy="578" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
-                  <circle cx="1050" cy="508" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
-                  <circle cx="1216" cy="602" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
-                  <circle cx="985" cy="712" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
-                </svg>
-                <div className={styles.sceneTag}>
-                  <span className={styles.tagDot} />
-                  {
-                    [
-                      "Your starting point",
-                      "Imagine a footprint",
-                      "A little more possibility",
-                    ][scene]
-                  }
-                  <span className={styles.tagLine} />
-                </div>
-                {scene === 2 && (
-                  <div className={styles.hotspotLayer} aria-label="Maquette inspection points">
-                    {hotspots.map((point, index) => (
-                      <button
-                        key={point.id}
-                        type="button"
-                        className={styles.hotspotPin}
-                        style={{ left: point.x, top: point.y }}
-                        aria-pressed={activeHotspot === index}
-                        aria-label={`Inspect ${point.title}`}
-                        onClick={() => setActiveHotspot(index)}
-                      >
-                        <span>{point.id}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <div className={styles.northMark} aria-hidden="true">
-                  N<ArrowUpRight size={24} strokeWidth={1.5} />
+          </section>
+
+          <section
+            ref={storyRef}
+            className={styles.story}
+            id="the-model"
+            aria-labelledby="story-title"
+          >
+            <div className={styles.storyStage}>
+              <div className={styles.storyCopy}>
+                <p className={styles.heroKicker}>
+                  <span />
+                  The model
+                </p>
+                <h2 id="story-title">
+                  Watch a yard
+                  <br />
+                  become a home.
+                </h2>
+                <ol className={styles.storyChapters}>
+                  {storyChapters.map((chapter, index) => (
+                    <li
+                      key={chapter.title}
+                      aria-current={scene === index ? "step" : undefined}
+                    >
+                      <span>0{index + 1}</span>
+                      <div>
+                        <h3>{chapter.title}</h3>
+                        <p>{chapter.detail}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className={styles.storyRail} aria-hidden="true">
+                  <span />
                 </div>
               </div>
-              {scene === 2 && (
-                <div className={styles.maquetteReadout} aria-live="polite">
-                  <div className={styles.maquetteReadoutTop}>
-                    <span className={styles.maquetteReadoutIndex}>
-                      POINT {hotspots[activeHotspot].id} / 03
-                    </span>
-                    <span className={styles.maquetteReadoutMetric}>
-                      {hotspots[activeHotspot].metric}
-                    </span>
-                  </div>
-                  <p className={styles.maquetteReadoutBody}>
-                    <strong>{hotspots[activeHotspot].title}.</strong>{" "}
-                    {hotspots[activeHotspot].detail}
-                  </p>
+              <figure className={styles.heroVisual} data-ui>
+                <div className={styles.artHeader}>
+                  <span>ILLUSTRATIVE CONCEPT · SCALE 1:100</span>
+                  <span>LOT — 001 / ORTHO 3D</span>
                 </div>
-              )}
-              <Segmented
-                className={styles.sceneControls}
-                aria-label="Property illustration view"
-                value={String(scene)}
-                onChange={(value) => setScene(Number(value))}
-                options={["Today", "The footprint", "The possibility"].map(
-                  (label, index) => ({
-                    value: String(index),
-                    label: (
-                      <>
-                        <span>0{index + 1}</span>
-                        {label}
-                      </>
-                    ),
-                  }),
-                )}
-              />
-              <figcaption className={styles.artCaption}>
-                <span aria-live="polite">
-                  {
-                    [
-                      "Existing yard",
-                      "Illustrative footprint",
-                      "Backyard home concept",
-                    ][scene]
-                  }
-                </span>
-                <span>Illustrative parcel model</span>
-              </figcaption>
-            </figure>
-            <div className={styles.appDownload}>
-              <span>Also on Android</span>
-              <a className={styles.appStoreLink} href={GOOGLE_PLAY_URL}>
-                {/* Official badge from Google's Partner Marketing Hub:
-                    partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/landing/google-play-badge.svg"
-                  alt="Get it on Google Play"
-                  width={238.96}
-                  height={70.87}
+                <div className={styles.parcelCanvas} data-scene={scene}>
+                  {/* Pre-sized local WebP variants keep the hero useful before JS. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={styles.parcelImage}
+                    src="/landing/a-lot-more/parcel-after.webp"
+                    srcSet="/landing/a-lot-more/parcel-after-mobile.webp 768w, /landing/a-lot-more/parcel-after.webp 1536w"
+                    sizes="(max-width: 800px) 100vw, 60vw"
+                    width={1536}
+                    height={1024}
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
+                    alt="Illustrative miniature lot with an existing house and an orange backyard home"
+                  />
+                  {/* Each layer describes its own picture (Bing flags an empty alt);
+                      the live figcaption announces which scene is showing. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className={`${styles.parcelImage} ${styles.beforeImage}`}
+                    src="/landing/a-lot-more/parcel-before.webp"
+                    srcSet="/landing/a-lot-more/parcel-before-mobile.webp 768w, /landing/a-lot-more/parcel-before.webp 1536w"
+                    sizes="(max-width: 800px) 100vw, 60vw"
+                    width={1536}
+                    height={1024}
+                    loading="lazy"
+                    alt="Illustrative miniature lot with an existing house and an empty yard"
+                  />
+                  <svg
+                    className={styles.cadGridOverlay}
+                    viewBox="0 0 1536 1024"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    {/* Precision corner registration ticks */}
+                    <path
+                      d="M64 96V64H96 M1472 96V64H1440 M64 928V960H96 M1472 928V960H1440"
+                      stroke={COLOR["lot-stone"]}
+                      strokeWidth="2"
+                      strokeOpacity="0.55"
+                    />
+                    {/* Subtle parcel survey boundary */}
+                    <path
+                      d="M270 560 L785 375 L1295 620 L765 865 Z"
+                      stroke={COLOR["lot-stone"]}
+                      strokeWidth="1.5"
+                      strokeDasharray="6 8"
+                      strokeOpacity="0.45"
+                    />
+                  </svg>
+                  <svg
+                    className={styles.footprintOverlay}
+                    viewBox="0 0 1536 1024"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    {/* Outer setback clearance envelope */}
+                    <path
+                      d="m745 568 295-84 202 114-275 130Z"
+                      stroke={COLOR["lot-ink"]}
+                      strokeWidth="2"
+                      strokeDasharray="6 6"
+                      strokeOpacity="0.65"
+                    />
+                    {/* Proposed ADU footprint with animated stroke */}
+                    <path
+                      className={styles.footprintPolygon}
+                      d="m800 578 250-70 166 94-231 110Z"
+                      fill={COLOR["lot-orange"]}
+                      fillOpacity={0.22}
+                      stroke={COLOR["lot-orange"]}
+                      strokeWidth="5"
+                      strokeDasharray="14 10"
+                    />
+                    {/* Architectural dimension ticks */}
+                    <line
+                      x1="800"
+                      y1="556"
+                      x2="1050"
+                      y2="486"
+                      stroke={COLOR["lot-ink"]}
+                      strokeWidth="2"
+                    />
+                    <circle cx="800" cy="578" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                    <circle cx="1050" cy="508" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                    <circle cx="1216" cy="602" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                    <circle cx="985" cy="712" r="7" fill={COLOR["lot-orange"]} stroke={COLOR["lot-ink"]} strokeWidth="2" />
+                  </svg>
+                  <div className={styles.sceneTag}>
+                    <span className={styles.tagDot} />
+                    {
+                      [
+                        "Your starting point",
+                        "Imagine a footprint",
+                        "A little more possibility",
+                      ][scene]
+                    }
+                    <span className={styles.tagLine} />
+                  </div>
+                  {scene === 2 && (
+                    <div className={styles.hotspotLayer} aria-label="Maquette inspection points">
+                      {hotspots.map((point, index) => (
+                        <button
+                          key={point.id}
+                          type="button"
+                          className={styles.hotspotPin}
+                          style={{ left: point.x, top: point.y }}
+                          aria-pressed={activeHotspot === index}
+                          aria-label={`Inspect ${point.title}`}
+                          onClick={() => setActiveHotspot(index)}
+                        >
+                          <span>{point.id}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className={styles.northMark} aria-hidden="true">
+                    N<ArrowUpRight size={24} strokeWidth={1.5} />
+                  </div>
+                </div>
+                {/* The slot keeps its height while the readout comes and goes,
+                    so the pinned stage does not jump between scenes. */}
+                <div className={styles.readoutSlot}>
+                  {scene === 2 && (
+                    <div className={styles.maquetteReadout} aria-live="polite">
+                      <div className={styles.maquetteReadoutTop}>
+                        <span className={styles.maquetteReadoutIndex}>
+                          POINT {hotspots[activeHotspot].id} / 03
+                        </span>
+                        <span className={styles.maquetteReadoutMetric}>
+                          {hotspots[activeHotspot].metric}
+                        </span>
+                      </div>
+                      <p className={styles.maquetteReadoutBody}>
+                        <strong>{hotspots[activeHotspot].title}.</strong>{" "}
+                        {hotspots[activeHotspot].detail}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <Segmented
+                  className={styles.sceneControls}
+                  aria-label="Property illustration view"
+                  value={String(scene)}
+                  onChange={(value) => setScene(Number(value))}
+                  options={["Today", "The footprint", "The possibility"].map(
+                    (label, index) => ({
+                      value: String(index),
+                      label: (
+                        <>
+                          <span>0{index + 1}</span>
+                          {label}
+                        </>
+                      ),
+                    }),
+                  )}
                 />
-              </a>
+                <figcaption className={styles.artCaption}>
+                  <span aria-live="polite">
+                    {
+                      [
+                        "Existing yard",
+                        "Illustrative footprint",
+                        "Backyard home concept",
+                      ][scene]
+                    }
+                  </span>
+                  <span>Illustrative parcel model</span>
+                </figcaption>
+              </figure>
             </div>
           </section>
 
@@ -1288,6 +1434,20 @@ export function LotMoreLanding({
               </h2>
               <p>See what more could look like on your lot.</p>
               {addressForm("closing")}
+              <div className={styles.appDownload}>
+                <span>Also on Android</span>
+                <a className={styles.appStoreLink} href={GOOGLE_PLAY_URL}>
+                  {/* Official badge from Google's Partner Marketing Hub:
+                      partnermarketinghub.withgoogle.com/brands/google-play/google-play/lockups-icons-badges/ */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/landing/google-play-badge.svg"
+                    alt="Get it on Google Play"
+                    width={238.96}
+                    height={70.87}
+                  />
+                </a>
+              </div>
             </div>
             <span className={styles.closingSerial}>
               YOUR NEXT CHAPTER / LOTFOUNDRY

@@ -18,7 +18,9 @@ type, disciplined white space, and one vivid orange volume that is the thing you
 The product promise is early-planning possibility, not a permit and not a guarantee. The visual system
 carries that: it looks like a studio presenting a model, not a bank approving a loan.
 
-- **Decoration level:** restrained. Hairline rules, hard shadows, no gradients, no blobs.
+- **Decoration level:** restrained. Hairline rules, hard shadows, no decorative gradients, no blobs. The
+  one cinematic exception is the landing hero: a full-bleed photograph with carbon scrims and glass
+  surfaces (§4.4, §8).
 - **Mood:** bright, calm, confident, tactile. Things settle; nothing bounces.
 - **The signature:** the miniature parcel and the orange backyard home. One still frame should identify
   LotFoundry.
@@ -247,6 +249,11 @@ All controls strictly use `rounded-control`. Do not write `rounded-[3px]` or a b
   (`0 12px 16px #1616160a`), because floating elements need to read as floating. They live in the landing
   CSS Module. **No other blurred shadows**; `app/design-tokens.test.ts` rejects `shadow-sm|md|lg|xl`.
 
+  **Landing hero glass (2026-11-01).** Over the hero photograph only, the address bar and the sample
+  result are one glass material: carbon at 40–46% (`color-mix`), `backdrop-filter: blur(16–18px)
+  saturate(140%)`, a chalk hairline at 22–34%, and on the sample result one soft shadow
+  (`0 18px 50px`, carbon 32%). Radii stay `0`/`3px`. Glass is not used on chalk grounds.
+
 ---
 
 ## 5. Motion
@@ -260,6 +267,12 @@ Everything is inside `@media (prefers-reduced-motion: no-preference)`.
 | Image crossfade | `opacity 650ms ease` |
 | Entrance — copy | `settle-in 700ms both` |
 | Entrance — visual | `settle-in 900ms 100ms both` |
+| Landing hero camera | `scale(1.14 → 1)` over 2.6s, then one 26s drift to `scale(1.06)`, which holds. Transform only: the photograph is the LCP element |
+| Landing wordmark | each line rises out of its own mask, `translateY(108%) → 0`, 1100ms, lines 110ms apart |
+| Landing hero h1 | `rise-in` (`translateY(14px) → 0`), 1000ms, transform only. It is the LCP element (Chrome counts the full-bleed photo as background), and opacity or a blur filter holds LCP until the animation ends |
+| Landing header | opacity fade, 800ms after 200ms. No translate: a sub-pixel offset measured the 44px home target at 43.99px on a 2.75× phone |
+| Section reveal | children of each section below the model rise once on entering view: `opacity` + `translateY(32px)`, 900ms |
+| Model section | pinned stage; scroll progress maps to the three parcel scenes (thirds) and a 0.94 → 1.02 camera scale |
 
 ```css
 @keyframes settle-in {
@@ -274,8 +287,11 @@ read as `duration-(--duration-hover)`; and `ease-settle` (`cubic-bezier(0.32, 0.
 decelerates into place without overshoot.
 
 **Rules:** enter `ease-out`, exit `ease-in`. No spring, no overshoot, no bounce, no parallax, no
-scroll-jacking, no autoplay media. Reduced motion disables entrance and crossfades entirely and shows
-composed still states — it never leaves a control unusable or a state unreadable.
+scroll-jacking, no autoplay video. The landing model section is scroll-*linked*, not scroll-jacked: the
+page scrolls at its own speed while a sticky stage follows it, and only with motion allowed and a viewport
+at least 700px tall; otherwise it is an ordinary section driven by the scene picker. Reduced motion
+disables entrance and crossfades entirely and shows composed still states — it never leaves a control
+unusable or a state unreadable.
 
 ---
 
@@ -332,6 +348,10 @@ floating on a plain chalk ground.
 - No people, no text, no arrows, no watermarks, no buildings outside the slab.
 - Lifestyle photography (e.g. `backyard-life.webp`) is candid editorial architecture — modest and
   attainable, never a luxury mansion, never generic stock.
+- **The landing opens on `backyard-life.webp`, full-bleed** (2026-11-01), under carbon scrims: a
+  left-to-right one behind the copy, a bottom one, and a short top one behind the header; on phones a
+  single vertical scrim. The maquette moves to the model section directly below, where the renders
+  blend into chalk with `mix-blend-mode: darken` and a measured edge mask.
 
 **Every concept image must be labelled as illustrative.** Artwork is never presented as the visitor's
 own surveyed parcel or as the numeric scenario shown beside it. Ship optimized WebP with responsive
@@ -364,11 +384,12 @@ Early-planning possibility, honestly bounded.
 
 ## 11. Anti-patterns
 
-No gradients. No decorative blobs. No 3-column icon grids. No rounded cards floating inside rounded
-cards. No soft blurred shadows outside the two sanctioned floating cases. No purple. No Inter, Roboto or
+No decorative gradients (the hero photograph's carbon scrims are the only gradients). No decorative
+blobs. No 3-column icon grids. No rounded cards floating inside rounded cards. No soft blurred shadows
+outside the sanctioned floating cases and the landing hero glass (§4.4). No purple. No Inter, Roboto or
 `system-ui` on user-visible surfaces. No donut or area charts for the money story. No icons explaining
-obvious concepts. No "Unlock your property potential" copy. No scroll-jacking or autoplay. No orange
-text on chalk. No colour-only status. No reintroducing money-green.
+obvious concepts. No "Unlock your property potential" copy. No scroll-jacking or autoplay video. No
+orange text on chalk. No colour-only status. No reintroducing money-green.
 
 **Retired — do not carry these forward from the old system:** Blue Hour / Golden Hour dual lighting; the
 dawn-ramp seam; "green is money, always"; the amber firewall; the pill-radius system; the two-serif
@@ -423,3 +444,4 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-10-17 | Landing critique applied (Andrew: "apply all suggestions"). The landing `h1` is the product line "Explore an ADU on your lot in 3D."; "A LOT MORE." keeps its display treatment as a paragraph. One `Segmented` look for all four landing pickers. One demo name, "{name} demo, {city}". In-page "start" CTAs focus the address field. Back to top uses ↑, not the forward ↗. The sample Certificate opens on its estimates page and comes before the CTAs on phones. The consent banner's Accept and Decline are equal-weight secondary buttons, and on phones it is a compact bottom bar that leaves the hero address field visible | The 2026-10-17 live critique (vault page `lotfoundry-landing-critique-2026-10-17`) found that the banner hid the hero form on a first phone visit, that Accept outweighed Decline despite the component's own equal-weight rule, that the brand H1 carried no product meaning (open since 2026-09-12), and that pickers, demo names and arrows were inconsistent. The consent copy was condensed on purpose, keeping every fact; opt-in behaviour is unchanged. |
 | 2026-10-12 | Store feature graphic rebuilt in A LOT MORE; blocked rust kept as a labelled status, not a hue apart (Andrew) | The Play feature graphic still carried the retired Warm Earth palette and fonts; it now uses chalk/carbon/signal orange with Space Grotesk/Manrope, and a guard test requires every literal in it to be a canonical palette value. The dark address placeholder rose from 3.79:1 to full stone-on-dark (7.97:1), and the password-reset confirmation icon moved from accent orange to eligible green/soft (4.97:1 on its tint). |
 | 2026-10-18 | Desktop Studio is one viewport: panes scroll, the page does not. The 3D stage fills its column above an explicit floor, the free rail's certificate CTA is sticky, and the planning guide is a 3rem bar that opens upward (Andrew: "fix the blank area... change it however you please") | Measured on the live site: the step body overflowed a clipped `main` on four of five steps, hiding the rail CTA and the $29 checkout button, a capped canvas left chalk under Tools, and the guide section and an escaped sr-only label gave the page a second scroll. See [record](./2026-10-18-studio-desktop-fill.md). |
+| 2026-11-01 | Landing goes cinematic (Andrew chose "Cinematic rework" over sharpening within the old rules, after being told it breaks the autoplay, gradient, blurred-shadow and pill rules). The hero is a full-bleed `backyard-life.webp` with carbon scrims, a slow camera settle and drift, per-line wordmark rises and glass address/sample surfaces. The maquette and its Today/Footprint/Possibility picker move to a new pinned "model" section that scroll walks through. Sections below rise in once. Square radii stay, pills were not adopted, and there is no video | The live page scored about 6.5/10 on a landing jury rubric: the first screen stacked nine elements, the maquette read as a boxed widget, and phones had no visual in the first screen. The homepage e2e requires no `<video>`, and the h1 (the LCP element) must paint on its first frame, so the motion is CSS transforms over the existing photograph. |

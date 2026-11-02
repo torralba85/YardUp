@@ -21,6 +21,7 @@ The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines whi
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-11-01-cinematic-landing.md`](./2026-11-01-cinematic-landing.md) | Cinematic landing: full-bleed photo hero, glass surfaces, the pinned scroll-driven model section, and the LCP and 44px-target lessons. |
 | [`2026-10-12-color-refinement.md`](./2026-10-12-color-refinement.md) | Measured re-audit: store-graphic realignment, dark-placeholder and success-icon fixes, blocked-rust decision, and the canonical-literal guard for store assets. |
 | [`2026-10-01-color-system.md`](./2026-10-01-color-system.md) | Color story, root causes of drift, shared palette, whole-project inventory and enforced checks. |
 | [`2026-10-01-design-system-audit.md`](./2026-10-01-design-system-audit.md) | Re-audit repairs that landed after the color system: shared field primitives, radio-group semantics, motion tokens, Skeleton adoption, and the guard tests and ratchet. |
@@ -51,7 +52,7 @@ type, disciplined white space, one vivid orange volume that is the thing you cou
 | **Display** | Space Grotesk, tight negative tracking |
 | **Body** | Manrope |
 | **Radius** | `0` for surfaces, `3px` for controls |
-| **Elevation** | Hard offset shadow, no blur |
+| **Elevation** | Hard offset shadow, no blur (landing hero glass excepted, see design-system §4.4) |
 | **Money** | Carbon and large. Not green, not coloured. |
 
 **The three traps**, all verified and all easy to walk into:
