@@ -124,7 +124,7 @@ test.describe("Public LotFoundry flows", () => {
 
     await page.goto("/studio");
     await page.getByRole("radio", { name: /Seattle/i }).click();
-    await page.getByRole("button", { name: /Reveal my backyard/i }).click();
+    await page.getByRole("button", { name: "See the Seattle example" }).click();
     await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();
 
     await page.getByRole("button", { name: /Shape your ADU/i }).click();

@@ -12,8 +12,8 @@ test.describe("mobile studio journey", () => {
     await expect(
       page.getByRole("heading", { name: /start with your address/i }),
     ).toBeVisible();
-    // A demo lot is preselected; the single primary action reveals the payoff.
-    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    // With no address typed, the single primary action opens the San Diego example.
+    await page.getByRole("button", { name: "See a San Diego example" }).click();
 
     // Reveal 2 · Earn — the money figure appears immediately with a
     // confidence teaser citing the market basis.
@@ -66,7 +66,7 @@ test.describe("mobile studio journey", () => {
 
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: "See a San Diego example" }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
 
     await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
@@ -92,7 +92,7 @@ test.describe("mobile studio journey", () => {
 
   test("closing fine-tune restores focus when exit animation events are lost", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: "See a San Diego example" }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
     const trigger = page.getByRole("button", { name: /fine-tune dimensions/i });
     await trigger.click();
@@ -111,7 +111,7 @@ test.describe("mobile studio journey", () => {
 
   test("the rail travels back to completed reveals only", async ({ page }) => {
     await page.goto("/studio");
-    await page.getByRole("button", { name: /reveal my backyard/i }).click();
+    await page.getByRole("button", { name: "See a San Diego example" }).click();
     await expect(
       page.getByRole("heading", { name: /your backyard could earn/i }),
     ).toBeVisible();

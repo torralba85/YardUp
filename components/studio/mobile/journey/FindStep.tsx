@@ -23,6 +23,12 @@ export interface FindStepProps {
   onPresetSelect: (id: string) => void;
   /** The one primary action: reveal what the chosen lot could earn. */
   onReveal: () => void;
+  /**
+   * The demo lot arrived already chosen, by a `?parcel=` link such as the
+   * landing's Oak Street sample, so the CTA keeps it instead of switching to
+   * the San Diego default.
+   */
+  presetChosen?: boolean;
 }
 
 /**
@@ -39,11 +45,18 @@ export default function FindStep({
   selectedPresetId,
   onPresetSelect,
   onReveal,
+  presetChosen = false,
 }: FindStepProps) {
   const [queryText, setQueryText] = useState("");
   const [userPickedPreset, setUserPickedPreset] = useState(false);
   const trimmedQuery = queryText.trim();
   const hasQuery = trimmedQuery.length > 0;
+  // A lot the visitor picked here or arrived with is kept, and the CTA names
+  // it; otherwise the CTA opens the San Diego example.
+  const keptPreset =
+    userPickedPreset || presetChosen
+      ? parcelPresets.find((preset) => preset.id === selectedPresetId)
+      : undefined;
   const { groupProps, getRadioProps } = useRadioGroup({
     value: selectedPresetId ?? "",
     onChange: (id) => {
@@ -125,14 +138,18 @@ export default function FindStep({
             if (hasQuery) {
               onSubmitText(trimmedQuery);
             } else {
-              if (!userPickedPreset && selectedPresetId !== "coyote-brush") {
+              if (!keptPreset && selectedPresetId !== "coyote-brush") {
                 onPresetSelect("coyote-brush");
               }
               onReveal();
             }
           }}
         >
-          {hasQuery ? "Check my address" : "See a San Diego example"}
+          {hasQuery
+            ? "Check my address"
+            : keptPreset
+              ? `See the ${keptPreset.city.split(",")[0]} example`
+              : "See a San Diego example"}
         </Button>
       </div>
     </section>

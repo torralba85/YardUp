@@ -105,6 +105,42 @@ describe("FindStep", () => {
     expect(onSubmitText).not.toHaveBeenCalled();
   });
 
+  it("keeps a demo lot that arrived by link and names it on the CTA", async () => {
+    const user = userEvent.setup();
+    const onReveal = vi.fn();
+    const onPresetSelect = vi.fn();
+    render(
+      <FindStep
+        {...defaultProps}
+        selectedPresetId="oak-street"
+        presetChosen
+        onPresetSelect={onPresetSelect}
+        onReveal={onReveal}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "See the Seattle example" }));
+    expect(onPresetSelect).not.toHaveBeenCalled();
+    expect(onReveal).toHaveBeenCalledTimes(1);
+  });
+
+  it("names a demo lot picked from the list instead of promising San Diego", async () => {
+    const user = userEvent.setup();
+    const onReveal = vi.fn();
+    const onPresetSelect = vi.fn();
+    const { rerender } = render(
+      <FindStep {...defaultProps} selectedPresetId="oak-street" onPresetSelect={onPresetSelect} onReveal={onReveal} />,
+    );
+    await user.click(screen.getByRole("radio", { name: "Portland" }));
+    rerender(
+      <FindStep {...defaultProps} selectedPresetId={onPresetSelect.mock.calls[0][0]} onPresetSelect={onPresetSelect} onReveal={onReveal} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "See the Portland example" }));
+    expect(onPresetSelect).toHaveBeenCalledTimes(1);
+    expect(onReveal).toHaveBeenCalledTimes(1);
+  });
+
   it("changes CTA to 'Check my address' when text is typed and submits the typed query", async () => {
     const user = userEvent.setup();
     const onReveal = vi.fn();

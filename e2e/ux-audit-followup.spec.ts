@@ -30,7 +30,7 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile journey");
   await page.goto("/studio?parcel=oak-street");
   // The default scenario begins at Find; commit to the demo lot to reach Earn.
-  await page.getByRole("button", { name: /reveal my backyard/i }).click();
+  await page.getByRole("button", { name: "See the Seattle example" }).click();
   const rail = page.getByRole("navigation", { name: "Journey progress" });
   const confidence = page.getByTestId("earn-confidence");
   await expect(confidence).toBeVisible();

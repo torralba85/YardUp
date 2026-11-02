@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 // The actual selectors and assertions were verified against the source by Codex.
 async function openShape(page: Page) {
   await page.goto("/studio");
-  await page.getByRole("button", { name: /reveal my backyard/i }).click();
+  await page.getByRole("button", { name: "See a San Diego example" }).click();
   await page.getByRole("button", { name: /shape your adu/i }).click();
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();
 }

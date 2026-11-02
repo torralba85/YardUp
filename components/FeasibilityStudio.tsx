@@ -460,6 +460,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
+  // The URL named a demo lot (a landing or shared link), so the mobile Find
+  // CTA keeps that lot rather than switching to the San Diego example.
+  const [presetFromLink, setPresetFromLink] = useState(false);
   // Whether the find decision has been made — an address resolved (live or
   // estimated) or a demo lot explicitly committed to. Shared by the journey
   // rail's reachability derivation below and the restore guard just below so
@@ -526,6 +529,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       assumptions: parsed.assumptions ?? initialScenario.assumptions,
     } : mergeScenarioPartial(parsed);
     setParcelId(merged.parcelId);
+    if (parsed.parcelId) setPresetFromLink(true);
     setConfig(merged.config);
     // Explicit placement from the URL or a restored layout takes precedence;
     // otherwise calculate placement from the active parcel (preset or live).
@@ -1206,6 +1210,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           parcelLoading={parcelLoading}
           parcelError={parcelError}
           selectedPresetId={parcelMode === "preset" ? parcelId : null}
+          presetChosen={presetFromLink}
           onPresetSelect={handleMobilePresetSelect}
           onReveal={() => {
             setDemoCommitted(true);
