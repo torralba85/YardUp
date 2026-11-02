@@ -269,12 +269,18 @@ export function LotMoreLanding({
   useEffect(() => {
     const section = storyRef.current;
     if (!section || typeof window.matchMedia !== "function") return;
-    if (!window.matchMedia("(prefers-reduced-motion: no-preference) and (min-height: 700px)").matches) return;
-    section.dataset.pinned = "true";
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: no-preference) and (min-height: 700px)");
     let frame = 0;
     let band = -1;
     const update = () => {
       frame = 0;
+      if (!motionQuery.matches) {
+        delete section.dataset.pinned;
+        section.style.removeProperty("--story-progress");
+        band = -1;
+        return;
+      }
+      section.dataset.pinned = "true";
       const rect = section.getBoundingClientRect();
       const travel = rect.height - window.innerHeight;
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
@@ -291,10 +297,12 @@ export function LotMoreLanding({
     schedule();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    motionQuery.addEventListener("change", schedule);
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
+      motionQuery.removeEventListener("change", schedule);
       delete section.dataset.pinned;
       section.style.removeProperty("--story-progress");
     };

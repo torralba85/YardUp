@@ -161,26 +161,28 @@ test.describe("phone banner layout", () => {
     });
   });
 
-  test("the phone banner leaves the hero address field visible", async ({ page }) => {
-    await page.goto("/");
-    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
+  for (const viewport of [{ width: 390, height: 844 }, { width: 390, height: 664 }, { width: 320, height: 568 }]) {
+    test(`the ${viewport.width}x${viewport.height} banner leaves the hero address field visible`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+      test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
-    const consentBanner = page.getByRole("region", { name: banner });
-    await expect(consentBanner).toBeVisible();
+      const consentBanner = page.getByRole("region", { name: banner });
+      await expect(consentBanner).toBeVisible();
 
-    const bannerBox = await consentBanner.boundingBox();
-    expect(bannerBox).not.toBeNull();
+      const bannerBox = await consentBanner.boundingBox();
+      expect(bannerBox).not.toBeNull();
 
-    const submitButton = page
-      .locator("#hero-address")
-      .locator("xpath=ancestor::form")
-      .getByRole("button", { name: /explore my lot/i });
-    await expect(submitButton).toBeVisible();
+      const submitButton = page
+        .locator("#hero-address")
+        .locator("xpath=ancestor::form")
+        .getByRole("button", { name: /explore my lot/i });
+      await expect(submitButton).toBeVisible();
 
-    const submitBox = await submitButton.boundingBox();
-    expect(submitBox).not.toBeNull();
+      const submitBox = await submitButton.boundingBox();
+      expect(submitBox).not.toBeNull();
 
-    expect(bannerBox!.y).toBeGreaterThanOrEqual(submitBox!.y + submitBox!.height);
+      expect(bannerBox!.y).toBeGreaterThanOrEqual(submitBox!.y + submitBox!.height);
   });
+  }
 });
-
