@@ -44,6 +44,7 @@ import type { LiveParcelData } from "@/lib/parcel-types";
 import {
   AgentPassError,
   clearAgentPassRedeemIntent,
+  clearAgentPass,
   hasAgentPassRedeemIntent,
   readAgentPass,
   redeemAgentPass,
@@ -126,6 +127,7 @@ export default function CertificatePanel({
   const [linkedPassCode, setLinkedPassCode] = useState<string | null>(null);
   const [passBusy, setPassBusy] = useState(false);
   const [passError, setPassError] = useState<string | null>(null);
+  const purchaseOperation = useRef(false);
 
   // The agent's code was captured from the link when the Studio opened.
   useEffect(() => {
@@ -250,6 +252,8 @@ export default function CertificatePanel({
   }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
 
   const beginCheckout = useCallback(async (authenticatedUser: FirebaseUser) => {
+    if (purchaseOperation.current) return;
+    purchaseOperation.current = true;
     setBusy(true);
     setError(null);
     recovery.acknowledgeCancellation();
@@ -300,6 +304,7 @@ export default function CertificatePanel({
           : "Could not start checkout. Please try again.",
       );
     } finally {
+      purchaseOperation.current = false;
       setBusy(false);
     }
   }, [certKey, feasibilityStatus, parcel, parcelName, recovery, refresh]);
@@ -324,6 +329,8 @@ export default function CertificatePanel({
   }, [authLoading, beginCheckout, certKey, loading, profile, purchased, recovery, user]);
 
   const redeemPass = useCallback(async (authenticatedUser: FirebaseUser, code: string) => {
+    if (purchaseOperation.current) return;
+    purchaseOperation.current = true;
     setPassBusy(true);
     setPassError(null);
     try {
@@ -349,6 +356,7 @@ export default function CertificatePanel({
         err instanceof AgentPassError ? err.message : "Could not apply this code. Please try again.",
       );
     } finally {
+      purchaseOperation.current = false;
       setPassBusy(false);
     }
   }, [certKey, feasibilityStatus, parcel, parcelName, refresh]);
@@ -367,7 +375,10 @@ export default function CertificatePanel({
   }, [authLoading, certKey, loading, profile, purchased, redeemPass, user]);
 
   async function handlePassRedeem(code: string) {
+    if (purchaseOperation.current) return;
+    clearCertificatePurchaseIntent();
     rememberAgentPass(code);
+    setLinkedPassCode(code);
     if (!user) {
       if ("source" in parcel && Boolean(parcel.source)) {
         stashedForPurchase.current = stashInitialParcel(parcel as unknown as LiveParcelData);
@@ -380,6 +391,8 @@ export default function CertificatePanel({
   }
 
   async function handleCta() {
+    if (purchaseOperation.current) return;
+    clearAgentPassRedeemIntent();
     const recoveryActive = Boolean(recovery.intent && recovery.intent.kind !== "cancel");
     if (recoveryActive && !purchased && user) return;
     if (purchased) {
@@ -422,7 +435,7 @@ export default function CertificatePanel({
     : "Continue to purchase";
   const feeJurisdiction = resolveFeeJurisdiction(parcel);
   const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
-  const reportBusy = busy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
+  const reportBusy = busy || passBusy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
 
   const ctaLabel = recoveryPending
     ? user
@@ -454,10 +467,16 @@ export default function CertificatePanel({
   const passOffer = (
     <AgentPassOffer
       linkedCode={linkedPassCode}
-      busy={passBusy}
+      busy={passBusy || busy || loading}
       error={passError}
       signedIn={Boolean(user)}
       onRedeem={(code) => void handlePassRedeem(code)}
+      onClear={() => {
+        clearAgentPass();
+        clearAgentPassRedeemIntent();
+        setLinkedPassCode(null);
+        setPassError(null);
+      }}
     />
   );
 

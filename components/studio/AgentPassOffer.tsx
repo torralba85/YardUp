@@ -17,6 +17,7 @@ export interface AgentPassOfferProps {
   signedIn: boolean;
   /** Claim the complimentary certificate with `code`. */
   onRedeem: (code: string) => void;
+  onClear: () => void;
 }
 
 /**
@@ -25,7 +26,7 @@ export interface AgentPassOfferProps {
  * "Have an agent code?" and type one. The server decides whether the code
  * covers this property.
  */
-export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRedeem }: AgentPassOfferProps) {
+export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRedeem, onClear }: AgentPassOfferProps) {
   const inputId = useId();
   const errorId = useId();
   const [typed, setTyped] = useState("");
@@ -49,6 +50,9 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
           onClick={() => onRedeem(linkedCode)}
         >
           {action}
+        </Button>
+        <Button className="mt-2" variant="secondary" disabled={busy} onClick={onClear}>
+          Change agent code
         </Button>
         {message && (
           <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-status-blocked">

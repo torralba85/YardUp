@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { normalizeAgentPassCode } from "@/lib/agent-pass";
 import { certificateKey } from "@/lib/certificate-key";
-import { agentLink, buildPass, campaignFor, certKeyFor, listingFromSnapshot, normalizeCode, parseArgs } from "./agent-pass.mjs";
+import { agentLink, buildPass, campaignFor, certKeyFor, isSubsequentPaidGrant, listingFromSnapshot, normalizeCode, parseArgs } from "./agent-pass.mjs";
 
 describe("agent-pass script", () => {
+  it("attributes only paid orders after redemption and excludes unknown dates", () => {
+    const timestamp = (value: number) => ({ toMillis: () => value });
+    const redemption = { createdAt: timestamp(100) };
+    const paid = { amount: 2900, createdAt: timestamp(101) };
+    expect(isSubsequentPaidGrant(paid, redemption)).toBe(true);
+    for (const createdAt of [timestamp(99), timestamp(100), undefined]) {
+      expect(isSubsequentPaidGrant({ ...paid, createdAt }, redemption)).toBe(false);
+    }
+    expect(isSubsequentPaidGrant(paid, {})).toBe(false);
+    expect(isSubsequentPaidGrant({ ...paid, demo: true }, redemption)).toBe(false);
+    expect(isSubsequentPaidGrant({ ...paid, source: "agent_pass" }, redemption)).toBe(false);
+    expect(isSubsequentPaidGrant({ ...paid, amount: 0 }, redemption)).toBe(false);
+  });
   it.each([
     ["1234 Elm St", "San Diego"],
     ["  77 O'Farrell Ave #2 ", "San José"],

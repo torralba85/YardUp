@@ -137,6 +137,15 @@ async function create(options) {
   console.log(`\nCreated agentPasses/${code}.`);
 }
 
+/** Count only paid grants strictly after a known redemption timestamp. */
+export function isSubsequentPaidGrant(grant, redemption) {
+  const redeemedAt = redemption.createdAt?.toMillis?.();
+  const purchasedAt = grant.createdAt?.toMillis?.();
+  return grant.source !== "agent_pass" && grant.demo !== true &&
+    Number.isFinite(grant.amount) && grant.amount > 0 &&
+    Number.isFinite(redeemedAt) && Number.isFinite(purchasedAt) && purchasedAt > redeemedAt;
+}
+
 async function report(options) {
   const code = requireCode(options);
   const { db } = await firestore();
@@ -152,7 +161,7 @@ async function report(options) {
     const grants = await db.collection("certificatePurchases").where("uid", "==", redemption.id).get();
     for (const grant of grants.docs) {
       const g = grant.data();
-      if (g.source === "agent_pass" || g.demo === true || !(g.amount > 0)) continue;
+      if (!isSubsequentPaidGrant(g, redemption.data())) continue;
       paidOrders += 1;
       paidCents += g.amount;
     }

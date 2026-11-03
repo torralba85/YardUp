@@ -25,6 +25,7 @@ import {
   clearAgentPassRedeemIntent,
   hasAgentPassRedeemIntent,
   rememberAgentPass,
+  readAgentPass,
 } from "@/lib/agent-pass";
 
 const mocks = vi.hoisted(() => ({
@@ -318,6 +319,40 @@ describe("CertificatePanel", () => {
 
   describe("agent pass", () => {
     beforeEach(() => { mocks.access.purchased = false; });
+
+    it("lets buyers replace a failed remembered code and keeps the replacement", async () => {
+      rememberAgentPass("OLD-CODE");
+      mocks.redeemAgentPass.mockRejectedValueOnce(new AgentPassError("This code has expired."));
+      render(<CertificatePanel {...createProps()} />);
+      fireEvent.click(screen.getByRole("button", { name: "Get this certificate free" }));
+      await screen.findByText("This code has expired.");
+      fireEvent.click(screen.getByRole("button", { name: "Change agent code" }));
+      expect(readAgentPass()).toBeNull();
+      fireEvent.click(screen.getByText("Have an agent code?"));
+      fireEvent.change(screen.getByLabelText("Agent code"), { target: { value: "NEW-CODE" } });
+      fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
+      await waitFor(() => expect(mocks.redeemAgentPass).toHaveBeenLastCalledWith(expect.objectContaining({ code: "NEW-CODE" })));
+      expect(readAgentPass()).toBe("NEW-CODE");
+    });
+
+    it.each(["pass", "checkout"])("prevents competing purchases while %s is pending", async (operation) => {
+      rememberAgentPass("SMITH-ELM");
+      let finish!: (value: never) => void;
+      const pending = new Promise((resolve) => { finish = resolve; });
+      const request = operation === "pass" ? mocks.redeemAgentPass : mocks.startCertificateCheckout;
+      request.mockReturnValueOnce(pending);
+      render(<CertificatePanel {...createProps()} />);
+      const claim = screen.getByRole("button", { name: "Get this certificate free" });
+      const buy = screen.getByRole("button", { name: /Unlock property certificate/ });
+      fireEvent.click(operation === "pass" ? claim : buy);
+      await waitFor(() => expect(request).toHaveBeenCalledOnce());
+      expect(claim).toBeDisabled();
+      expect(buy).toBeDisabled();
+      fireEvent.click(operation === "pass" ? buy : claim);
+      expect(operation === "pass" ? mocks.startCertificateCheckout : mocks.redeemAgentPass).not.toHaveBeenCalled();
+      finish({ kind: "already_purchased" } as never);
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+    });
 
     it("offers a linked agent code and claims it in place without a purchase conversion", async () => {
       rememberAgentPass("smith-elm");
