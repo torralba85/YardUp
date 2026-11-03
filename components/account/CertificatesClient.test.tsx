@@ -131,10 +131,11 @@ describe("CertificatesClient", () => {
   });
 
   it("labels a $0 agent-pass certificate as complimentary instead of a price", () => {
+    const listing = "1234-elm-st-san-diego";
     certState.certificates = [
       {
-        id: "u1_1234-elm-st-san-diego",
-        certKey: "1234-elm-st-san-diego",
+        id: `u1_${listing}`,
+        certKey: listing,
         uid: "u1",
         stripeSessionId: "pass:SMITH-ELM",
         amount: 0,

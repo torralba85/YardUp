@@ -46,11 +46,11 @@ import { Timestamp } from "firebase-admin/firestore";
 import { redeemAgentPassGrant } from "./agent-passes";
 
 const NOW = new Date("2026-11-20T12:00:00Z");
-const CERT_KEY = "1-elm-st-san-diego";
+const LISTING = "1-elm-st-san-diego";
 
 function seedPass(overrides: Record<string, unknown> = {}) {
   store.docs.set("agentPasses/SMITH-ELM", {
-    certKey: CERT_KEY,
+    certKey: LISTING,
     status: "active",
     maxRedemptions: 10,
     redemptions: 3,
@@ -63,7 +63,7 @@ function redeem() {
   return redeemAgentPassGrant({
     code: "SMITH-ELM",
     uid: "buyer-1",
-    certKey: CERT_KEY,
+    certKey: LISTING,
     address: "1 Elm St",
     city: "San Diego",
     now: NOW,
@@ -84,7 +84,7 @@ describe("redeemAgentPassGrant", () => {
     expect(grant?.op).toBe("create");
     expect(grant?.data).toMatchObject({
       uid: "buyer-1",
-      certKey: CERT_KEY,
+      certKey: LISTING,
       amount: 0,
       demo: false,
       status: "granted",
@@ -102,7 +102,7 @@ describe("redeemAgentPassGrant", () => {
     expect(store.writes).toContainEqual({
       op: "set",
       path: "agentPasses/SMITH-ELM/redemptions/buyer-1",
-      data: { uid: "buyer-1", certKey: CERT_KEY, createdAt: "SERVER_TS" },
+      data: { uid: "buyer-1", certKey: LISTING, createdAt: "SERVER_TS" },
     });
   });
 

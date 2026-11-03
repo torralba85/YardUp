@@ -44,7 +44,7 @@ describe("agent-pass script", () => {
     const { options } = parseArgs(["create", "--layout", "b".repeat(48), "--agent", "Jane Smith", "--brokerage", "Example Realty", "--max", "10", "--days", "30"]);
     const pass = buildPass({ options, listing, now });
     expect(pass).toMatchObject({
-      certKey: "1234-elm-st-san-diego",
+      certKey: certificateKey(listing),
       status: "active",
       maxRedemptions: 10,
       redemptions: 0,

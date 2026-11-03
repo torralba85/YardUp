@@ -12,6 +12,8 @@ import {
   rememberAgentPassRedeemIntent,
 } from "./agent-pass";
 
+const LISTING = "1-elm-st-san-diego";
+
 beforeEach(() => {
   clearAgentPass();
   clearAgentPassRedeemIntent();
@@ -48,11 +50,11 @@ describe("remembered code and claim intent", () => {
 
   it("expires a guest's claim click and scopes it to the property", () => {
     const start = 1_000_000;
-    rememberAgentPassRedeemIntent("1-elm-st-san-diego", start);
-    expect(hasAgentPassRedeemIntent("1-elm-st-san-diego", start + 1000)).toBe(true);
+    rememberAgentPassRedeemIntent(LISTING, start);
+    expect(hasAgentPassRedeemIntent(LISTING, start + 1000)).toBe(true);
     expect(hasAgentPassRedeemIntent(undefined, start + 1000)).toBe(true);
     expect(hasAgentPassRedeemIntent("9-oak-ave-san-jose", start + 1000)).toBe(false);
-    expect(hasAgentPassRedeemIntent("1-elm-st-san-diego", start + AGENT_PASS_REDEEM_TTL_MS + 1)).toBe(false);
+    expect(hasAgentPassRedeemIntent(LISTING, start + AGENT_PASS_REDEEM_TTL_MS + 1)).toBe(false);
     clearAgentPassRedeemIntent();
     expect(hasAgentPassRedeemIntent()).toBe(false);
   });
@@ -62,11 +64,11 @@ describe("redeemAgentPass", () => {
   it("posts the claim with the bearer token and resolves on success", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: "granted" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
-    await redeemAgentPass({ code: "SMITH-ELM", certKey: "1-elm-st-san-diego", idToken: "tok", city: "San Diego" });
+    await redeemAgentPass({ code: "SMITH-ELM", certKey: LISTING, idToken: "tok", city: "San Diego" });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("/api/certificates/redeem");
     expect(init.headers.Authorization).toBe("Bearer tok");
-    expect(JSON.parse(init.body)).toEqual({ code: "SMITH-ELM", certKey: "1-elm-st-san-diego", city: "San Diego" });
+    expect(JSON.parse(init.body)).toEqual({ code: "SMITH-ELM", certKey: LISTING, city: "San Diego" });
   });
 
   it("surfaces the server's message", async () => {

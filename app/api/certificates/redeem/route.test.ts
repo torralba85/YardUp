@@ -32,7 +32,8 @@ function post(body: unknown) {
   }));
 }
 
-const VALID = { code: " smith-elm ", certKey: "1-elm-st-san-diego", address: "1 Elm St", city: "San Diego", lat: 32.7, lng: -117.1 };
+const LISTING = "1-elm-st-san-diego";
+const VALID = { code: " smith-elm ", certKey: LISTING, address: "1 Elm St", city: "San Diego", lat: 32.7, lng: -117.1 };
 
 beforeEach(() => {
   mocks.auth = { uid: "buyer-1" };
@@ -48,7 +49,7 @@ describe("POST /api/certificates/redeem", () => {
     expect(mocks.redeem).toHaveBeenCalledWith(expect.objectContaining({
       code: "SMITH-ELM",
       uid: "buyer-1",
-      certKey: "1-elm-st-san-diego",
+      certKey: LISTING,
       address: "1 Elm St",
       city: "San Diego",
       lat: 32.7,
