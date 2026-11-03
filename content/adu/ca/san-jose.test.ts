@@ -44,6 +44,8 @@ describe("San José guide facts", () => {
     const legalize = sanJose.cityDiffers.flatMap(({ paragraphs }) => paragraphs).join(" ");
     expect(legalize).toContain("§20.80.179");
     expect(legalize).toContain("AB 2533");
+    expect(legalize).toContain("Under City standards, on a lot of half an acre or more");
+    expect(legalize).toContain("This City-standard setback does not apply to State-standard ADUs.");
   });
 
   it("keeps internal review notes out of the public copy", () => {
