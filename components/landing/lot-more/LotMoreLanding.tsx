@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import { ParcelMark } from "@/components/ui/BrandLockup";
+import { BusinessAddress } from "@/components/legal/BusinessAddress";
 import { configForFootprint } from "@/lib/feasibility";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
@@ -1530,6 +1531,7 @@ export function LotMoreLanding({
               appraisal, loan approval, or guarantee of cost or income. Verify site conditions
               and requirements with local authorities and licensed professionals.
             </p>
+            <BusinessAddress className={styles.footerAddress} />
           </div>
           <div className={styles.footerWordmark} aria-hidden="true">
             LotFoundry<span aria-hidden="true">↗</span>

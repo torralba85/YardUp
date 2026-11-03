@@ -4,6 +4,7 @@ import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import { landingScenarios } from "@/lib/landing-demo";
 import { LANDING_OG_IMAGE } from "@/lib/og-images";
 import { COLOR } from "@/lib/design-tokens";
+import { organizationJsonLd } from "@/lib/business-identity";
 
 
 
@@ -49,6 +50,10 @@ export default function LandingPage() {
       {/* React hoists this into <head>. */}
       <link rel="canonical" href={canonicalUrl} />
       <meta property="og:url" content={canonicalUrl} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       <LotMoreLanding scenarios={scenarios} />
     </>
   );

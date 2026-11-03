@@ -12,6 +12,9 @@ Component package providing domain logic and interface implementations for scrip
 - `firebase-scenario-smoke.mjs:main` - Executable entrypoint / script
 - `firebase-signup-smoke.mjs:main` - Executable entrypoint / script
 - `indexnow-submit.mjs:main` - Executable entrypoint / script
+- `indexnow.mjs:parseSitemap` - Exported Function
+- `indexnow.mjs:diffSitemapStates` - Exported Function
+- `indexnow.mjs:run` - Exported Function
 - `prepare-firebase.js:main` - Executable entrypoint / script
 - `preview-mobile-studio.mjs:main` - Executable entrypoint / script
 - `render-app-icons.mjs:main` - Executable entrypoint / script

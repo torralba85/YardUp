@@ -107,6 +107,11 @@ Component package providing domain logic and interface implementations for lib.
 - `auth-errors.ts:getAuthErrorCode` - Exported Function
 - `auth-providers.ts:isAppleSignInEnabled` - Exported Function
 - `builder-checkout-return.ts:BuilderCheckoutReturn` - Type Definition
+- `business-identity.ts:BUSINESS` - Exported constant / variable
+- `business-identity.ts:BUSINESS_ADDRESS_LINE` - Exported constant / variable
+- `business-identity.ts:BUSINESS_PHONE_HREF` - Exported constant / variable
+- `business-identity.ts:ORGANIZATION_ID` - Exported constant / variable
+- `business-identity.ts:organizationJsonLd` - Exported constant / variable
 - `builder-checkout-return.ts:readBuilderCheckoutReturn` - Exported Function
 - `builder-checkout-return.ts:hasBuilderCheckoutReturnMarkers` - Exported Function
 - `builder-checkout-return.ts:stripBuilderCheckoutReturnMarkers` - Exported Function

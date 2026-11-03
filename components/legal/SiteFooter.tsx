@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BusinessAddress } from "./BusinessAddress";
 
 // `firebase: true` marks a route inside the `(firebase)` group. This footer
 // renders on Firebase-free pages, so those links opt out of Next's automatic
@@ -17,7 +18,7 @@ const FOOTER_LINKS = [
 
 /**
  * Shared public footer: About, ADU rules, ADU cost calculator, Help,
- * Feedback, Terms, Privacy, Delete account.
+ * Feedback, Terms, Privacy, Delete account, then the business address and phone.
  * Used on legal/support surfaces and any public shell that needs consistent nav.
  *
  * These are product surfaces, so they keep the warm studio palette documented
@@ -51,6 +52,10 @@ export function SiteFooter() {
             </Link>
           </span>
         ))}
+        <BusinessAddress
+          className="basis-full text-center not-italic"
+          phoneClassName={`inline-flex min-h-11 items-center ${hover}`}
+        />
       </div>
     </footer>
   );

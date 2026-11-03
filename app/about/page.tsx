@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
+import { organizationJsonLd } from "@/lib/business-identity";
 
 const title = "About LotFoundry: Free ADU Feasibility Check";
 const description =
-  "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.";
+  "LotFoundry, from San Diego's VeriShare LLC, is an ADU feasibility studio. See what may fit on your lot, with estimated build cost, rent and payback.";
 
 export const metadata: Metadata = {
   title,
@@ -17,6 +18,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       <LegalSection title="What we do">
         <p>
           LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent

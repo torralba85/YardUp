@@ -4,8 +4,9 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "Help | LotFoundry";
-const description = "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.";
+const title = "LotFoundry Help Center: ADU Studio, Account and Payments";
+const description =
+  "Start using the LotFoundry ADU studio, manage your account and saved concepts, learn how certificate payments work, delete your account or contact support.";
 
 export const metadata: Metadata = {
   title,

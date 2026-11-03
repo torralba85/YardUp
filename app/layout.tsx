@@ -7,6 +7,7 @@ import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { DIRECTORY_URLS, SOCIAL_URLS } from "@/lib/social-links";
 import { SITE_OG_IMAGE } from "@/lib/og-images";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { ORGANIZATION_ID } from "@/lib/business-identity";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 import { COLOR } from "@/lib/design-tokens";
@@ -70,6 +71,8 @@ const jsonLd = {
   ],
   publisher: {
     "@type": "Organization",
+    // The same node as the Organization JSON-LD (address, phone) on / and /about.
+    "@id": ORGANIZATION_ID,
     name: "LotFoundry",
     alternateName: ["Lot Foundry"],
     // The name the Terms and Privacy Policy contract under: one word, no hyphen

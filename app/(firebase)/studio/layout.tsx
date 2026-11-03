@@ -4,7 +4,7 @@ import { StudioOfferSummary } from "@/components/studio/StudioOfferSummary";
 
 const title = "LotFoundry Studio — feasibility and design";
 const description =
-  "Place an ADU on your lot and see estimated rent, build cost, and payback for your address.";
+  "Search an address or open a sample lot, place a 3D ADU, and compare estimated build cost, rent, payback, setbacks and lot coverage. Free to explore.";
 
 /**
  * Studio metadata.

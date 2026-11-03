@@ -1251,6 +1251,23 @@
   line-height: 1.7;
   color: var(--stone);
 }
+.footerAddress {
+  margin-top: 4px;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.7;
+  color: var(--stone);
+}
+.footerAddress a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.footerAddress a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 @media (max-width: 800px) {
   .offerBenefits li { display: block; }
   .offerBenefits strong { display: block; margin-bottom: 6px; }

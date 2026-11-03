@@ -20,13 +20,14 @@ const baseUrl = CANONICAL_ORIGIN;
  * `lastmod` is the date the page's content last changed, never the build time:
  * Bing and Google stop trusting a sitemap whose dates move on every deploy.
  * Bump a page's date when you change what it shows. The legal pages follow
- * their published versions.
+ * their published versions. CI's IndexNow step submits only URLs whose date
+ * (or presence) changed in a deploy, so an unbumped page is never resubmitted.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-11-01",
-  "/studio": "2026-11-01",
-  "/about": "2026-11-01",
-  "/help": "2026-10-21",
+  "/": "2026-11-03",
+  "/studio": "2026-11-03",
+  "/about": "2026-11-03",
+  "/help": "2026-11-03",
   "/feedback": "2026-10-21",
   "/privacy": CURRENT_LEGAL_CONSENT.privacyVersion,
   "/terms": CURRENT_LEGAL_CONSENT.termsVersion,

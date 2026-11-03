@@ -4,6 +4,7 @@
 Reusable user interface components and presentation widgets for legal.
 
 ## Interface
+- `BusinessAddress.tsx:BusinessAddress` - Exported Function
 - `LegalPageShell.tsx:LegalPageShell` - Exported Function
 - `LegalPageShell.tsx:LegalSection` - Exported Function
 - `SiteFooter.tsx:SiteFooter` - Exported Function
