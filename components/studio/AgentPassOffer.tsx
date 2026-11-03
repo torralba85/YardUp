@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FieldLabel, Input } from "@/components/ui/Field";
 import { normalizeAgentPassCode } from "@/lib/agent-pass";
@@ -55,8 +56,9 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
           Change agent code
         </Button>
         {message && (
-          <p id={errorId} role="alert" className="mt-2 text-xs leading-5 text-status-blocked">
-            {message}
+          <p id={errorId} role="alert" className="mt-2 flex items-start gap-2 text-xs leading-5 text-status-blocked">
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{message}</span>
           </p>
         )}
       </section>
@@ -97,8 +99,9 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
           {signedIn ? "Apply code" : "Create a free account to apply it"}
         </Button>
         {message && (
-          <p id={errorId} role="alert" className="text-xs leading-5 text-status-blocked">
-            {message}
+          <p id={errorId} role="alert" className="flex items-start gap-2 text-xs leading-5 text-status-blocked">
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{message}</span>
           </p>
         )}
       </form>
