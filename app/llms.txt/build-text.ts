@@ -115,12 +115,14 @@ licensed builder.
 
 ## Pricing
 
-- Free: 3D layout exploration and an estimated monthly rent range. The first
-  address needs no account; a free account looks up more.
+- Free: 3D layout exploration, estimated monthly rent range, build cost range,
+  monthly net cash flow, and simple payback. The first address needs no
+  account; a free account looks up more.
 - Certificate of Feasibility: ${price} one-time on the web, for one property.
-  Build costs, net income, payback, financing scenarios, a fee and permit audit
-  for its size, and a bid-leveling checklist for three builders. In the Android
-  app it is bought through Google Play.
+  Itemized hard and soft cost allowances, debt-service financing scenarios, a
+  fee and permit audit for its size, an AI Project Brief, and a bid-leveling
+  checklist for three builders. In the Android app it is bought through Google
+  Play.
 - [Sample certificate](${baseUrl}/sample-certificate/san-diego): a complete example for a fictional San Diego lot.
 
 ## Jurisdiction guides

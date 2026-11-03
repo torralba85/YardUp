@@ -57,7 +57,7 @@ Upload current phone and tablet screenshots from the release candidate. Do not
 reuse the web-manifest screenshots as store-listing assets without reviewing
 them in Play Console's required dimensions.
 
-## App content
+## App content & Developer account declarations
 
 | Play Console question | Answer |
 |---|---|
@@ -71,13 +71,15 @@ them in Play Console's required dimensions.
 | Government app | `No` |
 | News app | `No` |
 | COVID-19 contact tracing/status | `No` |
+| Trader status (Nov 2026 rollout; mandatory by Feb 1, 2027) | `Non-trader` while distributed exclusively in the United States (no EEA/Brazil/Japan distribution); if EEA/Brazil/Japan distribution is enabled, declare `Trader` under `VeriShare LLC`, `1150 E St, Unit 202, San Diego, CA 92101`, `(419) 669-6663`, `support@lotfoundry.net`. |
+| Play Age Signals (`com.google.android.play:age-signals`) | Target audience is `18 and over` (`app/privacy/page.tsx` §8 honors platform age signals). Before Jan 1, 2027 (CA AB 1043), wire or verify the Play Age Signals runtime check in the Android wrapper if required for 18+ apps. |
 
 ## Data safety
 
 | Data type | Collected | Shared | Purpose | Required |
 |---|---|---|---|---|
 | Name | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality | No |
-| Email address | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality | No |
+| Email address | Yes | Yes, after a homeowner submits a builder connection request | Account management, app functionality, developer communications (optional emailed 3D lot link and optional permit/fee update opt-in) | No |
 | Phone number | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
 | Address | Yes | Yes, after a homeowner submits a builder connection request | App functionality | No |
 | Precise location | Yes, from a user-entered property address geocoded server-side | No | App functionality | No |
@@ -87,11 +89,11 @@ them in Play Console's required dimensions.
 | Device or other IDs | Yes | No | Security and fraud prevention | Yes |
 
 Notes for the form:
-- Firebase and Stripe act as service providers (processing on the developer's
-  behalf), which Play does not count as "sharing."
+- Firebase, Resend, ATTOM, TypeSafe, OpenAI, and Stripe act as service providers
+  (processing on the developer's behalf), which Play does not count as "sharing."
 - The homeowner's email, phone (if provided), and lot address ARE shared with
   a third party — matched builders — once the homeowner submits a connect
-  request (`app/privacy/page.tsx` § Marketplace Sharing, `lib/marketplace.ts`).
+  request (`app/privacy/page.tsx` §5, `lib/marketplace.ts`).
   Declare these under the Shared column, purpose "App functionality," basis
   "User provided."
 - The homeowner's name is shared on the same trigger as the email, phone, and
@@ -100,14 +102,26 @@ Notes for the form:
   unlocked. This row previously read `Shared: No`, which the code does not
   support — and a Data safety form that disagrees with the shipped app is
   among the most common causes of Play enforcement.
+- In `/studio`, a user or guest can also enter an email address in
+  `EmailScenarioLinkCard` (`/api/studio/email-scenario-link`) to receive a
+  one-time 3D lot link delivered via Resend and optionally check
+  `marketingOptIn` for California/San Diego ADU permit and fee updates. Both are
+  optional (`Required: No`), and deleting the account with a verified email
+  purges matching `studioScenarioLeads` records (`app/api/account/delete/route.ts`).
 - No device location permission is requested, but the typed address is
   geocoded server-side to latitude/longitude and sent to `/api/parcel`
   (`lib/parcel-api.ts`) for the feasibility lookup — declare this under
-  Location → Precise location in addition to Personal info → Address.
-- The optional AI style-match feature uploads a home photo to
+  Location → Precise location in addition to Personal info → Address. Signed-in
+  address searches also query ATTOM (`/api/address-validate`, `lib/server/attom.ts`)
+  with the searched street address, city, state, and ZIP code (without user name,
+  email, or account ID) to cross-check property location.
+- The optional AI style-match feature uploads an EXIF-stripped home photo and
+  non-identifying parcel/config context (without street address or coordinates) to
   `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
-  generation — declare Photos as collected. The photo is not stored on our
-  servers (processed and discarded), matching `app/privacy/page.tsx`.
+  generation — declare Photos as collected. The original uploaded photo is not
+  stored on our servers (processed and discarded), while saving a scenario to an
+  account stores the generated AI concept rendering with that saved scenario,
+  matching `app/privacy/page.tsx`.
 - The AI Project Brief feature forwards parcel dimensions, zoning constraints,
   and feasibility metrics to OpenAI via `/api/ai/project-brief` to synthesize
   the planning narrative for Certificates of Feasibility. OpenAI acts as a
@@ -115,11 +129,10 @@ Notes for the form:
   model training on API inputs), matching `app/privacy/page.tsx`.
 - The address disambiguation and zoning shadow feature forwards candidate
   address strings and zoning district labels to TypeSafe to pick the best match
-  and evaluate zoning classifications (`app/privacy/page.tsx` § Third-Party
-  Subprocessors). Neither query transmits user names, emails, account IDs, or
-  street addresses. TypeSafe processes data strictly as a service provider on our
-  behalf under contract; under Play policy, this does not constitute third-party
-  sharing.
+  and evaluate zoning classifications (`app/privacy/page.tsx` §3). Neither query
+  transmits user names, emails, account IDs, or street addresses on zoning checks.
+  TypeSafe processes data strictly as a service provider on our behalf under
+  contract; under Play policy, this does not constitute third-party sharing.
 - No crash/analytics SDK ships in the app bundle, so **Crash logs** and
   **Diagnostics** under App info and performance stay undeclared.
 - **App activity -> App interactions** must be declared: Collected, Not shared,
@@ -137,10 +150,12 @@ Notes for the form:
   scenario, or feasibility result — so this adds no PII category.
 
 For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
-or third-party advertising. Firebase, Google Maps/Places/Geocoding, Regrid,
-the US Census geocoder, public county/state parcel GIS services, USA Structures,
-OpenAI, TypeSafe, Stripe, and store billing process data for LotFoundry; the builder
-marketplace disclosure above is the only third-party sharing claim.
+or third-party advertising. Firebase, Google Maps/Places/Geocoding,
+OpenStreetMap (Nominatim/OSM tiles), Esri World Imagery, Regrid, ATTOM, the US
+Census geocoder, USGS 3DEP, public county/state parcel GIS services (including
+CAL FIRE), USA Structures, OpenAI, TypeSafe, Resend, Cloudflare Web Analytics,
+Stripe, and store billing process data for LotFoundry; the builder marketplace
+disclosure above is the only third-party sharing claim.
 
 ## Content rating
 

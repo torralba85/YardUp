@@ -79,6 +79,19 @@ export async function POST(request: NextRequest) {
       db.collection("feedback").where("uid", "==", uid),
     );
 
+    // Emailed 3D lot links are keyed by lowercased email. Only purge when
+    // Firebase has verified that this account owns the email address.
+    const verifiedEmail =
+      auth.emailVerified && typeof auth.email === "string"
+        ? auth.email.trim().toLowerCase()
+        : null;
+    if (verifiedEmail) {
+      await deleteQueryInBatches(
+        db,
+        db.collection("studioScenarioLeads").where("email", "==", verifiedEmail),
+      );
+    }
+
     // Remove the builder profile before Auth deletion so a failure is retryable.
     await db.collection("builders").doc(uid).delete();
 

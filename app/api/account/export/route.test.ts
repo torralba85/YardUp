@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
+const { requireApiAuthMock } = vi.hoisted(() => ({
+  requireApiAuthMock: vi.fn(async () => ({
+    uid: "local-dev",
+    email: "owner@example.com",
+    emailVerified: true,
+  })),
+}));
+
+vi.mock("@/lib/server/api-auth", () => ({
+  requireApiAuth: requireApiAuthMock,
+}));
+
 type Row = { id: string; data: Record<string, unknown> };
 
 const state = {
@@ -14,6 +26,7 @@ const state = {
   leadUnlocks: [] as Row[],
   feedback: [] as Row[],
   purchaseGrants: [] as Row[],
+  studioScenarioLeads: [] as Row[],
   certificateCredits: {} as Record<string, Record<string, unknown>>,
   throwOnDb: false,
 };
@@ -28,6 +41,7 @@ function rowsForCollection(name: string): Row[] {
   if (name === "leadUnlocks") return state.leadUnlocks;
   if (name === "feedback") return state.feedback;
   if (name === "purchaseGrants") return state.purchaseGrants;
+  if (name === "studioScenarioLeads") return state.studioScenarioLeads;
   return [];
 }
 
@@ -112,13 +126,38 @@ describe("GET /api/account/export", () => {
     state.leadUnlocks = [];
     state.feedback = [];
     state.purchaseGrants = [];
+    state.studioScenarioLeads = [];
     state.certificateCredits = {};
     state.throwOnDb = false;
+    requireApiAuthMock.mockReset().mockResolvedValue({
+      uid: "local-dev",
+      email: "owner@example.com",
+      emailVerified: true,
+    });
   });
 
   it("exports only the authenticated user's complete records", async () => {
     state.users["local-dev"] = { email: "owner@example.com", role: "user" };
     state.savedScenarios = [{ id: "s1", data: { name: "Backyard studio" } }];
+    state.studioScenarioLeads = [
+      {
+        id: "sl-1",
+        data: {
+          email: "owner@example.com",
+          marketingOptIn: true,
+          address: "123 Maple St",
+          city: "San Diego",
+          parcelId: "p-1",
+          scenarioUrl: "https://lotfoundry.net/studio?layout=sl-1",
+          consentVersion: "studio-layout-v1",
+          emailDeliveryStatus: "sent_resend",
+        },
+      },
+      {
+        id: "sl-2",
+        data: { email: "other@example.com", address: "999 Other Ave" },
+      },
+    ];
     state.connectionRequests = [
       {
         id: "lead-1",
@@ -163,6 +202,20 @@ describe("GET /api/account/export", () => {
     const body = await res.json();
     expect(body.profile).toEqual({ email: "owner@example.com", role: "user" });
     expect(body.savedScenarios).toEqual([{ id: "s1", name: "Backyard studio" }]);
+    expect(body.emailedScenarioLinks).toEqual([
+      {
+        id: "sl-1",
+        email: "owner@example.com",
+        marketingOptIn: true,
+        address: "123 Maple St",
+        city: "San Diego",
+        parcelId: "p-1",
+        scenarioUrl: "https://lotfoundry.net/studio?layout=sl-1",
+        createdAt: null,
+        consentVersion: "studio-layout-v1",
+        emailDeliveryStatus: "sent_resend",
+      },
+    ]);
     expect(body.connectionRequests).toEqual([
       {
         id: "lead-1",
@@ -189,6 +242,21 @@ describe("GET /api/account/export", () => {
       },
     ]);
     expect(typeof body.exportedAt).toBe("string");
+  });
+
+  it("does not export studioScenarioLeads when the account email is unverified", async () => {
+    requireApiAuthMock.mockResolvedValue({
+      uid: "local-dev",
+      email: "owner@example.com",
+      emailVerified: false,
+    });
+    state.studioScenarioLeads = [
+      { id: "sl-1", data: { email: "owner@example.com", address: "123 Maple St" } },
+    ];
+
+    const res = await GET(getRequest());
+    const body = await res.json();
+    expect(body.emailedScenarioLinks).toEqual([]);
   });
 
   it("serializes Firestore timestamps and native Dates as ISO strings", async () => {

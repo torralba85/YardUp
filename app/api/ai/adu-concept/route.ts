@@ -20,6 +20,30 @@ const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-sol";
 const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-5.6-sol";
 
+const ALLOWED_PARCEL_STYLE_KEYS = [
+  "city",
+  "zoning",
+  "lotSqft",
+  "width",
+  "depth",
+  "setbacks",
+  "houseFootprint",
+  "slopeDeg",
+  "fireHazardZone",
+] as const;
+
+function sanitizeParcelForStylePrompt(
+  parcel: Record<string, unknown>,
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const key of ALLOWED_PARCEL_STYLE_KEYS) {
+    if (key in parcel && parcel[key] !== undefined) {
+      sanitized[key] = parcel[key];
+    }
+  }
+  return sanitized;
+}
+
 interface StyleAnalysis {
   architecturalStyle: string;
   styleSummary: string;
@@ -132,6 +156,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const sanitizedParcel = sanitizeParcelForStylePrompt(parcel);
+
   try {
     const imageUrl = `data:${image.type};base64,${bytes.toString("base64")}`;
 
@@ -149,7 +175,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "input_text",
-              text: `Untrusted parcel and current ADU config data: ${JSON.stringify({ parcel, config })}`,
+              text: `Untrusted parcel and current ADU config data: ${JSON.stringify({ parcel: sanitizedParcel, config })}`,
             },
             { type: "input_image", image_url: imageUrl },
           ],
