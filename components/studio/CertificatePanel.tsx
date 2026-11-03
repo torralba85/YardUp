@@ -449,6 +449,18 @@ export default function CertificatePanel({
     ? undefined
     : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Unlocks this property permanently`;
 
+  // Web only: a store shell sells digital goods through its own billing.
+  const showPassOffer = !purchased && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
+  const passOffer = (
+    <AgentPassOffer
+      linkedCode={linkedPassCode}
+      busy={passBusy}
+      error={passError}
+      signedIn={Boolean(user)}
+      onRedeem={(code) => void handlePassRedeem(code)}
+    />
+  );
+
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
@@ -487,6 +499,9 @@ export default function CertificatePanel({
         </div>
       )}
 
+      {/* A buyer who arrived on an agent's link sees the free claim before the price. */}
+      {showPassOffer && linkedPassCode && passOffer}
+
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
@@ -500,16 +515,7 @@ export default function CertificatePanel({
         feeJurisdiction={feeJurisdiction}
       />
 
-      {/* Web only: a store shell sells digital goods through its own billing. */}
-      {!purchased && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web" && (
-        <AgentPassOffer
-          linkedCode={linkedPassCode}
-          busy={passBusy}
-          error={passError}
-          signedIn={Boolean(user)}
-          onRedeem={(code) => void handlePassRedeem(code)}
-        />
-      )}
+      {showPassOffer && !linkedPassCode && passOffer}
 
       {!purchased && (
         <p className="text-center text-xs leading-5 text-lot-stone">

@@ -336,6 +336,21 @@ describe("CertificatePanel", () => {
       expect(mocks.trackPurchase).not.toHaveBeenCalled();
     });
 
+    it("puts a linked code's free claim above the price, and a typed code below it", () => {
+      rememberAgentPass("SMITH-ELM");
+      const { unmount } = render(<CertificatePanel {...createProps()} />);
+      const claim = screen.getByRole("button", { name: "Get this certificate free" });
+      const buy = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      expect(claim.compareDocumentPosition(buy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      unmount();
+
+      clearAgentPass();
+      render(<CertificatePanel {...createProps()} />);
+      const typed = screen.getByText("Have an agent code?");
+      const buyAgain = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      expect(buyAgain.compareDocumentPosition(typed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
     it("shows the server's reason when a code does not apply", async () => {
       rememberAgentPass("SMITH-ELM");
       mocks.redeemAgentPass.mockRejectedValue(new AgentPassError("This code has expired."));
