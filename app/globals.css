@@ -393,3 +393,29 @@ summary {
     animation: lf-stamp 200ms ease-out both;
   }
 }
+
+/* ui/Dialog: the scrim fades in at hover speed; the sheet rises from the
+   bottom edge on phones and settles 14px into place from sm up, decelerating
+   without overshoot. Reduced motion opens it in place. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes lf-dialog-scrim-in {
+    from { opacity: 0; }
+  }
+  @keyframes lf-dialog-sheet-in {
+    from { transform: translateY(100%); }
+  }
+  @keyframes lf-dialog-panel-in {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+  .lf-dialog-scrim {
+    animation: lf-dialog-scrim-in var(--duration-hover) ease-out both;
+  }
+  .lf-dialog-panel {
+    animation: lf-dialog-sheet-in var(--duration-settle) var(--ease-settle) both;
+  }
+  @media (min-width: 40rem) {
+    .lf-dialog-panel {
+      animation-name: lf-dialog-panel-in;
+    }
+  }
+}

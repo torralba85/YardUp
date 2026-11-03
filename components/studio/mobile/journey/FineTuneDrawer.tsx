@@ -26,7 +26,7 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
     <Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
       {/* Closing must release the modal and focus even if an exit animation stalls. */}
       {open && <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-(--z-index-sheet) bg-lot-ink/50" />
+        <Drawer.Overlay className="fixed inset-0 z-(--z-index-sheet) bg-lot-scrim" />
         <Drawer.Content
           data-testid="fine-tune-drawer"
           onCloseAutoFocus={event=>{event.preventDefault();returnFocus.current?.focus();}}

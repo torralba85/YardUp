@@ -127,9 +127,10 @@ describe("BeforeAfterBoard", () => {
     const onClose = vi.fn();
     render(<BeforeAfterBoard {...defaultProps} onClose={onClose} />);
 
-    // Click the outer scrim dialog element
-    const dialog = screen.getByRole("dialog");
-    fireEvent.click(dialog);
+    // The scrim is the dialog's parent; a press must start and end on it.
+    const scrim = screen.getByRole("dialog").parentElement as HTMLElement;
+    fireEvent.mouseDown(scrim);
+    fireEvent.click(scrim);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

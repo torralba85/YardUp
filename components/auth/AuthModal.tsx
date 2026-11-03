@@ -12,8 +12,9 @@ import {
   type AuthPromptSource,
   type AuthSurface,
 } from "@/lib/analytics/events";
-import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
+import { Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
+import { Dialog } from "@/components/ui/Dialog";
 import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 
@@ -264,41 +265,6 @@ export function AuthModal({
       }
     };
   }, [user, isOpen, focusTriggerReplacement, releaseTriggerRefs]);
-
-  // Escape dismisses; Tab cycles inside the dialog while it is open.
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose("dismissed");
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const panel = panelRef.current;
-      if (!panel) return;
-      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (event.shiftKey && (active === first || !panel.contains(active))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previousOverflow; };
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -580,146 +546,25 @@ export function AuthModal({
   );
 
   return (
-    <div className="fixed inset-0 z-(--z-index-modal) flex items-center justify-center bg-lot-ink/75 p-4" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-      <div ref={panelRef} className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-none bg-lot-chalk text-lot-ink shadow-overlay relative border border-lot-line">
-        <button
-          type="button"
-          onClick={() => onClose("dismissed")}
-          className="absolute right-4 top-4 rounded-control flex h-11 w-11 items-center justify-center text-lot-stone hover:bg-lot-surface hover:text-lot-ink motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
-        >
-          <X size={20} />
-          <span className="sr-only">Close</span>
-        </button>
-
-        <div className="p-8">
-          <h2 id="auth-modal-title" className="lf-panel-heading mb-2 text-lot-ink">
-            {isSignUp ? "Save your property" : "Welcome back"}
-          </h2>
-          <p className="lf-body-sm mb-6 text-lot-stone">
-            {isSignUp
-              ? signUpBlurb(analyticsSource)
-              : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."}
-          </p>
-
-          {isSignUp && (
-            <div className="mb-4">
-              <label
-                htmlFor="auth-role"
-                className="lf-caption mb-1 block font-medium text-lot-stone"
-              >
-                Account type
-              </label>
-              <Select
-                id="auth-role"
-                value={role}
-                onChange={(event) =>
-                  setRole(event.target.value as "user" | "builder")
-                }
-              >
-                <option value="user">Homeowner</option>
-                <option value="builder">Builder</option>
-              </Select>
-            </div>
-          )}
-          {error && (
-            <div role="alert" className="lf-body-sm mb-4 flex items-start gap-2 rounded-none border border-status-blocked bg-status-blocked-soft p-3 text-status-blocked">
-              <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
-            </div>
-          )}
-          {isSignUp && socialChoices}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label
-                  htmlFor="auth-display-name"
-                  className="lf-caption mb-1 block font-medium text-lot-stone"
-                >
-                  Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-                    <UserIcon size={16} />
-                  </div>
-                  <Input
-                    id="auth-display-name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required
-                    className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
-                    placeholder="Alma Reyes"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="auth-email"
-                className="lf-caption mb-1 block font-medium text-lot-stone"
-              >
-                Email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-                  <Mail size={16} />
-                </div>
-                <Input
-                  id="auth-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
-                  placeholder="name@example.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="auth-password"
-                className="lf-caption mb-1 block font-medium text-lot-stone"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-                  <Lock size={16} />
-                </div>
-                <Input
-                  id="auth-password"
-                  name="password"
-                  type="password"
-                  autoComplete={isSignUp ? "new-password" : "current-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 min-h-11 w-full rounded-control bg-lot-orange px-4 py-2.5 text-sm font-semibold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Please wait..." : isSignUp ? "Create free account" : "Sign In"}
-            </button>
-          </form>
-
-          {!isSignUp && socialChoices}
-        </div>
-
-        <div className="bg-lot-surface p-4 text-center border-t border-lot-stone">
+    <Dialog
+      kicker={isSignUp ? "Free account" : "Sign in"}
+      title={isSignUp ? "Save your property" : "Welcome back"}
+      description={
+        isSignUp
+          ? signUpBlurb(analyticsSource)
+          : "Sign in to access your saved ADU estimates, reports, and builder-ready snapshots."
+      }
+      onClose={() => onClose("dismissed")}
+      titleId="auth-modal-title"
+      size="sm"
+      // This modal captures its opener and restores focus itself (including to the
+      // account control that replaces the trigger after a sign-in), so the dialog
+      // neither moves focus in nor restores it.
+      initialFocus="none"
+      restoreFocus={false}
+      bodyRef={panelRef}
+      footer={
+        <div className="text-center">
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
@@ -730,7 +575,124 @@ export function AuthModal({
               : "Don't have an account? Create free account"}
           </button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {isSignUp && (
+        <div className="mb-4">
+          <label
+            htmlFor="auth-role"
+            className="lf-caption mb-1 block font-medium text-lot-stone"
+          >
+            Account type
+          </label>
+          <Select
+            id="auth-role"
+            value={role}
+            onChange={(event) =>
+              setRole(event.target.value as "user" | "builder")
+            }
+          >
+            <option value="user">Homeowner</option>
+            <option value="builder">Builder</option>
+          </Select>
+        </div>
+      )}
+      {error && (
+        <div role="alert" className="lf-body-sm mb-4 flex items-start gap-2 rounded-none border border-status-blocked bg-status-blocked-soft p-3 text-status-blocked">
+          <TriangleAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
+      {isSignUp && socialChoices}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {isSignUp && (
+          <div>
+            <label
+              htmlFor="auth-display-name"
+              className="lf-caption mb-1 block font-medium text-lot-stone"
+            >
+              Name
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
+                <UserIcon size={16} />
+              </div>
+              <Input
+                id="auth-display-name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+                placeholder="Alma Reyes"
+              />
+            </div>
+          </div>
+        )}
+
+        <div>
+          <label
+            htmlFor="auth-email"
+            className="lf-caption mb-1 block font-medium text-lot-stone"
+          >
+            Email
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
+              <Mail size={16} />
+            </div>
+            <Input
+              id="auth-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+              placeholder="name@example.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="auth-password"
+            className="lf-caption mb-1 block font-medium text-lot-stone"
+          >
+            Password
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
+              <Lock size={16} />
+            </div>
+            <Input
+              id="auth-password"
+              name="password"
+              type="password"
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+              placeholder="••••••••"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-2 min-h-11 w-full rounded-control bg-lot-orange px-4 py-2.5 text-sm font-semibold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Please wait..." : isSignUp ? "Create free account" : "Sign In"}
+        </button>
+      </form>
+
+      {!isSignUp && socialChoices}
+    </Dialog>
   );
 }

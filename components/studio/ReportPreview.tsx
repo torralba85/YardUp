@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
+import { useRef } from "react";
 import { constructionBudgetNote, constructionBudgetRows } from "@/lib/finance";
 import {
   AlertTriangle,
@@ -18,7 +17,6 @@ import {
   Share2,
   Sparkles,
   Square,
-  X,
 } from "lucide-react";
 import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types";
 import { formatCurrency, type ADUConfig } from "@/lib/feasibility";
@@ -37,6 +35,7 @@ import {
 import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
 import { buildAduHeightModel } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { Checkbox } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -44,9 +43,6 @@ import type { FeasibilityResult } from "./types";
 import { trackReportExported, type FeasibilityStatus } from "@/lib/analytics/events";
 import type { Parcel } from "@/lib/parcel-types";
 import ParcelDataNotice from "./ParcelDataNotice";
-
-const FOCUSABLE_SELECTOR =
-  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Props for {@link ReportPreview}. */
 export interface ReportPreviewProps {
@@ -118,66 +114,6 @@ export default function ReportPreview({
   autoFocus = false,
 }: ReportPreviewProps) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const previouslyFocused = useRef<HTMLElement | null>(null);
-  // Client-only portal gate — avoids SSR HTML mismatch when createPortal runs.
-  const isClient = useSyncExternalStore(
-    () => () => undefined,
-    () => true,
-    () => false,
-  );
-
-  useEffect(() => {
-    if (!isClient) return;
-
-    previouslyFocused.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const focusTarget = autoFocus ? headingRef.current : closeButtonRef.current;
-    focusTarget?.focus();
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused.current?.focus();
-    };
-  }, [autoFocus, isClient]);
-
-  useEffect(() => {
-    if (!isClient) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-      const focusable = getFocusableElements(dialogRef.current);
-      if (focusable.length === 0) {
-        event.preventDefault();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isClient, onClose]);
-
-  if (!isClient) return null;
 
   const permitAudit = parcel
     ? buildPermitFeeAudit({
@@ -187,261 +123,212 @@ export default function ReportPreview({
       })
     : null;
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-(--z-index-modal) flex items-end justify-center bg-lot-ink/70 p-0 sm:items-center sm:p-4 md:p-6 print:static print:bg-transparent print:p-0"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section
-        ref={dialogRef}
-        id="export"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="report-preview-heading"
-        className="flex h-[min(94dvh,920px)] w-full max-w-5xl flex-col overflow-hidden rounded-none border border-lot-line bg-lot-chalk shadow-card motion-safe:animate-[lf-fade-in_180ms_ease-out] sm:h-auto sm:max-h-[min(92dvh,900px)] sm:rounded-none print:h-auto print:max-h-none print:overflow-visible print:rounded-none print:border-0 print:shadow-none"
-      >
-        {/* Sticky chrome: title + primary actions always reachable */}
-        <header className="shrink-0 border-b border-lot-line bg-lot-chalk px-4 py-3 sm:px-6 sm:py-4 print:static print:border-b print:bg-lot-chalk">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="lf-kicker-dense text-lot-orange-ink">LotFoundry</p>
-              <h2
-                id="report-preview-heading"
-                ref={headingRef}
-                tabIndex={-1}
-                className="lf-panel-heading mt-0.5 text-lot-ink focus:outline-none"
-              >
-                Certificate of Feasibility
-              </h2>
-              <p className="mt-1 truncate text-xs text-lot-stone sm:text-sm">{parcelName}</p>
-            </div>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              onClick={onClose}
-              aria-label="Close report preview"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-lot-stone motion-safe:transition hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 print:hidden"
-            >
-              <X size={18} aria-hidden="true" />
-            </button>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2 print:hidden">
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              className="text-[11px]"
-              onClick={() => {
-                trackReportExported({
-                  report_format: "print",
-                  feasibility_status: feasibilityStatus,
-                });
-                window.print();
-              }}
-              leftIcon={<Printer size={14} />}
-            >
-              Print / Save
-            </Button>
+  return (
+    <Dialog
+      title="Certificate of Feasibility"
+      kicker="LotFoundry"
+      description={<span className="block truncate">{parcelName}</span>}
+      onClose={onClose}
+      closeLabel="Close report preview"
+      initialFocus={autoFocus ? headingRef : undefined}
+      titleId="report-preview-heading"
+      titleRef={headingRef}
+      id="export"
+      size="xl"
+      printable
+      toolbar={
+        <>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              trackReportExported({
+                report_format: "print",
+                feasibility_status: feasibilityStatus,
+              });
+              window.print();
+            }}
+            leftIcon={<Printer size={14} />}
+          >
+            Print / Save
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              trackReportExported({
+                report_format: "html",
+                feasibility_status: feasibilityStatus,
+              });
+              onDownload();
+            }}
+            leftIcon={<Download size={14} />}
+          >
+            Download
+          </Button>
+          {onExportCsv && (
             <Button
               type="button"
               variant="secondary"
-              size="md"
-              className="text-[11px]"
+              size="sm"
               onClick={() => {
                 trackReportExported({
-                  report_format: "html",
+                  report_format: "csv",
                   feasibility_status: feasibilityStatus,
                 });
-                onDownload();
+                onExportCsv();
               }}
-              leftIcon={<Download size={14} />}
+              leftIcon={<FileSpreadsheet size={14} />}
             >
-              Download
+              CSV Export
             </Button>
-            {onExportCsv && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="md"
-                className="text-[11px]"
-                onClick={() => {
-                  trackReportExported({
-                    report_format: "csv",
-                    feasibility_status: feasibilityStatus,
-                  });
-                  onExportCsv();
-                }}
-                leftIcon={<FileSpreadsheet size={14} />}
-              >
-                CSV Export
-              </Button>
-            )}
-            {onShare && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="md"
-                className="text-[11px]"
-                onClick={() => {
-                  trackReportExported({
-                    report_format: "share",
-                    feasibility_status: feasibilityStatus,
-                  });
-                  onShare();
-                }}
-                leftIcon={<Share2 size={14} />}
-              >
-                {shareNotice ?? "Share Link"}
-              </Button>
-            )}
-            {onConnectBuilders && (
-              <Button
-                type="button"
-                variant="primary"
-                size="md"
-                className="text-[11px]"
-                onClick={onConnectBuilders}
-                leftIcon={<Hammer size={14} />}
-              >
-                Connect with builders
-              </Button>
-            )}
-          </div>
-        </header>
-
-        {/* Scrollable certificate body */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 print:overflow-visible">
-          <div className="grid gap-6 lg:grid-cols-[140px_minmax(0,1fr)]">
-            <div className="hidden border-[1.5px] border-lot-ink bg-lot-chalk p-1 lg:block lg:self-start">
-              <div className="border border-lot-stone px-2.5 py-3 text-center">
-                <div className="lf-kicker-dense text-lot-orange-ink">LotFoundry</div>
-                <div className="mt-1.5 font-display text-sm font-semibold leading-tight text-lot-ink">
-                  Certificate of Feasibility
-                </div>
-                <div className="mx-auto mt-2 h-px w-10 bg-lot-line" />
-                <div className="lf-caption mt-2 truncate text-lot-stone">{parcelName}</div>
-                {/* Decorative facsimile thumbnail only — not primary body copy. */}
-                <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.08em] text-status-blocked">
-                  Concept
-                </div>
-              </div>
+          )}
+          {onShare && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                trackReportExported({
+                  report_format: "share",
+                  feasibility_status: feasibilityStatus,
+                });
+                onShare();
+              }}
+              leftIcon={<Share2 size={14} />}
+            >
+              {shareNotice ?? "Share Link"}
+            </Button>
+          )}
+          {onConnectBuilders && (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onConnectBuilders}
+              leftIcon={<Hammer size={14} />}
+            >
+              Connect with builders
+            </Button>
+          )}
+        </>
+      }
+    >
+      <div className="grid gap-6 lg:grid-cols-[140px_minmax(0,1fr)]">
+        <div className="hidden border-[1.5px] border-lot-ink bg-lot-chalk p-1 lg:block lg:self-start">
+          <div className="border border-lot-stone px-2.5 py-3 text-center">
+            <div className="lf-kicker-dense text-lot-orange-ink">LotFoundry</div>
+            <div className="mt-1.5 font-display text-sm font-semibold leading-tight text-lot-ink">
+              Certificate of Feasibility
             </div>
-
-            <div className="min-w-0">
-              <p className="lf-body-sm max-w-2xl text-lot-stone">
-                A recorded concept for this lot: the ADU, site fit, estimated costs,
-                income summary, property notes, and typical approval timeline—one
-                document you can print, share, or bring to a builder. Final scope and
-                approvals still need local review.
-              </p>
-
-              <div className="mt-4 grid gap-2.5 text-sm text-lot-stone sm:grid-cols-2">
-                <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
-                <ReportFact
-                  icon={Ruler}
-                  text={result.footprintKnown === false ? "Lot coverage unknown — existing footprint unavailable" : `${result.coveragePercent.toFixed(1)}% projected lot coverage${result.regulationsEstimated ? " · maximum coverage unverified" : ""}`}
-                  tone={result.remainingCapacity < 0 ? "blocked" : "default"}
-                />
-                <ReportFact
-                  icon={BarChart3}
-                  text={`${formatCurrency(result.annualNoi)} annual net income estimate`}
-                  tone="money"
-                />
-                <ReportFact
-                  icon={CheckCircle2}
-                  text={`${result.zoningStatus} feasibility status`}
-                  tone={result.zoningStatus === "Compliant" ? "clear" : "review"}
-                />
-              </div>
-
-              <div className="mt-6 border-t border-lot-line pt-5">
-                {parcel && <ParcelDataNotice parcel={parcel} />}
-                <h3 className="lf-dataprint text-lot-orange-ink">
-                  Certificate includes
-                </h3>
-                <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4 gap-y-2 text-xs leading-5 text-lot-stone">
-                  {[
-                    "Project overview",
-                    "Cost estimate range",
-                    "Leveraged cash-flow pro forma",
-                    ...(permitAudit ? [permitAudit.jurisdiction === "other" ? "Permit fee & submittal audit" : "750 sq ft fee & permit audit"] : []),
-                    "3-builder bid-leveling checklist",
-                    "Modeled site-fit flags",
-                    "Rental analysis",
-                    "Assumptions",
-                    "Zoning & compliance",
-                    "AI property notes, when available",
-                    "Typical approval path, when available",
-                    "Recommended next steps",
-                    "Source and rent basis",
-                  ].map((item) => (
-                    <div key={item} className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="shrink-0 text-status-eligible" />
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lf-caption mt-5 rounded-none border border-lot-line/50 bg-lot-surface p-3 text-lot-stone">
-                Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
-                and market rents with local professionals before moving forward. No approval or
-                income outcome is guaranteed.
-              </div>
-
-              {result.costBreakdown && (
-                <section className="mt-6 border-t border-lot-line pt-5" aria-label="Hard and soft cost allowances">
-                  <h3 className="font-display text-xl font-medium text-lot-ink">Hard &amp; soft cost allowances</h3>
-                  <dl className="mt-3 divide-y divide-lot-line">
-                    {[...constructionBudgetRows(result.costBreakdown), ["Central project estimate", result.costBreakdown.total] as [string, number]].map(([label, value]) => (
-                      <div key={label} className="flex flex-wrap justify-between gap-2 py-2 text-sm text-lot-ink"><dt>{label}</dt><dd className="tabular-nums">{formatCurrency(value)}</dd></div>
-                    ))}
-                  </dl>
-                  <p className="mt-2 text-xs leading-5 text-lot-stone">{constructionBudgetNote}</p>
-                </section>
-              )}
-              <CertificateProFormaSection result={result} />
-              {permitAudit && <CertificatePermitAuditSection audit={permitAudit} />}
-
-              {styleMatchConcept && (
-                <CertificateStyleMatchSection concept={styleMatchConcept} />
-              )}
-
-              {projectBrief && projectBriefSavedAt && (
-                <p className="text-xs leading-5 text-lot-stone">
-                  Saved Brief snapshot. Verify these historical notes against current guidance.
-                </p>
-              )}
-              <CertificateBriefSection
-                brief={projectBrief ?? null}
-                loading={projectBriefLoading}
-                error={projectBriefError}
-                onRetry={onRetryProjectBrief}
-              />
-
-              <CertificateBidChecklistSection parcelName={parcelName} />
+            <div className="mx-auto mt-2 h-px w-10 bg-lot-line" />
+            <div className="lf-caption mt-2 truncate text-lot-stone">{parcelName}</div>
+            {/* Decorative facsimile thumbnail only — not primary body copy. */}
+            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.08em] text-status-blocked">
+              Concept
             </div>
           </div>
         </div>
-      </section>
-    </div>,
-    document.body,
-  );
-}
 
-function getFocusableElements(root: HTMLElement | null): HTMLElement[] {
-  if (!root) return [];
-  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((el) => {
-    if (el.hasAttribute("disabled") || el.getAttribute("aria-hidden") === "true") return false;
-    // tabIndex -1 is intentionally non-tabbable (e.g. programmatic heading focus).
-    if (el.tabIndex < 0) return false;
-    // offsetParent is null for fixed/hidden nodes; client rects cover both cases.
-    return el.getClientRects().length > 0;
-  });
+        <div className="min-w-0">
+          <p className="lf-body-sm max-w-2xl text-lot-stone">
+            A recorded concept for this lot: the ADU, site fit, estimated costs,
+            income summary, property notes, and typical approval timeline—one
+            document you can print, share, or bring to a builder. Final scope and
+            approvals still need local review.
+          </p>
+
+          <div className="mt-4 grid gap-2.5 text-sm text-lot-stone sm:grid-cols-2">
+            <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
+            <ReportFact
+              icon={Ruler}
+              text={result.footprintKnown === false ? "Lot coverage unknown — existing footprint unavailable" : `${result.coveragePercent.toFixed(1)}% projected lot coverage${result.regulationsEstimated ? " · maximum coverage unverified" : ""}`}
+              tone={result.remainingCapacity < 0 ? "blocked" : "default"}
+            />
+            <ReportFact
+              icon={BarChart3}
+              text={`${formatCurrency(result.annualNoi)} annual net income estimate`}
+              tone="money"
+            />
+            <ReportFact
+              icon={CheckCircle2}
+              text={`${result.zoningStatus} feasibility status`}
+              tone={result.zoningStatus === "Compliant" ? "clear" : "review"}
+            />
+          </div>
+
+          <div className="mt-6 border-t border-lot-line pt-5">
+            {parcel && <ParcelDataNotice parcel={parcel} />}
+            <h3 className="lf-dataprint text-lot-orange-ink">
+              Certificate includes
+            </h3>
+            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-x-4 gap-y-2 text-xs leading-5 text-lot-stone">
+              {[
+                "Project overview",
+                "Cost estimate range",
+                "Leveraged cash-flow pro forma",
+                ...(permitAudit ? [permitAudit.jurisdiction === "other" ? "Permit fee & submittal audit" : "750 sq ft fee & permit audit"] : []),
+                "3-builder bid-leveling checklist",
+                "Modeled site-fit flags",
+                "Rental analysis",
+                "Assumptions",
+                "Zoning & compliance",
+                "AI property notes, when available",
+                "Typical approval path, when available",
+                "Recommended next steps",
+                "Source and rent basis",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <CheckCircle2 size={14} className="shrink-0 text-status-eligible" />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lf-caption mt-5 rounded-none border border-lot-line/50 bg-lot-surface p-3 text-lot-stone">
+            Estimate only. Confirm local zoning, utility constraints, financing, tax treatment,
+            and market rents with local professionals before moving forward. No approval or
+            income outcome is guaranteed.
+          </div>
+
+          {result.costBreakdown && (
+            <section className="mt-6 border-t border-lot-line pt-5" aria-label="Hard and soft cost allowances">
+              <h3 className="font-display text-xl font-medium text-lot-ink">Hard &amp; soft cost allowances</h3>
+              <dl className="mt-3 divide-y divide-lot-line">
+                {[...constructionBudgetRows(result.costBreakdown), ["Central project estimate", result.costBreakdown.total] as [string, number]].map(([label, value]) => (
+                  <div key={label} className="flex flex-wrap justify-between gap-2 py-2 text-sm text-lot-ink"><dt>{label}</dt><dd className="tabular-nums">{formatCurrency(value)}</dd></div>
+                ))}
+              </dl>
+              <p className="mt-2 text-xs leading-5 text-lot-stone">{constructionBudgetNote}</p>
+            </section>
+          )}
+          <CertificateProFormaSection result={result} />
+          {permitAudit && <CertificatePermitAuditSection audit={permitAudit} />}
+
+          {styleMatchConcept && (
+            <CertificateStyleMatchSection concept={styleMatchConcept} />
+          )}
+
+          {projectBrief && projectBriefSavedAt && (
+            <p className="text-xs leading-5 text-lot-stone">
+              Saved Brief snapshot. Verify these historical notes against current guidance.
+            </p>
+          )}
+          <CertificateBriefSection
+            brief={projectBrief ?? null}
+            loading={projectBriefLoading}
+            error={projectBriefError}
+            onRetry={onRetryProjectBrief}
+          />
+
+          <CertificateBidChecklistSection parcelName={parcelName} />
+        </div>
+      </div>
+    </Dialog>
+  );
 }
 
 const REPORT_RISK_TONE: Record<AIRiskLevel, string> = {
@@ -977,12 +864,12 @@ function ReportFact({
 }: {
   icon: typeof FileText;
   text: string;
-  /** Semantic tone for money/status — DESIGN.md forest/amber/brick rules. */
+  /** Money is carbon and set by weight (design-system §2.6); status tones follow §2.5. */
   tone?: "default" | "money" | "clear" | "review" | "blocked";
 }) {
   const toneClass =
     tone === "money"
-      ? "text-status-eligible font-semibold"
+      ? "text-lot-ink font-semibold tabular-nums"
       : tone === "clear"
         ? "text-status-eligible font-semibold"
         : tone === "review"

@@ -1251,27 +1251,6 @@
   line-height: 1.7;
   color: var(--stone);
 }
-.sampleDialog {
-  width: min(1000px, calc(100% - 24px));
-  max-width: 100%;
-  height: calc(100dvh - 32px);
-  max-height: calc(100dvh - 32px);
-  margin: auto;
-  padding: 16px;
-  border: 1px solid var(--ink);
-  background: var(--chalk);
-  color: var(--ink);
-  font-family: var(--font-lot-body), sans-serif;
-}
-.sampleDialog::backdrop { background: color-mix(in srgb, var(--color-lot-ink) 70%, transparent); }
-.sampleDialog[open] { display: flex; flex-direction: column; gap: 8px; }
-.sampleToolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.sampleDialog .sampleToolbar h2 { margin: 0; font-size: 22px; line-height: 1.25; font-weight: 500; }
-.sampleDialog .sampleToolbar p { margin: 8px 0; font-size: 13px; line-height: 1.6; }
-.sampleToolbar button { display: grid; place-items: center; flex-shrink: 0; min-width: 44px; min-height: 44px; background: transparent; border: 1px solid var(--ink); cursor: pointer; }
-.sampleDialog a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-size: 13px; }
-.sampleDialog :is(a, button):focus-visible { outline: 2px solid var(--orange-ink); outline-offset: 3px; }
-.sampleDialog iframe { flex: 1; width: 100%; min-height: 0; border: 1px solid var(--line); }
 @media (max-width: 800px) {
   .offerBenefits li { display: block; }
   .offerBenefits strong { display: block; margin-bottom: 6px; }

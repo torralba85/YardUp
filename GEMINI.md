@@ -104,6 +104,8 @@ The marketing landing (`/`) and the 3D Feasibility Studio (`/studio`) run on **A
 - Inverted surfaces use Carbon ground (`#161616`) with hairline `--line-dark` (`#44443F`).
 - **Money is typographic, not chromatic.** Large tabular figures in carbon `#161616` or chalk `#F5F5F0`. Green is strictly reserved for eligible/verified status.
 - **Strict contrast invariants:** Orange is NEVER text on chalk (use `--orange-ink` `#C43708` if orange text is needed). Stone is chalk-only (use `--stone-on-dark` `#B7B7AE` on carbon). Focus rings are pinned to ground, never `currentColor`.
+- **Shared components only.** Modals use `Dialog` (`components/ui/Dialog`, 75% `lot-scrim`); fields and checkboxes use `components/ui/Field`; buttons use `ui/Button`. Never hand-roll `role="dialog"`, `aria-modal` or a `fixed inset-0` scrim. A new `components/ui` export needs its row in `docs/design/design-system.md` §6. `app/design-tokens.test.ts` enforces this.
+- **Text over a photograph is measured.** Secondary text is chalk at 86% or more; `e2e/hero-text-contrast.spec.ts` checks the rendered hero.
 
 A LOT MORE is the project-wide source of truth, including authentication, consent, builder, Studio,
 reports and certificates. Shared `lf-*` names are compatibility aliases for global A LOT MORE tokens,
