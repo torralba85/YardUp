@@ -21,6 +21,7 @@ The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines whi
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-11-02-dialog-system.md`](./2026-11-02-dialog-system.md) | The one modal: `Dialog`, the 75% scrim, the mounted-sheet look, the six migrations and the guards that keep new UI on the shared components. |
 | [`2026-11-02-design-system-audit.md`](./2026-11-02-design-system-audit.md) | Re-audit after the cinematic landing: measured hero text contrast, the `Checkbox` primitive, motion-safe spinners, hotspot radio group, money-scale figures and the doc sync. |
 | [`2026-11-01-cinematic-landing.md`](./2026-11-01-cinematic-landing.md) | Cinematic landing: full-bleed photo hero, glass surfaces, the pinned scroll-driven model section, and the LCP and 44px-target lessons. |
 | [`2026-10-12-color-refinement.md`](./2026-10-12-color-refinement.md) | Measured re-audit: store-graphic realignment, dark-placeholder and success-icon fixes, blocked-rust decision, and the canonical-literal guard for store assets. |

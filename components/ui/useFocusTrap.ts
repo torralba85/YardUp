@@ -34,7 +34,7 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, active
         first.focus();
       }
     }
-    document.addEventListener("keydown", trapFocus);
-    return () => document.removeEventListener("keydown", trapFocus);
+    window.addEventListener("keydown", trapFocus);
+    return () => window.removeEventListener("keydown", trapFocus);
   }, [containerRef, active]);
 }

@@ -25,7 +25,9 @@ test("market demo, full sample, and keyboard dismissal agree", async ({ page }, 
   await preview.click();
   const dialog = page.getByRole("dialog", { name: "Oak Street sample Certificate" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("heading")).toHaveCSS("font-size", "22px");
+  // The shared ui/Dialog title: Space Grotesk 500, the same on every dialog.
+  await expect(dialog.getByRole("heading", { level: 2 })).toHaveCSS("font-family", /space.*grotesk/i);
+  await expect(dialog.getByRole("heading", { level: 2 })).toHaveCSS("font-weight", "500");
   const report = page.frameLocator('iframe[title="Full sample Certificate of Feasibility"]');
   await expect(report.getByRole("heading", { name: "Hard & Soft Cost Allowances" })).toBeVisible();
   await expect(report.getByText("Public sample", { exact: false })).toContainText("market rent");

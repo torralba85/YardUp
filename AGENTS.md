@@ -114,7 +114,13 @@ Project-specific design rules:
   offset shadow, no blur: `shadow-paper`, `shadow-paper-sm`, `shadow-card`, `shadow-callout`, `shadow-overlay`.
 - New code uses `lot-*` / `status-*` colour tokens only; `npm run lint` rejects `lf-*` colour aliases and raw
   colours, and a ratchet in `app/design-tokens.test.ts` caps `text-[Npx]` sizes and inline kicker recipes. Fields use
-  `Input` / `Select` / `Textarea` from `components/ui/Field`; single choices use `Segmented` or `useRadioGroup`.
+  `Input` / `Select` / `Textarea` / `Checkbox` from `components/ui/Field`; single choices use `Segmented` or `useRadioGroup`.
+- Every modal is `Dialog` from `components/ui/Dialog`: the 75% `lot-scrim`, a chalk sheet in a carbon frame with a
+  hairline mat, and focus, inert, Escape and scroll lock built in. Never hand-roll `role="dialog"`, `aria-modal` or a
+  `fixed inset-0` scrim, and new UI uses `ui/Button` (a ratchet caps raw `<button>`s). A new `components/ui` export
+  needs its row in `docs/design/design-system.md` §6; `app/design-tokens.test.ts` enforces all three.
+- Text over a photograph is measured, not assumed: secondary text is chalk at 86% or more, and
+  `e2e/hero-text-contrast.spec.ts` checks the rendered hero (design-system §2.3 rule 6).
 - Money is typographic, not chromatic: carbon, large, `tabular-nums`. Green is an eligible/verified
   status colour and **never** money.
 - Status colours (label + icon always, never colour alone): eligible `#176B4C` on chalk / `#5FBF93` on

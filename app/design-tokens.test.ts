@@ -156,6 +156,11 @@ describe("A LOT MORE shared design contract", () => {
           const following = lines.slice(index, index + 5).join("\n");
           expect(greenMark.test(following), `${file}:${index + 1}`).toBe(false);
         }
+        // Nor a "money" tone that maps to green (the certificate's ReportFact did until 2026-11-02).
+        if (/["']money["']/.test(line)) {
+          const mapping = lines.slice(index, index + 3).join("\n");
+          expect(green.test(mapping), `${file}:${index + 1} maps a money tone to green`).toBe(false);
+        }
       });
     }
   });
@@ -222,23 +227,58 @@ describe("A LOT MORE shared design contract", () => {
     expect(checked).toBeGreaterThan(0);
   });
 
-  it("only lets legacy aliases, raw hex, arbitrary type sizes and inline kickers fall (ratchet)", () => {
+  it("renders every modal through the shared ui/Dialog on the one scrim", () => {
+    // §6 Dialog. The 2026-11-02 audit found six hand-rolled modals with three scrim
+    // strengths (70/75/90%) and four Escape/focus/scroll recipes; Dialog owns all of it.
+    const primitive = resolve(root, "components/ui/Dialog.tsx");
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      if (file === primitive) continue;
+      const source = readFileSync(file, "utf8");
+      expect(source, `${file}: use Dialog from components/ui/Dialog`).not.toMatch(/role=\{?["'`](?:alert)?dialog["'`]|aria-modal|<dialog\b/);
+      // A full-screen backdrop dims with lot-scrim, never an ad-hoc carbon alpha.
+      for (const [classes] of Array.from(source.matchAll(/["'`][^"'`\n]*["'`]/g))) {
+        if (/(?<![\w:-])fixed(?![\w-])/.test(classes) && /(?<![\w:-])inset-0(?![\w-])/.test(classes)) {
+          expect(classes, `${file}: dim with bg-lot-scrim`).not.toMatch(/(?<![\w-])bg-lot-ink\/\d+/);
+        }
+      }
+    }
+  });
+
+  it("documents every shared ui component and hook in design-system §6", () => {
+    // A new components/ui export is a new rule for every surface, so it ships with its row.
+    const doc = readFileSync(resolve(root, "docs/design/design-system.md"), "utf8");
+    const exported = new Set<string>();
+    for (const file of sourceFiles(resolve(root, "components/ui"))) {
+      for (const [, name] of Array.from(readFileSync(file, "utf8").matchAll(/^export (?:const|function) ([A-Z]\w*|use[A-Z]\w*)/gm))) {
+        exported.add(name);
+      }
+    }
+    expect(exported.size).toBeGreaterThan(15);
+    for (const name of Array.from(exported)) {
+      expect(doc, `${name} needs a row in docs/design/design-system.md §6`).toMatch(new RegExp("`" + name + "\\b"));
+    }
+  });
+
+  it("only lets legacy aliases, raw hex, arbitrary type sizes, inline kickers and raw buttons fall (ratchet)", () => {
     // §12: new code uses lot-* / status-*. When a change migrates a surface, lower the
     // matching ceiling in the same commit. Never raise one.
     // Pinned 2026-10-02 on master after #249 (lf-* colour aliases were 1,759 at the
     // 2026-09-30 audit). lfAliases and rawHex are already zero: every colour class
     // names a lot-* / status-* token, and the lint audit keeps it that way.
-    // Re-pinned 2026-11-02 to the counts on master (they had fallen to 166 and 24).
-    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 166, inlineKickers: 24 };
+    // Re-pinned 2026-11-02 after the Dialog migration (type sizes 166 → 151, kickers
+    // 24 → 23). rawButtons counts <button> outside components/ui: new UI uses Button.
+    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 151, inlineKickers: 23, rawButtons: 75 };
     const patterns = {
       lfAliases:
         /(?<![\w-])(?:[\w-]+:)*(?:text|bg|border(?:-[xytrblse])?|ring(?:-offset)?|outline|fill|stroke|decoration|divide|placeholder|caret|accent|from|via|to|shadow)-lf-[a-z0-9-]+|var\(--color-lf-[a-z0-9-]+\)/g,
       rawHex: /-\[#[0-9a-fA-F]{3,8}\]/g,
       arbitraryTextSizes: /(?<![\w-])(?:[\w-]+:)*text-\[\d+(?:\.\d+)?(?:px|rem)\]/g,
     };
-    const counts = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 0, inlineKickers: 0 };
+    const counts = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 0, inlineKickers: 0, rawButtons: 0 };
+    const sharedUi = resolve(root, "components/ui");
     for (const file of [...productSources(), ...sourceFiles(resolve(root, "hooks"))]) {
       const source = readFileSync(file, "utf8");
+      if (!file.startsWith(sharedUi)) counts.rawButtons += source.match(/<button\b/g)?.length ?? 0;
       counts.lfAliases += source.match(patterns.lfAliases)?.length ?? 0;
       counts.rawHex += source.match(patterns.rawHex)?.length ?? 0;
       counts.arbitraryTextSizes += source.match(patterns.arbitraryTextSizes)?.length ?? 0;
@@ -250,7 +290,7 @@ describe("A LOT MORE shared design contract", () => {
       }
     }
     for (const key of Object.keys(ceilings) as Array<keyof typeof ceilings>) {
-      expect(counts[key], `${key} rose above its ratchet ceiling; use lot-*/status-* tokens, lf-kicker or a type utility`).toBeLessThanOrEqual(ceilings[key]);
+      expect(counts[key], `${key} rose above its ratchet ceiling; use lot-*/status-* tokens, lf-kicker, a type utility or ui/Button`).toBeLessThanOrEqual(ceilings[key]);
     }
   });
 

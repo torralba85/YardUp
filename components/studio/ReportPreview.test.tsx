@@ -67,7 +67,7 @@ describe("ReportPreview", () => {
     expect(dialog).toHaveAttribute("id", "export");
     // Viewport modal: max-height + internal scroll so content is never clipped.
     expect(dialog.className).toMatch(/max-h/);
-    expect(dialog.className).toMatch(/overflow/);
+    expect(dialog.querySelector(".overflow-y-auto")).not.toBeNull();
     // Overlay is portaled to body so studio overflow cannot trap it.
     expect(dialog.closest("body")).toBe(document.body);
   });
