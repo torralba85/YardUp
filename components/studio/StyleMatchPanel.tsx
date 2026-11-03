@@ -20,6 +20,7 @@ import { AIRequestError, requestADUConcept } from "@/lib/ai-api";
 import type { AIADUConcept } from "@/lib/ai-types";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Field";
 
 /** Props for {@link StyleMatchPanel}. */
 export interface StyleMatchPanelProps {
@@ -288,11 +289,10 @@ export default function StyleMatchPanel({
               </div>
             </div>
             <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-lot-ink">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={aiConsent}
                 onChange={(e) => setAiConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-lot-stone text-lot-orange-ink focus:ring-lot-orange-ink"
+                className="mt-0.5"
               />
               <span>
                 I agree to send this photo to OpenAI to generate a concept. LotFoundry does not

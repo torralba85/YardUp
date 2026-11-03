@@ -279,6 +279,10 @@
   padding: 128px 6% 144px;
   color: var(--chalk);
   background: var(--ink);
+  /* Secondary text over the photograph. 86% is the floor: at 72-74% the label,
+     note and sample captions measured below 4.5:1 over the bright half of the
+     photo (design-system §2.3 rule 6). */
+  --hero-text-muted: color-mix(in srgb, var(--chalk) 86%, transparent);
 }
 .heroMedia {
   position: absolute;
@@ -315,12 +319,18 @@
   align-items: flex-end;
   gap: 14px;
 }
+/* The required "illustrative" label sits on the bright half of the photo, so it
+   carries the hero glass rather than relying on the scrim. */
 .heroCredit {
-  font-size: 11px;
+  padding: 5px 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--chalk) 72%, transparent);
+  color: var(--chalk);
+  background: color-mix(in srgb, var(--ink) 46%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
 }
 .heroKicker {
   font-size: 13px;
@@ -373,7 +383,7 @@
 .heroDescription {
   max-width: 440px;
   font-size: 17px;
-  color: color-mix(in srgb, var(--chalk) 82%, transparent);
+  color: var(--hero-text-muted);
   margin-top: 12px !important;
   line-height: 1.55;
 }
@@ -2228,7 +2238,7 @@
 .hotspotPin:hover {
   background: var(--line);
 }
-.hotspotPin[aria-pressed="true"] {
+.hotspotPin[aria-checked="true"] {
   background: var(--orange);
   color: var(--ink);
   border-color: var(--ink);
@@ -2384,7 +2394,7 @@
       background-color 180ms,
       color 180ms;
   }
-  .hotspotPin[aria-pressed="true"] {
+  .hotspotPin[aria-checked="true"] {
     transform: translate(-50%, -50%) scale(1.08);
   }
   .demoSteps li {
@@ -2427,7 +2437,7 @@
   outline-color: var(--chalk);
 }
 .hero .fieldLabel {
-  color: color-mix(in srgb, var(--chalk) 86%, transparent);
+  color: var(--hero-text-muted);
 }
 .hero .addressForm {
   margin-top: 26px;
@@ -2451,7 +2461,7 @@
   box-shadow: 0 0 0 2px var(--chalk);
 }
 .hero .formNote {
-  color: color-mix(in srgb, var(--chalk) 74%, transparent);
+  color: var(--hero-text-muted);
 }
 .hero .formError {
   color: var(--chalk);
@@ -2471,10 +2481,14 @@
 .hero .sampleResult:hover {
   border-color: color-mix(in srgb, var(--chalk) 62%, transparent);
 }
-.hero .sampleKicker,
+/* The kicker is 11px at the top edge of the glass, where the photo behind is
+   brightest; it needs full chalk. */
+.hero .sampleKicker {
+  color: var(--chalk);
+}
 .hero .sampleFigures dt,
 .hero .sampleFigures dd small {
-  color: color-mix(in srgb, var(--chalk) 72%, transparent);
+  color: var(--hero-text-muted);
 }
 .hero .sampleFigures {
   flex-wrap: nowrap;

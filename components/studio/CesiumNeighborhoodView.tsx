@@ -983,7 +983,7 @@ export default function CesiumNeighborhoodView({
           aria-live="polite"
           className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-lot-chalk"
         >
-          <RefreshCw size={24} className="animate-spin text-lot-orange-ink" aria-hidden="true" />
+          <RefreshCw size={24} className="motion-safe:animate-spin text-lot-orange-ink" aria-hidden="true" />
           <p className="text-sm font-medium text-lot-ink">Streaming 3D globe & neighborhood data…</p>
         </div>
       )}

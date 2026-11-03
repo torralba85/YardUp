@@ -12,6 +12,7 @@ import {
   detectPurchaseChannel,
   type PurchaseChannel,
 } from "@/lib/commerce/purchase-channel";
+import { useFocusTrap } from "@/components/ui/useFocusTrap";
 
 /** Props for {@link UnlockSlip}. */
 export interface UnlockSlipProps {
@@ -39,8 +40,8 @@ export interface UnlockSlipProps {
 /**
  * Certificate-style purchase slip (3A). Lists exactly what the unlock buys,
  * the head-start and bad-lead-credit terms (19C/20A), and a single confirm
- * action. Basic dialog a11y here (Esc + focus + labelling); the full focus
- * trap + contrast bundle is T15.
+ * action. Dialog a11y: Escape closes, focus starts on Close, Tab stays inside
+ * the slip (`useFocusTrap`), and the title labels it.
  */
 export default function UnlockSlip({
   item,
@@ -66,6 +67,8 @@ export default function UnlockSlip({
   // confirm against, so the purchase waits rather than showing a wrong one.
   const priceBlocked = !hasCredits && (unlockPrice.loading || unlockPrice.error !== null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -84,6 +87,7 @@ export default function UnlockSlip({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="unlock-slip-title"

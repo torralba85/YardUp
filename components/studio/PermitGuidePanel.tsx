@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, BookOpen, ExternalLink } from "lucide-react";
 import { inferJurisdiction, regulationGuides } from "@/lib/regulations-data";
 import { getSafeCitationHref } from "@/lib/safe-url";
+import { Checkbox } from "@/components/ui/Field";
 import { StatusChip } from "@/components/ui/StatusChip";
 
 /** Props for {@link PermitGuidePanel}. */
@@ -106,11 +107,10 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                 key={idx}
                 className="flex items-start gap-3 rounded-none border border-lot-line bg-lot-chalk/20 p-3 hover:bg-lot-chalk/40 motion-safe:transition cursor-pointer"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={!!checkedItems[step]}
                   onChange={() => handleToggle(step)}
-                  className="mt-0.5 h-4 w-4 accent-lot-orange rounded-control focus:ring-lot-orange-ink"
+                  className="mt-0.5"
                 />
                 <span className={`text-sm leading-relaxed ${checkedItems[step] ? "text-lot-stone line-through" : "text-lot-ink font-medium"}`}>
                   {step}

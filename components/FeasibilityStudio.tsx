@@ -1043,7 +1043,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             data-testid="neighborhood-loading"
             className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-chalk p-8 text-center"
           >
-            <RefreshCw className="animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
+            <RefreshCw className="motion-safe:animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
             <p className="font-display text-sm font-semibold text-lot-ink">Loading property for Neighborhood 3D…</p>
             <p className="text-xs text-lot-stone">
               {displayAddress !== "Looking up property…"
@@ -1131,7 +1131,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 data-testid="property-loading"
                 className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
               >
-                <RefreshCw className="animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
+                <RefreshCw className="motion-safe:animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
                 <p className="font-display text-sm font-semibold text-lot-chalk">Looking up property data…</p>
                 <p className="text-xs text-lot-stone-on-dark">
                   {displayAddress !== "Looking up property…"

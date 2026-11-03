@@ -48,7 +48,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
     <section aria-label="Free property preview" className="space-y-5 border border-lot-line bg-lot-chalk p-5 sm:p-6">
       <div>
         <p className="lf-kicker text-lot-stone">Estimated monthly rent</p>
-        <p className="mt-2 font-display text-3xl font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}</p>
+        <p className="mt-2 lf-money-lg text-lot-ink">{rentRangeLabel(result)}</p>
         <p className="mt-2 text-xs leading-5 text-lot-stone">Conservative to optimistic rent scenarios · {result.rentBasis}</p>
       </div>
       <div>
@@ -63,12 +63,12 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
         ].map(([label, value]) => (
           <div key={label} className="min-w-0 bg-lot-surface p-4">
             <p className="text-xs text-lot-stone">{label}</p>
-            <p className="mt-3 font-display text-xl tabular-nums text-lot-ink">{value}</p>
+            <p className="mt-3 lf-money-sm leading-tight text-lot-ink">{value}</p>
           </div>
         ))}
         <div data-locked-metric="true" className="min-w-0 bg-lot-surface p-4">
           <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />Financed cash flow</p>
-          <span aria-hidden="true" className="mt-3 block select-none font-display text-xl tabular-nums text-lot-ink blur-xs">±$••• /mo</span>
+          <span aria-hidden="true" className="mt-3 block select-none lf-money-sm leading-tight text-lot-ink blur-xs">±$••• /mo</span>
           <span className="sr-only">Financed cash flow locked in the certificate</span>
         </div>
       </div>

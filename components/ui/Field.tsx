@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Shared visual recipe for native text inputs and selects on chalk surfaces. */
@@ -30,6 +31,39 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
   },
 );
 Textarea.displayName = "Textarea";
+
+/** Props for {@link Checkbox}: a native checkbox input. `className` positions the box. */
+export type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type">;
+
+/**
+ * The one checkbox: a native `type=checkbox` drawn as a 20px chalk box with a
+ * stone boundary (5.36:1), filled carbon with a chalk check when checked, and
+ * the shared 2px orange-ink focus ring. The browser's own box is pure white and
+ * only its checked fill follows `accent-color`, so the control draws its own.
+ * Put it inside a `<label>` at least 44px tall. `className` lands on the
+ * wrapper so callers can align it with the first line of the label (`mt-0.5`).
+ */
+export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
+  function Checkbox({ className, ...props }, ref) {
+    return (
+      <span className={cn("relative inline-flex h-5 w-5 shrink-0", className)}>
+        <input
+          ref={ref}
+          type="checkbox"
+          className="peer h-5 w-5 cursor-pointer appearance-none rounded-control border border-lot-stone bg-lot-chalk motion-safe:transition-colors motion-safe:duration-(--duration-hover) hover:border-lot-ink checked:border-lot-ink checked:bg-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk aria-[invalid=true]:border-status-blocked disabled:cursor-not-allowed disabled:opacity-60 print:[print-color-adjust:exact]"
+          {...props}
+        />
+        <Check
+          aria-hidden="true"
+          size={14}
+          strokeWidth={2.5}
+          className="pointer-events-none absolute inset-0 m-auto text-lot-chalk opacity-0 peer-checked:opacity-100 print:[print-color-adjust:exact]"
+        />
+      </span>
+    );
+  },
+);
+Checkbox.displayName = "Checkbox";
 
 /** Props for {@link FieldLabel}; extends native label attributes. */
 export interface FieldLabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
-import { Input, Select } from "@/components/ui/Field";
+import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { validateEmail } from "@/lib/account-settings";
 import { normalizeServiceArea } from "@/lib/marketplace";
 import { US_STATE_NAMES } from "@/lib/us-states";
@@ -219,10 +219,8 @@ export default function BuilderProfileForm({
         htmlFor="builder-active"
         className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-lot-stone md:col-span-2"
       >
-        <input
+        <Checkbox
           id="builder-active"
-          type="checkbox"
-          className="h-5 w-5 shrink-0 accent-lot-ink"
           checked={active}
           onChange={(event) => setActive(event.target.checked)}
         />

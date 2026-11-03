@@ -57,6 +57,8 @@ test("scanner catches new aliases, undefined tokens, literal colors and misleadi
   assert.ok(result.errors.some((e) => e.includes("retired")));
   assert.ok(result.errors.some((e) => e.includes("undefined")));
   assert.ok(result.errors.some((e) => e.includes("action fill")));
+  // A checkbox accent paints the checked fill, so orange ink there is still a fill.
+  assert.ok(inspect("accent.tsx", 'const c = "accent-lot-orange-ink";', names).errors.some((e) => e.includes("action fill")));
   assert.deepEqual(inspect("good.tsx", 'const c = "bg-lot-orange text-lot-ink";', names).errors, []);
   assert.equal(inspect("example.css", ".x { color: rgb(1 2 3); }", names).raw["rgb(1 2 3)"], 1);
   assert.ok(inspect("named.tsx", 'const style = { color: "red" };', names).errors.some((e) => e.includes("named color red")));

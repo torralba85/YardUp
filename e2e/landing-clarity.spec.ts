@@ -88,9 +88,24 @@ test("landing radios expose one tab stop, move focus, and update the associated 
   page,
 }) => {
   await page.goto("/");
-  const groups = page.getByRole("radiogroup");
-  await expect(groups).toHaveCount(6);
-  for (const group of await groups.all()) {
+  // Address each group by name. The maquette's inspection pins are a radio group too,
+  // but they mount and unmount as scroll walks the pinned model section between scenes,
+  // which shifts positional locators; they have their own test below.
+  const names = [
+    "Property illustration view",
+    "Preview footprint",
+    "Preview roof profile",
+    "What would your backyard home be for?",
+    "Demo rent assumption",
+    "Sample report pages",
+  ];
+  await expect(page.getByRole("radiogroup", { name: names[0], exact: true })).toBeVisible();
+  const groupNames = await page.getByRole("radiogroup").evaluateAll((groups) =>
+    groups.map((group) => group.getAttribute("aria-label")).filter((name) => name !== "Maquette inspection points"),
+  );
+  expect(groupNames.sort()).toEqual([...names].sort());
+  for (const name of names) {
+    const group = page.getByRole("radiogroup", { name, exact: true });
     const checked = group.getByRole("radio", { checked: true });
     await expect(group.locator('[role="radio"][tabindex="0"]')).toHaveCount(1);
     await checked.focus();
@@ -111,6 +126,27 @@ test("landing radios expose one tab stop, move focus, and update the associated 
   await expect(
     page.getByRole("radio", { name: "Next steps", exact: true }),
   ).toHaveCSS("outline-color", "rgb(196, 55, 8)");
+});
+
+test("maquette inspection pins are one radio group that moves with the arrow keys", async ({
+  page,
+}) => {
+  // Reduced motion keeps the model section static on "The possibility", so the pins
+  // stay mounted while focus moves between them.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const pins = page.getByRole("radiogroup", { name: "Maquette inspection points" });
+  await pins.scrollIntoViewIfNeeded();
+  await expect(pins.getByRole("radio")).toHaveCount(3);
+  await expect(pins.locator('[role="radio"][tabindex="0"]')).toHaveCount(1);
+  await pins.getByRole("radio", { checked: true }).press("End");
+  const last = pins.getByRole("radio").last();
+  await expect(last).toBeChecked();
+  await expect(last).toBeFocused();
+  await expect(page.getByText("POINT 03 / 03")).toBeVisible();
+  await last.press("ArrowRight");
+  await expect(pins.getByRole("radio").first()).toBeChecked();
+  await expect(page.getByText("POINT 01 / 03")).toBeVisible();
 });
 
 test("actual Studio preview loads and the example opens without an account prompt", async ({

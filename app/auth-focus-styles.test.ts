@@ -16,8 +16,11 @@ describe("auth focus color roles", () => {
 
     expect(forgotPassword).toContain('import { Input } from "@/components/ui/Field"');
     expect(forgotPassword).toContain("<Input");
-    expect(signup).toContain('import { Input } from "@/components/ui/Field"');
+    expect(signup).toMatch(/import \{[^}]*\bInput\b[^}]*\} from "@\/components\/ui\/Field"/);
     expect(signup.match(/<Input\b/g)).toHaveLength(3);
+    // The legal consent box is the shared ui/Field Checkbox, with its orange-ink focus ring.
+    expect(signup).toContain("<Checkbox");
+    expect(fields).toContain("focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2");
     expect(fields).toContain("focus-visible:ring-2 focus-visible:ring-lot-orange-ink");
     expect(signup).toContain("border-lot-ink bg-lot-ink");
     expect(signup).toContain("{...radioProps}");

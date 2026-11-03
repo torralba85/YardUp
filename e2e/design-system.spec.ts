@@ -4,6 +4,7 @@ import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 const chalk = "rgb(245, 245, 240)";
 const carbon = "rgb(22, 22, 22)";
 const orange = "rgb(255, 91, 36)";
+const stone = "rgb(101, 101, 95)";
 
 test.describe("Project-wide A LOT MORE contract", () => {
   test("Studio gives the task action one signal-orange fill", async ({ page, isMobile }, testInfo) => {
@@ -79,7 +80,9 @@ test.describe("Project-wide A LOT MORE contract", () => {
       await page.goto(route);
       const checkbox = page.getByRole("checkbox");
       await expect(checkbox).not.toBeChecked();
-      await expect(checkbox).toHaveCSS("accent-color", carbon);
+      // ui/Field Checkbox draws its own box: chalk with a stone boundary, never the browser's white.
+      await expect(checkbox).toHaveCSS("background-color", chalk);
+      await expect(checkbox).toHaveCSS("border-color", stone);
       await expect(checkbox).toHaveCSS("width", "20px");
       await expect(page.getByRole("button", { name: "Google", exact: true })).toBeDisabled();
       const primary = page.locator('button[type="submit"]');
@@ -88,6 +91,7 @@ test.describe("Project-wide A LOT MORE contract", () => {
       await expect(primary).toHaveCSS("border-radius", "3px");
       // Local UI-only interaction: never submit credentials or accept real account terms.
       await checkbox.check();
+      await expect(checkbox).toHaveCSS("background-color", carbon);
       await expect(page.getByRole("button", { name: "Google", exact: true })).toBeEnabled();
       await checkbox.uncheck();
       await expect(page.getByRole("button", { name: "Google", exact: true })).toBeDisabled();
@@ -101,7 +105,8 @@ test.describe("Project-wide A LOT MORE contract", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.locator("form input").first()).toHaveCSS("background-color", chalk);
-    await expect(dialog.getByRole("checkbox")).toHaveCSS("accent-color", carbon);
+    await expect(dialog.getByRole("checkbox")).toHaveCSS("background-color", chalk);
+    await expect(dialog.getByRole("checkbox")).toHaveCSS("border-color", stone);
     await page.screenshot({ path: testInfo.outputPath("auth-modal.png"), fullPage: false });
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();

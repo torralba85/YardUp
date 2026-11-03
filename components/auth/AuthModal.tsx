@@ -14,7 +14,7 @@ import {
 } from "@/lib/analytics/events";
 import { X, Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
-import { Input, Select } from "@/components/ui/Field";
+import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 
 /**
@@ -468,11 +468,10 @@ export function AuthModal({
   const socialChoices = (
     <div className={isSignUp ? "mb-5" : "mt-6"}>
       <label className="mb-4 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={legalAccepted}
           onChange={(event) => setLegalAccepted(event.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+          className="mt-0.5"
         />
         <span>
           I confirm I am 18 or older, agree to the{" "}
