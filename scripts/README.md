@@ -4,6 +4,7 @@
 Component package providing domain logic and interface implementations for scripts.
 
 ## Interface
+- `agent-pass.mjs:main` - Executable entrypoint / script (create, report and revoke real estate agent passes; dry run unless `--write`)
 - `build-market-data.js:main` - Executable entrypoint / script
 - `build-san-diego-adu-permits.mjs:main` - Executable entrypoint / script
 - `capture-landing-demo.mjs:main` - Executable entrypoint / script

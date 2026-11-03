@@ -214,7 +214,8 @@ export function CertificatesClient() {
                         <div className="flex items-center gap-3 pt-1 text-xs text-lot-stone">
                           <span className="tabular-nums">ID: #{cert.certKey}</span>
                           <span>·</span>
-                          <span>Amount: {formatPrice(cert.amount)}</span>
+                          {/* A $0 grant is an agent-pass certificate, not a sale. */}
+                          <span>{cert.amount === 0 ? "Complimentary" : <>Amount: {formatPrice(cert.amount)}</>}</span>
                         </div>
                       </div>
 

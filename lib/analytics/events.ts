@@ -599,6 +599,19 @@ export function trackCertificateCheckoutCancelled(params: {
   });
 }
 
+/**
+ * 10c. certificate_pass_redeemed — a buyer claimed a complimentary certificate
+ * with a real estate agent's pass code. Never a purchase: no value, no
+ * transaction id, and never the agent's code.
+ */
+export function trackCertificatePassRedeemed(params: {
+  feasibility_status: FeasibilityStatus;
+}): void {
+  trackEvent("certificate_pass_redeemed", {
+    feasibility_status: params.feasibility_status,
+  });
+}
+
 /** 11. purchase (GA4 Recommended Ecommerce Event) */
 export function trackCertificatePurchase(params: {
   transaction_id: string;

@@ -607,6 +607,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Real estate agent passes and their redemption records (Admin SDK only:
+    // scripts/agent-pass.mjs creates them, /api/certificates/redeem spends
+    // them). No client may read a code, its cap or who redeemed it.
+    match /agentPasses/{code} {
+      allow read, write: if false;
+      match /redemptions/{uid} {
+        allow read, write: if false;
+      }
+    }
+
     // Store purchase grants (Admin SDK only). Clients may read their own.
     match /purchaseGrants/{grantId} {
       allow read: if isSignedIn()

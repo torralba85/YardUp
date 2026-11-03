@@ -4,6 +4,8 @@
 Reusable user interface components and presentation widgets for studio.
 
 ## Interface
+- `AgentPassOffer.tsx:AgentPassOfferProps` - TypeScript Interface
+- `AgentPassOffer.tsx:AgentPassOffer` - Exported Function (default)
 - `AddressSearch.tsx:AddressSearchResult` - TypeScript Interface
 - `AddressSearch.tsx:AddressSearchProps` - TypeScript Interface
 - `AddressSearch.tsx:AddressSearch` - Exported Function (default)

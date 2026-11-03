@@ -22,6 +22,7 @@ import {
   trackBuilderMatchesViewed,
   trackBuilderUnlockCheckoutStarted,
   trackCertificateCheckoutCancelled,
+  trackCertificatePassRedeemed,
   trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
   trackCertificatePaywallViewed,
@@ -320,6 +321,17 @@ describe("analytics events module", () => {
 
       expect(trackEventSpy).toHaveBeenCalledWith("certificate_checkout_cancelled", {
         purchase_channel: "web_stripe",
+      });
+    });
+
+    it("emits certificate_pass_redeemed without value, transaction id or the agent's code", () => {
+      trackCertificatePassRedeemed({
+        feasibility_status: "eligible",
+        ...({ code: "SMITH-ELM", value: 29, transaction_id: "x" } as object),
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("certificate_pass_redeemed", {
+        feasibility_status: "eligible",
       });
     });
 

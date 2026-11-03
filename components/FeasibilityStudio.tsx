@@ -96,6 +96,7 @@ import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-st
 import { AlertCircle, ArrowRight, ImageOff, RefreshCw, Search } from "lucide-react";
 import { summarizeFeasibility } from "@/lib/feasibility-verdict";
 import { hasCertificatePurchaseIntent } from "@/lib/certificate-purchase-intent";
+import { hasAgentPassRedeemIntent } from "@/lib/agent-pass";
 import {
   trackFeasibilityResultViewed,
   trackAduDesignCommitted,
@@ -194,7 +195,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [activeStep, setActiveStep] = useState<StudioStep>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
-      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent()) {
+      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) {
         return "certificate";
       }
     }
@@ -454,7 +455,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
-      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent()) return "act";
+      if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) return "act";
     }
     return parcelMode !== "preset" || demoChosen ? "earn" : "find";
   });
@@ -571,9 +572,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
     const certParam = incomingCertRef.current ?? params.get("cert");
     const stepParam = params.get("step");
-    // A purchase click that went through sign-in reopens the Certificate step,
-    // where the panel resumes Checkout.
-    if (certParam || stepParam === "certificate" || hasCertificatePurchaseIntent()) {
+    // A purchase or agent-code claim that went through sign-in reopens the
+    // Certificate step, where the panel resumes it.
+    if (certParam || stepParam === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) {
       setActiveStep("certificate");
       setDemoCommitted(true);
       setJourneyStep("act");

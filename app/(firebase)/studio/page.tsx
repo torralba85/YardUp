@@ -17,6 +17,7 @@ import LeadScenarioEntry from "@/components/studio/LeadScenarioEntry";
 import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
 import { validLayoutToken } from "@/lib/scenario-share-url";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
+import { AGENT_PASS_PARAM, rememberAgentPass } from "@/lib/agent-pass";
 
 // The native shell is fixed for the life of the page; there is nothing to observe.
 const subscribeToNothing = () => () => {};
@@ -46,6 +47,8 @@ export default function StudioPage() {
     // real-property handoff takes precedence over an old sample URL.
     if (initialDemoEntry.current === null) {
       const search = new URLSearchParams(window.location.search);
+      // An agent's link carries their pass code; keep it before Studio rewrites the URL.
+      rememberAgentPass(search.get(AGENT_PASS_PARAM));
       const isCert = search.has("cert");
       const lead = search.get("lead");
       // eslint-disable-next-line react-hooks/set-state-in-effect

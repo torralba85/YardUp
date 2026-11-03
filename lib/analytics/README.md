@@ -80,6 +80,7 @@ Domain modeling, utility functions, and calculation engines for analytics.
 - `events.ts:trackCertificateCheckoutStarted` - Exported Function
 - `events.ts:trackCertificateCheckoutRedirected` - Exported Function
 - `events.ts:trackCertificateCheckoutCancelled` - Exported Function
+- `events.ts:trackCertificatePassRedeemed` - Exported Function
 - `events.ts:trackCertificatePurchase` - Exported Function
 - `events.ts:trackBuilderMatchesViewed` - Exported Function
 - `events.ts:trackBuilderConnectionSubmitted` - Exported Function
