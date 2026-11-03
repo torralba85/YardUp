@@ -257,10 +257,11 @@ export default function TermsPage() {
           <strong>Photos.</strong> Style-match is optional; declining it does not block the rest of
           the Studio. You must agree before a prepared photo is sent to our AI provider. Photos are
           downscaled and stripped of EXIF and GPS metadata in your browser first, and we do not store
-          the original photo on our servers. You represent that you own the property or have the
-          owner&rsquo;s permission to photograph and upload it. Do not upload images of identifiable
-          people without their consent, minors, sensitive personal information, or plans or designs
-          you do not have rights to.
+          the original uploaded photo on our servers (if you save a scenario to your account, the
+          resulting AI concept rendering is stored with that saved scenario until deleted). You
+          represent that you own the property or have the owner&rsquo;s permission to photograph and
+          upload it. Do not upload images of identifiable people without their consent, minors,
+          sensitive personal information, or plans or designs you do not have rights to.
         </p>
         <p>
           <strong>AI transparency.</strong> We use AI providers through their APIs; we do not
@@ -309,12 +310,14 @@ export default function TermsPage() {
 
       <LegalSection title="11. Third-Party Data &amp; GIS Accuracy">
         <p>
-          Parcel lot boundaries, zoning overlays, satellite imagery, building footprints, and rental
-          benchmarks are aggregated from third parties (including Regrid, Google Maps, US Census Bureau,
-          USA Structures, and municipal GIS services). Third-party data may be outdated, inaccurate, or
-          misaligned. Algorithmic address candidate matching and zoning classification heuristics (including TypeSafe)
-          are automated software interpretations. LotFoundry assumes no responsibility for spatial inaccuracies,
-          unrecorded easements, private covenants, HOA restrictions, or utility access limitations.
+          Parcel lot boundaries, zoning overlays, satellite imagery, terrain elevation, building
+          footprints, fire hazard layers, and rental benchmarks are aggregated from third parties
+          (including Regrid, ATTOM, Google Maps Platform, OpenStreetMap, Esri World Imagery, US Census
+          Bureau, USGS 3DEP, USA Structures, and state and municipal GIS services such as CAL FIRE).
+          Third-party data may be outdated, inaccurate, or misaligned. Algorithmic address candidate
+          matching and zoning classification heuristics (including TypeSafe) are automated software
+          interpretations. LotFoundry assumes no responsibility for spatial inaccuracies, unrecorded
+          easements, private covenants, HOA restrictions, or utility access limitations.
         </p>
       </LegalSection>
 

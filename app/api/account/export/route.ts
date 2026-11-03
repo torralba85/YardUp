@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
+import { parseEmailScenario } from "@/lib/scenario-email";
 
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
 export const runtime = "nodejs";
@@ -38,14 +39,19 @@ async function mapInBatches<T, R>(
 
 /**
  * Download the authenticated user's account data as portable JSON: profile,
- * saved scenarios, builder profile, their own lead submissions and contact
- * details, feedback, store/Stripe purchase records, and credit balances. Never
- * includes other users' PII, Firebase tokens, or payment-provider secrets.
+ * saved scenarios, emailed 3D lot links (when email is verified), builder
+ * profile, their own lead submissions and contact details, feedback,
+ * store/Stripe purchase records, and credit balances. Never includes other
+ * users' PII, Firebase tokens, or payment-provider secrets.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
   const { uid } = auth;
+  const verifiedEmail =
+    auth.emailVerified && typeof auth.email === "string"
+      ? auth.email.trim().toLowerCase()
+      : null;
 
   try {
     const db = getAdminDb();
@@ -63,6 +69,7 @@ export async function GET(request: NextRequest) {
       feedbackSnap,
       purchaseGrantsSnap,
       certificateCreditsSnap,
+      scenarioLeadsSnap,
     ] = await Promise.all([
       userRef.get(),
       userRef.collection("savedScenarios").get(),
@@ -74,6 +81,9 @@ export async function GET(request: NextRequest) {
       db.collection("feedback").where("uid", "==", uid).get(),
       db.collection("purchaseGrants").where("uid", "==", uid).get(),
       db.collection("certificateCredits").doc(uid).get(),
+      verifiedEmail
+        ? db.collection("studioScenarioLeads").where("email", "==", verifiedEmail).get()
+        : Promise.resolve({ docs: [] as FirebaseFirestore.QueryDocumentSnapshot[] }),
     ]);
 
     // Read gated contact payloads with bounded concurrency so large lead histories
@@ -103,6 +113,28 @@ export async function GET(request: NextRequest) {
         id: docSnap.id,
         ...(toPortable(docSnap.data()) as Record<string, unknown>),
       })),
+      emailedScenarioLinks: scenarioLeadsSnap.docs.map((docSnap) => {
+        const data = docSnap.data();
+        let snapshot: unknown = null;
+        try {
+          if (typeof data.scenarioSnapshot === "string" && data.scenarioSnapshot.length <= 100_000) {
+            snapshot = JSON.parse(data.scenarioSnapshot);
+          }
+        } catch { /* Keep the rest of the export available for malformed legacy snapshots. */ }
+        return {
+          id: docSnap.id,
+          email: data.email ?? null,
+          marketingOptIn: Boolean(data.marketingOptIn),
+          address: data.address ?? null,
+          city: data.city ?? null,
+          parcelId: data.parcelId ?? null,
+          scenarioUrl: data.scenarioUrl ?? null,
+          scenarioSnapshot: parseEmailScenario(snapshot),
+          createdAt: toPortable(data.createdAt) ?? null,
+          consentVersion: data.consentVersion ?? null,
+          emailDeliveryStatus: data.emailDeliveryStatus ?? null,
+        };
+      }),
       builderProfile: builderSnap.exists ? toPortable(builderSnap.data()) : null,
       connectionRequests,
       feedback: feedbackSnap.docs.map((docSnap) => ({

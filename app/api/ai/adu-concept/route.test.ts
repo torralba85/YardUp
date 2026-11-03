@@ -37,7 +37,15 @@ function makeConceptRequest({
         arrayBuffer: async () => imageBytes.slice().buffer,
       } as File,
     ],
-    ["parcel", JSON.stringify(parcelPresets[0])],
+    [
+      "parcel",
+      JSON.stringify({
+        ...parcelPresets[0],
+        lat: 32.7157,
+        lng: -117.1611,
+        apn: "123-456-78-00",
+      }),
+    ],
     ["config", JSON.stringify(defaultAduConfig)],
   ]);
   if (consent !== null) fields.set("consent", consent);
@@ -105,7 +113,7 @@ describe("POST /api/ai/adu-concept", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("uses the Responses image-generation tool with the documented model fallbacks", async () => {
+  it("uses the Responses image-generation tool with the documented model fallbacks and strips address/coordinates from parcel context", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-openai-key");
     vi.stubEnv("OPENAI_TEXT_MODEL", "");
     vi.stubEnv("OPENAI_IMAGE_MODEL", "");
@@ -139,7 +147,8 @@ describe("POST /api/ai/adu-concept", () => {
     expect(requireApiAuthMock).toHaveBeenCalledOnce();
     expect(consumeOpenAIProviderQuotaMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    const styleRequestBody = JSON.parse(fetchMock.mock.calls[0][1].body as string) as {
+    const styleRequestRaw = fetchMock.mock.calls[0][1].body as string;
+    const styleRequestBody = JSON.parse(styleRequestRaw) as {
       model: string;
     };
     const imageRequestBody = JSON.parse(fetchMock.mock.calls[1][1].body as string) as {
@@ -149,6 +158,16 @@ describe("POST /api/ai/adu-concept", () => {
     expect(styleRequestBody.model).toBe("gpt-5.6-sol");
     expect(imageRequestBody.model).toBe("gpt-5.6-sol");
     expect(imageRequestBody.tools).toEqual([{ type: "image_generation" }]);
+    expect(styleRequestRaw).not.toContain(parcelPresets[0].address);
+    expect(styleRequestRaw).not.toContain("32.7157");
+    expect(styleRequestRaw).not.toContain("-117.1611");
+    expect(styleRequestRaw).not.toContain("123-456-78-00");
+    expect(styleRequestRaw).toContain(parcelPresets[0].city);
+    for (const key of ["lotArea", "lotWidth", "lotLength", "existingHouseSqft"] as const) {
+      expect(styleRequestRaw).toContain(
+        JSON.stringify(`${JSON.stringify(key)}:${parcelPresets[0][key]}`).slice(1, -1),
+      );
+    }
   });
 
   it("rejects malformed provider output before requesting image generation", async () => {

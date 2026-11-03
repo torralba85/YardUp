@@ -27,7 +27,7 @@ function SupportEmail() {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, ATTOM, Census, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4).
+ * infrastructure (Firebase, Regrid, ATTOM, Census, OpenStreetMap, Esri, USGS 3DEP, CAL FIRE, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4, Cloudflare).
  * The version in the kicker must match `CURRENT_LEGAL_CONSENT` in `lib/legal-consent.ts`.
  */
 export default function PrivacyPage() {
@@ -73,8 +73,10 @@ export default function PrivacyPage() {
             property address, design, estimate snapshot, and optional permit-update preference to
             prepare and deliver that email. Links remain available until deleted; anyone with your
             link can view the layout and property address. Marketing updates require a separate,
-            optional opt-in. Contact support@lotfoundry.net to withdraw that opt-in or delete the
-            saved link and associated lead. The email is delivered by Resend (see Section 3).
+            optional opt-in. Deleting an account with a verified email address also deletes saved
+            lot links for that email, or you can contact support@lotfoundry.net at any time to
+            withdraw that opt-in or delete the saved link and associated lead. The email is delivered
+            by Resend (see Section 3).
           </li>
           <li>
             <strong>Marketplace &amp; Referral Requests:</strong> When you ask to connect with
@@ -136,9 +138,13 @@ export default function PrivacyPage() {
             Authentication, Cloud Firestore, and Firebase App Check with Google reCAPTCHA Enterprise).
           </li>
           <li>
-            <strong>Geocoding &amp; Spatial Data:</strong> Property searches use <em>Google Maps Platform</em>,{" "}
-            <em>Regrid</em> (Loveland Technologies parcel boundaries), the <em>US Census Bureau Geocoder</em>,{" "}
-            <em>USA Structures</em> (federal building footprints), and municipal GIS open data portals.
+            <strong>Geocoding &amp; Spatial Data:</strong> Property searches and 3D context views use{" "}
+            <em>Google Maps Platform</em>, <em>OpenStreetMap</em> (Nominatim geocoding and OSM map/building
+            tiles), <em>Esri World Imagery</em> (ArcGIS Online satellite tiles), <em>Regrid</em>{" "}
+            (Loveland Technologies parcel boundaries), the <em>US Census Bureau Geocoder</em>,{" "}
+            <em>USGS 3DEP</em> (National Map terrain elevation), <em>USA Structures</em> (federal
+            building footprints), and state and municipal GIS open data portals (including{" "}
+            <em>CAL FIRE</em> fire hazard severity zone layers).
           </li>
           <li>
             <strong>Property Address Verification (ATTOM):</strong> For signed-in address searches,
@@ -158,10 +164,11 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI</em> API to process
-            both: (1) optional user-uploaded photos to generate architectural style-match imagery, and
-            (2) parcel metrics, zoning constraints, and feasibility parameters to synthesize the
-            narrative AI Project Brief and risk breakdown included with Certificates. Under
-            OpenAI&rsquo;s API terms, inputs are not used to train its models by default.
+            both: (1) optional user-uploaded photos (paired with non-identifying lot and ADU style
+            parameters) to generate architectural style-match imagery, and (2) parcel metrics, zoning
+            constraints, and feasibility parameters to synthesize the narrative AI Project Brief and
+            risk breakdown included with Certificates. Under OpenAI&rsquo;s API terms, inputs are not
+            used to train its models by default.
           </li>
           <li>
             <strong>Address &amp; Zoning Interpretation (TypeSafe):</strong> We use <em>TypeSafe</em>{" "}
@@ -189,8 +196,12 @@ export default function PrivacyPage() {
         <p>
           When you use the AI Style-Match feature, your photo is processed locally in your browser to
           downscale the image and strip all embedded EXIF, GPS location, and camera metadata prior to
-          transmission. The prepared image is sent directly via encrypted API to OpenAI to produce a
-          concept visualization. LotFoundry does not store raw photos on our database servers.
+          transmission. The prepared image and non-identifying lot context (city, zoning district,
+          lot dimensions, and target ADU configuration, without your street address or parcel
+          coordinates) are sent directly via encrypted API to OpenAI to produce a concept
+          visualization. LotFoundry does not store your original uploaded photo on our database
+          servers; if you save a scenario to your account, the resulting AI concept rendering is
+          stored with that saved scenario until you delete the scenario or your account.
         </p>
         <p>
           When generating a Certificate of Feasibility, project feasibility parameters (lot size,
@@ -246,10 +257,11 @@ export default function PrivacyPage() {
           portal (accessible without installing our mobile application).
         </p>
         <p>
-          Upon deletion, your active profile, saved scenario studies, and contact records are permanently
-          removed from active product databases. We retain transactional, accounting, tax, dispute, and
-          fraud records for up to seven (7) years as required by applicable commercial and financial
-          regulations, in de-identified or pseudonymized format.
+          Upon deletion, your active profile, saved scenario studies, emailed 3D lot links associated
+          with your verified account email, and contact records are permanently removed from active
+          product databases. We retain transactional, accounting, tax, dispute, and fraud records for
+          up to seven (7) years as required by applicable commercial and financial regulations, in
+          de-identified or pseudonymized format.
         </p>
         <p>
           <strong>Information already shared at your direction.</strong> Deleting your LotFoundry
