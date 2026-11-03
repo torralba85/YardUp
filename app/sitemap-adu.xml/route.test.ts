@@ -19,7 +19,7 @@ describe("sitemap-adu.xml", () => {
     const xml = buildAduSitemapXml();
     expect(xml).toContain(`<loc>${hubUrl()}</loc>`);
     expect(xml).toContain(`<loc>${stateCostUrl()}</loc>`);
-    expect(xml).toContain("<lastmod>2026-10-07</lastmod>");
+    expect(xml).toContain("<lastmod>2026-10-29</lastmod>");
     expect(xml).toContain(`<loc>${calculatorUrl()}</loc>`);
     expect(xml).toContain(`<loc>${methodologyUrl()}</loc>`);
     for (const city of ADU_CITIES) {
