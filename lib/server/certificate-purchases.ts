@@ -65,6 +65,38 @@ export interface GrantCertificateInput {
   parcelData?: Record<string, unknown>;
 }
 
+/** The grant document's Firestore ref, at the deterministic `{uid}_{certKey}` id. */
+export function certificateGrantRef(uid: string, certKey: string) {
+  return getAdminDb()
+    .collection(CERTIFICATE_PURCHASES)
+    .doc(purchaseId(uid, certKey));
+}
+
+/** The grant document fields, shared by paid grants and agent-pass grants. */
+export function certificateGrantData(input: GrantCertificateInput): Record<string, unknown> {
+  const docData: Record<string, unknown> = {
+    uid: input.uid,
+    certKey: input.certKey,
+    stripeSessionId: input.stripeSessionId,
+    amount: input.amount,
+    status: "granted",
+    demo: input.demo ?? false,
+    analyticsOrderId: input.analyticsOrderId ?? randomUUID(),
+    createdAt: FieldValue.serverTimestamp(),
+  };
+  if (input.parcelName) docData.parcelName = input.parcelName;
+  if (input.address) docData.address = input.address;
+  if (input.city) docData.city = input.city;
+  if (input.state) docData.state = input.state;
+  if (input.zip) docData.zip = input.zip;
+  if (Number.isFinite(input.lat)) docData.lat = input.lat;
+  if (Number.isFinite(input.lng)) docData.lng = input.lng;
+  if (input.parcelData && isStorableParcelData(input.parcelData)) {
+    docData.parcelData = input.parcelData;
+  }
+  return docData;
+}
+
 /**
  * Write the certificate grant via the Admin SDK (which bypasses the
  * `certificatePurchases` "no client write" rule). Uses `create()` so a replay or
@@ -75,33 +107,10 @@ export interface GrantCertificateInput {
 export async function grantCertificate(
   input: GrantCertificateInput,
 ): Promise<boolean> {
-  const ref = getAdminDb()
-    .collection(CERTIFICATE_PURCHASES)
-    .doc(purchaseId(input.uid, input.certKey));
+  const ref = certificateGrantRef(input.uid, input.certKey);
 
   try {
-    const docData: Record<string, unknown> = {
-      uid: input.uid,
-      certKey: input.certKey,
-      stripeSessionId: input.stripeSessionId,
-      amount: input.amount,
-      status: "granted",
-      demo: input.demo ?? false,
-      analyticsOrderId: input.analyticsOrderId ?? randomUUID(),
-      createdAt: FieldValue.serverTimestamp(),
-    };
-    if (input.parcelName) docData.parcelName = input.parcelName;
-    if (input.address) docData.address = input.address;
-    if (input.city) docData.city = input.city;
-    if (input.state) docData.state = input.state;
-    if (input.zip) docData.zip = input.zip;
-    if (Number.isFinite(input.lat)) docData.lat = input.lat;
-    if (Number.isFinite(input.lng)) docData.lng = input.lng;
-    if (input.parcelData && isStorableParcelData(input.parcelData)) {
-      docData.parcelData = input.parcelData;
-    }
-
-    await ref.create(docData);
+    await ref.create(certificateGrantData(input));
     return true;
   } catch (err) {
     if (isAlreadyExists(err)) return false;

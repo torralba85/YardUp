@@ -19,12 +19,21 @@ import {
   clearCertificatePurchaseIntent,
   hasCertificatePurchaseIntent,
 } from "@/lib/certificate-purchase-intent";
+import {
+  AgentPassError,
+  clearAgentPass,
+  clearAgentPassRedeemIntent,
+  hasAgentPassRedeemIntent,
+  rememberAgentPass,
+  readAgentPass,
+} from "@/lib/agent-pass";
 
 const mocks = vi.hoisted(() => ({
   getIdToken: vi.fn(),
   refresh: vi.fn(),
   trackPurchase: vi.fn(),
   startCertificateCheckout: vi.fn(),
+  redeemAgentPass: vi.fn(),
   intent: null as CertificateReturnIntent | null,
   recoveryStatus: "idle" as CertificateRecovery["status"],
   consumeOpen: vi.fn(),
@@ -53,6 +62,7 @@ const analyticsEvents = vi.hoisted(() => ({
   trackCertificateCheckoutRedirected: vi.fn(),
   trackCertificateCheckoutCancelled: vi.fn(),
   trackCertificatePurchase: vi.fn(),
+  trackCertificatePassRedeemed: vi.fn(),
   mapPurchaseChannel: vi.fn(() => "web_stripe"),
   mapFeasibilityVerdict: vi.fn(() => "eligible"),
 }));
@@ -118,6 +128,14 @@ vi.mock("@/lib/certificate-checkout", async (importOriginal) => {
   return {
     ...actual,
     startCertificateCheckout: mocks.startCertificateCheckout,
+  };
+});
+
+vi.mock("@/lib/agent-pass", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/agent-pass")>();
+  return {
+    ...actual,
+    redeemAgentPass: mocks.redeemAgentPass,
   };
 });
 
@@ -232,11 +250,14 @@ function stubLocationAssign() {
 describe("CertificatePanel", () => {
   beforeEach(() => {
     clearCertificatePurchaseIntent();
+    clearAgentPass();
+    clearAgentPassRedeemIntent();
     window.sessionStorage.clear();
     mocks.getIdToken.mockReset().mockResolvedValue("test-token");
     mocks.refresh.mockReset();
     mocks.trackPurchase.mockReset();
     mocks.startCertificateCheckout.mockReset();
+    mocks.redeemAgentPass.mockReset().mockResolvedValue(undefined);
     mocks.intent = null;
     mocks.recoveryStatus = "idle";
     mocks.consumeOpen.mockReset().mockReturnValueOnce(true).mockReturnValue(false);
@@ -294,6 +315,148 @@ describe("CertificatePanel", () => {
     render(<CertificatePanel {...createProps({ result: { ...result, remainingCapacity: -380 } })} />);
     expect(screen.getByText(/This concept exceeds the modeled size allowance/)).toBeInTheDocument();
     expect(screen.getByText(/Unlocks this property permanently/)).toBeInTheDocument();
+  });
+
+  describe("agent pass", () => {
+    beforeEach(() => { mocks.access.purchased = false; });
+
+    it("lets buyers replace a failed remembered code and keeps the replacement", async () => {
+      rememberAgentPass("OLD-CODE");
+      mocks.redeemAgentPass.mockRejectedValueOnce(new AgentPassError("This code has expired."));
+      render(<CertificatePanel {...createProps()} />);
+      fireEvent.click(screen.getByRole("button", { name: "Get this certificate free" }));
+      await screen.findByText("This code has expired.");
+      fireEvent.click(screen.getByRole("button", { name: "Change agent code" }));
+      expect(readAgentPass()).toBeNull();
+      fireEvent.click(screen.getByText("Have an agent code?"));
+      fireEvent.change(screen.getByLabelText("Agent code"), { target: { value: "NEW-CODE" } });
+      fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
+      await waitFor(() => expect(mocks.redeemAgentPass).toHaveBeenLastCalledWith(expect.objectContaining({ code: "NEW-CODE" })));
+      expect(readAgentPass()).toBe("NEW-CODE");
+    });
+
+    it.each(["pass", "checkout"])("prevents competing purchases while %s is pending", async (operation) => {
+      rememberAgentPass("SMITH-ELM");
+      let finish!: (value: never) => void;
+      const pending = new Promise((resolve) => { finish = resolve; });
+      const request = operation === "pass" ? mocks.redeemAgentPass : mocks.startCertificateCheckout;
+      request.mockReturnValueOnce(pending);
+      render(<CertificatePanel {...createProps()} />);
+      const claim = screen.getByRole("button", { name: "Get this certificate free" });
+      const buy = screen.getByRole("button", { name: /Unlock property certificate/ });
+      fireEvent.click(operation === "pass" ? claim : buy);
+      await waitFor(() => expect(request).toHaveBeenCalledOnce());
+      expect(claim).toBeDisabled();
+      expect(buy).toBeDisabled();
+      fireEvent.click(operation === "pass" ? buy : claim);
+      expect(operation === "pass" ? mocks.startCertificateCheckout : mocks.redeemAgentPass).not.toHaveBeenCalled();
+      finish({ kind: "already_purchased" } as never);
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+    });
+
+    it("offers a linked agent code and claims it in place without a purchase conversion", async () => {
+      rememberAgentPass("smith-elm");
+      render(<CertificatePanel {...createProps()} />);
+      expect(screen.getByText("Agent code SMITH-ELM")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Get this certificate free" }));
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+      expect(mocks.redeemAgentPass).toHaveBeenCalledWith(expect.objectContaining({
+        code: "SMITH-ELM",
+        certKey: certificateKey(parcel),
+        idToken: "test-token",
+      }));
+      expect(analyticsEvents.trackCertificatePassRedeemed).toHaveBeenCalledWith({ feasibility_status: "eligible" });
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(analyticsEvents.trackCertificatePurchase).not.toHaveBeenCalled();
+      expect(mocks.trackPurchase).not.toHaveBeenCalled();
+    });
+
+    it("puts a linked code's free claim above the price, and a typed code below it", () => {
+      rememberAgentPass("SMITH-ELM");
+      const { unmount } = render(<CertificatePanel {...createProps()} />);
+      const claim = screen.getByRole("button", { name: "Get this certificate free" });
+      const buy = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      expect(claim.compareDocumentPosition(buy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      unmount();
+
+      clearAgentPass();
+      render(<CertificatePanel {...createProps()} />);
+      const typed = screen.getByText("Have an agent code?");
+      const buyAgain = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      expect(buyAgain.compareDocumentPosition(typed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("shows the server's reason when a code does not apply", async () => {
+      rememberAgentPass("SMITH-ELM");
+      mocks.redeemAgentPass.mockRejectedValue(new AgentPassError("This code has expired."));
+      render(<CertificatePanel {...createProps()} />);
+      fireEvent.click(screen.getByRole("button", { name: "Get this certificate free" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("This code has expired.");
+      expect(mocks.refresh).not.toHaveBeenCalled();
+      expect(analyticsEvents.trackCertificatePassRedeemed).not.toHaveBeenCalled();
+    });
+
+    it("carries a guest's claim through account creation, then redeems", async () => {
+      mocks.auth.user = null;
+      rememberAgentPass("SMITH-ELM");
+      const props = createProps();
+      const { rerender } = render(<CertificatePanel {...props} />);
+      fireEvent.click(screen.getByRole("button", { name: "Create a free account to claim it" }));
+      expect(screen.getByRole("dialog")).toHaveAttribute("data-mode", "sign-up");
+      expect(hasAgentPassRedeemIntent(certificateKey(parcel))).toBe(true);
+      expect(mocks.redeemAgentPass).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
+      rerender(<CertificatePanel {...props} />);
+      await waitFor(() => expect(mocks.redeemAgentPass).toHaveBeenCalledTimes(1));
+      expect(hasAgentPassRedeemIntent()).toBe(false);
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+    });
+
+    it("forgets a guest's claim when they dismiss the account step", () => {
+      mocks.auth.user = null;
+      rememberAgentPass("SMITH-ELM");
+      render(<CertificatePanel {...createProps()} />);
+      fireEvent.click(screen.getByRole("button", { name: "Create a free account to claim it" }));
+      fireEvent.click(screen.getByRole("button", { name: "Dismiss authentication" }));
+      expect(hasAgentPassRedeemIntent()).toBe(false);
+    });
+
+    it("accepts a typed code and rejects a malformed one before calling the server", async () => {
+      render(<CertificatePanel {...createProps()} />);
+      fireEvent.click(screen.getByText("Have an agent code?"));
+      const field = screen.getByLabelText("Agent code");
+      fireEvent.change(field, { target: { value: "!!" } });
+      fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Enter the code exactly as your agent shared it.");
+      expect(mocks.redeemAgentPass).not.toHaveBeenCalled();
+      fireEvent.change(field, { target: { value: " smith-elm " } });
+      fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
+      await waitFor(() => expect(mocks.redeemAgentPass).toHaveBeenCalledWith(expect.objectContaining({ code: "SMITH-ELM" })));
+    });
+
+    it("is not offered to builders, in store shells, or once the certificate is unlocked", () => {
+      rememberAgentPass("SMITH-ELM");
+      mocks.auth.profile = { role: "builder" };
+      const { rerender } = render(<CertificatePanel {...createProps()} />);
+      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+
+      mocks.auth.profile = null;
+      storePrice.override = { channel: "google-play", amount: "", amountCompact: "", unitAmount: "", exact: false, loading: false } as StorePriceDisplay;
+      rerender(<CertificatePanel {...createProps()} />);
+      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+
+      storePrice.override = null;
+      mocks.access.purchased = true;
+      rerender(<CertificatePanel {...createProps()} />);
+      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+    });
+
+    it("labels a $0 agent-pass grant as complimentary", () => {
+      mocks.access.purchased = true;
+      render(<CertificatePanel {...createProps({ recovery: { ...createProps().recovery, get access() { return { ...mocks.access, amount: 0, refresh: mocks.refresh }; } } as CertificateRecovery })} />);
+      expect(screen.getByText("Complimentary")).toBeInTheDocument();
+      expect(screen.queryByText("Purchased")).not.toBeInTheDocument();
+    });
   });
 
   describe("paywall offer", () => {

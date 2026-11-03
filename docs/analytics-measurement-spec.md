@@ -500,6 +500,22 @@ feasibility_status is deliberately omitted: the event fires before the studio re
 Owner:
 components/studio/CertificatePanel.tsx.
 
+### 10c. certificate_pass_redeemed
+
+Business meaning:
+A buyer claimed a complimentary certificate with a real estate agent's pass code (`/api/certificates/redeem` wrote a `$0` grant stamped `source: "agent_pass"`). This is not a sale: never send it with value, currency or a transaction id, and never as `purchase` or a Google Ads conversion.
+
+Fire:
+Once, after the redeem API returns success for a new or existing grant. Never on a rejected code.
+
+Parameters:
+- feasibility_status
+
+The agent's code is deliberately omitted. Program attribution comes from the first-party `agentPasses/{code}/redemptions` records, not analytics.
+
+Owner:
+components/studio/CertificatePanel.tsx.
+
 ### 11. purchase
 
 Business meaning:

@@ -19,6 +19,7 @@ import {
   trackCertificateCheckoutCancelled,
   trackCertificateCheckoutRedirected,
   trackCertificateCheckoutStarted,
+  trackCertificatePassRedeemed,
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
   type FeasibilityStatus,
@@ -41,6 +42,16 @@ import {
 } from "@/lib/certificate-purchase-intent";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import {
+  AgentPassError,
+  clearAgentPassRedeemIntent,
+  clearAgentPass,
+  hasAgentPassRedeemIntent,
+  readAgentPass,
+  redeemAgentPass,
+  rememberAgentPass,
+  rememberAgentPassRedeemIntent,
+} from "@/lib/agent-pass";
+import {
   FINANCING_SCENARIOS,
   formatOperatingShare,
 } from "@/lib/certificate-pro-forma";
@@ -49,6 +60,7 @@ import {
 } from "@/lib/certificate-permit-audit";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
+import AgentPassOffer from "./AgentPassOffer";
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
@@ -112,6 +124,17 @@ export default function CertificatePanel({
   const sawSettledUnpurchased = useRef(false);
   const adsConversionFiredFor = useRef<string | null>(null);
   const paywallViewedFor = useRef<string | null>(null);
+  const [linkedPassCode, setLinkedPassCode] = useState<string | null>(null);
+  const [passBusy, setPassBusy] = useState(false);
+  const [passError, setPassError] = useState<string | null>(null);
+  const purchaseOperation = useRef(false);
+
+  // The agent's code was captured from the link when the Studio opened.
+  useEffect(() => {
+    // Reads sessionStorage once after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLinkedPassCode(readAgentPass());
+  }, []);
 
   // A parcel switch is a new purchase context — never carry unlock history
   // from one certificate key to another.
@@ -229,6 +252,8 @@ export default function CertificatePanel({
   }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
 
   const beginCheckout = useCallback(async (authenticatedUser: FirebaseUser) => {
+    if (purchaseOperation.current) return;
+    purchaseOperation.current = true;
     setBusy(true);
     setError(null);
     recovery.acknowledgeCancellation();
@@ -279,6 +304,7 @@ export default function CertificatePanel({
           : "Could not start checkout. Please try again.",
       );
     } finally {
+      purchaseOperation.current = false;
       setBusy(false);
     }
   }, [certKey, feasibilityStatus, parcel, parcelName, recovery, refresh]);
@@ -302,7 +328,71 @@ export default function CertificatePanel({
     void beginCheckout(user);
   }, [authLoading, beginCheckout, certKey, loading, profile, purchased, recovery, user]);
 
+  const redeemPass = useCallback(async (authenticatedUser: FirebaseUser, code: string) => {
+    if (purchaseOperation.current) return;
+    purchaseOperation.current = true;
+    setPassBusy(true);
+    setPassError(null);
+    try {
+      const idToken = await authenticatedUser.getIdToken();
+      const isLive = "source" in parcel && Boolean(parcel.source);
+      await redeemAgentPass({
+        code,
+        certKey,
+        idToken,
+        parcelName,
+        address: "address" in parcel && typeof parcel.address === "string" ? parcel.address : undefined,
+        city: "city" in parcel && typeof parcel.city === "string" ? parcel.city : undefined,
+        state: "state" in parcel && typeof parcel.state === "string" ? parcel.state : undefined,
+        zip: "zip" in parcel && typeof parcel.zip === "string" ? parcel.zip : undefined,
+        lat: "lat" in parcel && typeof parcel.lat === "number" ? parcel.lat : undefined,
+        lng: "lng" in parcel && typeof parcel.lng === "number" ? parcel.lng : undefined,
+        parcelData: isLive ? (parcel as unknown as Record<string, unknown>) : undefined,
+      });
+      trackCertificatePassRedeemed({ feasibility_status: feasibilityStatus });
+      refresh(); // the $0 grant is written; unlock in place
+    } catch (err) {
+      setPassError(
+        err instanceof AgentPassError ? err.message : "Could not apply this code. Please try again.",
+      );
+    } finally {
+      purchaseOperation.current = false;
+      setPassBusy(false);
+    }
+  }, [certKey, feasibilityStatus, parcel, parcelName, refresh]);
+
+  // A guest's claim click survives the account step the same way a purchase
+  // click does, and resumes once the new session's reads have settled.
+  useEffect(() => {
+    if (!user || authLoading || loading) return;
+    if (!hasAgentPassRedeemIntent(certKey)) return;
+    clearAgentPassRedeemIntent();
+    const code = readAgentPass();
+    if (!code || profile?.role === "builder" || purchased) return;
+    // Resuming follows an explicit claim click and a completed sign-in.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void redeemPass(user, code);
+  }, [authLoading, certKey, loading, profile, purchased, redeemPass, user]);
+
+  async function handlePassRedeem(code: string) {
+    if (purchaseOperation.current) return;
+    clearCertificatePurchaseIntent();
+    rememberAgentPass(code);
+    setLinkedPassCode(code);
+    if (!user) {
+      if ("source" in parcel && Boolean(parcel.source)) {
+        stashedForPurchase.current = stashInitialParcel(parcel as unknown as LiveParcelData);
+      }
+      rememberAgentPassRedeemIntent(certKey);
+      setAuthOpen(true);
+      return;
+    }
+    await redeemPass(user, code);
+  }
+
   async function handleCta() {
+    if (purchaseOperation.current) return;
+    clearAgentPassRedeemIntent();
     const recoveryActive = Boolean(recovery.intent && recovery.intent.kind !== "cancel");
     if (recoveryActive && !purchased && user) return;
     if (purchased) {
@@ -327,8 +417,9 @@ export default function CertificatePanel({
   function handleAuthClose(reason: AuthModalCloseReason) {
     setAuthOpen(false);
     if (reason === "signed-in") return;
-    // Dismissed without an account: never start this purchase on a later sign-in.
+    // Dismissed without an account: never start this purchase or claim on a later sign-in.
     clearCertificatePurchaseIntent();
+    clearAgentPassRedeemIntent();
     if (stashedForPurchase.current) {
       clearInitialParcel();
       stashedForPurchase.current = false;
@@ -344,7 +435,7 @@ export default function CertificatePanel({
     : "Continue to purchase";
   const feeJurisdiction = resolveFeeJurisdiction(parcel);
   const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
-  const reportBusy = busy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
+  const reportBusy = busy || passBusy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
 
   const ctaLabel = recoveryPending
     ? user
@@ -370,6 +461,24 @@ export default function CertificatePanel({
   const ctaNote = purchased || recoveryPending
     ? undefined
     : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Unlocks this property permanently`;
+
+  // Web only: a store shell sells digital goods through its own billing.
+  const showPassOffer = !purchased && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
+  const passOffer = (
+    <AgentPassOffer
+      linkedCode={linkedPassCode}
+      busy={passBusy || busy || loading}
+      error={passError}
+      signedIn={Boolean(user)}
+      onRedeem={(code) => void handlePassRedeem(code)}
+      onClear={() => {
+        clearAgentPass();
+        clearAgentPassRedeemIntent();
+        setLinkedPassCode(null);
+        setPassError(null);
+      }}
+    />
+  );
 
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
@@ -409,6 +518,9 @@ export default function CertificatePanel({
         </div>
       )}
 
+      {/* A buyer who arrived on an agent's link sees the free claim before the price. */}
+      {showPassOffer && linkedPassCode && passOffer}
+
       <EstimateSummaryPanel
         parcelName={parcelName}
         result={result}
@@ -421,6 +533,8 @@ export default function CertificatePanel({
         certificateUnlocked={purchased}
         feeJurisdiction={feeJurisdiction}
       />
+
+      {showPassOffer && !linkedPassCode && passOffer}
 
       {!purchased && (
         <p className="text-center text-xs leading-5 text-lot-stone">
@@ -435,7 +549,7 @@ export default function CertificatePanel({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-lot-ink">Certificate unlocked</h3>
-                <StatusChip status="clear" label="Purchased" />
+                <StatusChip status="clear" label={amount === 0 ? "Complimentary" : "Purchased"} />
               </div>
               <p className="lf-body-sm mt-1 text-lot-stone">
                 Your complete Certificate of Feasibility for {parcelName} is ready to print,

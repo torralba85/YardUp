@@ -4,6 +4,18 @@
 Component package providing domain logic and interface implementations for lib.
 
 ## Interface
+- `agent-pass.ts:AGENT_PASS_PARAM` - Exported constant / variable
+- `agent-pass.ts:AGENT_PASS_REDEEM_TTL_MS` - Exported constant / variable
+- `agent-pass.ts:normalizeAgentPassCode` - Exported Function
+- `agent-pass.ts:rememberAgentPass` - Exported Function
+- `agent-pass.ts:readAgentPass` - Exported Function
+- `agent-pass.ts:clearAgentPass` - Exported Function
+- `agent-pass.ts:rememberAgentPassRedeemIntent` - Exported Function
+- `agent-pass.ts:hasAgentPassRedeemIntent` - Exported Function
+- `agent-pass.ts:clearAgentPassRedeemIntent` - Exported Function
+- `agent-pass.ts:AgentPassError` - Exported Class
+- `agent-pass.ts:RedeemAgentPassInput` - TypeScript Interface
+- `agent-pass.ts:redeemAgentPass` - Exported Function
 - `account-settings.ts:AccountCapabilities` - TypeScript Interface
 - `account-settings.ts:getAccountCapabilities` - Exported Function
 - `account-settings.ts:validateDisplayName` - Exported Function

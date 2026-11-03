@@ -74,6 +74,26 @@ describe.skipIf(!hasFirestoreEmulator)("private Studio email leads", () => {
   });
 });
 
+const AGENT_LISTING = "1-elm-st-san-diego";
+
+describe.skipIf(!hasFirestoreEmulator)("agent passes", () => {
+  it("denies guest and signed-in reads and writes of passes and redemption records", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "agentPasses", "SMITH-ELM"), { certKey: AGENT_LISTING, status: "active", maxRedemptions: 10, redemptions: 0 });
+      await setDoc(doc(context.firestore(), "agentPasses", "SMITH-ELM", "redemptions", OWNER_ID), { uid: OWNER_ID });
+    });
+    for (const context of [rulesEnv().unauthenticatedContext(), rulesEnv().authenticatedContext(OWNER_ID)]) {
+      const pass = doc(context.firestore(), "agentPasses", "SMITH-ELM");
+      const redemption = doc(context.firestore(), "agentPasses", "SMITH-ELM", "redemptions", OWNER_ID);
+      await assertFails(getDoc(pass));
+      await assertFails(setDoc(pass, { redemptions: 0 }));
+      await assertFails(updateDoc(pass, { maxRedemptions: 1000 }));
+      await assertFails(getDoc(redemption));
+      await assertFails(deleteDoc(redemption));
+    }
+  });
+});
+
 function currentConsent(acceptedAt: unknown = serverTimestamp()) {
   return {
     termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,

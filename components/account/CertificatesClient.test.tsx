@@ -129,4 +129,27 @@ describe("CertificatesClient", () => {
       "/studio?cert=ca-san-jose-141-n-almaden-blvd-95110&checkout=open",
     );
   });
+
+  it("labels a $0 agent-pass certificate as complimentary instead of a price", () => {
+    const listing = "1234-elm-st-san-diego";
+    certState.certificates = [
+      {
+        id: `u1_${listing}`,
+        certKey: listing,
+        uid: "u1",
+        stripeSessionId: "pass:SMITH-ELM",
+        amount: 0,
+        status: "granted",
+        demo: false,
+        createdAt: new Date("2026-11-20T12:00:00Z"),
+        address: "1234 Elm St",
+        city: "San Diego",
+        state: "CA",
+      },
+    ];
+
+    render(<CertificatesClient />);
+    expect(screen.getByText("Complimentary")).toBeInTheDocument();
+    expect(screen.queryByText(/Amount:/)).not.toBeInTheDocument();
+  });
 });

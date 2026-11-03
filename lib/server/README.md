@@ -4,6 +4,11 @@
 Domain modeling, utility functions, and calculation engines for server.
 
 ## Interface
+- `agent-passes.ts:AGENT_PASSES` - Exported constant / variable
+- `agent-passes.ts:AGENT_PASS_GRANT_PREFIX` - Exported constant / variable
+- `agent-passes.ts:AgentPassRedeemResult` - Type Definition
+- `agent-passes.ts:RedeemAgentPassGrantInput` - Type Definition
+- `agent-passes.ts:redeemAgentPassGrant` - Exported Function
 - `active-checkout-sessions.ts:CheckoutPurchaseType` - Type Definition
 - `active-checkout-sessions.ts:ActiveCheckoutSession` - TypeScript Interface
 - `active-checkout-sessions.ts:ReserveActiveCheckoutInput` - TypeScript Interface
@@ -58,6 +63,8 @@ Domain modeling, utility functions, and calculation engines for server.
 - `census-geocode.ts:fetchCensusLocation` - Exported Function
 - `certificate-purchases.ts:purchaseId` - Re-exported symbol
 - `certificate-purchases.ts:GrantCertificateInput` - TypeScript Interface
+- `certificate-purchases.ts:certificateGrantRef` - Exported Function
+- `certificate-purchases.ts:certificateGrantData` - Exported Function
 - `certificate-purchases.ts:grantCertificate` - Exported Function
 - `certificate-purchases.ts:hasCertificate` - Exported Function
 - `checkout-origin.ts:resolveCheckoutOrigin` - Exported Function
