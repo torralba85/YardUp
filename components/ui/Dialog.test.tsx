@@ -37,7 +37,7 @@ describe("Dialog", () => {
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAccessibleDescription("One-time purchase.");
     expect(container).not.toContainElement(dialog);
-    expect(dialog).toHaveClass("border-[1.5px]", "border-lot-ink", "bg-lot-chalk", "sm:shadow-paper", "lf-dialog-panel");
+    expect(dialog).toHaveClass("border-[1.5px]", "border-lot-ink", "bg-lot-chalk", "lf-dialog-panel");
     expect(dialog.parentElement).toHaveClass("bg-lot-scrim", "lf-dialog-scrim", "z-(--z-index-modal)");
     expect(screen.getByRole("heading", { level: 2, name: "Unlock this lead" })).toBeInTheDocument();
   });

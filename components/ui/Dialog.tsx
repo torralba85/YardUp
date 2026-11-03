@@ -104,7 +104,8 @@ function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {
 /**
  * The one modal dialog. A chalk sheet in a 1.5px carbon frame with an inner
  * hairline mat, set on the carbon scrim (75%) like a print mounted on a board:
- * centred with a hard paper offset from `sm` up, a bottom sheet on phones.
+ * centred from `sm` up, a bottom sheet on phones. No exterior shadow: an
+ * offset sheet on the dark scrim can look like a second window.
  * It portals to `body`, makes the rest of the page inert, traps Tab, locks
  * page scroll, closes on Escape and on the scrim, and returns focus to its
  * opener. Render it only while open.
@@ -209,7 +210,7 @@ export function Dialog({
         aria-describedby={descriptionId}
         tabIndex={-1}
         className={cn(
-          "lf-dialog-panel relative flex max-h-[92dvh] w-full flex-col border-[1.5px] border-lot-ink bg-lot-chalk text-lot-ink outline-none sm:max-h-[min(92dvh,56rem)] sm:shadow-paper",
+          "lf-dialog-panel relative flex max-h-[92dvh] w-full flex-col border-[1.5px] border-lot-ink bg-lot-chalk text-lot-ink outline-none sm:max-h-[min(92dvh,56rem)]",
           SIZE[size],
           fill && "h-[92dvh] sm:h-[min(92dvh,56rem)]",
           printable && "print:h-auto print:max-h-none print:max-w-none print:border-0 print:shadow-none",

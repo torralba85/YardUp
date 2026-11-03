@@ -104,6 +104,9 @@ test.describe("Project-wide A LOT MORE contract", () => {
     await signIn.click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveCount(1);
+    // A pale offset shadow looks like a second window behind the sign-in form.
+    await expect(dialog).toHaveCSS("box-shadow", "none");
     await expect(dialog.locator("form input").first()).toHaveCSS("background-color", chalk);
     await expect(dialog.getByRole("checkbox")).toHaveCSS("background-color", chalk);
     await expect(dialog.getByRole("checkbox")).toHaveCSS("border-color", stone);

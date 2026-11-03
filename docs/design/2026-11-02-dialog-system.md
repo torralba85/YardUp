@@ -23,9 +23,9 @@ the shared look:
 - **Backdrop:** `lot-scrim`, a new token: carbon at 75%. One value for every modal backdrop, including
   the fine-tune drawer (it was 50%).
 - **Sheet:** chalk, radius 0, a 1.5px carbon frame and an inner hairline mat 6px in.
-- **Elevation:** from `sm` up, the landing's `shadow-paper` offset (`12px 16px 0 #E7E7DF`), so the sheet
-  reads as a print mounted on a board. `shadow-overlay` is a carbon offset, and on a carbon scrim it did
-  not read; it is now reserved.
+- **Elevation:** no exterior shadow. Andrew reported that the original desktop `shadow-paper` offset
+  looked like another window behind sign-in. The carbon frame and inner mat define a single sheet on
+  the scrim. Paper shadows remain for artwork on chalk; `shadow-overlay` stays reserved.
 - **Anatomy:**
   - an optional stone kicker;
   - a Space Grotesk 500 title (24px, 30px from `sm`);
@@ -144,3 +144,14 @@ Evidence, in [`evidence/dialog-system-20261102/`](./evidence/dialog-system-20261
   The one-orange-action rule says one of them should step down. Which one is a product call.
 - The fine-tune drawer stays a vaul drawer, because dragging is its interaction. Only its backdrop moved
   to `lot-scrim`.
+
+## Reported shadow correction
+
+The sign-in regression in `e2e/design-system.spec.ts` fails against the original live desktop dialog's
+`12px 16px` paper shadow and passes against the corrected production build. The focused unit suite
+passes 56 tests; the desktop/mobile design-system browser suite passes 22 tests (2 platform skips).
+Rendered checks confirm one dialog, no exterior shadow and no horizontal overflow at 1440, 390 and
+320px. Updated screenshots:
+[desktop](./evidence/dialog-shadow-20261102/sign-in-1440.png),
+[phone](./evidence/dialog-shadow-20261102/sign-in-390.png),
+[small phone](./evidence/dialog-shadow-20261102/sign-in-320.png).
