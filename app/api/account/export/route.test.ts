@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 
 const { requireApiAuthMock } = vi.hoisted(() => ({
   requireApiAuthMock: vi.fn(async () => ({
@@ -212,6 +213,7 @@ describe("GET /api/account/export", () => {
         parcelId: "p-1",
         scenarioUrl: "https://lotfoundry.net/studio?layout=sl-1",
         createdAt: null,
+        scenarioSnapshot: null,
         consentVersion: "studio-layout-v1",
         emailDeliveryStatus: "sent_resend",
       },
@@ -242,6 +244,28 @@ describe("GET /api/account/export", () => {
       },
     ]);
     expect(typeof body.exportedAt).toBe("string");
+  });
+
+  it("exports the validated layout itself so it survives link deletion", async () => {
+    state.studioScenarioLeads = [{ id: "layout", data: {
+      email: "owner@example.com",
+      scenarioSnapshot: JSON.stringify({ ...EMAIL_SCENARIO, internalQueueData: "omit-me" }),
+    } }];
+    const body = await (await GET(getRequest())).json();
+    const snapshot = body.emailedScenarioLinks[0].scenarioSnapshot;
+    expect(snapshot.liveParcel).toMatchObject({
+      address: EMAIL_SCENARIO.liveParcel!.address,
+      boundaryGeoJson: EMAIL_SCENARIO.liveParcel!.boundaryGeoJson,
+    });
+    expect(snapshot.config).toEqual(EMAIL_SCENARIO.config);
+    expect(snapshot).not.toHaveProperty("internalQueueData");
+  });
+
+  it.each(["{invalid", JSON.stringify({ invalid: true })])("keeps exports usable with malformed snapshots: %s", async (scenarioSnapshot) => {
+    state.studioScenarioLeads = [{ id: "layout", data: { email: "owner@example.com", scenarioSnapshot } }];
+    const response = await GET(getRequest());
+    expect(response.status).toBe(200);
+    expect((await response.json()).emailedScenarioLinks[0].scenarioSnapshot).toBeNull();
   });
 
   it("does not export studioScenarioLeads when the account email is unverified", async () => {
