@@ -15,7 +15,8 @@
  *
  * Rechecked in Chrome on 2026-11-03: Bulletin 210 (updated 09/16/2026, all
  * six pages), the ADU FAQs and the Preapproved ADUs page, plus HCD's ADU
- * Handbook (March 2026) for school fees, JADU occupancy and JADU rentals.
+ * Handbook (March 2026) for school fees, JADU occupancy and JADU rentals,
+ * and Municipal Code §§20.80.175-.179 on Municode (version of 2026-10-26).
  * The checklist governs; where the FAQ or State guidance says something
  * different (school fees, the exact-750 sq ft case), the page says so.
  *
@@ -45,13 +46,13 @@ export const sanJose: JurisdictionContent = {
     { label: "Two sets of standards", value: "Design to City standards (§20.80.175) or State standards (§20.80.176), never a mix", note: "Bulletin 210, Part 3" },
     { label: "Units — City standards", value: "1 ADU (attached or detached) + 1 JADU on a single-family lot", note: "Duplex and multifamily lots: 1 ADU" },
     { label: "Units — State standards", value: "1 new ADU of up to 800 sq ft + 1 conversion ADU + 1 JADU", note: "A new attached ADU is not allowed alongside a conversion ADU. Multifamily lots: up to 8 detached ADUs on an existing building (not more than its units) and conversions of up to 25% of the units" },
-    { label: "Max size — detached", value: "City: 1,000 sq ft on lots of 9,000 sq ft or less; 1,200 sq ft on larger lots. State: 800 sq ft", note: "Minimum 150 sq ft either way" },
+    { label: "Max size — detached", value: "City: 1,000 sq ft on lots of 9,000 sq ft or less; 1,200 sq ft on larger lots. State: 800 sq ft", note: "Minimum 150 sq ft either way. Under City standards, converting an existing detached accessory structure has no size cap (§20.80.175(D)(1)(d))" },
     { label: "Max size — attached", value: "City: 50% of the main home, up to 1,000 sq ft (lots of 9,000 sq ft or less) or 1,200 sq ft (larger lots)" },
     { label: "Max size — JADU", value: "500 sq ft, inside the home's existing footprint (an attached garage counts) or a proposed new home" },
     { label: "How size is measured", value: "Each livable floor, measured to the exterior finish", note: "The main home's figure excludes garages and unfinished attics and basements; a stairwell counts once" },
     { label: "Max height", value: "City: detached 18 ft (1 story) or 25 ft (2 stories); attached 25 ft. State: detached 16 ft; attached 25 ft", note: "State detached: up to 2 ft more for a pitched roof within a half-mile walk of a major transit stop or high-quality transit corridor" },
     { label: "Side and rear setbacks", value: "4 ft", note: "Under City standards, a zero setback is allowed for an attached ADU, a JADU or the ground floor of a detached ADU if building and fire codes are met" },
-    { label: "Where a detached ADU sits", value: "City standards: behind the main home or the zone's 45 ft front setback, with rear-yard coverage of 40% or less and 6 ft from other buildings", note: "Swimming pools don't count toward the 40%" },
+    { label: "Where a detached ADU sits", value: "City standards: in the rear yard, or at least 45 ft from the front property line with a 4 ft interior side setback, with rear-yard coverage of 40% or less and 6 ft from the main home", note: "Pools don't count toward the 40%, and neither the 40% nor the front setback can block an 800 sq ft ADU with 4 ft side and rear setbacks (§20.80.175)" },
     { label: "Parking required", value: "None", note: "Under City or State standards" },
     { label: "Fire access", value: "Every side of the ADU within 150 ft of the street curb along a 4 ft clear path, and its walls within 600 ft of a hydrant", note: "Otherwise a fire variance with added safety measures may be needed" },
     { label: "Renting and selling", value: "ADU rentals must be at least 30 days, even when listed on a short-term rental site, and JADU rentals longer than 30 days; selling the ADU separately requires a condominium conversion", note: "JADU: an owner must live on the property only if the JADU shares sanitation with the main home, in either the main home or the JADU (Gov. Code §66333)" },
@@ -60,7 +61,7 @@ export const sanJose: JurisdictionContent = {
     {
       heading: "City or State standards: one set for the whole project",
       paragraphs: [
-        "San José's checklist puts the choice up front: design the ADU to the City's development standards or to the State's, and the two cannot be mixed. City standards allow a bigger unit, a detached ADU of 1,000 square feet on a lot of 9,000 square feet or less and 1,200 square feet on a larger one, up to 25 feet and two stories. The trade-off is one ADU plus a junior ADU, and more rules about where it sits. A detached ADU goes behind the main home or the zone's 45-foot front setback, structures may cover no more than 40% of the rear yard (pools excluded), and it needs 6 feet of separation from other buildings. An attached ADU's front door must be on a different side of the house from the main entrance.",
+        "San José's checklist puts the choice up front: design the ADU to the City's development standards or to the State's, and the two cannot be mixed. City standards allow a bigger unit, a detached ADU of 1,000 square feet on a lot of 9,000 square feet or less and 1,200 square feet on a larger one, up to 25 feet and two stories. The trade-off is one ADU plus a junior ADU, and more rules about where it sits. A detached ADU goes in the rear yard, or at least 45 feet from the front property line if it keeps a 4-foot interior side setback. Structures may cover no more than 40% of the rear yard (pools excluded), and the ADU needs 6 feet of separation from the main home. Neither the 40% limit nor the zone's front setback can rule out an 800-square-foot ADU with 4-foot side and rear setbacks (Municipal Code §20.80.175). An attached ADU's front door must be on a different side of the house from the main entrance.",
         "State standards let you add more units with fewer local rules. A single-family lot can have a new ADU of up to 800 square feet, an ADU converted from existing space (which may grow by 150 square feet for access) and a junior ADU. The new unit can be attached, up to 25 feet, or detached, up to 16 feet, plus 2 feet for a pitched roof near a major transit stop. A new attached ADU is not allowed when there is also a conversion ADU. No other City design standard applies, including the historic-property rules in §20.80.175(E) that bind City-standard projects.",
         "Under either path a JADU is limited to 500 square feet inside the home's existing footprint, which can include an attached garage. An owner must live on the property only if the JADU shares bathroom facilities with the main home, and State law lets that owner live in either the main home or the JADU (Gov. Code §66333). A JADU that is rented must be rented for longer than 30 days.",
       ],
@@ -76,7 +77,7 @@ export const sanJose: JurisdictionContent = {
       heading: "Site conditions to check before you design",
       paragraphs: [
         "The checklist sends you to SJPermits.org to look up designations that change the design. In flood zones A, AE, AH or AO, the plans must follow the City's flood-zone design requirements. A geohazard or landslide designation requires a geologic hazard clearance, and a liquefaction zone does too once you build two or more units. Easements often allow no construction at all, so check the title report. A former swimming pool leaves a nonbuildable area until you document its demolition or provide a geotechnical report.",
-        "The main home must be legally built with approved permits, and any open code-enforcement case must be resolved before the City will accept ADU plans. An ordinance-size tree (38 inches or more in circumference, 4.5 feet above ground) can be removed for an ADU without a removal permit but must be replaced, while a heritage tree still needs a permit. PG&E now requires a separate electric meter for an ADU, though not for a JADU.",
+        "The main home must be legally built with approved permits, and any open code-enforcement case must be resolved before the City will accept ADU plans. An existing unpermitted ADU may still be legalized through the City's ADU Amnesty Program (§20.80.179) or under State law (AB 2533); the City's ADU Ally team reviews whether a unit qualifies. An ordinance-size tree (38 inches or more in circumference, 4.5 feet above ground) can be removed for an ADU without a removal permit but must be replaced, while a heritage tree still needs a permit. PG&E now requires a separate electric meter for an ADU, though not for a JADU. On a lot of half an acre or more, the ADU must sit more than 100 feet from a riparian corridor.",
       ],
     },
   ],
@@ -157,7 +158,7 @@ export const sanJose: JurisdictionContent = {
     {
       question: "What are the ADU setbacks in San José?",
       answer:
-        "4 feet on the side and rear. Under City standards, a zero setback is allowed for an attached ADU, a junior ADU or the ground floor of a detached ADU if building and fire codes are met, and a detached ADU sits behind the main home or the zone's 45-foot front setback.",
+        "4 feet on the side and rear. Under City standards, a zero setback is allowed for an attached ADU, a junior ADU or the ground floor of a detached ADU if building and fire codes are met, and a detached ADU sits in the rear yard or at least 45 feet from the front property line with a 4-foot interior side setback. The front setback and the 40% rear-yard limit cannot block an 800-square-foot ADU with 4-foot side and rear setbacks.",
     },
     {
       question: "Does San José have pre-approved ADU plans?",

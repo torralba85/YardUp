@@ -6,7 +6,7 @@ describe("regulations data layers", () => {
   it("keeps San Jose's two standards and fire checks explicit", () => {
     const guide = regulationGuides["san-jose"];
     const checklist = [guide.summary, ...guide.permitSteps, ...guide.blockers].join(" ");
-    for (const fact of ["20.80.175", "20.80.176", "never mix", "1,000", "1,200", "9,000", "800", "150 ft", "4 ft", "600 ft", "1,000 gpm", "20 psi", "water-company", "40%", "6 ft", "30 days"]) {
+    for (const fact of ["20.80.175", "20.80.176", "never mix", "1,000", "1,200", "9,000", "800", "150 ft", "4 ft", "600 ft", "1,000 gpm", "20 psi", "water-company", "40%", "6 ft", "30 days", "800 sq ft ADU with 4 ft side and rear setbacks"]) {
       expect(checklist).toContain(fact);
     }
     expect(checklist).not.toContain("Utility metering conflicts");

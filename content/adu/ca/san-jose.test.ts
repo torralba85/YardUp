@@ -36,6 +36,16 @@ describe("San José guide facts", () => {
     expect(answer).toContain("can take longer");
   });
 
+  it("carries the Municipal Code's 800 sq ft protection and legalization paths", () => {
+    // §20.80.175(D)(3)(a), (D)(5)(e): the front setback and 40% rear-yard limit cannot block an 800 sq ft ADU.
+    const siting = sanJose.glance.find(({ label }) => label === "Where a detached ADU sits")!;
+    expect(siting.value).toContain("45 ft from the front property line with a 4 ft interior side setback");
+    expect(siting.note).toContain("800 sq ft ADU");
+    const legalize = sanJose.cityDiffers.flatMap(({ paragraphs }) => paragraphs).join(" ");
+    expect(legalize).toContain("§20.80.179");
+    expect(legalize).toContain("AB 2533");
+  });
+
   it("keeps internal review notes out of the public copy", () => {
     const copy = JSON.stringify({ ...sanJose, sources: [] });
     expect(copy).not.toContain("Source check");

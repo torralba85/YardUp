@@ -155,7 +155,7 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
     summary: "Choose City standards (§20.80.175) or State standards (§20.80.176); never mix them. City detached limits: 1,000 sq ft on lots up to 9,000 sq ft, 1,200 sq ft on larger lots. State new-ADU limit: 800 sq ft. No parking required.",
     permitSteps: [
       "Complete Bulletin 210; confirm City boundaries, permitted home, site hazards and the chosen standards.",
-      "Check setbacks and height. City detached siting: behind the main home or the zone's 45 ft front setback; maximum 40% rear-yard coverage (pools excluded), with 6 ft building separation.",
+      "Check setbacks and height. City detached siting: rear yard, or 45 ft from the front property line with a 4 ft interior side setback; maximum 40% rear-yard coverage (pools excluded), with 6 ft separation from the main home. Neither rule can block an 800 sq ft ADU with 4 ft side and rear setbacks.",
       "Show every side within 150 ft of the street curb along a 4 ft clear path, and exterior walls within 600 ft of a hydrant; request a water-company letter showing 1,000 gpm at 20 psi.",
       "Submit the building-permit application through SJPermits and plans through SJePlans; resolve reviews, pay applicable fees and pass inspections.",
     ],
@@ -163,8 +163,9 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
       "Fire access or hydrant shortfalls may require a fire variance; easements, flood, geohazard and WUI conditions need site review.",
       "ADU rentals must be at least 30 days; separate sale requires condominium conversion.",
     ],
-    // Bulletin 210 (updated 09/16/2026) and the City ADU pages, read in Chrome
-    // (the City's site refuses automated readers); see content/adu/ca/san-jose.ts.
+    // Bulletin 210 (updated 09/16/2026), the City ADU pages and Municipal Code
+    // §20.80.175, read in Chrome (the City's site refuses automated readers);
+    // see content/adu/ca/san-jose.ts.
     verifiedAt: "2026-11-03",
     confidence: "high",
     citations: [
