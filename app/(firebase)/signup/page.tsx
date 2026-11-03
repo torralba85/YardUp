@@ -15,7 +15,7 @@ import {
   trackSignupSucceeded,
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { Input } from "@/components/ui/Field";
+import { Checkbox, Input } from "@/components/ui/Field";
 import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
 import { useSignupFormState } from "@/hooks/useSignupFormState";
 
@@ -219,11 +219,10 @@ function SignupForm() {
       </div>}
 
       <label className="flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={legalAccepted}
           onChange={(event) => setLegalAccepted(event.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+          className="mt-0.5"
         />
         <span>
           I confirm I am 18 or older, agree to the{" "}

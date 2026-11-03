@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
+import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import { ParcelMark } from "@/components/ui/BrandLockup";
 import { configForFootprint } from "@/lib/feasibility";
 import { stashAddressQuery } from "@/lib/address-handoff";
@@ -179,6 +180,13 @@ export function LotMoreLanding({
       y: "46%",
     },
   ];
+  // One inspection point at a time: a radio group, so the pins announce as a
+  // choice and the arrow keys move between them.
+  const hotspotGroup = useRadioGroup({
+    value: activeHotspot,
+    onChange: setActiveHotspot,
+    values: hotspots.map((_, index) => index),
+  });
 
   // One chapter per parcel scene; scroll (or the scene picker) advances them.
   const storyChapters = [
@@ -753,16 +761,19 @@ export function LotMoreLanding({
                     <span className={styles.tagLine} />
                   </div>
                   {scene === 2 && (
-                    <div className={styles.hotspotLayer} aria-label="Maquette inspection points">
+                    <div
+                      className={styles.hotspotLayer}
+                      {...hotspotGroup.groupProps}
+                      aria-label="Maquette inspection points"
+                    >
                       {hotspots.map((point, index) => (
                         <button
                           key={point.id}
                           type="button"
                           className={styles.hotspotPin}
                           style={{ left: point.x, top: point.y }}
-                          aria-pressed={activeHotspot === index}
                           aria-label={`Inspect ${point.title}`}
-                          onClick={() => setActiveHotspot(index)}
+                          {...hotspotGroup.getRadioProps(index)}
                         >
                           <span>{point.id}</span>
                         </button>

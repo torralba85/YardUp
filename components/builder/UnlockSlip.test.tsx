@@ -108,6 +108,27 @@ describe("UnlockSlip", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("keeps Tab inside the slip, wrapping at both ends and pulling stray focus back in", async () => {
+    render(
+      <>
+        <button type="button">Background control</button>
+        <UnlockSlip item={item} companyName="Ramos Build Co." pending={false} error={null} onConfirm={() => {}} onClose={() => {}} />
+      </>,
+    );
+    const dialog = screen.getByRole("dialog");
+    const close = screen.getByRole("button", { name: /close/i });
+    expect(close).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
+    await userEvent.tab();
+    expect(close).toHaveFocus();
+
+    screen.getByRole("button", { name: "Background control" }).focus();
+    await userEvent.tab();
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
+  });
+
   it("shows a recording state and disables actions while pending", () => {
     render(
       <UnlockSlip item={item} companyName="Ramos Build Co." pending error={null} onConfirm={() => {}} onClose={() => {}} />,

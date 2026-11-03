@@ -490,9 +490,16 @@ describe("landing address handoff", () => {
   it("updates maquette inspection readouts and interactive massing sandbox figures", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     expect(screen.getByText(/24′ × 25′ footprint · 1 bed/)).toBeVisible();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Inspect Modeled Setback Buffer" }),
-    );
+    // One inspection point at a time, so the pins are a radio group.
+    const points = screen.getByRole("radiogroup", { name: "Maquette inspection points" });
+    const setback = screen.getByRole("radio", { name: "Inspect Modeled Setback Buffer" });
+    expect(points).toContainElement(setback);
+    fireEvent.click(setback);
+    expect(setback).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
+    fireEvent.keyDown(setback, { key: "ArrowRight" });
+    expect(screen.getByRole("radio", { name: "Inspect Primary Residence Context" })).toHaveAttribute("aria-checked", "true");
+    fireEvent.keyDown(screen.getByRole("radio", { name: "Inspect Primary Residence Context" }), { key: "ArrowLeft" });
     expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
 
     fireEvent.click(screen.getByRole("radio", { name: /Today/ }));

@@ -21,6 +21,7 @@ The [Studio free/paid boundary](./2026-10-18-studio-paid-preview.md) defines whi
 |---|---|
 | [`design-system.md`](./design-system.md) | **Start here.** Tokens, type, space, motion, components, a11y, voice, anti-patterns. |
 | [`product-surfaces.md`](./product-surfaces.md) | Project-wide surface map, compatibility aliases, and release verification. |
+| [`2026-11-02-design-system-audit.md`](./2026-11-02-design-system-audit.md) | Re-audit after the cinematic landing: measured hero text contrast, the `Checkbox` primitive, motion-safe spinners, hotspot radio group, money-scale figures and the doc sync. |
 | [`2026-11-01-cinematic-landing.md`](./2026-11-01-cinematic-landing.md) | Cinematic landing: full-bleed photo hero, glass surfaces, the pinned scroll-driven model section, and the LCP and 44px-target lessons. |
 | [`2026-10-12-color-refinement.md`](./2026-10-12-color-refinement.md) | Measured re-audit: store-graphic realignment, dark-placeholder and success-icon fixes, blocked-rust decision, and the canonical-literal guard for store assets. |
 | [`2026-10-01-color-system.md`](./2026-10-01-color-system.md) | Color story, root causes of drift, shared palette, whole-project inventory and enforced checks. |
@@ -55,7 +56,7 @@ type, disciplined white space, one vivid orange volume that is the thing you cou
 | **Elevation** | Hard offset shadow, no blur (landing hero glass excepted, see design-system §4.4) |
 | **Money** | Carbon and large. Not green, not coloured. |
 
-**The three traps**, all verified and all easy to walk into:
+**The four traps**, all verified and all easy to walk into:
 
 1. **Orange text on chalk is 2.83:1 — it fails AA.** Orange is a fill colour, not a text colour, on
    light ground. Use `#C43708` if you need orange type on chalk.
@@ -63,6 +64,9 @@ type, disciplined white space, one vivid orange volume that is the thing you cou
    ground — `currentColor` made it invisible on every light-labelled control.
 3. **Do not "snap the spacing to an 8px grid."** The odd values are optically tuned. That cleanup is a
    regression.
+4. **Translucent chalk over a photograph looks readable and often isn't.** The hero's 72% labels
+   measured 3.2:1 over the bright half of the photo. Use chalk at 86% or more, and measure the render
+   (design-system §2.3 rule 6).
 
 ## Working rules
 

@@ -189,13 +189,47 @@ describe("A LOT MORE shared design contract", () => {
     }
   });
 
+  it("draws every checkbox with the shared ui/Field Checkbox", () => {
+    // The browser's own box is pure white and only its checked fill follows `accent-color`.
+    // The 2026-11-02 audit found ten hand-rolled checkboxes in four colours, one browser blue.
+    const primitive = resolve(root, "components/ui/Field.tsx");
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      if (file === primitive) continue;
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/type=\{?["'`]checkbox["'`]/);
+    }
+  });
+
+  it("keeps looping animations behind motion-safe", () => {
+    // §5: all motion sits inside prefers-reduced-motion: no-preference. A spinner that
+    // stops under reduced motion still shows its icon beside the loading label.
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
+      expect(readFileSync(file, "utf8"), file).not.toMatch(/(?<![\w:-])animate-(?:spin|pulse|ping|bounce)(?![\w-])/);
+    }
+  });
+
+  it("keeps landing text over the hero photograph at chalk 86% or more", () => {
+    // §2.3 rule 6. At 72–74% the required "illustrative" label and the sample captions
+    // measured below 4.5:1 over the bright half of the photo (2026-11-02 audit).
+    const landing = readFileSync(resolve(root, "components/landing/lot-more/LotMoreLanding.module.css"), "utf8");
+    let checked = 0;
+    for (const [, selector, body] of Array.from(landing.matchAll(/([^{}]+)\{([^{}]*)\}/g))) {
+      if (!/\.hero/.test(selector) || /::placeholder/.test(selector)) continue;
+      for (const [, percent] of Array.from(body.matchAll(/(?:^|[;\s])(?:color|--hero-text-muted):\s*color-mix\(in srgb, var\(--chalk\) (\d+)%/g))) {
+        expect(Number(percent), selector.trim()).toBeGreaterThanOrEqual(86);
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
   it("only lets legacy aliases, raw hex, arbitrary type sizes and inline kickers fall (ratchet)", () => {
     // §12: new code uses lot-* / status-*. When a change migrates a surface, lower the
     // matching ceiling in the same commit. Never raise one.
     // Pinned 2026-10-02 on master after #249 (lf-* colour aliases were 1,759 at the
     // 2026-09-30 audit). lfAliases and rawHex are already zero: every colour class
     // names a lot-* / status-* token, and the lint audit keeps it that way.
-    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 168, inlineKickers: 25 };
+    // Re-pinned 2026-11-02 to the counts on master (they had fallen to 166 and 24).
+    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 166, inlineKickers: 24 };
     const patterns = {
       lfAliases:
         /(?<![\w-])(?:[\w-]+:)*(?:text|bg|border(?:-[xytrblse])?|ring(?:-offset)?|outline|fill|stroke|decoration|divide|placeholder|caret|accent|from|via|to|shadow)-lf-[a-z0-9-]+|var\(--color-lf-[a-z0-9-]+\)/g,

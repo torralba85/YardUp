@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 import { isAppleSignInEnabled } from "@/lib/auth-providers";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
-import { Input } from "@/components/ui/Field";
+import { Checkbox, Input } from "@/components/ui/Field";
 
 /** Email/password, Google, and (when enabled) Apple sign-in with a validated redirect. */
 export default function LoginForm() {
@@ -161,11 +161,10 @@ export default function LoginForm() {
       </form>
 
       <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+          className="mt-0.5"
         />
         <span>
           {appleEnabled ? "For Google or Apple" : "For Google"}, I confirm I am 18 or older, agree to the{" "}

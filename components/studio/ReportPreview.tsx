@@ -37,6 +37,7 @@ import {
 import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
 import { buildAduHeightModel } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import type { FeasibilityResult } from "./types";
@@ -724,10 +725,8 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
                 {BID_LEVELING_BUILDERS.map((builder) => (
                   <td key={builder} className="px-1 py-1 text-center">
                     <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         aria-label={`${builder} includes ${item.title}`}
-                        className="h-4 w-4 accent-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
                       />
                     </label>
                     <span className="hidden text-lot-stone print:block">$______</span>
@@ -794,7 +793,7 @@ function CertificateBriefSection({
                   disabled={loading}
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-status-blocked/50 bg-transparent px-3 py-2 text-xs font-medium text-status-blocked hover:bg-status-blocked/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-blocked motion-safe:transition-colors disabled:opacity-50"
                 >
-                  <RotateCcw size={12} className={loading ? "animate-spin" : ""} aria-hidden="true" />
+                  <RotateCcw size={12} className={loading ? "motion-safe:animate-spin" : ""} aria-hidden="true" />
                   <span>Try again</span>
                 </button>
               </div>

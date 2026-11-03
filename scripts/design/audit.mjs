@@ -53,7 +53,7 @@ export function inspect(file, source, defined) {
   }
   if (/\b(?:bg|text|border|ring|outline|fill|stroke)-\[#[\da-f]/i.test(text)) errors.push("raw color utility; use a named token");
   if (/\bfont-mono\b/.test(text)) errors.push("retired mono type layer");
-  if (/\bbg-lot-orange-ink\b/.test(text)) errors.push("orange ink is text/focus, not an action fill");
+  if (/\b(?:bg|accent)-lot-orange-ink\b/.test(text)) errors.push("orange ink is text/focus, not an action fill");
   if (/(?<![\w:-])text-lot-orange(?![\w-])/.test(text)) errors.push("signal-orange text requires an explicitly reviewed dark surface; use orange ink on chalk");
   if (/\b(?:bg|text|border|ring|outline|fill|stroke|divide)-(?:white|black|gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-\d{2,3})?(?![\w-])/.test(text)) errors.push("default utility palette bypasses the design system");
   if (/\b(?:shadow-(?:sm|md|lg|xl|2xl)|backdrop-blur[\w-]*)\b/.test(text)) errors.push("unapproved blurred UI surface");

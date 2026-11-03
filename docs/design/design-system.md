@@ -78,6 +78,13 @@ Measured, not estimated. WCAG 2.1: normal text needs 4.5:1, large text and UI bo
    (selected, invalid, disabled) must clear 3:1 — use stone or carbon.
 5. **Never encode status by colour alone.** Label + icon, always. This rule survives from the old
    system unchanged.
+6. **Text over a photograph is measured, not assumed.** The scrims and glass are not a fixed ground, so
+   no token pair proves the ratio. Secondary text over the landing hero photo is chalk at **86% or more**
+   (`--hero-text-muted`); 11–12px labels on the bright half of the photo are full chalk, and a label that
+   sits on the photo itself carries the hero glass (§4.4). At 72–74% the required "illustrative" label and
+   the sample captions measured 3.2–3.9:1 (2026-11-02). `e2e/hero-text-contrast.spec.ts` screenshots
+   the hero with and without its text and requires the 5th-percentile glyph pixel of each block to clear
+   4.5:1; `app/design-tokens.test.ts` rejects a hero chalk alpha below 86%.
 
 ### 2.4 Semantic roles
 
@@ -156,10 +163,10 @@ Fraunces on any A LOT MORE surface.
 
 | Role | Family | Size | Line | Tracking | Weight |
 |---|---|---|---|---|---|
-| Hero display | display | `clamp(90px, 10vw, 164px)` · ≤1150px `11vw` · ≤800px `clamp(90px,17vw,130px)` · ≤480px `21vw` | `0.84` | `-0.075em` | 600 |
+| Hero wordmark ("A LOT MORE.", a `<p>`) | display | `clamp(76px, 10.2vw, 156px)` · ≤1150px `9.6vw` · ≤800px `clamp(76px, 17vw, 132px)` · ≤480px `21vw`. Short screens: ≥801px wide and ≤800px tall `clamp(76px, 8vw, 110px)`; ≤800px wide and ≤720px tall `18vw`; ≤380px wide and ≤620px tall `32px` on one line | `0.82` | `-0.075em` | 600 |
+| Landing h1 (product line) | display | `clamp(26px, 2.6vw, 38px)` · ≤800px `clamp(26px, 5vw, 34px)` · ≤480px `26px` · ≤380px wide and ≤620px tall `24px` | `1.08` | `-0.04em` | 500 |
 | Closing display | display | `clamp(62px, 8.5vw, 126px)` · ≤800px `10vw` · ≤480px `13vw` | `0.97` | `-0.065em` | 500 |
-| Section h2 | display | `clamp(38px, 4.5vw, 68px)` · ≤480px `38px` | `1.06` | `-0.055em` | 500 |
-| Sub-section h2 | display | `clamp(34px, 3.6vw, 54px)` – `clamp(35px, 3.8vw, 58px)` | `1.06` | `-0.055em` | 500 |
+| Section h2 | display | `clamp(38px, 4.4vw, 64px)` · ≤480px `38px`; the model section `clamp(38px, 3.9vw, 60px)` | `1.06` | `-0.055em` | 500 |
 | h3 / card title | display | `22–24px` | `1.2` | `-0.035em` | 500 |
 | Body large | body | `17–18px` | `1.4–1.6` | — | 400 |
 | Body base | body | `16px` | `1.6` | — | 400 |
@@ -211,7 +218,9 @@ regression, not a fix. When adding a component, match the nearest existing value
 
 ### 4.3 Breakpoints
 
-Four, all `max-width` except the ultrawide cap. Tailwind's defaults are **not** used on this surface.
+Four width breakpoints, all `max-width` except the ultrawide cap, plus a narrow-phone step and three
+height queries that keep the hero's address button above the consent bar. Tailwind's defaults are
+**not** used on this surface.
 
 | Breakpoint | What changes |
 |---|---|
@@ -219,6 +228,10 @@ Four, all `max-width` except the ultrawide cap. Tailwind's defaults are **not** 
 | `≤1150px` | Header CTA hides; nav gap `30→18px`; hero grid `45/55`; input row wraps |
 | `≤800px` | Desktop nav → hamburger; hero stacks; sections go single-column; sticky CTA activates |
 | `≤480px` | Hero DOM reorders via `display: contents` + `order`; inputs go `16px` (blocks iOS zoom); buttons full-width; metrics stack |
+| `≤360px` | Narrowest phones: picker and tab labels drop to `13px` with `4px` inline padding so every option fits |
+| `≥801px` and `≤800px` tall | Short desktop: hero top padding `110px` and a smaller wordmark |
+| `≤800px` and `≤720px` tall | Short phone: hero top padding `82px`, wordmark `18vw` and tighter form spacing, so the address button clears the consent bar |
+| `≤380px` and `≤620px` tall | Smallest phones: the kicker hides, the wordmark collapses to one `32px` line and the description drops to `14px`, so address entry comes first |
 
 Hero grid is `43% / 57%` at desktop — the artwork gets the larger half.
 
@@ -249,10 +262,11 @@ All controls strictly use `rounded-control`. Do not write `rounded-[3px]` or a b
   (`0 12px 16px #1616160a`), because floating elements need to read as floating. They live in the landing
   CSS Module. **No other blurred shadows**; `app/design-tokens.test.ts` rejects `shadow-sm|md|lg|xl`.
 
-  **Landing hero glass (2026-11-01).** Over the hero photograph only, the address bar and the sample
-  result are one glass material: carbon at 40–46% (`color-mix`), `backdrop-filter: blur(16–18px)
-  saturate(140%)`, a chalk hairline at 22–34%, and on the sample result one soft shadow
-  (`0 18px 50px`, carbon 32%). Radii stay `0`/`3px`. Glass is not used on chalk grounds.
+  **Landing hero glass (2026-11-01).** Over the hero photograph only, the address bar, the sample
+  result and the "illustrative" concept label beneath it are one glass material: carbon at 40–46%
+  (`color-mix`), `backdrop-filter: blur(16–18px) saturate(140%)`, a chalk hairline at 22–34% on the
+  address bar and sample result, and on the sample result one soft shadow (`0 18px 50px`, carbon 32%).
+  Radii stay `0`/`3px`. Glass is not used on chalk grounds. Text on it follows §2.3 rule 6.
 
 ---
 
@@ -293,6 +307,10 @@ at least 700px tall; otherwise it is an ordinary section driven by the scene pic
 disables entrance and crossfades entirely and shows composed still states — it never leaves a control
 unusable or a state unreadable.
 
+In product markup every looping animation carries the `motion-safe:` variant: `motion-safe:animate-spin`,
+`motion-safe:animate-pulse`. Under reduced motion a spinner's icon holds still beside its loading label,
+so the state is still announced. `app/design-tokens.test.ts` rejects a bare `animate-*`.
+
 ---
 
 ## 6. Components
@@ -302,14 +320,16 @@ unusable or a state unreadable.
 | **Primary button** | Orange fill, carbon label, `3px`, `min-height 48px`, `padding 12px 19px`, `14px/700`, `gap 18px` between label and trailing arrow (leading icons keep `8px`). Hover `#EE4B17`. This is `ui/Button`'s default `md` size; `xs`/`sm` are compact 44px variants, never smaller. |
 | **Secondary button** | Carbon fill, chalk label, same metrics. Hover `#33332F`. |
 | **Product secondary button** | Shared `Button variant="secondary"`: chalk, carbon label, stone boundary; neutral surface hover. Carbon filled controls use `variant="commit"`. |
-| **Address input** | `.inputRow` wrapper owns the ring: `:focus-within` → `box-shadow: 0 0 0 2px var(--ink)`; the inner `input` sets `outline: none`. Input font `16px` at ≤480px to block iOS zoom. |
-| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented` with one look: a hairline tray, carbon-filled selection and 14px labels on chalk, inverted (chalk selection, carbon label) on carbon. No underline tabs. Custom-visual groups use `useRadioGroup` from `components/ui/useRadioGroup.ts`; deliberate `aria-pressed` exceptions include independent toggles, builder inbox filters, and lead responses. |
+| **Address input** | `.inputRow` wrapper owns the ring: `:focus-within` → a 2px `box-shadow` pinned to the ground per §7: orange ink on chalk, carbon on the orange closing section, chalk on the hero glass. The inner `input` sets `outline: none`. Input font `16px` at ≤480px to block iOS zoom. |
+| **Segmented control** | A single choice is a WAI-ARIA radio group: use `Segmented` from `components/ui/Field` — `role="radiogroup"` + `aria-label`, `role="radio"` + `aria-checked` per option, roving tabindex, Arrow/Home/End move *and* select. Selected = carbon fill, chalk label; `min-height 44px`. `aria-pressed` is only for independent on/off toggles. The landing scene/intention/scenario/report pickers use `Segmented` with one look: a hairline tray, carbon-filled selection and 14px labels on chalk, inverted (chalk selection, carbon label) on carbon. No underline tabs. Custom-visual groups use `useRadioGroup` from `components/ui/useRadioGroup.ts`, including the landing maquette's inspection pins; deliberate `aria-pressed` exceptions include independent toggles, builder inbox filters, and lead responses. |
 | **Tabs (report)** | Single choice, so the radio-group pattern above; `min-height 44px`; content region is `aria-live="polite"`. |
 | **Disclosure** | Native `<details>`/`<summary>`; `min-height 44px`; chevron rotates `45deg`. |
 | **Paper card** | `radius 0`, chalk ground, hard shadow `12px 16px 0 #E7E7DF`. |
 | **Nav** | Desktop inline ≥800px; hamburger below, with `aria-expanded`/`aria-controls`, Escape closing and returning focus to the trigger. |
 | **Sticky CTA** | Appears ≤800px between hero and closing form; carbon fill; respects `env(safe-area-inset-bottom)`. |
 | **Text field / select** | `Input`, `Select`, `Textarea` from `components/ui/Field`: `rounded-control`, 1px **stone** border (5.36:1; the hairline is decorative and fails 3:1), chalk fill, `min-height 44px`, 16px text below `sm` (blocks iOS zoom). Focus: 2px deep-orange ring. `aria-invalid` turns the border blocked red. The landing address input keeps its §6 `.inputRow` recipe. |
+| **Checkbox** | `Checkbox` from `components/ui/Field`, the only checkbox (`app/design-tokens.test.ts` rejects a hand-rolled `type="checkbox"`). A native input drawn as a 20px chalk box with a 1px stone boundary and `rounded-control`; checked is a carbon fill with a chalk Lucide check; hover darkens the boundary to carbon. Focus: 2px deep-orange ring, offset 2px. `aria-invalid` turns the boundary blocked red. Never `accent-color`: the browser's own box is pure white and only its checked fill follows the accent. Wrap it with its text in a `<label>` at least 44px tall; `className` lands on the box's wrapper for alignment (`mt-0.5` beside a 24px line). |
+| **Money figure** | `MoneyFigure` from `components/ui/MoneyFigure` for a single amount; the `lf-money-sm|md|lg|xl` utilities (20/25/31/39px, Space Grotesk 600, tabular, line-height 1) for ranges, percents and years. Carbon on chalk, chalk on carbon (§2.6). Add `whitespace-nowrap` when a range must not break at its dash. Never hand-set a figure with `font-display text-*`. |
 
 ---
 
@@ -445,3 +465,4 @@ The landing CSS Module retains its optical layout. See [product surfaces](./prod
 | 2026-10-12 | Store feature graphic rebuilt in A LOT MORE; blocked rust kept as a labelled status, not a hue apart (Andrew) | The Play feature graphic still carried the retired Warm Earth palette and fonts; it now uses chalk/carbon/signal orange with Space Grotesk/Manrope, and a guard test requires every literal in it to be a canonical palette value. The dark address placeholder rose from 3.79:1 to full stone-on-dark (7.97:1), and the password-reset confirmation icon moved from accent orange to eligible green/soft (4.97:1 on its tint). |
 | 2026-10-18 | Desktop Studio is one viewport: panes scroll, the page does not. The 3D stage fills its column above an explicit floor, the free rail's certificate CTA is sticky, and the planning guide is a 3rem bar that opens upward (Andrew: "fix the blank area... change it however you please") | Measured on the live site: the step body overflowed a clipped `main` on four of five steps, hiding the rail CTA and the $29 checkout button, a capped canvas left chalk under Tools, and the guide section and an escaped sr-only label gave the page a second scroll. See [record](./2026-10-18-studio-desktop-fill.md). |
 | 2026-11-01 | Landing goes cinematic (Andrew chose "Cinematic rework" over sharpening within the old rules, after being told it breaks the autoplay, gradient, blurred-shadow and pill rules). The hero is a full-bleed `backyard-life.webp` with carbon scrims, a slow camera settle and drift, per-line wordmark rises and glass address/sample surfaces. The maquette and its Today/Footprint/Possibility picker move to a new pinned "model" section that scroll walks through. Sections below rise in once. Square radii stay, pills were not adopted, and there is no video | The live page scored about 6.5/10 on a landing jury rubric: the first screen stacked nine elements, the maquette read as a boxed widget, and phones had no visual in the first screen. The homepage e2e requires no `<video>`, and the h1 (the LCP element) must paint on its first frame, so the motion is CSS transforms over the existing photograph. |
+| 2026-11-02 | Text over a photograph is measured (§2.3 rule 6): hero secondary text at chalk 86%+, the concept label on hero glass. One `Checkbox` primitive, drawn rather than `accent-color`. Looping animations are `motion-safe:`. Landing hotspot pins are a radio group. §3.2/§4.3/§6 re-read from the shipped landing (Andrew: "make suggested fixes and improve where possible") | The 2026-11-02 re-audit (78/100) measured the required "illustrative" label at 3.15–3.40:1 over the live photo, found ten checkboxes in four colours (one browser blue, one orange-ink fill) and four spinners running under reduced motion, and found the type scale and breakpoints trailing the cinematic landing. See [record](./2026-11-02-design-system-audit.md). |

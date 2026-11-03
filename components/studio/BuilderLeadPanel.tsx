@@ -12,7 +12,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
-import { FieldLabel, Input, Textarea } from "@/components/ui/Field";
+import { Checkbox, FieldLabel, Input, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -174,12 +174,11 @@ export default function BuilderLeadPanel({
           htmlFor="builder-lead-consent"
           className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
         >
-          <input
+          <Checkbox
             id="builder-lead-consent"
-            type="checkbox"
             checked={consent}
             onChange={(event) => setConsent(event.target.checked)}
-            className="mt-1 h-4 w-4 shrink-0 rounded-none accent-lot-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            className="mt-0.5"
           />
           <span>
             I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.

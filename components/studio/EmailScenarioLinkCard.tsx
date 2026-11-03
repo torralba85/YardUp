@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, Copy, Mail, TriangleAlert } from "lucide-react";
-import { Input, FieldLabel } from "@/components/ui/Field";
+import { Checkbox, Input, FieldLabel } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { serializeScenarioParams } from "@/lib/scenario-url";
@@ -101,7 +101,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
             <Button type="submit" variant="secondary" className="w-full shrink-0 border-lot-ink bg-lot-ink text-lot-chalk hover:bg-lot-ink/90 @min-[440px]:w-auto focus-visible:ring-lot-orange-ink" loading={busy} disabled={busy}>Email My 3D Link</Button>
           </div>
           <div className="hidden" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-xs leading-5 text-lot-stone"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-lot-orange focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} disabled={busy} />Also send me San Diego / California ADU permit &amp; fee waiver updates.</label>
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-xs leading-5 text-lot-stone"><Checkbox checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} disabled={busy} />Also send me San Diego / California ADU permit &amp; fee waiver updates.</label>
           <p className="text-xs leading-5 text-lot-stone">We’ll save your email and design to send this link. Anyone with the link can view the layout and property address. Updates are optional. <a href="/privacy" className="underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-lot-orange-ink">Privacy</a></p>
           {error && <p role="alert" className="flex items-start gap-2 text-sm text-status-blocked"><TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />{error}</p>}
         </form>

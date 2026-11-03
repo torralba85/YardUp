@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Field";
+import { useFocusTrap } from "@/components/ui/useFocusTrap";
 
 /**
  * Routes the gate never covers: account deletion must work without accepting,
@@ -31,36 +33,11 @@ export function LegalReacceptGate() {
     !UNGATED_PATHS.has(pathname);
 
   useEffect(() => {
-    if (!open) return;
-    dialogRef.current?.focus();
-    // Keep Tab inside the dialog, including after a click on the backdrop:
-    // the page behind it stays mounted and focusable.
-    const trapFocus = (event: KeyboardEvent) => {
-      const dialog = dialogRef.current;
-      if (event.key !== "Tab" || !dialog) return;
-      const focusable = Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled])',
-        ),
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (!active || !dialog.contains(active)) {
-        event.preventDefault();
-        first.focus();
-      } else if (event.shiftKey && (active === first || active === dialog)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", trapFocus);
-    return () => document.removeEventListener("keydown", trapFocus);
+    if (open) dialogRef.current?.focus();
   }, [open]);
+  // Keep Tab inside the dialog, including after a click on the backdrop:
+  // the page behind it stays mounted and focusable.
+  useFocusTrap(dialogRef, open);
 
   if (!open) return null;
 
@@ -103,14 +80,13 @@ export function LegalReacceptGate() {
 
         <div className="mb-6">
           <label className="flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={isChecked}
               onChange={(e) => {
                 setIsChecked(e.target.checked);
                 if (error) setError(null);
               }}
-              className="mt-1 h-5 w-5 shrink-0 rounded-control border border-lot-stone text-lot-orange-ink accent-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink focus:ring-offset-2 focus:ring-offset-lot-chalk"
+              className="mt-0.5"
             />
             <span>
               I confirm I am 18 or older and agree to the{" "}

@@ -1,5 +1,10 @@
 # Cadastral Lyric
 
+> **Retired. Not a design authority.** This is the May 2026 philosophy behind `render_plate.py`'s
+> sepia hero plate, whose output was removed as unreferenced. Its sepia/clay palette, monospace labels and
+> serif line conflict with A LOT MORE. Design authority lives only in
+> [`docs/design/`](../docs/design/README.md). Kept as history; do not apply it to new work.
+
 *A visual philosophy.*
 
 ---

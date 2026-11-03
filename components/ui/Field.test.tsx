@@ -1,7 +1,7 @@
 import { createRef } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { FieldLabel, Input, Select, Segmented, Slider, Textarea } from "./Field";
+import { Checkbox, FieldLabel, Input, Select, Segmented, Slider, Textarea } from "./Field";
 
 describe("shared field controls", () => {
   const sharedClasses = [
@@ -55,6 +55,52 @@ describe("shared field controls", () => {
     expect(textarea).toBeRequired();
     expect(textarea).toHaveAttribute("aria-invalid", "true");
     expect(textarea).toHaveClass(...sharedClasses, "py-2");
+  });
+});
+
+describe("Checkbox", () => {
+  it("is a native checkbox named by its label that forwards its ref and toggles", () => {
+    const ref = createRef<HTMLInputElement>();
+    const onChange = vi.fn();
+    render(
+      <label>
+        <Checkbox ref={ref} name="terms" required onChange={onChange} />
+        I agree
+      </label>,
+    );
+    const box = screen.getByRole("checkbox", { name: "I agree" });
+
+    expect(ref.current).toBe(box);
+    expect(box).toHaveAttribute("type", "checkbox");
+    expect(box).toHaveAttribute("name", "terms");
+    expect(box).toBeRequired();
+    fireEvent.click(box);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(box).toBeChecked();
+  });
+
+  it("draws its own chalk box with a stone boundary, carbon when checked, and the orange-ink focus ring", () => {
+    render(<Checkbox aria-label="Opt in" />);
+    const box = screen.getByRole("checkbox", { name: "Opt in" });
+
+    expect(box).toHaveClass(
+      "appearance-none",
+      "rounded-control",
+      "border-lot-stone",
+      "bg-lot-chalk",
+      "checked:bg-lot-ink",
+      "focus-visible:ring-lot-orange-ink",
+      "aria-[invalid=true]:border-status-blocked",
+    );
+    expect(box.className).not.toMatch(/\baccent-/);
+  });
+
+  it("puts className on the wrapper so callers can align the box, not restyle it", () => {
+    render(<Checkbox aria-label="Align" className="mt-0.5" />);
+    const box = screen.getByRole("checkbox", { name: "Align" });
+
+    expect(box).not.toHaveClass("mt-0.5");
+    expect(box.parentElement).toHaveClass("mt-0.5", "h-5", "w-5");
   });
 });
 

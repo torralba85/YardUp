@@ -68,7 +68,7 @@ export function AduFinancingCalculator({
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="text-sm text-lot-stone">{label}</dt>
-                <dd className="mt-1 font-display text-2xl font-medium tabular-nums text-lot-ink">
+                <dd className="mt-1 whitespace-nowrap lf-money-md text-lot-ink">
                   {formatCurrency(Number(value))}
                 </dd>
               </div>
