@@ -23,6 +23,15 @@ bf9b231f7eb3a927f2c8d0a57ef346c6c1880169:lib/cesium-photoreal-diagnostics.test.t
 bf9b231f7eb3a927f2c8d0a57ef346c6c1880169:lib/cesium-photoreal.test.ts:generic-api-key:173
 413502a1bcec3c9a653c3c676f4201efc754a2f2:lib/server/certificate-purchases.test.ts:generic-api-key:50
 413502a1bcec3c9a653c3c676f4201efc754a2f2:lib/server/certificate-purchases.test.ts:generic-api-key:60
+# 2026-11-03: agent pass tests quoted synthetic address slugs after `certKey:` (keyword match, no credential); moved into constants in 4c4720c
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:components/account/CertificatesClient.test.tsx:generic-api-key:137
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:app/api/certificates/redeem/route.test.ts:generic-api-key:35
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:app/api/certificates/redeem/route.test.ts:generic-api-key:51
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:firestore.rules.test.ts:generic-api-key:80
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/agent-pass.test.ts:generic-api-key:65
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/agent-pass.test.ts:generic-api-key:69
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/server/agent-passes.test.ts:generic-api-key:49
+fce78e3ba1c4f0fb9126795cab82d40c09797ce5:scripts/agent-pass.test.ts:generic-api-key:47
 
 # Public Cloudflare Web Analytics beacon identifier
 cd9350a1cce65d5bcadc4839f1cb09e8d9b8b72d:app/layout.tsx:generic-api-key:129
