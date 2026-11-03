@@ -23,11 +23,11 @@ const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-5.6-sol";
 const ALLOWED_PARCEL_STYLE_KEYS = [
   "city",
   "zoning",
-  "lotSqft",
-  "width",
-  "depth",
+  "lotArea",
+  "lotWidth",
+  "lotLength",
   "setbacks",
-  "houseFootprint",
+  "existingHouseSqft",
   "slopeDeg",
   "fireHazardZone",
 ] as const;
