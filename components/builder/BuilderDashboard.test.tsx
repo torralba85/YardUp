@@ -134,8 +134,10 @@ describe("BuilderDashboard", () => {
       "builder-1",
       "interested",
     );
-    // The triage label now also reads "Interested" alongside the button.
-    expect((await screen.findAllByText("Interested")).length).toBeGreaterThanOrEqual(2);
+    // The card's triage control now reports the new response as pressed.
+    expect(
+      await screen.findByRole("button", { name: /^Interested$/i, pressed: true }),
+    ).toBeInTheDocument();
   });
 
   it("unlocks a lead via the demo grant and reveals the owner contact", async () => {
@@ -283,7 +285,7 @@ describe("BuilderDashboard", () => {
     render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
 
     // Spend should display $300 (actual ledger sum), with 2 unlocks label
-    const spendCell = (await screen.findByText("Spend this month")).closest("div")!;
+    const spendCell = (await screen.findByText("Total spend")).closest("div")!;
     expect(spendCell).toHaveTextContent("$300");
     expect(spendCell).toHaveTextContent("2 unlocks");
     expect(spendCell).not.toHaveTextContent("$98");

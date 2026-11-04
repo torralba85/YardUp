@@ -42,5 +42,5 @@ test("a direct Android builder URL returns to homeowner Studio", async ({ page }
   await page.goto("/builder");
   await expect(page).toHaveURL(/\/studio$/);
   await expect(page.getByRole("heading", { name: "A little more room for life." })).toBeVisible();
-  await expect(page.getByText("Lead Credits", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Lead credits", { exact: true })).toHaveCount(0);
 });
