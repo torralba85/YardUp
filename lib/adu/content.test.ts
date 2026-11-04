@@ -136,6 +136,18 @@ describe("adu cost pages", () => {
     expect(answer).toContain("Over 16 feet");
   });
 
+  it("states San Diego's bonus-program zones and lot-area cap as SDMC 141.0302(d) does", () => {
+    const sanDiego = getCity("ca", "san-diego");
+    const text = JSON.stringify(sanDiego);
+    // (d)(1)(A) excludes RS-1-1 to RS-1-4 and RS-1-8 to RS-1-11; RS-1-5 to RS-1-7 stay eligible.
+    expect(text).not.toContain("RS-1-1 through RS-1-10");
+    expect(text).toContain("RS-1-1 through RS-1-4 and RS-1-8 through RS-1-11");
+    // Table 141-03A caps bonus-program totals; the base JADU + two ADUs don't depend on lot area.
+    const answer = sanDiego?.faqs.find((faq) => faq.question.startsWith("How many ADUs"))?.answer;
+    expect(answer).not.toMatch(/further limited by your lot area/i);
+    expect(answer).toContain("§ 141.0302(d)(4)");
+  });
+
   it("states Sacramento's two rulebooks as City Code §17.228.105 does", () => {
     const sacramento = getCity("ca", "sacramento");
     const text = JSON.stringify(sacramento);
