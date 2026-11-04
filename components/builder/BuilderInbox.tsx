@@ -36,6 +36,7 @@ import LeadCard, { type LeadAccess } from "./LeadCard";
 import UnlockSlip from "./UnlockSlip";
 import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { PanelHeader } from "@/components/ui/Panel";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -59,6 +60,12 @@ const TABS = [
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
+
+const ACCESS_LABEL: Record<LeadAccess, string> = {
+  locked: "Locked",
+  confirming: "Confirming",
+  unlocked: "Unlocked",
+};
 
 /** TRIAGE filter only (8A): the lock/access axis is never a tab. */
 function inTab(item: BuilderInboxItem, key: TabKey): boolean {
@@ -345,24 +352,8 @@ export default function BuilderInbox({
   });
 
   return (
-    <section className="mt-6">
-      <div className="border border-lot-line bg-lot-chalk p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="lf-panel-heading">{profile.companyName}</h2>
-            <p className="lf-body-sm mt-1 text-lot-stone">
-              {profile.serviceAreas.map((area) => `${area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, ${area.state}`).join(" | ")}
-            </p>
-          </div>
-          <span className="self-start rounded-none border border-lot-line px-2 py-1 lf-kicker-dense text-lot-stone">
-            {profile.active ? "Active" : "Inactive"}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 border border-lot-line">
-        <BuilderMoneyBand metrics={metrics} credits={credits} />
-      </div>
+    <section className="mt-6" aria-label="Leads">
+      <BuilderMoneyBand metrics={metrics} credits={credits} />
 
       <div aria-live="polite" className="sr-only">
         {announce}
@@ -377,35 +368,35 @@ export default function BuilderInbox({
       {items.length === 0 ? (
         <ZeroEverEmptyState />
       ) : (
-        <div className="mt-4 flex flex-col xl:flex-row gap-6 items-start">
+        <div className="mt-8 flex flex-col xl:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 w-full">
-            <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lot-line pb-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-lot-line pb-4">
               <div role="group" aria-label="Filter leads by status" className="flex flex-wrap gap-2">
                 {TABS.map((t) => (
                   <Button
                     key={t.key}
                     type="button"
                     aria-pressed={tab === t.key}
-                    size="md"
+                    size="sm"
                     variant={tab === t.key ? "selected" : "secondary"}
                     onClick={() => {
                       setTab(t.key);
                     }}
-                    className="px-3.5 lf-kicker-dense text-[10px] leading-[14px]"
                   >
-                    {t.label} · {tabCounts[t.key]}
+                    {t.label} ·{" "}
+                    <span className={`tabular-nums ${tab === t.key ? "" : "text-lot-stone"}`}>{tabCounts[t.key]}</span>
                   </Button>
                 ))}
               </div>
 
               {/* Cards vs Table View Mode Segment Toggle */}
-              <div aria-label="View mode" className="flex rounded-none border border-lot-line p-0.5 self-start md:self-auto bg-lot-chalk" {...viewModeGroupProps}>
+              <div aria-label="View mode" className="flex rounded-control border border-lot-line p-0.5 self-start md:self-auto bg-lot-chalk" {...viewModeGroupProps}>
                 <Button
                   type="button"
                   size="sm"
                   variant={viewMode === "cards" ? "selected" : "ghost"}
                   {...getViewModeRadioProps("cards")}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[checked=false]:text-lot-stone aria-[checked=false]:hover:bg-lot-surface"
+                  className="aria-[checked=false]:text-lot-stone aria-[checked=false]:hover:bg-lot-surface"
                 >
                   Cards
                 </Button>
@@ -414,7 +405,7 @@ export default function BuilderInbox({
                   size="sm"
                   variant={viewMode === "table" ? "selected" : "ghost"}
                   {...getViewModeRadioProps("table")}
-                  className="px-3.5 lf-kicker-dense text-[10px] leading-[14px] aria-[checked=false]:text-lot-stone aria-[checked=false]:hover:bg-lot-surface"
+                  className="aria-[checked=false]:text-lot-stone aria-[checked=false]:hover:bg-lot-surface"
                 >
                   Table
                 </Button>
@@ -465,12 +456,12 @@ export default function BuilderInbox({
                 <table className="w-full text-left border-collapse" aria-label="Inbox Leads Ledger">
                   <thead>
                     <tr className="border-b border-lot-line bg-lot-surface">
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Lead / Recorded</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Location</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone text-right">Rent Potential</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Specs</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone">Economics</th>
-                      <th scope="col" className="px-4 py-3 lf-dataprint text-lot-stone text-center">Status</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone">Lead / Recorded</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone">Location</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone text-right">Rent Potential</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone xl:hidden">Specs</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone">Economics</th>
+                      <th scope="col" className="px-3 py-3 lf-kicker-dense text-lot-stone">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -493,52 +484,51 @@ export default function BuilderInbox({
                               setSelectedItemId(item.request.id);
                             }
                           }}
-                          className={`group border-b border-lot-line cursor-pointer motion-safe:transition hover:bg-lot-surface/50 ${
+                          className={`group border-b border-lot-line cursor-pointer motion-safe:transition hover:bg-lot-surface/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lot-orange-ink ${
                             isSelected ? "bg-lot-surface border-l-[3px] border-l-lot-orange" : ""
                           }`}
                         >
-                          <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[10.5px] font-semibold text-lot-ink group-hover:text-lot-orange-ink motion-safe:transition">
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <div className="text-sm font-semibold tabular-nums text-lot-ink group-hover:text-lot-orange-ink motion-safe:transition">
                               {item.request.preview.previewSerial}
                             </div>
-                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">{dateStr}</div>
+                            <div className="lf-kicker-dense mt-1 text-lot-stone">{dateStr}</div>
                           </td>
-                          <td className="px-4 py-3.5">
-                            <div className="font-semibold text-lot-ink text-xs truncate max-w-[180px]">
+                          <td className="px-3 py-4">
+                            <div className="max-w-[170px] truncate text-sm font-semibold text-lot-ink">
                               {hasAccess && itemContact ? itemContact.streetAddress : item.request.preview.neighborhood}
                             </div>
-                            <div className="font-sans text-[9.5px] text-lot-stone mt-0.5">{item.request.preview.zip}</div>
+                            <div className="lf-caption mt-0.5 tabular-nums text-lot-stone">{item.request.preview.zip}</div>
                           </td>
-                          <td className="px-4 py-3.5 text-right lf-money-sm text-lot-ink whitespace-nowrap">
-                            {formatCurrency(item.request.preview.rentBand)}
-                            <span className="font-sans text-[9px] font-normal text-lot-stone ml-0.5">/mo</span>
+                          <td className="px-3 py-4 text-right whitespace-nowrap">
+                            <span className="lf-money-sm text-lot-ink">{formatCurrency(item.request.preview.rentBand)}</span>
+                            <span className="lf-caption ml-1 text-lot-stone">/mo</span>
                           </td>
-                          <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[9.5px] text-lot-ink font-medium">
+                          <td className="px-3 py-4 whitespace-nowrap xl:hidden">
+                            <div className="text-sm tabular-nums text-lot-ink">
                               {item.request.preview.aduSqft.toLocaleString()} sf ADU
                             </div>
-                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">
+                            <div className="lf-caption mt-0.5 tabular-nums text-lot-stone">
                               {item.request.preview.lotSqft.toLocaleString()} sf lot
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 whitespace-nowrap">
-                            <div className="font-sans text-[9.5px] text-lot-ink">
-                              Build: {formatCompactCurrency(item.request.preview.buildBandLow)}–{formatCompactCurrency(item.request.preview.buildBandHigh)}
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <div className="text-sm tabular-nums text-lot-ink">
+                              Build {formatCompactCurrency(item.request.preview.buildBandLow)}–{formatCompactCurrency(item.request.preview.buildBandHigh)}
                             </div>
-                            <div className="font-sans text-[9px] text-lot-stone mt-0.5">
-                              Payback: {item.request.preview.paybackYears} yrs
+                            <div className="lf-caption mt-0.5 tabular-nums text-lot-stone">
+                              Payback {item.request.preview.paybackYears} yrs
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1">
-                              {itemAccess === "locked" && <Lock size={12} className="text-lot-stone" />}
-                              {itemAccess === "unlocked" && <Unlock size={12} className="text-status-eligible" />}
+                          <td className="px-3 py-4 whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 text-sm text-lot-ink">
+                              {itemAccess === "locked" && <Lock size={14} aria-hidden className="text-lot-stone" />}
+                              {itemAccess === "unlocked" && <Unlock size={14} aria-hidden className="text-status-eligible" />}
                               {itemAccess === "confirming" && (
-                                <span className="h-2 w-2 rounded-full bg-status-review motion-safe:animate-pulse" />
+                                <span aria-hidden className="h-2 w-2 rounded-full bg-status-review motion-safe:animate-pulse" />
                               )}
-                              <span className="lf-dataprint text-lot-stone ml-0.5">
-                                {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
-                              </span>
+                              <span className="sr-only">{ACCESS_LABEL[itemAccess]}, </span>
+                              {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}
                             </div>
                           </td>
                         </tr>
@@ -549,7 +539,7 @@ export default function BuilderInbox({
               </div>
             )}
           </div>
-          <aside className={`w-full shrink-0 space-y-4 ${viewMode === 'cards' ? 'xl:w-80' : 'xl:w-[450px] 2xl:w-[520px]'}`}>
+          <aside className={`w-full shrink-0 space-y-4 ${viewMode === 'cards' ? 'xl:w-80' : 'xl:w-[450px]'}`}>
             {viewMode === "table" && (
               <div className={`${selectedItemId ? "block" : "hidden xl:block"} xl:sticky xl:top-4 h-fit`}>
                 {selectedItemId === null ? (
@@ -665,12 +655,12 @@ export default function BuilderInbox({
                                 </p>
                               </div>
 
-                              <div className="space-y-3 rounded-none border border-dashed border-lot-stone bg-lot-surface/30 p-4 text-center">
-                                <Lock size={24} className="mx-auto text-lot-stone" />
-                                <h4 className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
+                              <div className="space-y-3 rounded-none border border-dashed border-lot-stone bg-lot-surface/30 p-5 text-center">
+                                <Lock size={24} aria-hidden className="mx-auto text-lot-stone" />
+                                <h4 className="lf-kicker text-lot-ink">
                                   Feasibility Certificate Locked
                                 </h4>
-                                <p className="mx-auto max-w-xs text-xs leading-relaxed text-lot-stone">
+                                <p className="lf-body-sm mx-auto max-w-xs text-lot-stone">
                                   Unlock this lead to reveal the exact street address, parcel boundaries, zoning calculations, detailed finances ledger, and direct homeowner contact info.
                                 </p>
                                 <Button
@@ -698,11 +688,11 @@ export default function BuilderInbox({
                           {/* 2. Confirming State Panel */}
                           {itemAccess === "confirming" && (
                             <div className="border border-status-review/35 bg-status-review-soft px-3.5 py-3 rounded-none">
-                              <div className="flex items-center gap-2 font-sans text-[10.5px] uppercase tracking-[0.08em] text-status-review">
+                              <div className="lf-kicker flex items-center gap-2 text-status-review">
                                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-status-review" />
                                 Recording lead unlock…
                               </div>
-                              <p className="mt-1.5 text-xs text-lot-ink">
+                              <p className="mt-1.5 text-sm text-lot-ink">
                                 Usually a few seconds. The owner contact and certificate will appear right here.
                               </p>
                             </div>
@@ -713,26 +703,27 @@ export default function BuilderInbox({
                             <div className="space-y-4 lf-stamp">
                               {/* Homeowner Info Block */}
                               <div className="border border-status-eligible bg-status-eligible-soft p-4 rounded-none">
-                                <div className="flex items-center justify-between lf-dataprint text-status-eligible">
+                                <div className="flex items-center gap-1.5 lf-kicker-dense text-status-eligible">
+                                  <CheckCircle2 size={12} aria-hidden />
                                   <span>Owner Contact Unlocked{demo ? " · Demo" : ""}</span>
                                 </div>
-                                <address className="mt-2 font-sans text-xs not-italic leading-relaxed text-lot-ink">
-                                  <span className="block font-semibold text-sm">{itemContact.ownerContact.name}</span>
-                                  <span className="block mt-1">
-                                    <Mail size={11} className="inline mr-1 text-lot-stone" />
+                                <address className="mt-2 font-sans text-sm not-italic leading-relaxed text-lot-ink">
+                                  <span className="block font-display text-lg font-medium">{itemContact.ownerContact.name}</span>
+                                  <span className="mt-1 flex items-center gap-1.5 break-all">
+                                    <Mail size={14} aria-hidden className="shrink-0 text-lot-stone" />
                                     {itemContact.ownerContact.email}
                                   </span>
                                   {itemContact.ownerContact.phone && (
-                                    <span className="block mt-0.5">
-                                      <Phone size={11} className="inline mr-1 text-lot-stone" />
+                                    <span className="mt-0.5 flex items-center gap-1.5 tabular-nums">
+                                      <Phone size={14} aria-hidden className="shrink-0 text-lot-stone" />
                                       {itemContact.ownerContact.phone}
                                     </span>
                                   )}
                                 </address>
                                 {itemContact.ownerContact.message && (
                                   <div className="mt-3 border-t border-dashed border-lot-line pt-2">
-                                    <span className="font-sans text-[9px] uppercase text-lot-stone font-medium">Homeowner Message:</span>
-                                    <p className="text-xs italic text-lot-ink mt-1 leading-relaxed bg-lot-chalk/60 p-2 border-l border-lot-stone">
+                                    <span className="lf-kicker-dense text-lot-stone">Homeowner Message</span>
+                                    <p className="text-sm italic text-lot-ink mt-1 leading-relaxed bg-lot-chalk/60 p-2 border-l border-lot-stone">
                                       &ldquo;{itemContact.ownerContact.message}&rdquo;
                                     </p>
                                   </div>
@@ -751,7 +742,7 @@ export default function BuilderInbox({
                                 {(!itemContact.snapshot?.result || !itemContact.snapshot?.parcel || !itemContact.snapshot?.config) ? (
                                   /* Defensively Fallback to Plain Text Report if structure is not present (e.g. tests) */
                                   <div className="max-h-[300px] overflow-y-auto border border-lot-line bg-lot-chalk/60 p-3.5">
-                                    <pre className="whitespace-pre-wrap font-sans text-[10px] leading-relaxed text-lot-ink">
+                                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-lot-ink">
                                       {itemContact.snapshot?.reportText || "Feasibility certificate data unavailable."}
                                     </pre>
                                   </div>
@@ -761,8 +752,8 @@ export default function BuilderInbox({
                                       {/* Monogram / Header */}
                                       <div className="border-b border-lot-line pb-2 text-center">
                                         <div className="lf-dataprint text-lot-orange-ink">LotFoundry</div>
-                                        <h5 className="mt-0.5 font-display text-sm font-semibold leading-tight text-lot-ink">Certificate of Feasibility</h5>
-                                        <p className="mt-1 truncate font-sans text-[9px] text-lot-stone">
+                                        <h5 className="mt-0.5 font-display text-base font-medium leading-tight text-lot-ink">Certificate of Feasibility</h5>
+                                        <p className="lf-caption mt-1 truncate text-lot-stone">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
                                       </div>
@@ -770,26 +761,26 @@ export default function BuilderInbox({
                                       {/* Annual Ledger T-Account */}
                                       <div className="space-y-1">
                                         <div className="lf-dataprint text-lot-orange-ink">Ledger Balance</div>
-                                        <div className="border border-lot-line text-[10px] divide-y divide-lot-line bg-lot-surface/20">
-                                          <div className="grid grid-cols-2 p-1.5">
+                                        <div className="border border-lot-line text-xs tabular-nums divide-y divide-lot-line bg-lot-surface/20">
+                                          <div className="grid grid-cols-2 px-2.5 py-2">
                                             <div>
                                               <span className="font-semibold block text-lot-ink">Gross Rent (annual)</span>
-                                              <span className="text-[9px] text-lot-stone">ADU rent potential</span>
+                                              <span className="text-lot-stone">ADU rent potential</span>
                                             </div>
                                             <div className="text-right font-sans font-semibold text-lot-ink">
                                               {formatCurrency(itemContact.snapshot.result.monthlyRent * 12)}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 p-1.5">
+                                          <div className="grid grid-cols-2 px-2.5 py-2">
                                             <div>
                                               <span className="font-semibold block text-lot-ink">Allowance</span>
-                                              <span className="text-[9px] text-lot-stone">Maint, vacancy, taxes</span>
+                                              <span className="text-lot-stone">Maint, vacancy, taxes</span>
                                             </div>
                                             <div className="text-right font-sans text-lot-stone">
                                               -{formatCurrency((itemContact.snapshot.result.monthlyRent * 12) - itemContact.snapshot.result.annualNoi)}
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-2 p-1.5 bg-lot-surface text-lot-ink font-semibold">
+                                          <div className="grid grid-cols-2 px-2.5 py-2 bg-lot-surface text-lot-ink font-semibold">
                                             <div>Net Income (NOI)</div>
                                             <div className="text-right font-sans">
                                               {formatCurrency(itemContact.snapshot.result.annualNoi)}
@@ -799,33 +790,30 @@ export default function BuilderInbox({
                                       </div>
 
                                       {/* Technical details table */}
-                                      <div className="text-[10px] space-y-1 border-t border-dashed border-lot-line pt-3">
+                                      <div className="text-xs tabular-nums space-y-1 border-t border-dashed border-lot-line pt-3">
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lot-stone">ADU Size</span>
+                                          <span className="lf-kicker-dense text-lot-stone">ADU Size</span>
                                           <span className="font-semibold text-lot-ink">{itemContact.snapshot.result.aduSqft} sf</span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lot-stone">Roof Style</span>
+                                          <span className="lf-kicker-dense text-lot-stone">Roof Style</span>
                                           <span className="font-semibold text-lot-ink">{roofLabels[itemContact.snapshot.config.roof]}</span>
                                         </div>
-                                        <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lot-stone">Zoning Status</span>
-                                          <span className={`font-semibold border px-1 text-[9px] ${
-                                            itemContact.snapshot.result.zoningStatus === "Compliant"
-                                              ? "border-status-eligible text-status-eligible"
-                                              : "border-status-review/40 text-status-review"
-                                          }`}>
-                                            {itemContact.snapshot.result.zoningStatus}
-                                          </span>
+                                        <div className="flex items-center justify-between py-1">
+                                          <span className="lf-kicker-dense text-lot-stone">Zoning Status</span>
+                                          <StatusChip
+                                            status={itemContact.snapshot.result.zoningStatus === "Compliant" ? "clear" : "review"}
+                                            label={itemContact.snapshot.result.zoningStatus}
+                                          />
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lot-stone">Build cost range</span>
+                                          <span className="lf-kicker-dense text-lot-stone">Build cost range</span>
                                           <span className="font-semibold text-lot-ink">
                                             {formatCurrency(itemContact.snapshot.result.costLow)} - {formatCurrency(itemContact.snapshot.result.costHigh)}
                                           </span>
                                         </div>
                                         <div className="flex justify-between py-1">
-                                          <span className="lf-dataprint text-lot-stone">Payback Estimate</span>
+                                          <span className="lf-kicker-dense text-lot-stone">Payback Estimate</span>
                                           <span className="font-semibold text-lot-ink">{itemContact.snapshot.result.paybackYears} yrs</span>
                                         </div>
                                       </div>
@@ -878,7 +866,7 @@ export default function BuilderInbox({
               </div>
             )}
             
-            <CreditShop />
+            <CreditShop credits={credits} />
           </aside>
         </div>
       )}
@@ -913,50 +901,57 @@ function ZeroEverEmptyState() {
   // Sample card, but the price it names is the one the builder will be charged.
   const unlockPrice = useStorePrice("builder1");
   return (
-    <div className="mt-5">
-      <div className="border border-lot-line bg-lot-chalk p-6">
+    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-start">
+      <div className="border-t-[1.5px] border-lot-ink pt-5">
         <h3 className="lf-card-heading text-lot-ink">No matched leads yet</h3>
-        <p className="lf-body-sm mt-1.5 max-w-prose text-lot-stone">
+        <p className="lf-body-sm mt-2 max-w-prose text-lot-stone">
           A lead lands here when a homeowner in one of your service areas submits a feasibility
           report. Complete your profile and add every area you build in — complete profiles get
           matched first.
         </p>
       </div>
 
-      <p className="mt-5 lf-kicker-dense text-lot-stone">
-        Example · this is what a lead looks like
-      </p>
-      <article
-        aria-label="Example lead"
-        className="mt-2 border border-dashed border-lot-stone bg-lot-chalk/70 p-5"
-      >
-        <div className="flex items-center justify-between">
-          <span className="lf-kicker-dense text-lot-stone">
-            NO. LF-EXAMPLE
-          </span>
-          <span className="rounded-none bg-lot-stone-soft px-2.5 py-1 lf-kicker-dense text-lot-stone">
-            Example
-          </span>
-        </div>
-        <p className="mt-2 font-semibold text-lot-ink">
-          Ballard, WA
-          <span className="ml-1.5 font-sans text-[10.5px] font-normal text-lot-stone">98107</span>
+      <div>
+        <p className="lf-kicker-dense text-lot-stone">
+          Example · this is what a lead looks like
         </p>
-        <p className="mt-1 flex flex-wrap gap-3 font-sans text-[10.5px] uppercase tracking-[0.08em] text-lot-stone">
-          <span>6,200 sqft</span>
-          <span>800 sf ADU</span>
-          <span>Compliant</span>
-        </p>
-        <p className="mt-2 lf-money-md text-lot-ink">
-          $2,500
-          <span className="ml-1.5 lf-kicker-dense text-lot-stone">
-            /mo rent potential
-          </span>
-        </p>
-        <p className="mt-3 border-t border-dashed border-lot-line pt-3 lf-kicker-dense text-lot-stone">
-          Owner contact unlocks for {unlockPrice.amountCompact} — once you have real leads
-        </p>
-      </article>
+        <article
+          aria-label="Example lead"
+          className="mt-2 border border-dashed border-lot-stone bg-lot-chalk/70 p-5 sm:p-6"
+        >
+          <div className="flex items-center justify-between">
+            <span className="lf-kicker-dense text-lot-stone">
+              NO. LF-EXAMPLE
+            </span>
+            <span className="rounded-none bg-lot-stone-soft px-2.5 py-1 lf-kicker-dense text-lot-stone">
+              Example
+            </span>
+          </div>
+          <p className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="lf-money-lg text-lot-ink">$2,500</span>
+            <span className="lf-caption text-lot-stone">/mo rent potential</span>
+          </p>
+          <p className="mt-3 font-display text-xl font-medium tracking-[-0.02em] text-lot-ink">
+            Ballard, WA
+            <span className="ml-2 font-sans text-sm font-normal tabular-nums tracking-normal text-lot-stone">98107</span>
+          </p>
+          <dl className="mt-5 grid grid-cols-3 gap-px border border-lot-line bg-lot-line">
+            {[
+              ["Lot", "6,200 sqft"],
+              ["ADU", "800 sf"],
+              ["Zoning", "Compliant"],
+            ].map(([label, value]) => (
+              <div key={label} className="min-w-0 bg-lot-chalk px-3 py-2.5">
+                <dt className="lf-kicker-dense text-lot-stone">{label}</dt>
+                <dd className="mt-1 text-sm font-semibold tabular-nums text-lot-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="lf-caption mt-4 border-t border-dashed border-lot-line pt-3 text-lot-stone">
+            Owner contact unlocks for {unlockPrice.amountCompact} — once you have real leads
+          </p>
+        </article>
+      </div>
     </div>
   );
 }
@@ -1007,7 +1002,7 @@ function ResponseTriage({
   );
 }
 
-function CreditShop() {
+function CreditShop({ credits }: { credits: number }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1069,50 +1064,57 @@ function CreditShop() {
   }
 
   return (
-    <div className="border border-lot-line bg-lot-chalk p-5">
-      <h3 className="lf-card-heading text-lot-ink">Credit Shop</h3>
-      <p className="mt-1 text-sm text-lot-stone">
-        Unlock leads instantly with credits.
-      </p>
-      {(error || priceError) && (
-        <div role="alert" className="mt-3 border border-status-blocked/30 bg-status-blocked-soft p-2 text-xs text-status-blocked">
-          {error ?? priceError}
+    <div className="border border-lot-line bg-lot-chalk">
+      <PanelHeader
+        as="h3"
+        title="Credit Shop"
+        sub="Unlock leads instantly with credits."
+        actions={
+          <p className="text-right">
+            <span className="lf-money-sm block text-lot-ink">{credits}</span>
+            <span className="lf-kicker-dense text-lot-stone">{credits === 1 ? "credit" : "credits"}</span>
+          </p>
+        }
+      />
+      <div className="p-5">
+        {(error || priceError) && (
+          <div role="alert" className="mb-3 border border-status-blocked/30 bg-status-blocked-soft p-2 text-xs text-status-blocked">
+            {error ?? priceError}
+          </div>
+        )}
+        <div className="space-y-3">
+          {/* Product rows are purchase instruments (ledger cards), not pill CTAs. */}
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => buyPack(5)}
+            disabled={loading !== null || priceBlocked}
+            className="min-h-16 justify-between text-left"
+          >
+            <span>
+              <span className="block text-sm font-bold text-lot-ink">5-Lead Pack</span>
+              <span className="block text-xs font-medium text-lot-stone">{prices[5].perLead}</span>
+            </span>
+            <span className="lf-money-md text-lot-ink">
+              {loading === 5 ? "…" : prices[5].total}
+            </span>
+          </Button>
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={() => buyPack(10)}
+            disabled={loading !== null || priceBlocked}
+            className="min-h-16 justify-between text-left"
+          >
+            <span>
+              <span className="block text-sm font-bold">10-Lead Pack</span>
+              <span className="block text-xs font-medium">{prices[10].perLead}</span>
+            </span>
+            <span className="lf-money-md">
+              {loading === 10 ? "…" : prices[10].total}
+            </span>
+          </Button>
         </div>
-      )}
-      <div className="mt-4 space-y-3">
-        {/* Product rows are purchase instruments (ledger cards), not pill CTAs. */}
-        <button
-          type="button"
-          onClick={() => buyPack(5)}
-          disabled={loading !== null || priceBlocked}
-          className="flex w-full min-h-14 items-center justify-between border border-lot-line bg-lot-chalk p-3 text-left motion-safe:transition hover:border-lot-orange/40 hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
-        >
-          <div>
-            <div className="font-semibold text-lot-ink">5-Lead Pack</div>
-            <div className="text-xs text-lot-stone">
-              {prices[5].perLead}
-            </div>
-          </div>
-          <div className="lf-money-md text-lot-ink">
-            {loading === 5 ? "…" : prices[5].total}
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={() => buyPack(10)}
-          disabled={loading !== null || priceBlocked}
-          className="flex w-full min-h-14 items-center justify-between border border-lot-orange bg-lot-orange p-3 text-left motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
-        >
-          <div>
-            <div className="font-semibold text-lot-chalk">10-Lead Pack</div>
-            <div className="text-xs text-lot-chalk/80">
-              {prices[10].perLead}
-            </div>
-          </div>
-          <div className="lf-money-md text-lot-chalk">
-            {loading === 10 ? "…" : prices[10].total}
-          </div>
-        </button>
       </div>
     </div>
   );

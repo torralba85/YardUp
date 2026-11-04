@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { formatCurrency } from "@/lib/feasibility";
 import type { BuilderLedgerEntry } from "@/lib/marketplace-types";
+import { PanelHeader } from "@/components/ui/Panel";
 import { FileText, Receipt, ShieldCheck } from "lucide-react";
 
 export interface BillingLedgerProps {
@@ -12,12 +13,19 @@ export interface BillingLedgerProps {
   credits: number;
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  credit: "CREDITED",
+  purchase: "PURCHASE",
+  unlock: "UNLOCK",
+};
+
 /**
  * In-app billing ledger (T10).
  *
  * Renders an instrument-grade ledger displaying lead unlocks, credit pack
  * purchases, bad-lead credit adjustments, and account balances, complete with
- * double-rule accounting totals and receipt policy disclosures.
+ * double-rule accounting totals and receipt policy disclosures. Rows read
+ * newest first.
  */
 export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
   const totals = useMemo(() => {
@@ -41,36 +49,42 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
     };
   }, [ledger]);
 
+  const rows = useMemo(
+    () => [...ledger].sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0)),
+    [ledger],
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="mt-6 space-y-6">
       {/* Account overview instruments */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="border border-lot-line bg-lot-chalk p-5">
-          <span className="lf-kicker-dense text-lot-stone">Available Balance</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
-            {credits} <span className="text-base font-normal text-lot-stone">{credits === 1 ? "Credit" : "Credits"}</span>
+      <div className="grid gap-px border border-lot-line bg-lot-line sm:grid-cols-3">
+        <div className="bg-lot-chalk p-5 sm:p-6">
+          <span className="lf-kicker-dense text-lot-stone">Available balance</span>
+          <p className="mt-3 flex items-baseline gap-2">
+            <span className="lf-money-lg text-lot-ink">{credits}</span>
+            <span className="text-base text-lot-stone">{credits === 1 ? "Credit" : "Credits"}</span>
           </p>
-          <p className="mt-1 text-xs text-lot-stone">
+          <p className="lf-caption mt-2 text-lot-stone">
             1 credit unlocks 1 full homeowner feasibility lead.
           </p>
         </div>
 
-        <div className="border border-lot-line bg-lot-chalk p-5">
-          <span className="lf-kicker-dense text-lot-stone">Total Unlocks</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
+        <div className="bg-lot-chalk p-5 sm:p-6">
+          <span className="lf-kicker-dense text-lot-stone">Total unlocks</span>
+          <p className="lf-money-lg mt-3 text-lot-ink">
             {totals.totalCreditsUsed}
           </p>
-          <p className="mt-1 text-xs text-lot-stone">
+          <p className="lf-caption mt-2 text-lot-stone">
             Homeowner leads unlocked across your service areas.
           </p>
         </div>
 
-        <div className="border border-lot-line bg-lot-chalk p-5">
-          <span className="lf-kicker-dense text-lot-stone">Total Spent</span>
-          <p className="mt-2 font-display text-3xl font-semibold tracking-tight text-lot-ink">
+        <div className="bg-lot-chalk p-5 sm:p-6">
+          <span className="lf-kicker-dense text-lot-stone">Total spent</span>
+          <p className="lf-money-lg mt-3 text-lot-ink">
             {formatCurrency(totals.totalPaid)}
           </p>
-          <p className="mt-1 text-xs text-lot-stone">
+          <p className="lf-caption mt-2 text-lot-stone">
             Direct card & credit purchases. Receipts emailed upon checkout.
           </p>
         </div>
@@ -78,28 +92,20 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
 
       {/* Transaction ledger sheet */}
       <div className="border border-lot-line bg-lot-chalk">
-        <div className="border-b border-lot-line px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-display text-lg font-semibold text-lot-ink">
-                Billing & Credits Ledger
-              </h2>
-              <p className="mt-0.5 text-xs text-lot-stone">
-                Audit trail of lead unlock purchases, credit grants, and bad-lead adjustments.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2.5 py-1 text-[11px] font-medium text-lot-stone">
-                <Receipt size={13} />
-                Tax Receipts via Stripe
-              </span>
-            </div>
-          </div>
-        </div>
+        <PanelHeader
+          title="Billing & Credits Ledger"
+          sub="Audit trail of lead unlock purchases, credit grants, and bad-lead adjustments."
+          actions={
+            <span className="hidden items-center gap-1.5 rounded-none border border-lot-line bg-lot-surface px-2.5 py-1 text-xs font-medium text-lot-stone sm:inline-flex">
+              <Receipt size={14} aria-hidden />
+              Tax Receipts via Stripe
+            </span>
+          }
+        />
 
         {ledger.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <FileText className="mx-auto h-8 w-8 text-lot-stone opacity-40" />
+            <FileText aria-hidden className="mx-auto h-8 w-8 text-lot-stone opacity-40" />
             <p className="mt-3 text-sm font-medium text-lot-ink">No billing activity recorded yet</p>
             <p className="mt-1 text-xs text-lot-stone">
               When you purchase lead unlocks or credit packs, transactions will appear in this ledger.
@@ -107,82 +113,59 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-lot-line bg-lot-surface text-[10px] uppercase tracking-[0.08em] text-lot-stone">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-lot-line bg-lot-surface text-lot-stone">
                 <tr>
-                  <th scope="col" className="px-6 py-3 font-medium">Date (UTC)</th>
-                  <th scope="col" className="px-6 py-3 font-medium">Description</th>
-                  <th scope="col" className="px-6 py-3 font-medium">Type</th>
-                  <th scope="col" className="px-6 py-3 font-medium text-right">Credits</th>
-                  <th scope="col" className="px-6 py-3 font-medium text-right">Amount</th>
+                  <th scope="col" className="lf-kicker-dense px-6 py-3">Date (UTC)</th>
+                  <th scope="col" className="lf-kicker-dense px-6 py-3">Description</th>
+                  <th scope="col" className="lf-kicker-dense px-6 py-3">Type</th>
+                  <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Credits</th>
+                  <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-lot-line">
-                {ledger.map((entry) => {
-                  const isCredit = entry.type === "credit";
-                  const isPurchase = entry.type === "purchase";
-                  const isUnlock = entry.type === "unlock";
-
-                  return (
-                    <tr key={entry.id} className="hover:bg-lot-surface/50 motion-safe:transition-colors">
-                      <td className="whitespace-nowrap px-6 py-3.5 font-sans tabular-nums text-lot-stone">
-                        {formatLedgerDate(entry.createdAt)}
-                      </td>
-                      <td className="px-6 py-3.5 font-medium text-lot-ink">
-                        {entry.description || "Marketplace Lead Unlock"}
-                        {entry.referenceId && (
-                          <span className="ml-2 font-sans tabular-nums text-[10.5px] font-normal text-lot-stone">
-                            ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
-                          </span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-3.5">
-                        {isCredit && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
-                            CREDITED
-                          </span>
-                        )}
-                        {isPurchase && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
-                            PURCHASE
-                          </span>
-                        )}
-                        {isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
-                            UNLOCK
-                          </span>
-                        )}
-                        {!isCredit && !isPurchase && !isUnlock && (
-                          <span className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-lot-stone">
-                            {entry.type.toUpperCase()}
-                          </span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-sans tabular-nums text-sm">
-                        {entry.creditsChange > 0 && (
-                          <span className="text-lot-ink font-semibold">+{entry.creditsChange}</span>
-                        )}
-                        {entry.creditsChange < 0 && (
-                          <span className="text-lot-stone">{entry.creditsChange}</span>
-                        )}
-                        {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-3.5 text-right font-sans tabular-nums text-sm font-semibold text-lot-ink">
-                        {formatCurrency(entry.amountPaid || 0)}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {rows.map((entry) => (
+                  <tr key={entry.id} className="hover:bg-lot-surface/50 motion-safe:transition-colors">
+                    <td className="whitespace-nowrap px-6 py-4 tabular-nums text-lot-stone">
+                      {formatLedgerDate(entry.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-lot-ink">
+                      {entry.description || "Marketplace Lead Unlock"}
+                      {entry.referenceId && (
+                        <span className="lf-caption ml-2 font-normal tabular-nums text-lot-stone">
+                          ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
+                        </span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className="lf-kicker-dense inline-flex items-center rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 text-lot-stone">
+                        {TYPE_LABEL[entry.type] ?? entry.type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums">
+                      {entry.creditsChange > 0 && (
+                        <span className="text-lot-ink font-semibold">+{entry.creditsChange}</span>
+                      )}
+                      {entry.creditsChange < 0 && (
+                        <span className="text-lot-stone">{entry.creditsChange}</span>
+                      )}
+                      {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums font-semibold text-lot-ink">
+                      {formatCurrency(entry.amountPaid || 0)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
               <tfoot className="border-t-4 border-double border-lot-ink bg-lot-surface/80 font-semibold text-lot-ink">
                 <tr>
-                  <td colSpan={3} className="px-6 py-3.5 font-sans text-xs uppercase tracking-[0.08em]">
+                  <td colSpan={3} className="lf-kicker px-6 py-4">
                     Net Account Total
                   </td>
-                  <td className="px-6 py-3.5 text-right font-sans tabular-nums text-sm">
+                  <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums">
                     {credits} balance
                   </td>
-                  <td className="px-6 py-3.5 text-right font-sans tabular-nums text-sm">
+                  <td className="px-6 py-4 text-right tabular-nums">
                     {formatCurrency(totals.totalPaid)}
                   </td>
                 </tr>
@@ -193,9 +176,9 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
       </div>
 
       {/* Bad-lead credit guarantee notice */}
-      <div className="flex items-start gap-3 border border-lot-line bg-lot-chalk p-4">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-status-eligible" />
-        <div className="text-xs text-lot-stone leading-relaxed">
+      <div className="flex items-start gap-3 border border-lot-line bg-lot-chalk p-5">
+        <ShieldCheck aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-status-eligible" />
+        <div className="lf-body-sm text-lot-stone">
           <strong className="text-lot-ink">Bad-Lead Guarantee:</strong> If homeowner contact details bounce, the phone
           is disconnected, or the owner denies having submitted their parcel feasibility request, use the &ldquo;Report this lead&rdquo;
           button on your unlocked lead card. An immediate 1-credit refund will be applied to your balance and recorded in this ledger.

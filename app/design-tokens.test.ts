@@ -267,7 +267,9 @@ describe("A LOT MORE shared design contract", () => {
     // names a lot-* / status-* token, and the lint audit keeps it that way.
     // Re-pinned 2026-11-02 after the Dialog migration (type sizes 166 → 151, kickers
     // 24 → 23). rawButtons counts <button> outside components/ui: new UI uses Button.
-    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 151, inlineKickers: 23, rawButtons: 75 };
+    // Re-pinned 2026-11-04 after the builder dashboard pass (type sizes 151 → 111,
+    // kickers 23 → 10, raw buttons 75 → 71).
+    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 111, inlineKickers: 10, rawButtons: 71 };
     const patterns = {
       lfAliases:
         /(?<![\w-])(?:[\w-]+:)*(?:text|bg|border(?:-[xytrblse])?|ring(?:-offset)?|outline|fill|stroke|decoration|divide|placeholder|caret|accent|from|via|to|shadow)-lf-[a-z0-9-]+|var\(--color-lf-[a-z0-9-]+\)/g,

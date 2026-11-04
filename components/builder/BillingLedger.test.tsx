@@ -10,7 +10,7 @@ describe("BillingLedger", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("Credits")).toBeInTheDocument();
     expect(screen.getByText(/No billing activity recorded yet/i)).toBeInTheDocument();
-    expect(screen.getByText("Total Spent")).toBeInTheDocument();
+    expect(screen.getByText("Total spent")).toBeInTheDocument();
     expect(screen.getByText("$0")).toBeInTheDocument();
   });
 

@@ -20,6 +20,8 @@ import BuilderInbox from "./BuilderInbox";
 import BuilderProfileForm from "./BuilderProfileForm";
 import BillingLedger from "./BillingLedger";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Segmented } from "@/components/ui/Field";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
 import {
@@ -40,6 +42,19 @@ type CheckoutReturnState = {
   target: BuilderCheckoutReturn;
   status: "confirming" | "confirmed" | "delayed";
 };
+
+const MAIN_CLASS = "px-4 pb-16 pt-8 lg:px-8 lg:pt-12";
+
+/** "San Diego, CA · San Diego County, CA" — the service areas a builder is matched in. */
+function formatServiceAreas(profile: BuilderProfile): string {
+  return profile.serviceAreas
+    .map((area) =>
+      area.scope === "state"
+        ? `Entire state, ${area.state}`
+        : `${area.county ? `${area.county} County` : area.city}, ${area.state}`,
+    )
+    .join(" · ");
+}
 
 /**
  * Top-level builder dashboard. Loads the signed-in builder's profile and lead
@@ -179,17 +194,20 @@ export default function BuilderDashboard({
           displayName={displayName || email}
           onSignOut={() => void logout()}
         />
-        <main id="main-content" tabIndex={-1} className="p-4 lg:p-8" aria-busy="true">
+        <main id="main-content" tabIndex={-1} className={MAIN_CLASS} aria-busy="true">
           <div
             role="status"
             aria-label="Loading the builder dashboard"
             className="mx-auto max-w-6xl"
           >
-            <Skeleton className="h-9 w-64 max-w-full" />
+            <p className="lf-kicker text-lot-orange-ink">Builder workspace</p>
+            <Skeleton className="mt-3 h-11 w-80 max-w-full" />
             <Skeleton className="mt-3 h-4 w-[28rem] max-w-full" />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton key={index} className="h-40" />
+            <Skeleton className="mt-8 h-11 w-full max-w-sm" />
+            <Skeleton className="mt-6 h-28 w-full" />
+            <div className="mt-6 space-y-4">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <Skeleton key={index} className="h-56" />
               ))}
             </div>
             <span className="sr-only">Loading…</span>
@@ -232,17 +250,34 @@ export default function BuilderDashboard({
         displayName={displayName || email}
         onSignOut={() => void logout()}
       />
-      <main id="main-content" tabIndex={-1} className="p-4 lg:p-8">
+      <main id="main-content" tabIndex={-1} className={MAIN_CLASS}>
         <div className="mx-auto max-w-6xl">
-          <h1 className="lf-section-heading">Builder dashboard</h1>
-        <p className="lf-body-sm mt-2 text-lot-stone">
-          Review consented ADU feasibility snapshots matched to your service area.
-        </p>
-        {loadError && (
-          <div role="alert" className="mt-4 rounded-none border border-status-blocked/20 bg-status-blocked-soft p-3 text-sm text-status-blocked">
-            {loadError}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <p className="lf-kicker text-lot-orange-ink">Builder workspace</p>
+              <h1 className="lf-section-heading mt-2 break-words">
+                {profile ? profile.companyName : "Builder dashboard"}
+              </h1>
+              <p className="lf-body-sm mt-2 max-w-prose text-lot-stone">
+                {profile
+                  ? `Serving ${formatServiceAreas(profile)}`
+                  : "Review consented ADU feasibility snapshots matched to your service area."}
+              </p>
+            </div>
+            {profile && (
+              <StatusChip
+                status={profile.active ? "clear" : "review"}
+                label={profile.active ? "Active · matching leads" : "Inactive · not matching"}
+                size="md"
+                className="self-start sm:self-auto"
+              />
+            )}
           </div>
-        )}
+          {loadError && (
+            <div role="alert" className="mt-4 rounded-none border border-status-blocked/20 bg-status-blocked-soft p-3 text-sm text-status-blocked">
+              {loadError}
+            </div>
+          )}
           {checkoutReturn && <CheckoutReturnNotice state={checkoutReturn} />}
           {!profile ? (
             <BuilderProfileForm
@@ -250,31 +285,17 @@ export default function BuilderDashboard({
               onSave={handleSaveProfile}
             />
           ) : (
-            <div className="mt-6 space-y-6">
-              <nav aria-label="Dashboard views" className="flex border-b border-lot-line">
-                <button
-                  type="button"
-                  onClick={() => setActiveView("inbox")}
-                  className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
-                    activeView === "inbox"
-                      ? "border-lot-ink text-lot-ink"
-                      : "border-transparent text-lot-stone hover:text-lot-ink"
-                  }`}
-                >
-                  Leads Inbox ({items.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveView("billing")}
-                  className={`border-b-2 px-4 py-2.5 font-sans text-xs font-semibold uppercase tracking-[0.08em] motion-safe:transition-colors ${
-                    activeView === "billing"
-                      ? "border-lot-ink text-lot-ink"
-                      : "border-transparent text-lot-stone hover:text-lot-ink"
-                  }`}
-                >
-                  Billing & Credits
-                </button>
-              </nav>
+            <div className="mt-8">
+              <Segmented
+                aria-label="Dashboard views"
+                value={activeView}
+                onChange={setActiveView}
+                options={[
+                  { value: "inbox", label: `Leads · ${items.length}` },
+                  { value: "billing", label: "Billing & credits" },
+                ]}
+                className="w-full sm:max-w-sm"
+              />
 
               {activeView === "inbox" ? (
                 <BuilderInbox
