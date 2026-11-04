@@ -15,7 +15,7 @@ export const sanDiego: JurisdictionContent = {
   city: "San Diego",
   slug: "san-diego",
   county: "San Diego County",
-  asOf: "2026-10-10",
+  asOf: "2026-11-03",
   // Rules-first title and H1 come from the shared template, like the other
   // guides. Cost moved to `san-diego-cost.ts` (`/adu/ca/san-diego/cost`).
   metaDescription:
@@ -120,7 +120,7 @@ export const sanDiego: JurisdictionContent = {
       heading: "The ADU Home Density Bonus Program",
       paragraphs: [
         "San Diego's bonus program lets you add a non-deed-restricted ADU for each qualifying affordable ADU you build, in designated Sustainable Development Areas. Outside those areas the cap is one bonus ADU.",
-        "The August 2025 amendments narrowed this significantly: the program no longer applies in RS-1-1 through RS-1-10 or RS-11 zones unless your parcel sits in a high or highest resource area. If you were counting on the bonus program, confirm your zone first — a lot of 2024-era advice about it is now wrong.",
+        "The August 2025 amendments narrowed this significantly: under SDMC § 141.0302(d)(1)(A), the program no longer applies in the RS-1-1 through RS-1-4 and RS-1-8 through RS-1-11 zones unless your parcel sits in a High or Highest CTCAC Opportunity Area and is designated Residential in a land use plan. RS-1-5, RS-1-6 and RS-1-7 are not on that list. If you were counting on the bonus program, confirm your zone first — a lot of 2024-era advice about it is now wrong.",
         "There is also a Community Enhancement Fee on affordable ADUs of 750 square feet or less, with waivers available in certain resource areas.",
       ],
     },
@@ -184,7 +184,7 @@ export const sanDiego: JurisdictionContent = {
     {
       question: "How many ADUs can I put on a single-family lot in San Diego?",
       answer:
-        "You can combine one JADU, one converted ADU such as a garage conversion, and one detached or attached ADU. The maximum is further limited by your lot area, so confirm against your parcel.",
+        "You can combine one JADU, one converted ADU such as a garage conversion, and one detached or attached ADU. Lot area doesn't limit those three. It caps the total only under the ADU Home Density Bonus Program: 4 ADUs and JADUs on 8,000 sq ft or less, 5 on 8,001 to 10,000 sq ft, and 6 above that (SDMC § 141.0302(d)(4)).",
     },
     {
       question: "How big can a San Diego ADU be?",
