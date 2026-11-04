@@ -1,0 +1,23 @@
+/*
+ * The A LOT MORE stylesheet as synced to Claude Design. It is the app's own
+ * globals.css (Tailwind 4 plus the generated design-theme tokens), compiled
+ * by .design-sync/kit/build.mjs with the same whole-repo source scan the app
+ * build uses, so every utility the app ships exists here too. Additions:
+ *  - the authored previews in .design-sync/previews are scanned;
+ *  - every lot-* / status-* colour utility and the lf-* type utilities are
+ *    generated even where the app does not use them yet;
+ *  - the brand font variables, which next/font sets on <html> in the app.
+ */
+@import "../../app/globals.css";
+@import "../../app/mobile-form-safeguards.css";
+
+@source "../previews";
+@source inline("{hover:,}{bg,text,border}-{lot-chalk,lot-ink,lot-orange,lot-orange-hover,lot-orange-ink,lot-orange-edge,lot-orange-soft,lot-stone,lot-stone-on-dark,lot-stone-soft,lot-line,lot-line-dark,lot-surface,lot-surface-dark,lot-ground-dark,lot-ink-hover,lot-paper}");
+@source inline("{hover:,}{bg,text,border}-{status-eligible,status-eligible-on-dark,status-eligible-soft,status-review,status-review-on-dark,status-review-soft,status-blocked,status-blocked-on-dark,status-blocked-soft}");
+@source inline("{lf-kicker,lf-kicker-dense,lf-dataprint,lf-money-sm,lf-money-md,lf-money-lg,lf-money-xl}");
+@source inline("{shadow-paper,shadow-paper-sm,shadow-card,shadow-callout,shadow-overlay,rounded-control,rounded-none,font-display,font-sans,tabular-nums}");
+
+:root {
+  --font-lot-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-lot-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
