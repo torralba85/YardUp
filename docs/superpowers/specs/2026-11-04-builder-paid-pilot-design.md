@@ -1,7 +1,7 @@
 # Done-for-you builder Studio pilot
 
 Date: 2026-11-04
-Status: Design proposed for Andrew's approval; approach selected, delivery terms below are proposed defaults.
+Status: Approved to proceed into execution planning by Andrew's subsequent resume instructions on 2026-11-04. Original proposed terms below are retained as the approved planning baseline; external sends and charges retain their stated review boundaries.
 Builder check: A fresh service-launch reviewer returned "Nothing important left" on 2026-11-04. This is a planning-completeness review, not customer validation or runtime verification.
 Owner: Andrew / LotFoundry. No application implementation is required for the initial test.
 
