@@ -299,6 +299,68 @@ describe("Google building auth", () => {
     expect(headers.Authorization).toBeUndefined();
   });
 
+  it("retries with the API key when Google refuses the runtime token", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fetchSpy = vi.fn().mockImplementation(async (input: string, init?: RequestInit) => {
+      if (input.includes("metadata.google.internal")) return runtimeTokenResponse();
+      const headers = init?.headers as Record<string, string>;
+      if (headers.Authorization) return { ok: false, status: 403, json: async () => ({}) };
+      return {
+        ok: true,
+        status: 200,
+        json: async () =>
+          input.includes("solar.googleapis.com")
+            ? SOLAR_RESPONSE
+            : { destinations: [{ primary: { displayPolygon: BUILDING_POLYGON } }] },
+      };
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const insights = await import("./google-building-insights");
+
+    const solar = await insights.fetchGoogleSolarBuildingInsights({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+    const outline = await insights.fetchGoogleBuildingOutline({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+
+    expect(solar?.roofPitchDegrees).toBe(18.5);
+    expect(outline?.outlineGeoJson).toEqual(BUILDING_POLYGON);
+    const keyRetries = (fetchSpy.mock.calls as [string, RequestInit][]).filter(
+      ([, init]) => (init?.headers as Record<string, string> | undefined)?.["X-Goog-Api-Key"],
+    );
+    expect(keyRetries).toHaveLength(2);
+    for (const [url, init] of keyRetries) {
+      const headers = init.headers as Record<string, string>;
+      expect(headers["X-Goog-Api-Key"]).toBe("test-gmp-key");
+      expect(headers.Authorization).toBeUndefined();
+      expect(url).not.toContain("test-gmp-key");
+    }
+  });
+
+  it("returns null without a retry when Google refuses the runtime token and no key is set", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    const fetchSpy = vi.fn().mockImplementation(async (input: string) => {
+      if (input.includes("metadata.google.internal")) return runtimeTokenResponse();
+      return { ok: false, status: 403, json: async () => ({}) };
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const insights = await import("./google-building-insights");
+
+    const res = await insights.fetchGoogleSolarBuildingInsights({ lat: 32.7155, lng: -117.1615 });
+
+    expect(res).toBeNull();
+    const googleCalls = (fetchSpy.mock.calls as [string, RequestInit][]).filter(
+      ([url]) => !url.includes("metadata.google.internal"),
+    );
+    expect(googleCalls).toHaveLength(1);
+  });
+
   it("makes no Google request with neither runtime OAuth nor an API key", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
