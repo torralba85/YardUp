@@ -167,6 +167,13 @@ Places API (New) App Check is enforced in `yardup-2026`. The production
 Function's short-lived OAuth token and `X-Goog-User-Project`; the dedicated
 Places key is a local/non-enforced fallback, not the production auth path.
 
+`/api/parcel` building enrichment (Solar API and Geocoding v4 `destinations`,
+`lib/server/google-building-insights.ts`) uses the same OAuth path, so the shared
+`GOOGLE_MAPS_API_KEY` does not need Solar API access in production. That key
+still needs Maps Static (`/api/aerial`) and Geocoding (the legacy endpoint in
+`/api/geocode`). Keep Solar on the key until production metrics show successful
+Solar calls over OAuth; the key is also the fallback if the metadata server fails.
+
 CI also needs `FIREBASE_SERVICE_ACCOUNT` and the browser-safe public Firebase and
 Places configuration, plus `NEXT_PUBLIC_GA_MEASUREMENT_ID` (the GA4 property's
 `G-XXXXXXXXXX` ID) if analytics should run in production. It is a browser-safe

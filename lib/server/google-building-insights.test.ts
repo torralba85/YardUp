@@ -32,12 +32,34 @@ const BUILDING_POLYGON: GeoJsonPolygon = {
   ],
 };
 
+const SOLAR_RESPONSE = {
+  center: { latitude: 32.7155, longitude: -117.1615 },
+  solarPotential: {
+    buildingStats: { groundAreaMeters2: 140 },
+    roofSegmentStats: [
+      { pitchDegrees: 18.5, azimuthDegrees: 90, stats: { groundAreaMeters2: 140 } },
+    ],
+  },
+};
+
+function runtimeTokenResponse() {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ access_token: "runtime-oauth-token", expires_in: 3600 }),
+  };
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
+  vi.resetModules();
+  vi.stubEnv("GOOGLE_CLOUD_PROJECT", "");
+  vi.stubEnv("GCLOUD_PROJECT", "");
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("fetchGoogleBuildingOutline", () => {
@@ -171,6 +193,120 @@ describe("fetchGoogleSolarBuildingInsights", () => {
     expect((init.headers as Record<string, string>)["X-Goog-Maps-Solution-ID"]).toBe(
       "gmp_git_agentskills_v1",
     );
+  });
+});
+
+describe("Google building auth", () => {
+  it("sends Solar requests with the key in a header, never the URL, off Google Cloud", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => SOLAR_RESPONSE,
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await fetchGoogleSolarBuildingInsights({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).not.toContain("test-gmp-key");
+    expect((init.headers as Record<string, string>)["X-Goog-Api-Key"]).toBe("test-gmp-key");
+  });
+
+  it("calls Solar and Geocoding v4 as the runtime service account, without the API key", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    const fetchSpy = vi.fn().mockImplementation(async (input: string) => {
+      if (input.includes("metadata.google.internal")) return runtimeTokenResponse();
+      return {
+        ok: true,
+        status: 200,
+        json: async () =>
+          input.includes("solar.googleapis.com")
+            ? SOLAR_RESPONSE
+            : { destinations: [{ primary: { displayPolygon: BUILDING_POLYGON } }] },
+      };
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const insights = await import("./google-building-insights");
+
+    await insights.fetchGoogleBuildingOutline({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+    await insights.fetchGoogleSolarBuildingInsights({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+
+    const googleCalls = (fetchSpy.mock.calls as [string, RequestInit][]).filter(
+      ([url]) => !url.includes("metadata.google.internal"),
+    );
+    expect(googleCalls).toHaveLength(2);
+    for (const [url, init] of googleCalls) {
+      const headers = init.headers as Record<string, string>;
+      expect(headers.Authorization).toBe("Bearer runtime-oauth-token");
+      expect(headers["X-Goog-User-Project"]).toBe("yardup-2026");
+      expect(headers["X-Goog-Api-Key"]).toBeUndefined();
+      expect(url).not.toContain("test-gmp-key");
+    }
+  });
+
+  it("reuses one runtime token across calls", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    const fetchSpy = vi.fn().mockImplementation(async (input: string) => {
+      if (input.includes("metadata.google.internal")) return runtimeTokenResponse();
+      return { ok: true, status: 200, json: async () => SOLAR_RESPONSE };
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const insights = await import("./google-building-insights");
+
+    await insights.fetchGoogleSolarBuildingInsights({ lat: 32.7155, lng: -117.1615 });
+    await insights.fetchGoogleSolarBuildingInsights({ lat: 32.7155, lng: -117.1615 });
+
+    const metadataCalls = (fetchSpy.mock.calls as [string, RequestInit][]).filter(([url]) =>
+      url.includes("metadata.google.internal"),
+    );
+    expect(metadataCalls).toHaveLength(1);
+  });
+
+  it("falls back to the API key when the metadata server fails", async () => {
+    vi.stubEnv("GOOGLE_CLOUD_PROJECT", "yardup-2026");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchSpy = vi.fn().mockImplementation(async (input: string) => {
+      if (input.includes("metadata.google.internal")) {
+        return { ok: false, status: 500, json: async () => ({}) };
+      }
+      return { ok: true, status: 200, json: async () => SOLAR_RESPONSE };
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+    const insights = await import("./google-building-insights");
+
+    const res = await insights.fetchGoogleSolarBuildingInsights({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+    });
+
+    expect(res?.roofPitchDegrees).toBe(18.5);
+    const [, init] = fetchSpy.mock.calls[1] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers["X-Goog-Api-Key"]).toBe("test-gmp-key");
+    expect(headers.Authorization).toBeUndefined();
+  });
+
+  it("makes no Google request with neither runtime OAuth nor an API key", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const res = await fetchGoogleSolarBuildingInsights({ lat: 32.7155, lng: -117.1615 });
+
+    expect(res).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
 
