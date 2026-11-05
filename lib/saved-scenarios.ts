@@ -177,8 +177,9 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     (value.dataQuality === undefined || isRecord(value.dataQuality)) &&
     (value.fireHazard === undefined || pickFireHazard(value.fireHazard) !== undefined) &&
     (value.bearingDeg === undefined || (isFiniteNumber(value.bearingDeg) && value.bearingDeg >= 0 && value.bearingDeg <= 360)) &&
-    (value.existingBuilding === undefined || value.existingBuilding === null ||
-      (isRecord(value.existingBuilding) && pickExistingBuilding(value.existingBuilding) !== null))
+    // Observed geometry is optional: normalizeLiveParcel drops a malformed
+    // snapshot rather than rejecting the parcel it came with.
+    (value.existingBuilding === undefined || value.existingBuilding === null || isRecord(value.existingBuilding))
   );
 }
 
@@ -394,8 +395,10 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
   };
   if (typeof value.county === "string") normalized.county = value.county;
   if (isFiniteNumber(value.bearingDeg) && value.bearingDeg >= 0 && value.bearingDeg <= 360) normalized.bearingDeg = value.bearingDeg;
+  // A corrupt outline or obstacle list drops all observed geometry, never just
+  // one obstacle, so placement falls back to the estimated house instead of
+  // checking a partial set. The parcel itself stays usable.
   const existingBuilding = pickExistingBuilding(value.existingBuilding);
-  if (existingBuilding === null || (value.existingBuilding != null && !isRecord(value.existingBuilding))) return null;
   if (existingBuilding) normalized.existingBuilding = existingBuilding;
   else if (value.existingBuilding === null) normalized.existingBuilding = null;
   if (isRecord(value.marketData)) normalized.marketData = pickMarketData(value.marketData);

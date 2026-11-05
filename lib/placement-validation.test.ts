@@ -9,18 +9,38 @@ const base: PlacementInput = { aduWidth: 20, aduLength: 20, pose,
   envelope: buildSetbackEnvelope(40, 60, { side: 5, front: 5, rear: 5 }),
   existingHouseCorners: rectangleCorners({ x: 0, z: 50 }, 10, 10) };
 describe("actual placement contract", () => {
-  it("rejects parcel holes and preserves invalid precedence over collisions", () => {
+  it("rejects parcel holes and falls back to the setback envelope when a recorded ring can't be evaluated", () => {
     const outer = rectangleCorners(pose, 100, 100);
     const hole = rectangleCorners(pose, 4, 4);
     expect(validatePlacement({ ...base, parcelRings: [outer, hole] }).status).toBe("blocked");
-    expect(validatePlacement({ ...base, parcelRings: [], additionalStructureCorners: [hole] }).status).toBe("invalid");
-    expect(validatePlacement({ ...base, parcelRings: [[]], additionalStructureCorners: [hole] }).status).toBe("invalid");
+    // A ring that revisits a vertex, as flag lots can, is unusable; it must not reject every pose.
+    const pinched = [{ x: -50, z: -50 }, { x: 50, z: -50 }, { x: 0, z: 0 }, { x: 50, z: 50 }, { x: -50, z: 50 }, { x: 0, z: 0 }];
+    for (const parcelRings of [[], [[]], [pinched]]) {
+      expect(validatePlacement({ ...base, parcelRings }).status).toBe("fits");
+      expect(validatePlacement({ ...base, parcelRings, additionalStructureCorners: [hole] }).status).toBe("blocked");
+    }
   });
-  it("does not recommend rotations that ignore recorded obstacles", () => {
-    const result = validatePlacement({ ...base, aduWidth: 31, additionalStructureCorners: [rectangleCorners(pose, 4, 4)] });
-    expect(result.status).toBe("blocked");
-    expect(result.rotatedAlternative).toBeNull();
-    expect(result.reasons.some(reason => reason.code === "rotate-recommended")).toBe(false);
+  it("re-checks a rotation hint against recorded geometry instead of dropping it", () => {
+    const blocking = validatePlacement({ ...base, aduWidth: 31, additionalStructureCorners: [rectangleCorners(pose, 4, 4)] });
+    expect(blocking.status).toBe("blocked");
+    expect(blocking.rotatedAlternative?.recommended).toBe(false);
+    expect(blocking.reasons.some(reason => reason.code === "rotate-recommended")).toBe(false);
+    const clear = validatePlacement({ ...base, aduWidth: 31, parcelRings: [rectangleCorners(pose, 100, 100)],
+      additionalStructureCorners: [rectangleCorners({ x: 0, z: -45 }, 4, 4)] });
+    expect(clear.status).toBe("blocked");
+    expect(clear.rotatedAlternative?.recommended).toBe(true);
+    expect(clear.reasons.some(reason => reason.code === "rotate-recommended")).toBe(true);
+  });
+  it("reports the worst structure across the house and recorded obstacles", () => {
+    const farObstacle = rectangleCorners({ x: 0, z: -45 }, 4, 4);
+    const unknownHouse = validatePlacement({ ...base, existingHouseCorners: null, additionalStructureCorners: [farObstacle] });
+    expect(unknownHouse.houseStatus).toBe("unknown");
+    expect(unknownHouse.houseClearanceFt).toBeNull();
+    expect(unknownHouse.status).toBe("review");
+    const overlap = validatePlacement({ ...base, existingHouseCorners: rectangleCorners(pose, 12, 12), additionalStructureCorners: [[]] });
+    expect(overlap.houseStatus).toBe("overlap");
+    expect(overlap.houseClearanceFt).toBeLessThan(0);
+    expect(overlap.status).toBe("blocked");
   });
   it("accepts exact boundary fit but rejects a one-inch overflow", () => {
     expect(validatePlacement({ ...base, aduWidth: 30 }).status).toBe("fits");

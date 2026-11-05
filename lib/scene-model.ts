@@ -349,8 +349,12 @@ const EXISTING_HOUSE_RIDGE_RISE_FT = 5;
 /** Gable eave overhang the renderer draws beyond the existing house's walls, shared with placement's roof-edge gap. */
 export const EXISTING_HOUSE_ROOF_OVERHANG_FT = 0.8;
 
+/**
+ * Ridge rise for the rendered gable. Its slopes run front to back (eaves at
+ * ±depth/2, ridge along x), so the run of each slope is half the depth.
+ */
 function deriveHouseRidgeRiseFt(
-  spanWidthFt: number,
+  spanDepthFt: number,
   roofPitchDegrees: number | null | undefined,
 ): number {
   if (!isFiniteNumber(roofPitchDegrees) || roofPitchDegrees < 0) {
@@ -360,7 +364,7 @@ function deriveHouseRidgeRiseFt(
     return 1.0;
   }
   const rad = (Math.min(roofPitchDegrees, 60) * Math.PI) / 180;
-  const computed = (spanWidthFt / 2) * Math.tan(rad);
+  const computed = (spanDepthFt / 2) * Math.tan(rad);
   return Math.round(Math.min(Math.max(computed, 1.8), 10) * 100) / 100;
 }
 
@@ -445,7 +449,7 @@ export function buildExistingHouseSceneModel(
       };
       const corners = rectangleCorners({ x: pose.x, z: pose.z }, polyWidth, polyDepth, 0);
       const observedRectangle = fitObservedRectangle(localPolygon);
-      const ridgeRiseFt = deriveHouseRidgeRiseFt(observedRectangle?.width ?? polyWidth, roofPitchDegrees);
+      const ridgeRiseFt = deriveHouseRidgeRiseFt(observedRectangle?.depth ?? polyDepth, roofPitchDegrees);
       const boundsLocal = boundsOfCorners(
         localPolygon,
         SLAB_DATUM_FT,
@@ -474,7 +478,7 @@ export function buildExistingHouseSceneModel(
   if (footprint.width === null || footprint.depth === null) {
     return { footprint, pose: null, corners: null, boundsLocal: null, ...(detachedPolygons.length ? { detachedPolygons } : {}) };
   }
-  const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.width, roofPitchDegrees);
+  const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.depth, roofPitchDegrees);
   const z = lotLength / 2 - footprint.depth / 2 - setbacks.front;
   const pose: Pose2D = { x: 0, z, rotationDeg: 0 };
   const corners = rectangleCorners({ x: pose.x, z: pose.z }, footprint.width, footprint.depth, 0);

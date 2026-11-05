@@ -1176,6 +1176,9 @@ export default function ParcelScene({
   // position edits therefore never start a camera flight (D8); re-tapping the
   // current view button bumps `frameCommand` to reframe deliberately.
   const existingHouse = useMemo(() => buildExistingHouseSceneModel(parcel), [parcel]);
+  // A stable element lets React skip ExistingHouse while the ADU is dragged,
+  // so observed footprints aren't re-extruded on every pose change.
+  const existingHouseMassing = useMemo(() => <ExistingHouse parcel={parcel} />, [parcel]);
   const parcelOutline = useMemo(() => buildParcelOutline(parcel), [parcel]);
   const aduModel = useMemo(() => buildAduSceneModel(config, activePose), [config, activePose]);
   const existingHouseMaxY = existingHouse.boundsLocal?.maxY;
@@ -1569,7 +1572,7 @@ export default function ParcelScene({
                   majorAlpha={0.13}
                   y={-0.08}
                 />
-                <ExistingHouse parcel={parcel} />
+                {existingHouseMassing}
                 <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
                 <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
                 <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />

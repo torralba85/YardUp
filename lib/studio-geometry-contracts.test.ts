@@ -6,7 +6,7 @@ import { buildAduMeshData } from "@/lib/adu-mesh-data";
 import { fitObservedRectangle } from "@/lib/observed-building-geometry";
 import { deriveParcelBearingDeg, polygonContainsPoint } from "@/lib/parcel-geometry";
 import { normalizeLiveParcel } from "@/lib/saved-scenarios";
-import { getScenePlacement } from "@/lib/site-fit";
+import { getDefaultAduPose, getScenePlacement, getSnapToFitPose } from "@/lib/site-fit";
 import type { GeoJsonPolygon, LiveParcelData } from "@/lib/parcel-types";
 
 // Regressions from the 2026-11-04 audit of #367's observed-geometry work.
@@ -80,18 +80,33 @@ describe("studio observed-geometry contracts", () => {
     expect(restored.existingBuilding).toEqual(parcel.existingBuilding);
   });
 
-  it("rejects corrupt observations instead of silently losing an obstacle", () => {
-    expect(normalizeLiveParcel({
-      ...parcel,
-      existingBuilding: {
-        ...parcel.existingBuilding,
-        detachedOutlinesGeoJson: [{ type: "Polygon", coordinates: [[[Infinity, 32]]] }],
-      },
-    })).toBeNull();
-    expect(normalizeLiveParcel({
-      ...parcel,
-      existingBuilding: { outlineGeoJson: { type: "Polygon", coordinates: [] } },
-    })).toBeNull();
+  it("drops all observed geometry, but keeps the parcel, when any observation is corrupt", () => {
+    for (const existingBuilding of [
+      { ...parcel.existingBuilding, detachedOutlinesGeoJson: [{ type: "Polygon" as const, coordinates: [[[Infinity, 32]]] }] },
+      { outlineGeoJson: { type: "Polygon" as const, coordinates: [] } },
+    ]) {
+      const restored = normalizeLiveParcel({ ...parcel, existingBuilding });
+      expect(restored).not.toBeNull();
+      expect(restored?.boundaryGeoJson).toEqual(parcel.boundaryGeoJson);
+      expect(restored).not.toHaveProperty("existingBuilding");
+    }
+  });
+
+  it("blocks and still snaps around a detached structure recorded with a courtyard ring", () => {
+    const courtyard = polygon([[-3, -33], [3, -33], [3, -27], [-3, -27]]);
+    const withCourtyard: GeoJsonPolygon = { type: "Polygon", coordinates: [detached.coordinates[0], courtyard.coordinates[0]] };
+    const courtyardParcel = { ...parcel, existingBuilding: { ...parcel.existingBuilding, detachedOutlinesGeoJson: [withCourtyard] } };
+    const config = { ...defaultAduConfig, width: 20, length: 20, footprint: 400 };
+    const pose = { x: 0, z: -30, rotationDeg: 0 };
+    expect(buildSceneModel(courtyardParcel, config, pose).existingHouse.detachedPolygons).toHaveLength(1);
+    expect(getScenePlacement(courtyardParcel, config, pose).status).toBe("blocked");
+    expect(getSnapToFitPose(courtyardParcel, config, pose)).not.toBeNull();
+  });
+
+  it("starts the ADU off a detached structure when the main house is unknown", () => {
+    const detachedOnly = { ...parcel, existingHouseSqft: 0, existingBuilding: { detachedOutlinesGeoJson: [detached] } };
+    const start = getDefaultAduPose(detachedOnly, defaultAduConfig);
+    expect(getScenePlacement(detachedOnly, defaultAduConfig, start).status).not.toBe("blocked");
   });
 
   it("blocks an ADU placed directly over the visible detached structure", () => {
@@ -120,10 +135,18 @@ describe("studio observed-geometry contracts", () => {
       };
       const house = buildSceneModel({ ...parcel, existingBuilding }, defaultAduConfig, { x: 0, z: -40, rotationDeg: 0 }).existingHouse;
       const rectangle = fitObservedRectangle(house.localPolygon!)!;
-      const pitch = Math.atan(house.ridgeRiseFt! / (rectangle.width / 2)) * 180 / Math.PI;
+      // GableRoof's slopes run front to back, so each slope's run is half the depth.
+      const pitch = Math.atan(house.ridgeRiseFt! / (rectangle.depth / 2)) * 180 / Math.PI;
       expect(pitch).toBeCloseTo(20, 1);
       expect(house.boundsLocal!.maxY).toBeCloseTo(house.wallHeightFt! + house.ridgeRiseFt!, 2);
     }
+    const estimated = buildSceneModel(
+      { ...parcel, existingBuilding: { roofPitchDegrees: 20 } },
+      defaultAduConfig,
+      { x: 0, z: -40, rotationDeg: 0 },
+    ).existingHouse;
+    const estimatedPitch = Math.atan(estimated.ridgeRiseFt! / (estimated.footprint.depth! / 2)) * 180 / Math.PI;
+    expect(estimatedPitch).toBeCloseTo(20, 1);
   });
 
   it("uses an observed outline even when the recorded house area is unknown", () => {
