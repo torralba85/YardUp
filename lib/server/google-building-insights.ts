@@ -8,9 +8,12 @@
  * - Responses are used transiently in-request (`cache: "no-store"`) and never
  *   cached or persisted outside permitted temporary rules.
  * - Never invoke for anonymous guest requests; callers must check `isGuestRequest`.
+ * - Production authenticates as the Function's service account. `apiKey` is the
+ *   local fallback, so the shared key does not need Solar API access in production.
  */
 import type { ExistingBuildingGeometry, GeoJsonPolygon } from "@/lib/parcel-types";
 import { interiorPoint, polygonAreaSqft, polygonContainsPoint } from "@/lib/parcel-geometry";
+import { getGoogleAuthHeaders } from "@/lib/server/google-runtime-auth";
 
 const GEOCODE_DESTINATIONS_URL = "https://geocode.googleapis.com/v4/geocode/destinations";
 const SOLAR_BUILDING_INSIGHTS_URL = "https://solar.googleapis.com/v1/buildingInsights:findClosest";
@@ -31,7 +34,8 @@ const DEFAULT_TIMEOUT_MS = 3500;
 export interface GoogleBuildingLookupParams {
   lat: number;
   lng: number;
-  apiKey: string;
+  /** Used when runtime OAuth is unavailable, such as local development. */
+  apiKey?: string;
   parcelPolygon?: GeoJsonPolygon | null;
   timeoutMs?: number;
 }
@@ -49,6 +53,29 @@ export interface GoogleSolarRoofResult {
 }
 
 /**
+ * Fetch with runtime OAuth, retrying once with the API key when Google refuses
+ * the service account (401/403), so enrichment keeps working while the key
+ * still allows the API.
+ */
+async function fetchWithGoogleAuth(
+  url: string,
+  init: RequestInit & { headers: Record<string, string> },
+  apiKey: string | undefined,
+): Promise<Response | null> {
+  const authHeaders = await getGoogleAuthHeaders(apiKey);
+  if (!authHeaders) return null;
+
+  const res = await fetch(url, { ...init, headers: { ...authHeaders, ...init.headers } });
+  if ((res.status === 401 || res.status === 403) && authHeaders.Authorization && apiKey) {
+    console.warn(
+      `[google-building-insights] ${new URL(url).hostname} refused runtime OAuth (${res.status}); retrying with the API key`,
+    );
+    return fetch(url, { ...init, headers: { "X-Goog-Api-Key": apiKey, ...init.headers } });
+  }
+  return res;
+}
+
+/**
  * Fetch the primary building footprint polygon and entrance coordinate from
  * Google Geocoding API v4 `destinations`.
  */
@@ -56,17 +83,16 @@ export async function fetchGoogleBuildingOutline(
   params: GoogleBuildingLookupParams,
 ): Promise<GoogleBuildingOutlineResult | null> {
   const { lat, lng, apiKey, parcelPolygon, timeoutMs = DEFAULT_TIMEOUT_MS } = params;
-  if (!apiKey || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(GEOCODE_DESTINATIONS_URL, {
+    const res = await fetchWithGoogleAuth(GEOCODE_DESTINATIONS_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask": DESTINATIONS_FIELD_MASK,
         "X-Goog-Maps-Solution-ID": GMP_SOLUTION_ID,
       },
@@ -81,9 +107,9 @@ export async function fetchGoogleBuildingOutline(
       }),
       signal: controller.signal,
       cache: "no-store",
-    });
+    }, apiKey);
 
-    if (!res.ok) return null;
+    if (!res?.ok) return null;
     const data = (await res.json()) as {
       destinations?: Array<{
         primary?: {
@@ -150,29 +176,28 @@ export async function fetchGoogleSolarBuildingInsights(
   params: GoogleBuildingLookupParams,
 ): Promise<GoogleSolarRoofResult | null> {
   const { lat, lng, apiKey, parcelPolygon, timeoutMs = DEFAULT_TIMEOUT_MS } = params;
-  if (!apiKey || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
   const query = new URLSearchParams({
     "location.latitude": String(lat),
     "location.longitude": String(lng),
     requiredQuality: "BASE",
-    key: apiKey,
   });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${SOLAR_BUILDING_INSIGHTS_URL}?${query.toString()}`, {
+    const res = await fetchWithGoogleAuth(`${SOLAR_BUILDING_INSIGHTS_URL}?${query.toString()}`, {
       method: "GET",
       headers: {
         "X-Goog-Maps-Solution-ID": GMP_SOLUTION_ID,
       },
       signal: controller.signal,
       cache: "no-store",
-    });
+    }, apiKey);
 
-    if (!res.ok) return null;
+    if (!res?.ok) return null;
     const data = (await res.json()) as {
       center?: { latitude?: unknown; longitude?: unknown };
       solarPotential?: {
