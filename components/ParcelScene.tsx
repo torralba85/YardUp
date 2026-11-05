@@ -279,7 +279,33 @@ function ContactShadow({
 function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: boolean }) {
   const y = 0.14;
   const color = isCompliant ? SCENE.ink : SCENE.review;
+  const outline = useMemo(() => buildParcelOutline(parcel), [parcel]);
   const { loop, ticks } = useMemo(() => {
+    const tickLen = 3;
+    const tickGap = 1.1;
+    const ticks: [number, number, number][][] = [];
+
+    if (outline.localPolygon && outline.localPolygon.length >= 3) {
+      const vertices = outline.localPolygon;
+      const loop: [number, number, number][] = [
+        ...vertices.map((pt): [number, number, number] => [pt.x, y, pt.z]),
+        [vertices[0].x, y, vertices[0].z],
+      ];
+      for (const pt of vertices) {
+        const sx = Math.sign(pt.x) || 1;
+        const sz = Math.sign(pt.z) || 1;
+        ticks.push([
+          [pt.x + sx * tickGap, y, pt.z],
+          [pt.x + sx * (tickGap + tickLen), y, pt.z],
+        ]);
+        ticks.push([
+          [pt.x, y, pt.z + sz * tickGap],
+          [pt.x, y, pt.z + sz * (tickGap + tickLen)],
+        ]);
+      }
+      return { loop, ticks };
+    }
+
     const hw = parcel.lotWidth / 2;
     const hl = parcel.lotLength / 2;
     const loop: [number, number, number][] = [
@@ -289,9 +315,6 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
       [-hw, y, hl],
       [-hw, y, -hl],
     ];
-    const tickLen = 3;
-    const tickGap = 1.1;
-    const ticks: [number, number, number][][] = [];
     for (const [cx, , cz] of loop.slice(0, 4)) {
       const sx = Math.sign(cx);
       const sz = Math.sign(cz);
@@ -305,7 +328,7 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
       ]);
     }
     return { loop, ticks };
-  }, [parcel.lotLength, parcel.lotWidth]);
+  }, [outline.localPolygon, parcel.lotLength, parcel.lotWidth]);
 
   return (
     <group>
@@ -575,12 +598,48 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const width = model.footprint.width;
   const depth = model.footprint.depth;
   if (width === null || depth === null || model.pose === null) return null;
-  const wallHeight = 9;
-  const ridgeHeight = 5;
+  const wallHeight = model.wallHeightFt ?? 9;
+  const ridgeHeight = model.ridgeRiseFt ?? 5;
+  const isFlatRoof =
+    typeof model.roofPitchDegrees === "number" &&
+    Number.isFinite(model.roofPitchDegrees) &&
+    model.roofPitchDegrees <= 5;
+  const xPos = model.pose.x;
   const zPos = model.pose.z;
 
   return (
-    <group position={[0, 0, zPos]}>
+    <>
+      {model.localPolygon && model.localPolygon.length >= 3 && (
+        <Line
+          points={[
+            ...model.localPolygon.map((pt): [number, number, number] => [pt.x, 0.16, pt.z]),
+            [model.localPolygon[0].x, 0.16, model.localPolygon[0].z],
+          ]}
+          color={SCENE.ink}
+          lineWidth={1.75}
+        />
+      )}
+      {model.detachedPolygons?.map((detPoly, idx) => {
+        const xs = detPoly.map((p) => p.x);
+        const zs = detPoly.map((p) => p.z);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+        const dw = Math.max(Math.max(...xs) - Math.min(...xs), 6);
+        const dd = Math.max(Math.max(...zs) - Math.min(...zs), 6);
+        return (
+          <group key={idx} position={[cx, 0, cz]}>
+            <mesh position={[0, 4, 0]} castShadow receiveShadow>
+              <boxGeometry args={[dw, 8, dd]} />
+              <meshStandardMaterial color={SCENE.wall} roughness={0.85} metalness={0.02} />
+            </mesh>
+            <mesh position={[0, 8.2, 0]} castShadow>
+              <boxGeometry args={[dw + 0.8, 0.4, dd + 0.8]} />
+              <meshStandardMaterial color={SCENE.roof} roughness={0.6} metalness={0.18} />
+            </mesh>
+          </group>
+        );
+      })}
+      <group position={[xPos, 0, zPos]}>
       {/* Soft contact shadow grounding the house */}
       <ContactShadow width={width + 6} length={depth + 6} opacity={0.34} />
 
@@ -600,12 +659,21 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
         <meshStandardMaterial color={SCENE.wall} roughness={0.82} metalness={0.02} />
       </mesh>
 
-      {/* Proper gable roof + ridge beam cap + eave fascia trim */}
-      <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
-      <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
-        <boxGeometry args={existingHouseRidgeCapSize(width)} />
-        <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
-      </mesh>
+      {/* Roof massing: flat parapet when Solar API reports <= 5° pitch, else gable roof */}
+      {isFlatRoof ? (
+        <mesh position={[0, wallHeight + 0.45, 0]} castShadow receiveShadow>
+          <boxGeometry args={[width + 1.2, 0.9, depth + 1.2]} />
+          <meshStandardMaterial color={SCENE.roof} roughness={0.55} metalness={0.2} />
+        </mesh>
+      ) : (
+        <>
+          <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
+          <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
+            <boxGeometry args={existingHouseRidgeCapSize(width)} />
+            <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
+          </mesh>
+        </>
+      )}
 
       {/* Architectural masonry chimney with metal flue cap */}
       <group position={[-width * 0.28, wallHeight + ridgeHeight * 0.42, -depth * 0.18]}>
@@ -688,7 +756,8 @@ function ExistingHouse({ parcel }: { parcel: Parcel }) {
         <boxGeometry args={[3, 0.2, 7]} />
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
-    </group>
+      </group>
+    </>
   );
 }
 
@@ -1614,8 +1683,13 @@ export default function ParcelScene({
           })}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
-          N
+        <div
+          data-testid="scene-compass-badge"
+          className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tabular-nums tracking-[0.08em] text-lot-chalk"
+        >
+          {typeof parcel.bearingDeg === "number" && Number.isFinite(parcel.bearingDeg)
+            ? `N · ${Math.round(parcel.bearingDeg)}°`
+            : "N"}
         </div>
       </div>
 

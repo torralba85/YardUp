@@ -109,4 +109,47 @@ describe("aerial context honesty", () => {
     draw();
     expect(screen.getByRole("status")).toHaveTextContent("Loading satellite context…");
   });
+
+  it("projects the existing house outline and proposed ADU footprint onto the aerial overlay when boundaryGeoJson and bearingDeg are present", async () => {
+    draw({
+      ...parcel,
+      source: "county-gis",
+      bearingDeg: 90,
+      boundaryGeoJson: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [-122.3102, 47.6899],
+            [-122.3098, 47.6899],
+            [-122.3098, 47.6901],
+            [-122.3102, 47.6901],
+            [-122.3102, 47.6899],
+          ],
+        ],
+      },
+      existingBuilding: {
+        outlineGeoJson: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [-122.30995, 47.68995],
+              [-122.30985, 47.68995],
+              [-122.30985, 47.69005],
+              [-122.30995, 47.69005],
+              [-122.30995, 47.68995],
+            ],
+          ],
+        },
+        detachedOutlinesGeoJson: [],
+        roofPitchDegrees: 20,
+        roofAzimuthDegrees: 180,
+        footprintSqft: 1500,
+        entranceLatLng: null,
+        geometrySource: "usa-structures",
+      },
+    });
+    await screen.findByAltText("Satellite context near Public test address");
+    expect(screen.getByTestId("aerial-house-polygon")).toBeInTheDocument();
+    expect(screen.getByTestId("aerial-adu-polygon")).toBeInTheDocument();
+  });
 });

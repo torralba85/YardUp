@@ -203,6 +203,20 @@ describe("ParcelScene controls", () => {
     fireEvent.click(sunBtn);
     expect(sunBtn).toHaveTextContent("Solar · 9 AM");
   });
+
+  it("displays real parcel frontage bearing in the compass badge when parcel.bearingDeg is provided", () => {
+    render(
+      <ParcelScene
+        parcel={{ ...parcelPresets[0], bearingDeg: 180 }}
+        config={defaultAduConfig}
+        isCompliant
+        remainingCapacity={20}
+      />,
+    );
+
+    const badge = screen.getByTestId("scene-compass-badge");
+    expect(badge).toHaveTextContent("N · 180°");
+  });
 });
 
 describe("placementToneColor", () => {

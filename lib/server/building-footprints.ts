@@ -37,10 +37,15 @@ export interface BuildingFootprintResult {
   largestSqft: number;
   /** How many structures matched. Zero means "none found", not "vacant". */
   structureCount: number;
+  /** Outer polygon of the largest matched structure when geometry was returned. */
+  primaryOutlineGeoJson?: GeoJsonPolygon | null;
+  /** Polygons of secondary matched structures on the parcel (largest first). */
+  detachedOutlinesGeoJson?: GeoJsonPolygon[];
 }
 
 /**
- * Sum the building footprints standing on a parcel.
+ * Sum the building footprints standing on a parcel and extract their footprint
+ * polygons when returned by the service.
  *
  * @param polygon - The parcel outline; structures are matched against it.
  * @returns The footprint totals, or null when the lookup could not run.
@@ -63,11 +68,10 @@ export async function fetchBuildingFootprint(
     }),
     geometryType: "esriGeometryEnvelope",
     inSR: "4326",
+    outSR: "4326",
     spatialRel: "esriSpatialRelIntersects",
     outFields: "SQFEET,LONGITUDE,LATITUDE",
-    // The centroid attributes are all we need, and skipping geometry keeps
-    // the response small enough to stay well inside the timeout.
-    returnGeometry: "false",
+    returnGeometry: "true",
   });
 
   try {
@@ -93,6 +97,7 @@ export async function fetchBuildingFootprint(
     let totalSqft = 0;
     let largestSqft = 0;
     let structureCount = 0;
+    const matchedWithOutlines: Array<{ sqft: number; outline: GeoJsonPolygon }> = [];
 
     for (const raw of features) {
       const attributes = readAttributes(raw);
@@ -102,13 +107,28 @@ export async function fetchBuildingFootprint(
       totalSqft += sqft;
       largestSqft = Math.max(largestSqft, sqft);
       structureCount += 1;
+
+      const outline = readGeometryPolygon(raw);
+      if (outline) {
+        matchedWithOutlines.push({ sqft, outline });
+      }
     }
 
-    return {
+    const result: BuildingFootprintResult = {
       totalSqft: Math.round(totalSqft),
       largestSqft: Math.round(largestSqft),
       structureCount,
     };
+
+    if (matchedWithOutlines.length > 0) {
+      matchedWithOutlines.sort((a, b) => b.sqft - a.sqft);
+      result.primaryOutlineGeoJson = matchedWithOutlines[0].outline;
+      if (matchedWithOutlines.length > 1) {
+        result.detachedOutlinesGeoJson = matchedWithOutlines.slice(1).map((item) => item.outline);
+      }
+    }
+
+    return result;
   } catch {
     return null;
   }
@@ -136,6 +156,44 @@ function readAttributes(
   const lat = finiteNumber(bag.LATITUDE);
   if (sqft === null || sqft <= 0 || lng === null || lat === null) return null;
   return { sqft, lng, lat };
+}
+
+/**
+ * Extract a valid GeoJSON Polygon from an Esri JSON (`geometry.rings`) or
+ * GeoJSON (`geometry.coordinates`) feature when present.
+ */
+function readGeometryPolygon(raw: unknown): GeoJsonPolygon | null {
+  if (!raw || typeof raw !== "object") return null;
+  const feature = raw as {
+    geometry?: {
+      rings?: unknown;
+      coordinates?: unknown;
+    };
+  };
+  const rawRings = feature.geometry?.rings ?? feature.geometry?.coordinates;
+  if (!Array.isArray(rawRings) || rawRings.length === 0) return null;
+
+  const validRings: number[][][] = [];
+  for (const ring of rawRings) {
+    if (!Array.isArray(ring) || ring.length < 4) continue;
+    const coords: number[][] = [];
+    for (const pt of ring) {
+      if (!Array.isArray(pt) || pt.length < 2) continue;
+      const lng = finiteNumber(pt[0]);
+      const lat = finiteNumber(pt[1]);
+      if (lng === null || lat === null) continue;
+      coords.push([lng, lat]);
+    }
+    if (coords.length >= 4) {
+      validRings.push(coords);
+    }
+  }
+
+  if (validRings.length === 0) return null;
+  return {
+    type: "Polygon",
+    coordinates: validRings,
+  };
 }
 
 function finiteNumber(value: unknown): number | null {
