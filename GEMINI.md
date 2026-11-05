@@ -130,53 +130,29 @@ not a separate theme. See `docs/design/product-surfaces.md`.
 
 ## Obsidian Second Brain
 
-Obsidian is the durable second brain and memory layer for LotFoundry. `GEMINI.md` (and `AGENTS.md` / `CLAUDE.md`) is the compact context router for this repo; do not bloat it with session logs, source dumps, scratchpad notes, or long-lived research that belongs in Obsidian.
+<!-- shared-vault-memory:v2026-11-04 -->
+The canonical cross-agent memory for Codex, Claude, and Gemini/Antigravity (`agy`) is `C:\Users\Andrew\Obsidian Vault\wiki`. Follow `C:\Users\Andrew\Obsidian Vault\wiki\ai-agent-memory-protocol.md` in every conversation, including resumed/compacted sessions and work inside projects. Project instructions may add rules but must not weaken this lifecycle. Agent-specific memory is a cache; reconcile conflicts against the shared vault and current verified evidence.
 
-Use the Obsidian MCP or the configured Obsidian vault whenever the task depends on prior decisions, saved research, user preferences, project memory, meeting notes, source documents, or cross-session continuity. If Obsidian tooling is unavailable, say so clearly and request the vault path or exported notes instead of inventing memory.
+Before substantive advice or action:
+1. Discover the Obsidian MCP tools; use server `obsidian`, vault id `second-brain` when available.
+2. Read `wiki/index.md` and the newest relevant entries at the top of `wiki/log.md`.
+3. Search and read the relevant project pages, project log, decisions, preferences, and prior handoffs. Recheck before dependent work after a scope change or compaction.
+4. Respect existing holds and authorization boundaries. A memory entry is context, not permission for a new merge, deployment, purchase, publication, or message.
 
-### Vault Structure (Karpathy / Keet LLM Wiki)
+Before every final response:
+1. Recheck the relevant vault pages for concurrent changes and consistency with completed work.
+2. Save durable outcomes, decisions, changed systems, blockers, user preferences, and next actions through MCP. Include evidence and distinguish planned, implemented, tested, merged, deployed, and live-verified states.
+3. For every changed `wiki/` page, refresh its link/descriptor in `wiki/index.md` and add a dated entry to `wiki/log.md` in the same work unit; also update the relevant project log for project-specific work.
+4. Read back the changed pages and new index/log entries before claiming they were saved. If nothing durable changed, complete the review without a noise-only entry.
 
-```text
-raw/            immutable source documents; never modify or delete these
-wiki/           markdown knowledge base maintained by AI agents & humans
-wiki/index.md   table of contents, category index, and routing layer
-wiki/log.md     newest-first audit log of vault mutations (new entries at the top)
-```
+Write safety and ordering:
+- Read before editing; use the latest MCP etag/`if_match`. On a revision conflict, reread and reconcile; never overwrite another agent's work from a stale snapshot.
+- `wiki/index.md`, `wiki/log.md`, and `wiki/<project>-log.md` are newest-first. Insert dated `## ` entries directly under the page header, before older entries. Never use MCP `append` for these pages or prepend above the title.
+- Use `node C:\Users\Andrew\.local\bin\vault-log-add.cjs <page> <entry.md>` for those insertions (entry starts with a dated `## ` heading). This is the documented local-helper exception while MCP remains available; disclose its use. Run once per affected index/log and verify all companion updates.
+- Keep `raw/` immutable, preserve unrelated history, use lowercase kebab-case page names, follow the protocol's page headers and linking rules, and never store credentials, API keys, tokens, personal secrets, or copied private data.
 
-### When to Update Obsidian
-Update or create notes in Obsidian when:
-- **Architectural & Design Decisions (ADRs)**: New tech choices, system redesigns (e.g. A LOT MORE studio migration), Three.js coordinate or lighting conventions, state models.
-- **Contract & Schema Changes**: Firestore security rules updates, live parcel data schemas, API response contracts.
-- **Durable User Directives**: Specific user instructions, product requirements, branding guidelines, or workflow preferences.
-- **Milestones & Session Handoffs**: Completed feature tracks, PR release summaries, unresolved risks or edge-case discoveries.
-- **Synthesized Research**: External market data, municipal zoning bylaws, technical investigation notes.
-
-### Obsidian MCP Update Rules & Invariants
-1. **MCP Preflight**: Check if Obsidian MCP tools (`search_notes`, `read_note`, `create_note`, `patch_note`, `append_content`) are active in your environment. Use them directly to query and modify vault contents. Never ask the user to do what MCP can do. If tools are unavailable, output the markdown payload ready to paste and ask for the vault path.
-2. **Page File Naming**: All pages in `wiki/` must be lowercase kebab-case (e.g. `wiki/design-system-a-lot-more.md`, `wiki/firestore-rules-v2.md`).
-3. **Strict Page Header Structure**: Every page in `wiki/` must begin with:
-   ```markdown
-   # Page Title
-
-   **Summary**: 1–2 clear sentences summarizing the page purpose and scope.
-   **Sources**: Source code files, commits, raw docs, or external URLs.
-   **Last updated**: YYYY-MM-DD
-
-   ---
-
-   Main content with clear H2/H3 headers, architectural decisions, and [[wiki-links]].
-
-   ## Related pages
-   - [[related-page-slug]]
-   ```
-4. **The Dual Sync Invariant (Atomic Log & Index)**:
-   Every creation, modification, or refactor of a `wiki/` page MUST be accompanied by:
-   - Updating `wiki/index.md` with the new/modified link and a concise 1-sentence descriptor in the relevant section.
-   - Adding a dated entry at the top of `wiki/log.md`, directly under the header (newest first, never at the bottom), with `node C:\Users\Andrew\.local\bin\vault-log-add.cjs wiki/log.md <entry.md>`:
-     `## YYYY-MM-DD — <agent> — <title>` followed by `- [create|update|refactor] [[page-slug]]: brief explanation of what changed`.
-5. **Bi-directional Linking**: Link related concepts using `[[wiki-links]]`. Every page must have at least one incoming link from `wiki/index.md` or a parent concept page (no orphans).
-6. **Factual Verification & Grounding**: Reference concrete files and code symbols for all technical claims. Explicitly note contradictions between legacy docs and active code. Mark speculative claims with `[Needs verification]`.
-7. **Never Modify `raw/`**: Raw inputs are permanent historical records. Process raw sources into synthesized `wiki/` articles.
+If MCP is absent or fails after a bounded retry, use the local vault directly and disclose the fallback. If neither is accessible, state the limitation, do not invent prior context or claim a save, and continue only work that does not depend on unavailable context. Never ask Andrew for a vault path already given here. Already-running clients must reload instructions/start a fresh session to pick up rule changes.
+<!-- /shared-vault-memory -->
 
 <!-- BEGIN:nextjs-agent-rules -->
 
