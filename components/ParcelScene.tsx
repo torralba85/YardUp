@@ -5,7 +5,7 @@ import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
-import { buildBuildingMassing, fitObservedRectangle } from "@/lib/building-massing";
+import { buildBuildingMassing } from "@/lib/building-massing";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
@@ -607,26 +607,26 @@ function ObservedBuilding({ points, height }: { points: LocalPoint[]; height: nu
  * read `buildExistingHouseSceneModel`, so they cannot disagree. An unknown
  * footprint renders nothing instead of a guessed box.
  */
-function ExistingHouse({ parcel }: { parcel: Parcel }) {
+export function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const model = buildExistingHouseSceneModel(parcel);
   const modelWidth = model.footprint.width;
   const modelDepth = model.footprint.depth;
-  if (modelWidth === null || modelDepth === null || model.pose === null) return null;
+  const detached = model.detachedPolygons?.map((points, index) => (
+    <ObservedBuilding key={index} points={points} height={8} />
+  ));
+  if (modelWidth === null || modelDepth === null || model.pose === null) return <>{detached}</>;
   const wallHeight = model.wallHeightFt ?? 9;
   const ridgeHeight = model.ridgeRiseFt ?? 5;
   const isFlatRoof =
     typeof model.roofPitchDegrees === "number" &&
     Number.isFinite(model.roofPitchDegrees) &&
     model.roofPitchDegrees <= 5;
-  const detached = model.detachedPolygons?.map((points, index) => (
-    <ObservedBuilding key={index} points={points} height={8} />
-  ));
 
   // An observed outline draws at its true size and heading, never boxed to its
   // bounds. A rectangle keeps the detailed house; any other shape is extruded
   // as-is, because a predominant pitch does not describe its roof planes.
   const observed = model.localPolygon && model.localPolygon.length >= 3 ? model.localPolygon : null;
-  const rectangle = observed ? fitObservedRectangle(observed) : null;
+  const rectangle = model.observedRectangle ?? null;
   if (observed && !rectangle) {
     return (
       <>

@@ -3,6 +3,7 @@ import { defaultAduConfig } from "@/lib/feasibility";
 import { rectPolygon } from "@/lib/scene-model-fixtures";
 import { buildSceneModel, projectLocalToGeodetic } from "@/lib/scene-model";
 import { buildAduMeshData } from "@/lib/adu-mesh-data";
+import { fitObservedRectangle } from "@/lib/observed-building-geometry";
 import { deriveParcelBearingDeg, polygonContainsPoint } from "@/lib/parcel-geometry";
 import { normalizeLiveParcel } from "@/lib/saved-scenarios";
 import { getScenePlacement } from "@/lib/site-fit";
@@ -101,8 +102,28 @@ describe("studio observed-geometry contracts", () => {
   });
 
   it("checks detached obstacles even without a primary outline", () => {
-    const detachedOnly = { ...parcel, existingBuilding: { detachedOutlinesGeoJson: [detached] } };
-    expect(getScenePlacement(detachedOnly, defaultAduConfig, { x: 0, z: -30, rotationDeg: 0 }).status).toBe("blocked");
+    for (const existingHouseSqft of [800, 0]) {
+      const detachedOnly = { ...parcel, existingHouseSqft, existingBuilding: { detachedOutlinesGeoJson: [detached] } };
+      const pose = { x: 0, z: -30, rotationDeg: 0 };
+      expect(getScenePlacement(detachedOnly, defaultAduConfig, pose).status).toBe("blocked");
+      const house = buildSceneModel(detachedOnly, defaultAduConfig, pose).existingHouse;
+      expect(house.detachedPolygons).toHaveLength(1);
+      if (existingHouseSqft === 0) expect(house.pose).toBeNull();
+    }
+  });
+
+  it("uses the rendered span to preserve observed roof pitch across headings", () => {
+    for (const angle of [0, 30, -40, 90, 135]) {
+      const existingBuilding = {
+        outlineGeoJson: rectPolygon(anchor.lat, anchor.lng, 20, 40, angle),
+        roofPitchDegrees: 20,
+      };
+      const house = buildSceneModel({ ...parcel, existingBuilding }, defaultAduConfig, { x: 0, z: -40, rotationDeg: 0 }).existingHouse;
+      const rectangle = fitObservedRectangle(house.localPolygon!)!;
+      const pitch = Math.atan(house.ridgeRiseFt! / (rectangle.width / 2)) * 180 / Math.PI;
+      expect(pitch).toBeCloseTo(20, 1);
+      expect(house.boundsLocal!.maxY).toBeCloseTo(house.wallHeightFt! + house.ridgeRiseFt!, 2);
+    }
   });
 
   it("uses an observed outline even when the recorded house area is unknown", () => {

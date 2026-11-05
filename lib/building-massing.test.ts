@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Euler, Vector3 } from "three";
-import { buildBuildingMassing, fitObservedRectangle } from "./building-massing";
+import { buildBuildingMassing } from "./building-massing";
+import { fitObservedRectangle } from "./observed-building-geometry";
 import { rectangleCorners } from "./scene-model";
 
 describe("observed rectangle fit", () => {
