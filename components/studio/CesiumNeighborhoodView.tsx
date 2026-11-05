@@ -19,7 +19,11 @@ import {
 import { Button } from "@/components/ui/Button";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
-import { type Pose2D } from "@/lib/scene-model";
+import {
+  buildSceneModel,
+  projectLocalToGeodetic,
+  type Pose2D,
+} from "@/lib/scene-model";
 import { type PlacementResult } from "@/lib/placement-validation";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { loadCesium } from "@/lib/cesium-loader";
@@ -243,21 +247,18 @@ interface SceneGeometryOptions {
   parcel: Parcel | LiveParcelData;
   config: ADUConfig;
   pose: Pose2D;
+  placement: PlacementResult;
   lat: number;
   lng: number;
 }
 
+const FT_TO_METERS = 0.3048;
+
 /**
- * Adds the address pin and published GIS boundary, and returns the entities so
- * they can be excluded from a later height sample or replaced on refinement.
- *
- * Heights come from Cesium's own ground clamping where the build supports it,
- * because that keeps re-clamping as tiles refine — better than any single
- * measurement. The measured height is the fallback, and draping flat is the
- * last resort: an extruded box at an invented height is the burial bug.
- *
- * Conceptual buildings are deliberately absent: address coordinates cannot
- * establish the model's real-world origin or compass bearing.
+ * Adds the address pin, published GIS boundary, and (when a true origin and
+ * street-frontage bearing are established) the projected 3D ADU volume and
+ * existing building footprint, returning all added entities so they can be
+ * excluded from a later height sample or replaced on refinement.
  */
 function placeSceneGeometry(
   Cesium: CesiumModule,
@@ -265,7 +266,7 @@ function placeSceneGeometry(
   groundHeightMeters: number | null,
   options: SceneGeometryOptions,
 ): unknown[] {
-  const { parcel, lat, lng } = options;
+  const { parcel, config, pose, placement, lat, lng } = options;
   const added: unknown[] = [];
   const clampToGround = Cesium.HeightReference?.RELATIVE_TO_GROUND;
   const canClamp = typeof clampToGround === "number";
@@ -322,6 +323,73 @@ function placeSceneGeometry(
     );
   }
 
+  // 3. Observed Existing Building Footprint (when returned by Geocoding v4 or USA Structures)
+  const existingOutline = parcel.existingBuilding?.outlineGeoJson;
+  if (existingOutline?.coordinates?.[0]?.length) {
+    const houseCoords = existingOutline.coordinates[0].flatMap(([coordLng, coordLat]) => [
+      coordLng,
+      coordLat,
+    ]);
+    added.push(
+      activeViewer.entities.add({
+        name: "Existing Building Outline",
+        polygon: {
+          hierarchy: Cesium.Cartesian3.fromDegreesArray(houseCoords),
+          material: Cesium.Color.fromCssColorString(COLOR["lot-ink"]).withAlpha(0.18),
+          outline: true,
+          outlineColor: Cesium.Color.fromCssColorString(COLOR["lot-ink"]),
+          outlineWidth: 2,
+          ...(typeof classifyBoth === "number" ? { classificationType: classifyBoth } : {}),
+        },
+      }),
+    );
+  }
+
+  // 4. Projected 3D ADU Massing when real-world origin and compass bearing are established
+  const sceneModel = buildSceneModel(parcel, config, pose);
+  const { origin, adu } = sceneModel;
+  if (
+    origin.lat !== null &&
+    origin.lng !== null &&
+    origin.bearingDeg !== null &&
+    adu.footprintCorners &&
+    adu.footprintCorners.length >= 3
+  ) {
+    const geodeticCorners = adu.footprintCorners.map((corner) =>
+      projectLocalToGeodetic(
+        { lat: origin.lat!, lng: origin.lng! },
+        origin.bearingDeg,
+        corner,
+      ),
+    );
+    if (geodeticCorners.every((pt): pt is { lat: number; lng: number } => pt !== null)) {
+      const aduFlatCoords = geodeticCorners.flatMap((pt) => [pt.lng, pt.lat]);
+      const feedback = describePlacementWithEvidence(placement, parcel);
+      const toneColor = PLACEMENT_STYLE[feedback.tone].color;
+      const totalHeightFt = adu.heightModel?.totalHeight ?? config.height;
+      const totalHeightMeters = totalHeightFt * FT_TO_METERS;
+      added.push(
+        activeViewer.entities.add({
+          name: "Proposed ADU",
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray(aduFlatCoords),
+            material: Cesium.Color.fromCssColorString(toneColor).withAlpha(0.68),
+            outline: true,
+            outlineColor: Cesium.Color.fromCssColorString(toneColor),
+            outlineWidth: 2,
+            ...(groundHeightMeters !== null
+              ? {
+                  height: groundHeightMeters,
+                  extrudedHeight: groundHeightMeters + totalHeightMeters,
+                }
+              : typeof classifyBoth === "number"
+                ? { classificationType: classifyBoth }
+                : {}),
+          },
+        }),
+      );
+    }
+  }
 
   return added;
 }
@@ -382,11 +450,13 @@ export default function CesiumNeighborhoodView({
     parcel,
     config,
     pose,
-    lat, lng,
+    placement,
+    lat,
+    lng,
   });
   useEffect(() => {
-    latestPropsRef.current = { parcel, config, pose, lat, lng };
-  }, [parcel, config, pose, lat, lng]);
+    latestPropsRef.current = { parcel, config, pose, placement, lat, lng };
+  }, [parcel, config, pose, placement, lat, lng]);
 
   const viewerRef = useRef<CesiumViewerInstance | null>(null);
   const cesiumModuleRef = useRef<CesiumModule | null>(null);
@@ -828,7 +898,7 @@ export default function CesiumNeighborhoodView({
       measuredGroundRef.current,
       latestPropsRef.current,
     ));
-  }, [parcel, config, pose]);
+  }, [parcel, config, pose, placement]);
 
   const groundLine = useMemo(() => {
     if (!ground) return null;

@@ -51,6 +51,40 @@ export interface Parcel {
     rear: number; // ft
     side: number; // ft
   };
+  /**
+   * Street-frontage bearing in degrees clockwise from true north (0..360) for
+   * the local scene frame's +z (front/street) axis. Derived from the parcel
+   * boundary polygon and building/street orientation when observed; null or
+   * omitted when unknown.
+   */
+  bearingDeg?: number | null;
+  /**
+   * Observed geometry and structural roof metrics for the primary existing
+   * building (and optional detached structures) on the parcel.
+   */
+  existingBuilding?: ExistingBuildingGeometry | null;
+}
+
+/**
+ * Observed building footprint and roof geometry from public structure layers
+ * (FEMA/ORNL USA Structures) or Google Maps Platform (Geocoding v4 Building
+ * Outlines + Solar API buildingInsights).
+ */
+export interface ExistingBuildingGeometry {
+  /** Outer footprint polygon of the primary existing structure in GeoJSON [lng, lat]. */
+  outlineGeoJson?: GeoJsonPolygon | null;
+  /** Additional detached structure footprint polygons on the parcel in GeoJSON [lng, lat]. */
+  detachedOutlinesGeoJson?: GeoJsonPolygon[];
+  /** Observed predominant roof pitch in degrees (0 = flat, >5 = pitched). */
+  roofPitchDegrees?: number | null;
+  /** Observed predominant roof azimuth in degrees clockwise from true north (0..360). */
+  roofAzimuthDegrees?: number | null;
+  /** Observed ground footprint area in sq ft from building outline or Solar API. */
+  footprintSqft?: number | null;
+  /** Primary building entrance coordinate if reported by Geocoding v4 destinations. */
+  entranceLatLng?: { lat: number; lng: number } | null;
+  /** Provider that supplied the primary footprint outline or roof insight. */
+  geometrySource?: "google-geocoding-v4" | "usa-structures" | "google-solar";
 }
 
 /**

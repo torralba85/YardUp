@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  deriveParcelBearingDeg,
   modeledSetbackAreaSqft,
   distanceToPolygonFt,
   estimateLotDimensions,
@@ -127,6 +128,30 @@ describe("orientedLotDimensions", () => {
       coordinates: [[[-122.31, 47.65], [-122.3105, 47.6502]]],
     };
     expect(orientedLotDimensions(poly)).toBeNull();
+  });
+});
+
+describe("deriveParcelBearingDeg", () => {
+  it("returns 0° for an axis-aligned north-south lot with frontage to the south", () => {
+    const poly = rectPolygon(47.65, -122.31, 50, 100, 0);
+    expect(deriveParcelBearingDeg(poly)).toBeCloseTo(0, 1);
+  });
+
+  it("flips to 180° when the street frontage hint sits in the south half of a north-south lot", () => {
+    const poly = rectPolygon(47.65, -122.31, 50, 100, 0);
+    const southHint = { lat: 47.65 - 30 / FT_PER_DEG_LAT, lng: -122.31 };
+    expect(deriveParcelBearingDeg(poly, southHint)).toBeCloseTo(180, 1);
+  });
+
+  it("recovers the principal axis bearing of a rotated rectangular parcel", () => {
+    // rectPolygon rotates counter-clockwise by 30°, so the long axis is at 150° CW from north.
+    const poly = rectPolygon(47.65, -122.31, 50, 100, 30);
+    expect(deriveParcelBearingDeg(poly)).toBeCloseTo(150, 1);
+  });
+
+  it("returns null for missing or degenerate polygons", () => {
+    expect(deriveParcelBearingDeg(null)).toBeNull();
+    expect(deriveParcelBearingDeg({ type: "Polygon", coordinates: [[]] })).toBeNull();
   });
 });
 
