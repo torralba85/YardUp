@@ -25,6 +25,7 @@
 import type { ADUConfig, RoofStyle } from "./feasibility";
 import type { GeoJsonPolygon, Parcel, LiveParcelData } from "./parcel-types";
 import { FT_PER_DEG_LAT } from "./parcel-geometry";
+import { fitObservedRectangle, type ObservedRectangle } from "./observed-building-geometry";
 
 function isFiniteNumber(n: unknown): n is number {
   return typeof n === "number" && Number.isFinite(n);
@@ -331,6 +332,8 @@ export interface ExistingHouseSceneModel {
   boundsLocal: LocalBounds | null;
   /** Observed primary building footprint vertices in local feet when available. */
   localPolygon?: LocalPoint[] | null;
+  /** Fitted wall dimensions and heading shared with detailed-house rendering. */
+  observedRectangle?: ObservedRectangle | null;
   /** Observed secondary/detached structure footprints in local feet when available. */
   detachedPolygons?: LocalPoint[][];
   /** Wall plate height in feet (defaults to 9 ft). */
@@ -346,8 +349,12 @@ const EXISTING_HOUSE_RIDGE_RISE_FT = 5;
 /** Gable eave overhang the renderer draws beyond the existing house's walls, shared with placement's roof-edge gap. */
 export const EXISTING_HOUSE_ROOF_OVERHANG_FT = 0.8;
 
+/**
+ * Ridge rise for the rendered gable. Its slopes run front to back (eaves at
+ * ±depth/2, ridge along x), so the run of each slope is half the depth.
+ */
 function deriveHouseRidgeRiseFt(
-  spanWidthFt: number,
+  spanDepthFt: number,
   roofPitchDegrees: number | null | undefined,
 ): number {
   if (!isFiniteNumber(roofPitchDegrees) || roofPitchDegrees < 0) {
@@ -357,7 +364,7 @@ function deriveHouseRidgeRiseFt(
     return 1.0;
   }
   const rad = (Math.min(roofPitchDegrees, 60) * Math.PI) / 180;
-  const computed = (spanWidthFt / 2) * Math.tan(rad);
+  const computed = (spanDepthFt / 2) * Math.tan(rad);
   return Math.round(Math.min(Math.max(computed, 1.8), 10) * 100) / 100;
 }
 
@@ -382,9 +389,26 @@ export function buildExistingHouseSceneModel(
   areaBasis: ExistingAreaBasis = "unknown",
 ): ExistingHouseSceneModel {
   const footprint = buildExistingHouseFootprint(parcel, areaBasis);
-  if (footprint.width === null || footprint.depth === null) {
-    return { footprint, pose: null, corners: null, boundsLocal: null };
+  const localFrame = computeParcelLocalFrame(parcel);
+  const detachedPolygons: LocalPoint[][] = [];
+  if (localFrame) {
+    for (const detPoly of parcel.existingBuilding?.detachedOutlinesGeoJson ?? []) {
+      const detOuter: GeoJsonPolygon = {
+        type: "Polygon",
+        coordinates: [detPoly.coordinates[0] ?? []],
+      };
+      const detPts = projectPolygonToLocal(
+        localFrame.anchor,
+        localFrame.bearingDeg,
+        detOuter,
+      );
+      const stripped = detPts ? stripClosingDuplicate(detPts) : null;
+      if (stripped && stripped.length >= 3) {
+        detachedPolygons.push(stripped);
+      }
+    }
   }
+
   const { lotLength, setbacks } = parcel;
   const poseInputsValid =
     isFiniteNumber(lotLength) &&
@@ -392,11 +416,10 @@ export function buildExistingHouseSceneModel(
     isFiniteNumber(setbacks?.front) &&
     setbacks.front >= 0;
   if (!poseInputsValid) {
-    return { footprint, pose: null, corners: null, boundsLocal: null };
+    return { footprint, pose: null, corners: null, boundsLocal: null, ...(detachedPolygons.length ? { detachedPolygons } : {}) };
   }
 
   const roofPitchDegrees = parcel.existingBuilding?.roofPitchDegrees ?? null;
-  const localFrame = computeParcelLocalFrame(parcel);
   const outlineGeoJson = parcel.existingBuilding?.outlineGeoJson ?? null;
 
   if (localFrame && outlineGeoJson) {
@@ -425,28 +448,13 @@ export function buildExistingHouseSceneModel(
         rotationDeg: 0,
       };
       const corners = rectangleCorners({ x: pose.x, z: pose.z }, polyWidth, polyDepth, 0);
-      const ridgeRiseFt = deriveHouseRidgeRiseFt(polyWidth, roofPitchDegrees);
+      const observedRectangle = fitObservedRectangle(localPolygon);
+      const ridgeRiseFt = deriveHouseRidgeRiseFt(observedRectangle?.depth ?? polyDepth, roofPitchDegrees);
       const boundsLocal = boundsOfCorners(
         localPolygon,
         SLAB_DATUM_FT,
         EXISTING_HOUSE_WALL_HEIGHT_FT + ridgeRiseFt,
       );
-      const detachedPolygons: LocalPoint[][] = [];
-      for (const detPoly of parcel.existingBuilding?.detachedOutlinesGeoJson ?? []) {
-        const detOuter: GeoJsonPolygon = {
-          type: "Polygon",
-          coordinates: [detPoly.coordinates[0] ?? []],
-        };
-        const detPts = projectPolygonToLocal(
-          localFrame.anchor,
-          localFrame.bearingDeg,
-          detOuter,
-        );
-        const stripped = detPts ? stripClosingDuplicate(detPts) : null;
-        if (stripped && stripped.length >= 3) {
-          detachedPolygons.push(stripped);
-        }
-      }
       return {
         footprint: {
           ...footprint,
@@ -458,6 +466,7 @@ export function buildExistingHouseSceneModel(
         corners,
         boundsLocal,
         localPolygon,
+        observedRectangle,
         ...(detachedPolygons.length > 0 ? { detachedPolygons } : {}),
         wallHeightFt: EXISTING_HOUSE_WALL_HEIGHT_FT,
         ridgeRiseFt,
@@ -466,7 +475,10 @@ export function buildExistingHouseSceneModel(
     }
   }
 
-  const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.width, roofPitchDegrees);
+  if (footprint.width === null || footprint.depth === null) {
+    return { footprint, pose: null, corners: null, boundsLocal: null, ...(detachedPolygons.length ? { detachedPolygons } : {}) };
+  }
+  const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.depth, roofPitchDegrees);
   const z = lotLength / 2 - footprint.depth / 2 - setbacks.front;
   const pose: Pose2D = { x: 0, z, rotationDeg: 0 };
   const corners = rectangleCorners({ x: pose.x, z: pose.z }, footprint.width, footprint.depth, 0);
@@ -480,6 +492,7 @@ export function buildExistingHouseSceneModel(
     pose,
     corners,
     boundsLocal,
+    ...(detachedPolygons.length ? { detachedPolygons } : {}),
     ...(roofPitchDegrees !== null
       ? {
           wallHeightFt: EXISTING_HOUSE_WALL_HEIGHT_FT,

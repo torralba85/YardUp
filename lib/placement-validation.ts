@@ -432,6 +432,10 @@ export interface PlacementResult {
 }
 
 export interface PlacementInput {
+  /** Actual parcel outer ring followed by excluded holes, in the scene frame. */
+  parcelRings?: LocalPoint[][];
+  /** Conservative bounds for every additional observed structure. */
+  additionalStructureCorners?: LocalPoint[][];
   /** ADU ground-plan width/length (no roof overhang) — the same values `buildAduFootprint` derives area from. */
   aduWidth: number;
   aduLength: number;
@@ -530,6 +534,152 @@ function buildRotatedAlternative(
  * the current pose's own status.
  */
 export function validatePlacement(input: PlacementInput): PlacementResult {
+  const result = applyRecordedGeometry(input, validateModeledPlacement(input));
+  const recorded = Boolean(input.parcelRings?.length || input.additionalStructureCorners?.length);
+  if (!recorded || result.status === "invalid") return result;
+
+  // Re-check the 90° alternative against the same recorded geometry, so a
+  // rotation hint is never based on the proxy geometry alone.
+  result.rotatedAlternative = null;
+  result.reasons = result.reasons.filter((reason) => reason.code !== "rotate-recommended");
+  if (result.status === "fits") return result;
+  const pose = { ...input.pose, rotationDeg: normalizeDeg(input.pose.rotationDeg + 90) };
+  const rotated = applyRecordedGeometry({ ...input, pose }, validateModeledPlacement({ ...input, pose }));
+  if (rotated.status === "invalid") return result;
+  const alternative: RotateAlternative = {
+    command: { rotationDeg: pose.rotationDeg },
+    envelopeStatus: rotated.envelopeStatus,
+    houseStatus: rotated.houseStatus,
+    envelopeClearanceFt: rotated.envelopeClearanceFt,
+    houseClearanceFt: rotated.houseClearanceFt,
+    recommended: rotated.envelopeStatus === "fits" && rotated.houseStatus === "clear",
+  };
+  result.rotatedAlternative = alternative;
+  if (alternative.recommended) result.reasons.push(rotateReason(result.envelopeStatus, result.houseStatus, alternative));
+  return result;
+}
+
+/** Worst first: a known overlap or contact outranks an unverified structure, which outranks a measured gap. */
+const HOUSE_STATUS_SEVERITY: Record<HouseClearanceStatus, number> = {
+  clear: 0,
+  close: 1,
+  unknown: 2,
+  "boundary-contact": 3,
+  overlap: 4,
+};
+
+/**
+ * Narrow a modeled result by the recorded parcel rings and every additional
+ * observed structure. The reported house status and clearance are the worst
+ * across all structures.
+ */
+function applyRecordedGeometry(input: PlacementInput, result: PlacementResult): PlacementResult {
+  if (result.status === "invalid") return result;
+  const toleranceFt = input.toleranceFt ?? PLACEMENT_TOLERANCE_FT;
+  const reviewSeparationFt = input.reviewSeparationFt ?? REVIEW_SEPARATION_FT;
+  const corners = rectangleCorners(input.pose, input.aduWidth, input.aduLength, input.pose.rotationDeg);
+  const usable = (ring: LocalPoint[]) => {
+    const checked = validateEnvelopeRing(ring, toleranceFt);
+    return checked.ring && checked.areaSqft > toleranceFt * toleranceFt ? checked.ring : null;
+  };
+
+  const [outerRing, ...holeRings] = input.parcelRings ?? [];
+  // A recorded ring that can't be evaluated (pinched or self-touching, as on
+  // some flag lots) leaves the setback envelope as the boundary check.
+  const outer = outerRing ? usable(outerRing) : null;
+  if (outer) {
+    const boundaryFit = rectangleWithinRing(corners, outer, toleranceFt);
+    result.envelopeClearanceFt = Math.min(result.envelopeClearanceFt, boundaryFit.clearanceFt);
+    const hitsHole = holeRings.some((holeRing) => {
+      const ring = usable(holeRing);
+      return ring !== null && (
+        corners.some((p) => pointInRing(p, ring)) || ring.some((p) => pointInRing(p, corners)) ||
+        corners.some((a, i) => ring.some((b, j) => segmentsTouch(a, corners[(i + 1) % 4], b, ring[(j + 1) % ring.length])))
+      );
+    });
+    if (!boundaryFit.fits || hitsHole) {
+      if (result.envelopeStatus === "fits") result.envelopeStatus = "overflow";
+      result.envelopeClearanceFt = Math.min(0, result.envelopeClearanceFt);
+      result.reasons.push({ code: "envelope-overflow", message: "Outside the recorded parcel boundary or inside an excluded area." });
+    }
+  }
+
+  for (const obstacle of input.additionalStructureCorners ?? []) {
+    const house = evaluateHouse(corners, obstacle, toleranceFt, reviewSeparationFt);
+    const roofClearanceFt = evaluateRoofGap({ ...input, existingHouseCorners: obstacle }, house.status !== "unknown");
+    const reason = houseReason(house, roofClearanceFt, toleranceFt, reviewSeparationFt);
+    if (reason) result.reasons.push(reason);
+    const severity = HOUSE_STATUS_SEVERITY[house.status] - HOUSE_STATUS_SEVERITY[result.houseStatus];
+    if (severity > 0 || (severity === 0 && house.clearanceFt !== null && result.houseClearanceFt !== null && house.clearanceFt < result.houseClearanceFt)) {
+      result.houseStatus = house.status;
+      result.houseClearanceFt = house.clearanceFt;
+    }
+    result.roofClearanceFt = result.roofClearanceFt !== null && roofClearanceFt !== null
+      ? Math.min(result.roofClearanceFt, roofClearanceFt)
+      : null;
+  }
+
+  result.status = placementStatus(result.envelopeStatus, result.houseStatus);
+  return result;
+}
+
+function placementStatus(envelopeStatus: EnvelopeFitStatus, houseStatus: HouseClearanceStatus): PlacementStatus {
+  if (envelopeStatus === "invalid") return "invalid";
+  if (envelopeStatus === "empty" || envelopeStatus === "overflow" || houseStatus === "overlap") return "blocked";
+  if (houseStatus === "boundary-contact" || houseStatus === "close" || houseStatus === "unknown") return "review";
+  return "fits";
+}
+
+function houseReason(
+  house: { status: HouseClearanceStatus; clearanceFt: number | null },
+  roofClearanceFt: number | null,
+  toleranceFt: number,
+  reviewSeparationFt: number,
+): PlacementReason | null {
+  if (house.status === "unknown") {
+    return {
+      code: "house-unknown",
+      message: "The existing structure's footprint is unverified — this pose isn't confirmed clear of it.",
+    };
+  }
+  if (house.status === "close") {
+    const roof = roofClearanceFt === null
+      ? ""
+      : roofClearanceFt > toleranceFt
+        ? ` (about ${formatClearanceFt(roofClearanceFt)} between roof edges)`
+        : " (the roof edges overlap in plan)";
+    return {
+      code: "house-close",
+      message: `Only about ${formatClearanceFt(house.clearanceFt ?? 0)} between walls and the modeled house${roof}. Buildings closer than ${Number(reviewSeparationFt.toFixed(1))} ft often need fire-rated walls or more separation — confirm locally.`,
+    };
+  }
+  if (house.status === "boundary-contact") {
+    return { code: "house-boundary-contact", message: "Touches the existing structure — review before permit." };
+  }
+  if (house.status === "overlap") {
+    return {
+      code: "house-overlap",
+      message: `Overlaps the existing structure by about ${formatClearanceFt(house.clearanceFt ?? 0)}.`,
+    };
+  }
+  return null;
+}
+
+function rotateReason(
+  envelopeStatus: EnvelopeFitStatus,
+  houseStatus: HouseClearanceStatus,
+  alternative: RotateAlternative,
+): PlacementReason {
+  const toDeg = Math.round(alternative.command.rotationDeg);
+  return {
+    code: "rotate-recommended",
+    message: envelopeStatus === "fits" && houseStatus === "close"
+      ? `Rotating the ADU 90° (to ${toDeg}°) here would leave about ${formatClearanceFt(alternative.houseClearanceFt ?? 0)} from the house.`
+      : `Rotating the ADU 90° (to ${toDeg}°) would fit the buildable envelope.`,
+  };
+}
+
+function validateModeledPlacement(input: PlacementInput): PlacementResult {
   const toleranceFt = input.toleranceFt ?? PLACEMENT_TOLERANCE_FT;
   const reviewSeparationFt = input.reviewSeparationFt ?? REVIEW_SEPARATION_FT;
   const { aduWidth, aduLength, pose } = input;
@@ -600,48 +750,15 @@ export function validatePlacement(input: PlacementInput): PlacementResult {
 
   const house = evaluateHouse(aduCorners, input.existingHouseCorners, toleranceFt, reviewSeparationFt);
   const roofClearanceFt = evaluateRoofGap(input, house.status !== "unknown");
-  if (house.status === "unknown") {
-    reasons.push({
-      code: "house-unknown",
-      message: "The existing structure's footprint is unverified — this pose isn't confirmed clear of it.",
-    });
-  } else if (house.status === "close") {
-    const roof = roofClearanceFt === null
-      ? ""
-      : roofClearanceFt > toleranceFt
-        ? ` (about ${formatClearanceFt(roofClearanceFt)} between roof edges)`
-        : " (the roof edges overlap in plan)";
-    reasons.push({
-      code: "house-close",
-      message: `Only about ${formatClearanceFt(house.clearanceFt ?? 0)} between walls and the modeled house${roof}. Buildings closer than ${Number(reviewSeparationFt.toFixed(1))} ft often need fire-rated walls or more separation — confirm locally.`,
-    });
-  } else if (house.status === "boundary-contact") {
-    reasons.push({ code: "house-boundary-contact", message: "Touches the existing structure — review before permit." });
-  } else if (house.status === "overlap") {
-    reasons.push({
-      code: "house-overlap",
-      message: `Overlaps the existing structure by about ${formatClearanceFt(house.clearanceFt ?? 0)}.`,
-    });
-  }
+  const houseReasonEntry = houseReason(house, roofClearanceFt, toleranceFt, reviewSeparationFt);
+  if (houseReasonEntry) reasons.push(houseReasonEntry);
 
-  let status: PlacementStatus;
-  if (envelopeStatus === "invalid") status = "invalid";
-  else if (envelopeStatus === "empty" || envelopeStatus === "overflow" || house.status === "overlap") status = "blocked";
-  else if (house.status === "boundary-contact" || house.status === "close" || house.status === "unknown") status = "review";
-  else status = "fits";
+  const status = placementStatus(envelopeStatus, house.status);
 
   const rotatedAlternative =
     status === "fits" ? null : buildRotatedAlternative(input, envelopeRing, envelopeAreaSqft, toleranceFt, reviewSeparationFt);
 
-  if (rotatedAlternative?.recommended) {
-    const toDeg = Math.round(rotatedAlternative.command.rotationDeg);
-    reasons.push({
-      code: "rotate-recommended",
-      message: envelopeStatus === "fits" && house.status === "close"
-        ? `Rotating the ADU 90° (to ${toDeg}°) here would leave about ${formatClearanceFt(rotatedAlternative.houseClearanceFt ?? 0)} from the house.`
-        : `Rotating the ADU 90° (to ${toDeg}°) would fit the buildable envelope.`,
-    });
-  }
+  if (rotatedAlternative?.recommended) reasons.push(rotateReason(envelopeStatus, house.status, rotatedAlternative));
 
   return {
     status,

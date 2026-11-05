@@ -425,7 +425,9 @@ service cloud.firestore {
           "county",
           "marketData",
           "dataQuality",
-          "fireHazard"
+          "fireHazard",
+          "bearingDeg",
+          "existingBuilding"
         ]) &&
         parcel.address is string &&
         parcel.address.size() > 0 &&
@@ -461,7 +463,13 @@ service cloud.firestore {
         (!("county" in parcel) || (parcel.county is string && parcel.county.size() <= 100)) &&
         (!("marketData" in parcel) || isValidMarketData(parcel.marketData)) &&
         (!("dataQuality" in parcel) || parcel.dataQuality is map) &&
-        (!("fireHazard" in parcel) || isValidFireHazard(parcel.fireHazard));
+        (!("fireHazard" in parcel) || isValidFireHazard(parcel.fireHazard)) &&
+        (!("bearingDeg" in parcel) || parcel.bearingDeg is number) &&
+        // Type only, like dataQuality: a maximal scenario sits a few expressions
+        // under the 1000 ceiling, and even a key allowlist here crossed it.
+        // normalizeLiveParcel keeps only known fields and re-checks every
+        // polygon and range when the scenario is read back.
+        (!("existingBuilding" in parcel) || parcel.existingBuilding is map);
     }
 
     function isValidNewScenario() {

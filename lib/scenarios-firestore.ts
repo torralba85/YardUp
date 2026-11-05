@@ -81,16 +81,33 @@ function decodeBoundaryFromFirestore(value: unknown): unknown {
 
 function decodeLiveParcelFromFirestore(value: unknown): unknown {
   if (!isRecord(value)) return value;
+  const building = value.existingBuilding;
   return {
     ...value,
     boundaryGeoJson: decodeBoundaryFromFirestore(value.boundaryGeoJson),
+    ...(isRecord(building) ? { existingBuilding: {
+      ...building,
+      ...(building.outlineGeoJson !== undefined ? { outlineGeoJson: decodeBoundaryFromFirestore(building.outlineGeoJson) } : {}),
+      ...(Array.isArray(building.detachedOutlinesGeoJson) ? {
+        detachedOutlinesGeoJson: building.detachedOutlinesGeoJson.map(decodeBoundaryFromFirestore),
+      } : {}),
+    } } : {}),
   };
 }
 
 function encodeLiveParcelForFirestore(parcel: LiveParcelData): Record<string, unknown> {
+  // Rules accept existingBuilding only as a map, so "no observation" is omitted.
+  const { existingBuilding: building, ...rest } = parcel;
   return {
-    ...parcel,
+    ...rest,
     boundaryGeoJson: encodeBoundaryForFirestore(parcel.boundaryGeoJson),
+    ...(building ? { existingBuilding: {
+      ...building,
+      ...(building.outlineGeoJson !== undefined ? { outlineGeoJson: encodeBoundaryForFirestore(building.outlineGeoJson) } : {}),
+      ...(building.detachedOutlinesGeoJson ? {
+        detachedOutlinesGeoJson: building.detachedOutlinesGeoJson.map(encodeBoundaryForFirestore),
+      } : {}),
+    } } : {}),
   };
 }
 

@@ -188,10 +188,16 @@ describe("saved scenario Firestore helpers", () => {
       ],
     };
 
+    const existingBuilding = {
+      outlineGeoJson: { ...boundaryGeoJson, coordinates: [boundaryGeoJson.coordinates[0]] },
+      detachedOutlinesGeoJson: [{ ...boundaryGeoJson, coordinates: [boundaryGeoJson.coordinates[0]] }],
+      roofPitchDegrees: 25,
+      geometrySource: "usa-structures" as const,
+    };
     const saved = await saveSavedScenario("user-1", {
       name: "Mapped parcel suite",
       parcelId: "oak-street",
-      liveParcel: { ...liveParcel, boundaryGeoJson },
+      liveParcel: { ...liveParcel, boundaryGeoJson, bearingDeg: 45, existingBuilding },
       config: defaultAduConfig,
       assumptions: defaultFinancialAssumptions,
     });
@@ -218,6 +224,8 @@ describe("saved scenario Firestore helpers", () => {
       ],
     });
     expect(saved.liveParcel?.boundaryGeoJson).toEqual(boundaryGeoJson);
+    expect(payload.liveParcel.existingBuilding.outlineGeoJson.coordinates[0]).toHaveProperty("points");
+    expect(payload.liveParcel.existingBuilding.detachedOutlinesGeoJson[0].coordinates[0]).toHaveProperty("points");
 
     firestoreMocks.getDocs.mockResolvedValue({
       docs: [
@@ -229,6 +237,22 @@ describe("saved scenario Firestore helpers", () => {
     });
     const [hydrated] = await fetchSavedScenarios("user-1");
     expect(hydrated.liveParcel?.boundaryGeoJson).toEqual(boundaryGeoJson);
+    expect(hydrated.liveParcel?.bearingDeg).toBe(45);
+    expect(hydrated.liveParcel?.existingBuilding).toEqual(existingBuilding);
+  });
+
+  it("omits an explicit no-observation existingBuilding, which rules accept only as a map", async () => {
+    firestoreMocks.addDoc.mockResolvedValue({ id: "scenario-1" });
+    await saveSavedScenario("user-1", {
+      name: "Mapped parcel suite",
+      parcelId: "oak-street",
+      liveParcel: { ...liveParcel, existingBuilding: null },
+      config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions,
+    });
+
+    const [, payload] = firestoreMocks.addDoc.mock.calls[0];
+    expect(payload.liveParcel).not.toHaveProperty("existingBuilding");
   });
 
   it("omits liveParcel when saving preset-only scenarios", async () => {
