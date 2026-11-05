@@ -49,7 +49,8 @@ export function buildAduSitemapXml(): string {
     },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
-      lastmod: city.asOf,
+      // County navigation changed without a new regulatory review.
+      lastmod: city.slug === "san-diego-county" ? "2026-10-31" : city.asOf,
       changefreq: "monthly",
       priority: "0.7",
     })),

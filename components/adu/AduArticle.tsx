@@ -100,6 +100,19 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         ))}
       </div>
 
+      {content.slug === "san-diego-county" ? (
+        <p className="lf-body mt-6 text-lot-stone">
+          Is your property inside Carlsbad city limits? Read the{" "}
+          <Link
+            href="/adu/ca/carlsbad"
+            className="font-semibold text-lot-ink underline underline-offset-2"
+          >
+            Carlsbad ADU rules and permits
+          </Link>
+          . The county rules below apply to unincorporated properties.
+        </p>
+      ) : null}
+
       {content.slug === "san-diego" ? (
         <div className="mt-8 space-y-6">
           <p className="lf-body text-lot-stone">
