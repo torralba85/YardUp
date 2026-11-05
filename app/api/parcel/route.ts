@@ -28,6 +28,7 @@ import {
   fetchBuildingFootprint,
 } from "@/lib/server/building-footprints";
 import { fetchGoogleBuildingGeometry } from "@/lib/server/google-building-insights";
+import { buildingOutlineAgreesWithFootprint } from "@/lib/building-outline-fit";
 import { fetchFireHazardZone } from "@/lib/server/fire-hazard-zones";
 import {
   type StreetAddress,
@@ -1454,9 +1455,18 @@ function deriveParcelSceneEnrichment(
 
 function withGoogleBuildingEnrichment(
   data: LiveParcelData,
-  googleBuilding: ExistingBuildingGeometry,
+  rawGoogleBuilding: ExistingBuildingGeometry,
 ): LiveParcelData {
   const prior = data.existingBuilding;
+  // A Google outline far larger than the independently measured footprint is
+  // a merged or grounds polygon, not the house: keep the observed outline and
+  // its area, and take only Google's roof insights.
+  const referenceSqft = prior?.footprintSqft ?? (data.existingHouseSqft > 0 ? data.existingHouseSqft : null);
+  const googleBuilding: ExistingBuildingGeometry =
+    !rawGoogleBuilding.outlineGeoJson ||
+    buildingOutlineAgreesWithFootprint(rawGoogleBuilding.outlineGeoJson, referenceSqft)
+      ? rawGoogleBuilding
+      : { ...rawGoogleBuilding, outlineGeoJson: null, footprintSqft: null, entranceLatLng: null };
   const outlineGeoJson =
     googleBuilding.outlineGeoJson ?? prior?.outlineGeoJson ?? null;
   const entranceLatLng =

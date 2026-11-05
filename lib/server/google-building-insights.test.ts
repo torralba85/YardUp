@@ -149,6 +149,57 @@ describe("fetchGoogleBuildingOutline", () => {
   });
 });
 
+describe("fetchGoogleBuildingOutline — non-building polygons", () => {
+  it("ignores GROUNDS polygons and a primary place that is not a building", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          destinations: [
+            {
+              primary: { structureType: "POINT", displayPolygon: PARCEL_POLYGON },
+              containingPlaces: [{ structureType: "GROUNDS", displayPolygon: PARCEL_POLYGON }],
+            },
+          ],
+        }),
+      }),
+    );
+
+    const res = await fetchGoogleBuildingOutline({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+      parcelPolygon: PARCEL_POLYGON,
+    });
+
+    expect(res).toBeNull();
+  });
+
+  it("rejects a building outline that blankets the parcel", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          destinations: [{ primary: { structureType: "BUILDING", displayPolygon: PARCEL_POLYGON } }],
+        }),
+      }),
+    );
+
+    const res = await fetchGoogleBuildingOutline({
+      lat: 32.7155,
+      lng: -117.1615,
+      apiKey: "test-gmp-key",
+      parcelPolygon: PARCEL_POLYGON,
+    });
+
+    expect(res).toBeNull();
+  });
+});
+
 describe("fetchGoogleSolarBuildingInsights", () => {
   it("queries Solar API buildingInsights:findClosest and computes area-weighted roof pitch and predominant azimuth", async () => {
     const fetchSpy = vi.fn().mockResolvedValue({
@@ -226,7 +277,7 @@ describe("Google building auth", () => {
         json: async () =>
           input.includes("solar.googleapis.com")
             ? SOLAR_RESPONSE
-            : { destinations: [{ primary: { displayPolygon: BUILDING_POLYGON } }] },
+            : { destinations: [{ primary: { structureType: "BUILDING", displayPolygon: BUILDING_POLYGON } }] },
       };
     });
     vi.stubGlobal("fetch", fetchSpy);
@@ -312,7 +363,7 @@ describe("Google building auth", () => {
         json: async () =>
           input.includes("solar.googleapis.com")
             ? SOLAR_RESPONSE
-            : { destinations: [{ primary: { displayPolygon: BUILDING_POLYGON } }] },
+            : { destinations: [{ primary: { structureType: "BUILDING", displayPolygon: BUILDING_POLYGON } }] },
       };
     });
     vi.stubGlobal("fetch", fetchSpy);
