@@ -432,6 +432,10 @@ export interface PlacementResult {
 }
 
 export interface PlacementInput {
+  /** Actual parcel outer ring followed by excluded holes, in the scene frame. */
+  parcelRings?: LocalPoint[][];
+  /** Conservative bounds for every additional observed structure. */
+  additionalStructureCorners?: LocalPoint[][];
   /** ADU ground-plan width/length (no roof overhang) — the same values `buildAduFootprint` derives area from. */
   aduWidth: number;
   aduLength: number;
@@ -530,6 +534,52 @@ function buildRotatedAlternative(
  * the current pose's own status.
  */
 export function validatePlacement(input: PlacementInput): PlacementResult {
+  const result = validateModeledPlacement(input);
+  if (result.status === "invalid") return result;
+  const tolerance = input.toleranceFt ?? PLACEMENT_TOLERANCE_FT;
+  const corners = rectangleCorners(input.pose, input.aduWidth, input.aduLength, input.pose.rotationDeg);
+  const rings = input.parcelRings;
+  if (rings !== undefined) {
+    const checked = rings.map(r => validateEnvelopeRing(r, tolerance));
+    const invalid = !checked.length || checked.some(r => !r.ring || r.areaSqft <= tolerance * tolerance);
+    const outer = checked[0]?.ring;
+    const boundaryFit = !invalid && outer ? rectangleWithinRing(corners, outer, tolerance) : null;
+    const outside = boundaryFit && !boundaryFit.fits;
+    if (boundaryFit) result.envelopeClearanceFt = Math.min(result.envelopeClearanceFt, boundaryFit.clearanceFt);
+    const hitsHole = !invalid && checked.slice(1).some(({ring}) => ring && (
+      corners.some(p => pointInRing(p, ring)) || ring.some(p => pointInRing(p, corners)) ||
+      corners.some((a,i) => ring.some((b,j) => segmentsTouch(a,corners[(i+1)%4],b,ring[(j+1)%ring.length])))
+    ));
+    if (invalid || outside || hitsHole) {
+      result.status = invalid ? "invalid" : "blocked";
+      result.envelopeStatus = invalid ? "invalid" : "overflow";
+      result.envelopeClearanceFt = Math.min(0, result.envelopeClearanceFt);
+      result.reasons.push({code: invalid ? "envelope-invalid" : "envelope-overflow", message: invalid
+        ? "Can't evaluate the recorded parcel boundary."
+        : "Outside the recorded parcel boundary or inside an excluded area."});
+    }
+  }
+  for (const obstacle of input.additionalStructureCorners ?? []) {
+    const other = validateModeledPlacement({...input, existingHouseCorners: obstacle});
+    if (result.status !== "invalid" && (other.status === "blocked" || (result.status === "fits" && other.status !== "fits"))) result.status = other.status;
+    if (other.houseClearanceFt === null || result.houseClearanceFt === null || other.houseClearanceFt < result.houseClearanceFt) {
+      result.houseStatus = other.houseStatus;
+      result.houseClearanceFt = other.houseClearanceFt;
+      result.reasons.push(...other.reasons.filter(r => r.code.startsWith("house-")));
+    }
+    if (result.roofClearanceFt !== null && other.roofClearanceFt !== null) {
+      result.roofClearanceFt = Math.min(result.roofClearanceFt, other.roofClearanceFt);
+    } else result.roofClearanceFt = null;
+  }
+  // Never advertise a rotation checked against only the proxy geometry.
+  if (rings !== undefined || input.additionalStructureCorners?.length) {
+    result.rotatedAlternative = null;
+    result.reasons = result.reasons.filter(reason => reason.code !== "rotate-recommended");
+  }
+  return result;
+}
+
+function validateModeledPlacement(input: PlacementInput): PlacementResult {
   const toleranceFt = input.toleranceFt ?? PLACEMENT_TOLERANCE_FT;
   const reviewSeparationFt = input.reviewSeparationFt ?? REVIEW_SEPARATION_FT;
   const { aduWidth, aduLength, pose } = input;

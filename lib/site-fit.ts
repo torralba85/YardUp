@@ -1,8 +1,12 @@
 import type { ADUConfig, Parcel } from "./feasibility";
+import type { GeoJsonPolygon } from "./parcel-types";
 import {
   buildAduHeightModel,
   buildExistingHouseSceneModel,
+  buildSceneOrigin,
   EXISTING_HOUSE_ROOF_OVERHANG_FT,
+  projectPolygonToLocal,
+  rectangleCorners,
   type Pose2D,
 } from "./scene-model";
 import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type PlacementResult } from "./placement-validation";
@@ -11,10 +15,31 @@ import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks
 import type { CapacityBasis } from "./zoning";
 import { findBestFitPose } from "./placement-search";
 
+/** Keep every placement path constrained by the recorded geometry. */
+function recordedConstraints(parcel: Parcel & { boundaryGeoJson?: GeoJsonPolygon | null }) {
+  const origin = buildSceneOrigin(parcel);
+  const boundary = parcel.boundaryGeoJson;
+  const parcelRings = boundary && origin.lat !== null && origin.lng !== null && origin.bearingDeg !== null
+    ? boundary.coordinates.map(ring =>
+      projectPolygonToLocal({lat: origin.lat!, lng: origin.lng!}, origin.bearingDeg, {type: "Polygon", coordinates: [ring]}) ?? [])
+    : undefined;
+  const additionalStructureCorners = parcel.existingBuilding?.detachedOutlinesGeoJson?.map(polygon => {
+    const ring = origin.lat !== null && origin.lng !== null && origin.bearingDeg !== null
+      ? projectPolygonToLocal({ lat: origin.lat, lng: origin.lng }, origin.bearingDeg, polygon)
+      : null;
+    if (!ring?.length) return [];
+    const xs = ring.map(p => p.x), zs = ring.map(p => p.z);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+    return rectangleCorners({x: (minX+maxX)/2, z: (minZ+maxZ)/2}, maxX-minX, maxZ-minZ, 0);
+  });
+  return {parcelRings, additionalStructureCorners};
+}
+
 export function getSnapToFitPose(parcel: Parcel, config: ADUConfig, pose: Pose2D): Pose2D | null {
   const height = buildAduHeightModel(config);
   if (!height) return null;
   return findBestFitPose({
+    ...recordedConstraints(parcel),
     aduWidth: config.width, aduLength: config.length, pose,
     envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
     existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
@@ -36,7 +61,7 @@ export function getScenePlacement(
     config.height !== undefined && config.roof !== undefined
       ? buildAduHeightModel({ width: config.width, length: config.length, height: config.height, roof: config.roof })
       : null;
-  return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
+  return validatePlacement({ ...recordedConstraints(parcel), aduWidth: config.width, aduLength: config.length, pose,
     envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
     existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
     ...(heightModel && {
@@ -77,6 +102,7 @@ export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D 
   if (!house || !Number.isFinite(config.width) || !Number.isFinite(config.length)) return rearBiased;
 
   const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, setbacks);
+  const constraints = recordedConstraints(parcel);
   const candidates: { pose: Pose2D; placement: PlacementResult }[] = [];
   for (const rotationDeg of [0, 90]) {
     const turned = rotationDeg === 90;
@@ -93,6 +119,7 @@ export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D 
       for (const x of xs) {
         const pose = { x, z, rotationDeg };
         const placement = validatePlacement({
+          ...constraints,
           aduWidth: config.width, aduLength: config.length, pose, envelope, existingHouseCorners: houseModel.corners,
         });
         if (placement.envelopeStatus === "fits") candidates.push({ pose, placement });

@@ -5,6 +5,7 @@ import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
+import { buildBuildingMassing, fitObservedRectangle } from "@/lib/building-massing";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
@@ -21,6 +22,7 @@ import {
   EXISTING_HOUSE_ROOF_OVERHANG_FT,
   SLAB_DATUM_FT,
   type LocalBounds,
+  type LocalPoint,
   type Pose2D,
 } from "@/lib/scene-model";
 import { SCENE_QUALITY, type SceneQuality } from "@/lib/scene-quality";
@@ -586,6 +588,18 @@ function GableRoof({
   );
 }
 
+/** Observed footprint extruded as-is; caps take the roof colour, walls the wall colour. */
+function ObservedBuilding({ points, height }: { points: LocalPoint[]; height: number }) {
+  const geometry = useMemo(() => buildBuildingMassing(points, height), [points, height]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial attach="material-0" color={SCENE.roof} roughness={0.8} />
+      <meshStandardMaterial attach="material-1" color={SCENE.wall} roughness={0.85} />
+    </mesh>
+  );
+}
+
 /**
  * The existing house, sized and placed by T01's shared scene model rather than
  * by a second copy of the sizing formula. The audit found Seattle's coverage
@@ -595,51 +609,41 @@ function GableRoof({
  */
 function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const model = buildExistingHouseSceneModel(parcel);
-  const width = model.footprint.width;
-  const depth = model.footprint.depth;
-  if (width === null || depth === null || model.pose === null) return null;
+  const modelWidth = model.footprint.width;
+  const modelDepth = model.footprint.depth;
+  if (modelWidth === null || modelDepth === null || model.pose === null) return null;
   const wallHeight = model.wallHeightFt ?? 9;
   const ridgeHeight = model.ridgeRiseFt ?? 5;
   const isFlatRoof =
     typeof model.roofPitchDegrees === "number" &&
     Number.isFinite(model.roofPitchDegrees) &&
     model.roofPitchDegrees <= 5;
-  const xPos = model.pose.x;
-  const zPos = model.pose.z;
+  const detached = model.detachedPolygons?.map((points, index) => (
+    <ObservedBuilding key={index} points={points} height={8} />
+  ));
+
+  // An observed outline draws at its true size and heading, never boxed to its
+  // bounds. A rectangle keeps the detailed house; any other shape is extruded
+  // as-is, because a predominant pitch does not describe its roof planes.
+  const observed = model.localPolygon && model.localPolygon.length >= 3 ? model.localPolygon : null;
+  const rectangle = observed ? fitObservedRectangle(observed) : null;
+  if (observed && !rectangle) {
+    return (
+      <>
+        <ObservedBuilding points={observed} height={wallHeight} />
+        {detached}
+      </>
+    );
+  }
+  const width = rectangle?.width ?? modelWidth;
+  const depth = rectangle?.depth ?? modelDepth;
+  const xPos = rectangle?.center.x ?? model.pose.x;
+  const zPos = rectangle?.center.z ?? model.pose.z;
 
   return (
     <>
-      {model.localPolygon && model.localPolygon.length >= 3 && (
-        <Line
-          points={[
-            ...model.localPolygon.map((pt): [number, number, number] => [pt.x, 0.16, pt.z]),
-            [model.localPolygon[0].x, 0.16, model.localPolygon[0].z],
-          ]}
-          color={SCENE.ink}
-          lineWidth={1.75}
-        />
-      )}
-      {model.detachedPolygons?.map((detPoly, idx) => {
-        const xs = detPoly.map((p) => p.x);
-        const zs = detPoly.map((p) => p.z);
-        const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
-        const cz = (Math.min(...zs) + Math.max(...zs)) / 2;
-        const dw = Math.max(Math.max(...xs) - Math.min(...xs), 6);
-        const dd = Math.max(Math.max(...zs) - Math.min(...zs), 6);
-        return (
-          <group key={idx} position={[cx, 0, cz]}>
-            <mesh position={[0, 4, 0]} castShadow receiveShadow>
-              <boxGeometry args={[dw, 8, dd]} />
-              <meshStandardMaterial color={SCENE.wall} roughness={0.85} metalness={0.02} />
-            </mesh>
-            <mesh position={[0, 8.2, 0]} castShadow>
-              <boxGeometry args={[dw + 0.8, 0.4, dd + 0.8]} />
-              <meshStandardMaterial color={SCENE.roof} roughness={0.6} metalness={0.18} />
-            </mesh>
-          </group>
-        );
-      })}
-      <group position={[xPos, 0, zPos]}>
+      {detached}
+      <group position={[xPos, 0, zPos]} rotation={[0, rectangle?.rotationY ?? 0, 0]}>
       {/* Soft contact shadow grounding the house */}
       <ContactShadow width={width + 6} length={depth + 6} opacity={0.34} />
 

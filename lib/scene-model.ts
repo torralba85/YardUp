@@ -382,9 +382,6 @@ export function buildExistingHouseSceneModel(
   areaBasis: ExistingAreaBasis = "unknown",
 ): ExistingHouseSceneModel {
   const footprint = buildExistingHouseFootprint(parcel, areaBasis);
-  if (footprint.width === null || footprint.depth === null) {
-    return { footprint, pose: null, corners: null, boundsLocal: null };
-  }
   const { lotLength, setbacks } = parcel;
   const poseInputsValid =
     isFiniteNumber(lotLength) &&
@@ -466,6 +463,9 @@ export function buildExistingHouseSceneModel(
     }
   }
 
+  if (footprint.width === null || footprint.depth === null) {
+    return { footprint, pose: null, corners: null, boundsLocal: null };
+  }
   const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.width, roofPitchDegrees);
   const z = lotLength / 2 - footprint.depth / 2 - setbacks.front;
   const pose: Pose2D = { x: 0, z, rotationDeg: 0 };

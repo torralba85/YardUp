@@ -451,8 +451,36 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
       setDoc(
         scenarioRef,
         sampleScenario({
-          liveParcel: SAMPLE_LIVE_PARCEL_MAX,
+          liveParcel: {
+            ...SAMPLE_LIVE_PARCEL_MAX,
+            bearingDeg: 45,
+            existingBuilding: {
+              outlineGeoJson: { type: "Polygon", coordinates: [{ points: [
+                { lng: -117, lat: 32 }, { lng: -117.001, lat: 32 },
+                { lng: -117.001, lat: 32.001 }, { lng: -117, lat: 32 },
+              ] }] },
+              detachedOutlinesGeoJson: [], roofPitchDegrees: 25, roofAzimuthDegrees: 90,
+              footprintSqft: 800, entranceLatLng: { lat: 32, lng: -117 }, geometrySource: "usa-structures",
+            },
+          },
         }),
+      ),
+    );
+  });
+
+  it("rejects observed geometry fields with the wrong type", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+
+    await assertFails(
+      setDoc(
+        doc(db, "users", OWNER_ID, "savedScenarios", "bad-bearing"),
+        sampleScenario({ liveParcel: sampleLiveParcel({ bearingDeg: "45" }) }),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        doc(db, "users", OWNER_ID, "savedScenarios", "bad-building"),
+        sampleScenario({ liveParcel: sampleLiveParcel({ existingBuilding: "outline" }) }),
       ),
     );
   });

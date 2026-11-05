@@ -13,7 +13,7 @@ import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario-design";
 export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-design";
 import type { Pose2D } from "./scene-model";
-import type { LiveParcelData, ParcelFireHazard } from "./parcel-types";
+import type { ExistingBuildingGeometry, GeoJsonPolygon, LiveParcelData, ParcelFireHazard } from "./parcel-types";
 import { FIRE_HAZARD_ZONES } from "./fire-hazard";
 import type { AIProjectBrief, AIRiskLevel } from "./ai-types";
 
@@ -86,6 +86,43 @@ function isValidGeoJsonPolygon(value: unknown): boolean {
         isFiniteNumber(point[1]) && point[1] >= -90 && point[1] <= 90));
 }
 
+/** Pick supported observations without retaining provider payloads. */
+function pickExistingBuilding(value: unknown): ExistingBuildingGeometry | null | undefined {
+  if (!isRecord(value)) return undefined;
+  const result: ExistingBuildingGeometry = {};
+  const polygon = (candidate: unknown): GeoJsonPolygon | undefined => {
+    if (!isRecord(candidate) || !isValidGeoJsonPolygon(candidate)) return undefined;
+    const coordinates = candidate.coordinates as number[][][];
+    if (!coordinates.length || coordinates.some(ring => ring.length < 4 ||
+      ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) return undefined;
+    return { type: "Polygon", coordinates: coordinates.map(ring => ring.map(([lng, lat]) => [lng, lat])) };
+  };
+  const outline = polygon(value.outlineGeoJson);
+  if (value.outlineGeoJson !== undefined && value.outlineGeoJson !== null && !outline) return null;
+  if (outline) result.outlineGeoJson = outline;
+  if (value.outlineGeoJson === null) result.outlineGeoJson = null;
+  if (Array.isArray(value.detachedOutlinesGeoJson)) {
+    const outlines = value.detachedOutlinesGeoJson.map(polygon);
+    // Do not silently discard an obstacle from a partially corrupt list.
+    if (outlines.some(outline => !outline)) return null;
+    result.detachedOutlinesGeoJson = outlines as GeoJsonPolygon[];
+  } else if (value.detachedOutlinesGeoJson !== undefined) return null;
+  for (const [key, max] of [["roofPitchDegrees", 90], ["roofAzimuthDegrees", 360], ["footprintSqft", Infinity]] as const) {
+    const number = value[key];
+    if (number === null || (isFiniteNumber(number) && number >= 0 && number <= max)) result[key] = number;
+  }
+  if (isRecord(value.entranceLatLng)) {
+    const { lat, lng } = value.entranceLatLng;
+    if (isFiniteNumber(lat) && Math.abs(lat) <= 90 && isFiniteNumber(lng) && Math.abs(lng) <= 180) {
+      result.entranceLatLng = { lat, lng };
+    }
+  } else if (value.entranceLatLng === null) result.entranceLatLng = null;
+  if (value.geometrySource === "google-geocoding-v4" || value.geometrySource === "usa-structures" || value.geometrySource === "google-solar") {
+    result.geometrySource = value.geometrySource;
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
 /**
  * Type guard verifying an unknown value is well-formed {@link LiveParcelData},
  * checking address fields, positive dimensions, coverage/setback ranges,
@@ -138,7 +175,10 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     (value.county === undefined || typeof value.county === "string") &&
     (value.marketData === undefined || isRecord(value.marketData)) &&
     (value.dataQuality === undefined || isRecord(value.dataQuality)) &&
-    (value.fireHazard === undefined || pickFireHazard(value.fireHazard) !== undefined)
+    (value.fireHazard === undefined || pickFireHazard(value.fireHazard) !== undefined) &&
+    (value.bearingDeg === undefined || (isFiniteNumber(value.bearingDeg) && value.bearingDeg >= 0 && value.bearingDeg <= 360)) &&
+    (value.existingBuilding === undefined || value.existingBuilding === null ||
+      (isRecord(value.existingBuilding) && pickExistingBuilding(value.existingBuilding) !== null))
   );
 }
 
@@ -353,6 +393,11 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
     zip: typeof value.zip === "string" ? value.zip : "",
   };
   if (typeof value.county === "string") normalized.county = value.county;
+  if (isFiniteNumber(value.bearingDeg) && value.bearingDeg >= 0 && value.bearingDeg <= 360) normalized.bearingDeg = value.bearingDeg;
+  const existingBuilding = pickExistingBuilding(value.existingBuilding);
+  if (existingBuilding === null || (value.existingBuilding != null && !isRecord(value.existingBuilding))) return null;
+  if (existingBuilding) normalized.existingBuilding = existingBuilding;
+  else if (value.existingBuilding === null) normalized.existingBuilding = null;
   if (isRecord(value.marketData)) normalized.marketData = pickMarketData(value.marketData);
   const dataQuality = pickDataQuality(value.dataQuality);
   if (dataQuality) normalized.dataQuality = dataQuality;

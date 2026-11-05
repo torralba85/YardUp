@@ -9,6 +9,19 @@ const base: PlacementInput = { aduWidth: 20, aduLength: 20, pose,
   envelope: buildSetbackEnvelope(40, 60, { side: 5, front: 5, rear: 5 }),
   existingHouseCorners: rectangleCorners({ x: 0, z: 50 }, 10, 10) };
 describe("actual placement contract", () => {
+  it("rejects parcel holes and preserves invalid precedence over collisions", () => {
+    const outer = rectangleCorners(pose, 100, 100);
+    const hole = rectangleCorners(pose, 4, 4);
+    expect(validatePlacement({ ...base, parcelRings: [outer, hole] }).status).toBe("blocked");
+    expect(validatePlacement({ ...base, parcelRings: [], additionalStructureCorners: [hole] }).status).toBe("invalid");
+    expect(validatePlacement({ ...base, parcelRings: [[]], additionalStructureCorners: [hole] }).status).toBe("invalid");
+  });
+  it("does not recommend rotations that ignore recorded obstacles", () => {
+    const result = validatePlacement({ ...base, aduWidth: 31, additionalStructureCorners: [rectangleCorners(pose, 4, 4)] });
+    expect(result.status).toBe("blocked");
+    expect(result.rotatedAlternative).toBeNull();
+    expect(result.reasons.some(reason => reason.code === "rotate-recommended")).toBe(false);
+  });
   it("accepts exact boundary fit but rejects a one-inch overflow", () => {
     expect(validatePlacement({ ...base, aduWidth: 30 }).status).toBe("fits");
     expect(validatePlacement({ ...base, aduWidth: 30 + 1 / 12 }).envelopeStatus).toBe("overflow");
