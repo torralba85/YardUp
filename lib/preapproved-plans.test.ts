@@ -1,7 +1,56 @@
 import { describe, expect, it } from "vitest";
 import { ADU_CITIES } from "./adu/content";
+import { defaultAduConfig, footprintOptions } from "./feasibility";
+import { isValidAduConfig } from "./scenario-design";
 import { preapprovedPrograms, preapprovedPlans } from "./preapproved-plans-data";
-import { findPreapprovedPlan, normalizePlanReference, planScopeForLot, suggestPlanJurisdiction } from "./preapproved-plans";
+import {
+  configForPlanArea,
+  findPreapprovedPlan,
+  modelMatchesPlanArea,
+  normalizePlanReference,
+  planProgramsForLot,
+  planScopeForLot,
+  suggestPlanJurisdiction,
+} from "./preapproved-plans";
+
+describe("sizing the 3D model to a plan", () => {
+  const starts = [
+    ...footprintOptions.map(({ value, width, length }) => ({ ...defaultAduConfig, width, length, footprint: value })),
+    { ...defaultAduConfig, width: 16, length: 40, footprint: 640, roof: "gable" as const },
+  ];
+  it.each(preapprovedPlans.filter(plan => plan.sqft !== undefined).map(plan => [plan.id, plan.sqft!] as const))(
+    "%s matches its floor area on the half-foot grid from every starting shape",
+    (_id, sqft) => {
+      for (const start of starts) {
+        const sized = configForPlanArea(sqft, start);
+        expect(isValidAduConfig(sized)).toBe(true);
+        expect(sized.footprint).toBe(sized.width * sized.length);
+        expect((sized.width * 2) % 1).toBe(0);
+        expect((sized.length * 2) % 1).toBe(0);
+        expect(modelMatchesPlanArea(sized.footprint, sqft)).toBe(true);
+        expect(Math.abs(Math.log(sized.length / sized.width / (start.length / start.width)))).toBeLessThan(0.15);
+        expect({ ...sized, width: 0, length: 0, footprint: 0 }).toEqual({ ...start, width: 0, length: 0, footprint: 0 });
+      }
+    },
+  );
+  it("keeps an exact match untouched and prefers the closer shape among equally good areas", () => {
+    expect(configForPlanArea(600, defaultAduConfig)).toEqual(defaultAduConfig);
+    expect(configForPlanArea(800, defaultAduConfig)).toMatchObject({ width: 23.5, length: 34, footprint: 799 });
+    expect(modelMatchesPlanArea(600, 559)).toBe(false);
+    expect(modelMatchesPlanArea(564, 559)).toBe(true);
+  });
+});
+
+describe("authority choices for a lot", () => {
+  it("lists only the lot's state, alphabetically, and keeps a restored authority", () => {
+    const ca = planProgramsForLot({ city: "San Diego, CA 92117" }).map(program => program.id);
+    expect(ca).not.toContain("wa-seattle");
+    expect(ca).toContain("ca-san-diego-county");
+    expect(ca).toEqual([...ca].sort((a, b) => preapprovedPrograms.find(p => p.id === a)!.city.localeCompare(preapprovedPrograms.find(p => p.id === b)!.city)));
+    expect(planProgramsForLot({ city: "Seattle, WA" }, "ca-sacramento").map(program => program.id)).toEqual(["ca-sacramento", "wa-seattle"]);
+    expect(planProgramsForLot({ city: "Springfield" })).toHaveLength(preapprovedPrograms.length);
+  });
+});
 
 describe("pre-approved plan catalog", () => {
   it("covers every content jurisdiction and all six additional studio markets", () => {

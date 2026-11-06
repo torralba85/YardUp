@@ -26,8 +26,12 @@ const SIZE_OPTIONS = [
 
 const FINISHES = Object.keys(finishLabels) as ExteriorFinish[];
 
+/** The model stage on desktop Design and mobile Shape, which never render together. */
+export const MODEL_STAGE_ID = "studio-model-stage";
+
 /** Props for {@link ShapeStep}. */
 export interface ShapeStepProps {
+  /** Pre-approved plans, offered beside the size choices they can set. */
   planBrowser?: ReactNode;
   certificateUnlocked?: boolean;
   /** The active ADU configuration. */
@@ -69,7 +73,7 @@ export default function ShapeStep({
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       {/* The model has its own height; feedback grows in the page flow. */}
-      <div className="relative shrink-0 bg-lot-chalk">
+      <div id={MODEL_STAGE_ID} className="relative shrink-0 bg-lot-chalk">
         {scene}
       </div>
 
@@ -114,6 +118,8 @@ export default function ShapeStep({
           <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
           <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
         </div>
+
+        {planBrowser && <div className="mt-4">{planBrowser}</div>}
 
         <p className="mt-5 text-sm font-semibold text-lot-ink">
           Exterior finish
@@ -160,8 +166,6 @@ export default function ShapeStep({
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions
         </button>
-
-        {planBrowser && <div className="mt-5">{planBrowser}</div>}
 
         <div className="mt-auto pt-6">
           <Button

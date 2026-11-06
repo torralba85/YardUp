@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseEmailScenario, isPlainPlaceText } from "./scenario-email";
+import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 
 describe("isPlainPlaceText", () => {
   it.each([
@@ -32,7 +33,6 @@ describe("isPlainPlaceText", () => {
   });
 });
 
-import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 it("keeps only the safe reference IDs in emailed layouts", () => {
   const preapprovedPlan = { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" };
   expect(parseEmailScenario({ ...EMAIL_SCENARIO, preapprovedPlan: { ...preapprovedPlan, url: "javascript:bad" } })).toHaveProperty("preapprovedPlan", preapprovedPlan);

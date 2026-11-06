@@ -1,52 +1,121 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { preapprovedPlans, preapprovedPrograms } from "@/lib/preapproved-plans-data";
-import { findPreapprovedPlan, suggestPlanJurisdiction, type PreapprovedPlanReference } from "@/lib/preapproved-plans";
+import {
+  findPreapprovedPlan,
+  modelMatchesPlanArea,
+  planProgramsForLot,
+  suggestPlanJurisdiction,
+  type PreapprovedPlan,
+  type PreapprovedPlanReference,
+  type PreapprovedProgram,
+} from "@/lib/preapproved-plans";
+import type { ADUConfig } from "@/lib/feasibility";
+import type { PlacementFitStatus } from "@/lib/placement-validation";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, FieldLabel, Select } from "@/components/ui/Field";
-import { PanelHeader } from "@/components/ui/Panel";
 import { StatusChip } from "@/components/ui/StatusChip";
+
+/** How a chosen plan connects to the Studio's 3D model. */
+export interface PlanModelLink {
+  /** The model's current size. */
+  config: Pick<ADUConfig, "width" | "length" | "footprint">;
+  /** Placement verdict for the current model, in the scene's own wording. */
+  fit: PlacementFitStatus;
+  /** Resize the model to the selected plan's floor area. */
+  onSizeToPlan: () => void;
+  /** Present while the model's size came from a plan and the earlier size can be restored. */
+  onUndoSize?: () => void;
+  /** Bring the 3D model into view. */
+  onViewModel?: () => void;
+}
 
 interface Props {
   parcel: { city: string; state?: string };
   selected: PreapprovedPlanReference | null;
+  /** Use a plan. In the Studio this also sizes the model to the plan's floor area. */
   onSelect: (reference: PreapprovedPlanReference) => void;
   onRemove: () => void;
-  showSelectedSummary?: boolean;
+  model?: PlanModelLink;
+  /** `inline` sits inside an already padded column (mobile Shape). */
+  layout?: "panel" | "inline";
 }
 
 const linkClass = "inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink";
+const sqft = (value: number) => `${value.toLocaleString()} sq ft`;
+const feet = (value: number) => `${Number(value.toFixed(2))}`;
+const authorityLabel = (program: PreapprovedProgram) => `${program.city}, ${program.state}`;
 
-export function PreapprovedPlanSummary({ selected, onRemove }: Pick<Props, "selected" | "onRemove">) {
+/** "600 sq ft · 1 bed · 1 bath": only the facts the official listing publishes. */
+export function planFacts(plan: PreapprovedPlan): string {
+  return [
+    plan.sqft !== undefined ? sqft(plan.sqft) : null,
+    plan.bedrooms === 0 ? "Studio" : plan.bedrooms !== undefined ? `${plan.bedrooms} bed` : null,
+    plan.bathrooms !== undefined ? `${plan.bathrooms} bath${plan.bathrooms === 1 ? "" : "s"}` : null,
+  ].filter(Boolean).join(" · ");
+}
+
+function PlanLinks({ plan }: { plan: PreapprovedPlan }) {
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-1">
+      <a href={plan.sourceUrl} className={linkClass} target="_blank" rel="noopener noreferrer">Official listing<span className="sr-only"> (opens in a new tab)</span></a>
+      {plan.documentUrl && <a href={plan.documentUrl} className={linkClass} target="_blank" rel="noopener noreferrer">{plan.documentLabel ?? "Plan documents"}<span className="sr-only"> (opens in a new tab)</span></a>}
+    </div>
+  );
+}
+
+export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "panel", headingRef }: Pick<Props, "selected" | "onRemove" | "model" | "layout"> & {
+  headingRef?: RefObject<HTMLHeadingElement | null>;
+}) {
   if (!selected) return null;
   const plan = findPreapprovedPlan(selected);
   const program = preapprovedPrograms.find(item => item.id === selected.jurisdictionId);
   const available = plan?.status === "active" && program?.status === "verified";
+  const planArea = available ? plan.sqft : undefined;
+  const sized = planArea !== undefined && model !== undefined && modelMatchesPlanArea(model.config.footprint, planArea);
   return (
-    <section aria-label="Selected plan reference" className="space-y-2 border-b border-lot-line bg-lot-surface px-6 py-4">
-      <StatusChip status={available ? "clear" : "review"} label={available ? "Plan reference selected" : "Plan unavailable"} />
-      <p className="font-semibold text-lot-ink">{plan?.name ?? selected.planId}</p>
-      <p className="text-sm text-lot-stone">{program ? `${program.city}, ${program.state}` : selected.jurisdictionId}</p>
-      <p className="text-sm leading-relaxed text-lot-stone">{available
-        ? "Reference only. Your 3D design and feasibility estimates are independent of this plan. Save your study to keep this choice."
-        : "This saved reference is no longer available in our verified catalog. Check with the permitting authority or choose another plan."}</p>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-        {available && <a href={plan.sourceUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>Official plan listing<span className="sr-only"> (opens in a new tab)</span></a>}
-        <Button variant="secondary" size="sm" onClick={onRemove}>Remove plan reference</Button>
+    <section aria-label="Selected plan reference" className={`space-y-3 border-b border-lot-line bg-lot-surface py-4 ${layout === "inline" ? "px-4" : "px-6"}`}>
+      <StatusChip status={available ? "clear" : "review"} label={available ? "Plan in use" : "Plan unavailable"} />
+      <div>
+        <h3 ref={headingRef} tabIndex={-1} className="font-semibold text-lot-ink focus:outline-none">{plan?.name ?? selected.planId}</h3>
+        <p className="text-sm text-lot-stone">{[plan ? planFacts(plan) : "", program ? authorityLabel(program) : selected.jurisdictionId].filter(Boolean).join(" · ")}</p>
+      </div>
+      {planArea !== undefined && model && (sized ? (
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-lot-ink">
+            3D model sized to this plan: <span className="tabular-nums">{feet(model.config.width)} × {feet(model.config.length)} ft, {sqft(model.config.footprint)}</span>.
+          </p>
+          <StatusChip status={model.fit.tone} label={model.fit.title} />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-lot-ink">
+            Your 3D model is <span className="tabular-nums">{sqft(model.config.footprint)}</span>; this plan is <span className="tabular-nums">{sqft(planArea)}</span>.
+          </p>
+          <Button variant="secondary" size="sm" onClick={model.onSizeToPlan}>Size 3D model to {sqft(planArea)}</Button>
+        </div>
+      ))}
+      <p className="text-xs leading-relaxed text-lot-stone">{available
+        ? "The model matches the plan's floor area, not its exact footprint or layout; check the official sheets. Lot-specific review and permits still apply."
+        : "This saved reference is no longer in our verified catalog. Check with the permitting authority or choose another plan."}</p>
+      {available && <PlanLinks plan={plan} />}
+      <div className="flex flex-wrap gap-2">
+        {sized && model?.onViewModel && <Button variant="secondary" size="sm" onClick={model.onViewModel}>View on your lot</Button>}
+        {model?.onUndoSize && <Button variant="ghost" size="sm" onClick={model.onUndoSize}>Undo size change</Button>}
+        <Button variant="ghost" size="sm" onClick={onRemove}>Remove plan</Button>
       </div>
     </section>
   );
 }
 
-/** Shared, free browser. Confirmation establishes the authority, never lot eligibility. */
-export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRemove, showSelectedSummary = true }: Props) {
+/** Free catalog. Confirming the authority unlocks its plans; it never establishes lot eligibility. */
+export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRemove, model, layout = "panel" }: Props) {
   const id = useId();
   const suggested = suggestPlanJurisdiction(parcel)?.id ?? "";
   const restoredAuthority = preapprovedPrograms.find(program => program.id === selected?.jurisdictionId);
   const restoredConfirmation = Boolean(selected && restoredAuthority?.status === "verified" && findPreapprovedPlan(selected)?.status === "active");
   const [authorityId, setAuthorityId] = useState(restoredAuthority?.id ?? suggested);
-  const [browsingId, setBrowsingId] = useState(restoredAuthority?.id || suggested || preapprovedPrograms[0].id);
   const [confirmed, setConfirmed] = useState(restoredConfirmation);
   const [previousAuthority, setPreviousAuthority] = useState(selected?.jurisdictionId);
   // Loading another study on the same lot may replace the reference without
@@ -55,42 +124,51 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
     setPreviousAuthority(selected?.jurisdictionId);
     if (restoredAuthority) {
       setAuthorityId(restoredAuthority.id);
-      setBrowsingId(restoredAuthority.id);
       setConfirmed(restoredConfirmation);
     }
   }
-  const [notice, setNotice] = useState("");
-  const authority = preapprovedPrograms.find(program => program.id === authorityId);
-  const program = preapprovedPrograms.find(program => program.id === browsingId)!;
-  const plans = preapprovedPlans.filter(plan => plan.jurisdictionId === browsingId && plan.status === "active");
-  const canSelect = confirmed && authorityId === browsingId && program.status === "verified";
-  const programLabel = program.status === "verified" ? "Official program verified"
-    : program.status === "unavailable" ? "Program unavailable" : "Availability needs verification";
+  // Removals stay visible because the summary they explain disappears; a use is
+  // announced only, since focus moves to the summary that reports it.
+  const [notice, setNotice] = useState({ text: "", visible: false });
+  const programs = planProgramsForLot(parcel, selected?.jurisdictionId);
+  const program = preapprovedPrograms.find(item => item.id === authorityId);
+  const plans = program ? preapprovedPlans.filter(plan => plan.jurisdictionId === program.id && plan.status === "active") : [];
+  const canUse = confirmed && program?.status === "verified";
+  const pad = layout === "inline" ? "px-4" : "px-6";
+  const programLabel = program?.status === "verified" ? "Official program verified"
+    : program?.status === "unavailable" ? "Program unavailable" : "Availability needs verification";
 
   return (
-    <section aria-label="Pre-approved plan browser" className="min-w-0 bg-lot-chalk">
-      <PanelHeader title="A head start on plan review." sub="Explore city-listed ADU plans that may shorten design review. Lot-specific review and permits are still required." />
-      {showSelectedSummary && <PreapprovedPlanSummary selected={selected} onRemove={onRemove} />}
-      <div className="space-y-5 px-6 py-5">
-        <p className="text-sm leading-relaxed text-lot-stone">Selecting a plan does not change your 3D model, placement or estimates. Official documents describe the plan; the Studio remains a separate planning study.</p>
-        <div className="space-y-2">
-          <FieldLabel htmlFor={`${id}-authority`}>Permitting authority for this lot</FieldLabel>
-          <Select id={`${id}-authority`} value={authorityId} onChange={event => { setAuthorityId(event.target.value); setConfirmed(false); setNotice(""); if (selected) onRemove(); }}>
-            <option value="">Choose the permitting authority</option>
-            {preapprovedPrograms.map(item => <option key={item.id} value={item.id}>{item.city}, {item.state}{item.authority === "county" ? " (county)" : ""}</option>)}
-          </Select>
-          <p className="text-xs leading-relaxed text-lot-stone">A postal city is a suggestion. Verify who issues permits for your lot; county plans do not automatically apply inside a city.</p>
-          {authority && <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-lot-ink">
-            <Checkbox checked={confirmed} onChange={event => { setConfirmed(event.target.checked); if (!event.target.checked && selected) onRemove(); }} />
-            <span>I confirm {authority.city}, {authority.state} is the permitting authority for this lot.</span>
-          </label>}
-        </div>
-        <div className="space-y-2">
-          <FieldLabel htmlFor={`${id}-browse`}>Browse plans for</FieldLabel>
-          <Select id={`${id}-browse`} value={browsingId} onChange={event => { setBrowsingId(event.target.value); setNotice(""); }}>
-            {preapprovedPrograms.map(item => <option key={item.id} value={item.id}>{item.city}, {item.state}</option>)}
-          </Select>
-        </div>
+    <section aria-label="Pre-approved plan browser" className={`min-w-0 space-y-5 pb-6 pt-1 ${pad}`}>
+      <p className="text-sm leading-relaxed text-lot-stone">Start from a plan your permitting authority has already reviewed. Using one sizes your 3D model to the plan&apos;s floor area so you can check how it fits this lot.</p>
+      <div className="space-y-2">
+        <FieldLabel htmlFor={`${id}-authority`}>Permitting authority for this lot</FieldLabel>
+        <Select id={`${id}-authority`} value={authorityId} onChange={event => {
+          const next = event.target.value;
+          setAuthorityId(next);
+          setConfirmed(false);
+          if (selected && selected.jurisdictionId !== next) {
+            onRemove();
+            setNotice({ text: "Plan removed: it belongs to a different permitting authority.", visible: true });
+          } else setNotice({ text: "", visible: false });
+        }}>
+          <option value="">Choose your permitting authority</option>
+          {programs.map(item => <option key={item.id} value={item.id}>{authorityLabel(item)}</option>)}
+        </Select>
+        <p className="text-xs leading-relaxed text-lot-stone">Suggested from the postal city. Unincorporated areas are permitted by the county, and county plans don&apos;t automatically apply inside a city.</p>
+        {program && <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-lot-ink">
+          <Checkbox checked={confirmed} onChange={event => {
+            setConfirmed(event.target.checked);
+            if (!event.target.checked && selected) {
+              onRemove();
+              setNotice({ text: "Plan removed until the permitting authority is confirmed.", visible: true });
+            }
+          }} />
+          <span>I confirm {authorityLabel(program)} is the permitting authority for this lot.</span>
+        </label>}
+      </div>
+      <p role="status" aria-live="polite" className={notice.visible ? "text-sm text-lot-ink" : "sr-only"}>{notice.text}</p>
+      {program ? (
         <div className="space-y-2">
           <StatusChip status={program.status === "verified" ? "clear" : "review"} label={programLabel} />
           <p className="text-sm leading-relaxed text-lot-stone">{program.notes}</p>
@@ -99,48 +177,71 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
             {program.catalogUrl ? "Full official catalog" : "Visit permitting authority"}<span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
-        <p className="text-xs leading-relaxed text-lot-stone">Browse freely; select a plan only for your confirmed permitting authority. Confirmation does not establish lot eligibility or guarantee approval.</p>
-        <p role="status" aria-live="polite" className={notice ? "text-sm text-lot-ink" : "sr-only"}>{notice}</p>
-        {plans.length === 0 && <p className="text-sm leading-relaxed text-lot-stone">{program.status === "unavailable" ? "The authority reports this program is unavailable." : "No individually verified plans are listed here yet. Check the official source for current options."}</p>}
-        <div className="grid min-w-0 gap-5 xl:grid-cols-2">
-          {plans.map(plan => {
-            const isSelected = selected?.planId === plan.id && selected.jurisdictionId === plan.jurisdictionId;
-            return (
-              <article key={plan.id} aria-label={plan.name} className="min-w-0 border border-lot-line">
-                <PanelHeader as="h3" title={plan.name} sub={plan.provider} />
-                <div className="space-y-3 px-6 py-4">
-                  <p className="text-sm font-semibold text-lot-ink tabular-nums">{[
-                    plan.sqft !== undefined ? `${plan.sqft.toLocaleString()} sq ft` : null,
-                    plan.bedrooms === 0 ? "Studio" : plan.bedrooms !== undefined ? `${plan.bedrooms} bedroom${plan.bedrooms === 1 ? "" : "s"}` : null,
-                  ].filter(Boolean).join(" · ")}</p>
-                  <p className="text-sm leading-relaxed text-lot-stone">{plan.restrictions}</p>
-                  {plan.feeNote && <p className="text-sm leading-relaxed text-lot-stone">{plan.feeNote}</p>}
-                  <p className="text-xs text-lot-stone">Listing checked {plan.verifiedAt}</p>
-                  <div className="flex flex-wrap gap-x-5 gap-y-1">
-                    <a href={plan.sourceUrl} className={linkClass} target="_blank" rel="noopener noreferrer">Official listing<span className="sr-only"> (opens in a new tab)</span></a>
-                    {plan.documentUrl && <a href={plan.documentUrl} className={linkClass} target="_blank" rel="noopener noreferrer">Plan documents<span className="sr-only"> (opens in a new tab)</span></a>}
-                  </div>
-                  <Button fullWidth variant="secondary" disabled={!canSelect || isSelected} onClick={() => {
-                    onSelect({ planId: plan.id, jurisdictionId: plan.jurisdictionId });
-                    setNotice(`${plan.name} selected as a reference. Save your study to keep this choice.`);
-                  }}>{isSelected ? "Selected" : selected ? "Replace selected plan" : "Select plan"}</Button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </div>
+      ) : (
+        <p className="text-sm leading-relaxed text-lot-stone">Don&apos;t see yours? Ask your city or county building department whether it offers pre-approved ADU plans.</p>
+      )}
+      {program && plans.length === 0 && <p className="text-sm leading-relaxed text-lot-stone">{program.status === "unavailable"
+        ? "The authority reports this program is unavailable."
+        : "No individual plans are listed here yet. Check the official source for current options."}</p>}
+      {plans.length > 0 && !canUse && <p id={`${id}-hint`} className="text-sm font-semibold text-lot-ink">Confirm the permitting authority above to use a plan.</p>}
+      {plans.length > 0 && <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+        {plans.map(plan => {
+          const isSelected = selected?.planId === plan.id && selected.jurisdictionId === plan.jurisdictionId;
+          return (
+            <article key={plan.id} aria-label={plan.name} className="min-w-0 space-y-3 border border-lot-line bg-lot-chalk p-4">
+              <div>
+                <h3 className="font-semibold text-lot-ink">{plan.name}</h3>
+                <p className="text-xs text-lot-stone">{plan.provider}</p>
+              </div>
+              <p className="text-sm font-semibold tabular-nums text-lot-ink">{planFacts(plan)}</p>
+              <p className="text-sm leading-relaxed text-lot-stone">{plan.restrictions}</p>
+              {plan.feeNote && <p className="text-sm leading-relaxed text-lot-stone">{plan.feeNote}</p>}
+              <PlanLinks plan={plan} />
+              <Button fullWidth variant="secondary" disabled={!canUse || isSelected} aria-describedby={canUse ? undefined : `${id}-hint`} onClick={() => {
+                onSelect({ planId: plan.id, jurisdictionId: plan.jurisdictionId });
+                setNotice({ text: model && plan.sqft !== undefined ? `${plan.name} is in use. 3D model sized to match its floor area.` : `${plan.name} is in use.`, visible: false });
+              }}>{isSelected ? "In use" : selected ? "Use this plan instead" : "Use this plan"}</Button>
+              <p className="text-xs text-lot-stone">Listing checked {plan.verifiedAt}</p>
+            </article>
+          );
+        })}
+      </div>}
     </section>
   );
 }
 
-/** The selected reference stays visible while the catalog is collapsed. Key by lot in Studio. */
+/**
+ * Studio placement: the plan in use stays visible while the catalog is
+ * collapsed. Key by lot so a new lot starts from its own postal suggestion.
+ */
 export function PreapprovedPlansSection(props: Props) {
-  return <div className="border-t border-lot-line bg-lot-chalk">
-    <PreapprovedPlanSummary selected={props.selected} onRemove={props.onRemove} />
-    <details>
-      <summary className="flex min-h-14 cursor-pointer items-center px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Pre-approved plans</summary>
-      <PreapprovedPlansPanel {...props} showSelectedSummary={false} />
-    </details>
-  </div>;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const focusSummary = useRef(false);
+  // After "Use this plan", move to the summary that reports the new size and fit.
+  useEffect(() => {
+    if (!focusSummary.current || !headingRef.current) return;
+    focusSummary.current = false;
+    headingRef.current.focus({ preventScroll: true });
+    headingRef.current.scrollIntoView?.({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  });
+  const shown = props.selected?.jurisdictionId ?? suggestPlanJurisdiction(props.parcel)?.id;
+  const count = shown ? preapprovedPlans.filter(plan => plan.jurisdictionId === shown && plan.status === "active").length : 0;
+  const shownProgram = preapprovedPrograms.find(program => program.id === shown);
+  const hint = count > 0 && shownProgram ? `${count} plan${count === 1 ? "" : "s"} for ${authorityLabel(shownProgram)}` : "Check your city";
+  const inline = props.layout === "inline";
+  return (
+    <div className={`bg-lot-chalk ${inline ? "border border-lot-line" : "border-t border-lot-line"}`}>
+      <PreapprovedPlanSummary selected={props.selected} onRemove={props.onRemove} model={props.model} layout={props.layout} headingRef={headingRef} />
+      <details className="group">
+        <summary className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink ${inline ? "px-4" : "px-6"}`}>
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <span>Pre-approved plans</span>
+            <span className="text-xs font-normal text-lot-stone">{hint}</span>
+          </span>
+          <span aria-hidden="true" className="group-open:rotate-45">+</span>
+        </summary>
+        <PreapprovedPlansPanel {...props} onSelect={reference => { focusSummary.current = true; props.onSelect(reference); }} />
+      </details>
+    </div>
+  );
 }

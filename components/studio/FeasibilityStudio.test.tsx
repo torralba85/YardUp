@@ -281,7 +281,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
   });
 
-  it("selects a reference without changing geometry, shares it, saves it and clears it on lot change", async () => {
+  it("uses a plan whose area the model already matches without changing geometry, shares, saves and clears it on lot change", async () => {
     authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
     savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: "2026-11-06T00:00:00Z" }));
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
@@ -291,7 +291,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
     const before = new URLSearchParams(window.location.search);
     fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
-    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan F" })).getByRole("button", { name: "Select plan" }));
+    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan F" })).getByRole("button", { name: "Use this plan" }));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
     const after = new URLSearchParams(window.location.search);
     for (const key of ["w", "l", "h", "x", "z", "rotation", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
@@ -304,6 +304,27 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(stepButton(/Design/));
     expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
     expect(new URLSearchParams(window.location.search).has("plan")).toBe(false);
+  });
+
+  it("sizes the 3D model to a plan's floor area, reports the fit and undoes only the size", async () => {
+    window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
+    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan E" })).getByRole("button", { name: "Use this plan" }));
+    const summary = screen.getByRole("region", { name: "Selected plan reference" });
+    expect(summary).toHaveTextContent("3D model sized to this plan: 23.5 × 34 ft, 799 sq ft.");
+    expect(within(summary).getByText(/at this placement|closer look/)).toBeInTheDocument();
+    let params = new URLSearchParams(window.location.search);
+    expect([params.get("w"), params.get("l"), params.get("size"), params.get("plan")]).toEqual(["23.5", "34", "799", "san-diego-city-plan-e"]);
+    fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
+    params = new URLSearchParams(window.location.search);
+    expect([params.get("w"), params.get("l"), params.get("plan")]).toEqual(["20", "30", "san-diego-city-plan-e"]);
+    expect(summary).toHaveTextContent("Your 3D model is 600 sq ft; this plan is 800 sq ft.");
+    fireEvent.click(within(summary).getByRole("button", { name: "Size 3D model to 800 sq ft" }));
+    expect(new URLSearchParams(window.location.search).get("size")).toBe("799");
   });
 
   it("restores plan references from a study and clears them when loading an older study on the same lot", async () => {
@@ -345,7 +366,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     const first = render(<FeasibilityStudio initialScenario={initial} />, { wrapper: TestWrapper });
     await screen.findByTestId("parcel-scene");
     fireEvent.click(stepButton(/Design/));
-    fireEvent.click(screen.getByRole("button", { name: "Remove plan reference" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove plan" }));
     const query = window.location.search;
     first.unmount();
     window.history.replaceState(null, "", `/studio${query}`);

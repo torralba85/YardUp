@@ -67,7 +67,14 @@ import BuilderLeadPanel, {
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
-import { normalizePlanReference, planScopeForLot, type PreapprovedPlanReference } from "@/lib/preapproved-plans";
+import {
+  configForPlanArea,
+  findPreapprovedPlan,
+  normalizePlanReference,
+  planScopeForLot,
+  type PreapprovedPlanReference,
+} from "@/lib/preapproved-plans";
+import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -78,7 +85,7 @@ import MobileHeader from "./studio/mobile/MobileHeader";
 import MobileJourney from "./studio/mobile/journey/MobileJourney";
 import FindStep from "./studio/mobile/journey/FindStep";
 import EarnStep from "./studio/mobile/journey/EarnStep";
-import ShapeStep from "./studio/mobile/journey/ShapeStep";
+import ShapeStep, { MODEL_STAGE_ID } from "./studio/mobile/journey/ShapeStep";
 import CheckStep from "./studio/mobile/journey/CheckStep";
 import ActStep from "./studio/mobile/journey/ActStep";
 import FineTuneDrawer from "./studio/mobile/journey/FineTuneDrawer";
@@ -190,6 +197,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     defaultFinancialAssumptions,
   );
   const [planState, setPlanState] = useState<{ key: string; reference: PreapprovedPlanReference | null }>({ key: parcelPresets[0].id, reference: null });
+  // The size the model had before a plan resized it, offered back as an undo
+  // only while the model still holds exactly the size the plan gave it.
+  const [planSizing, setPlanSizing] = useState<{ key: string; previous: ADUConfig; applied: ADUConfig } | null>(null);
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -345,9 +355,6 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // Scope the reference to the lot, using the same synchronous reset as placement.
   const preapprovedPlan = planState.key === sceneKey ? planState.reference : null;
   if (planState.key !== sceneKey) setPlanState({ key: sceneKey, reference: null });
-  const planBrowser = <PreapprovedPlansSection key={sceneKey} parcel={activeParcel}
-    selected={preapprovedPlan} onSelect={reference => setPlanState({ key: sceneKey, reference })}
-    onRemove={() => setPlanState({ key: sceneKey, reference: null })} />;
   const pose = poseState.key===sceneKey ? poseState.pose : defaultPose(activeParcel,config);
   if(poseState.key!==sceneKey) setPoseState({key:sceneKey,pose});
   const commitPose=useCallback((next:Pose2D)=>{ if(isValidPose(next)) setPoseState({key:sceneKey,pose:next}); },[sceneKey]);
@@ -446,6 +453,47 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     projectBriefState?.key === projectBriefKey ? projectBriefState.error : null;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
+
+  // A plan in use drives the model: its floor area sizes the ADU (proportions,
+  // roof and finish stay), so the scene, fit check and estimates answer "does
+  // this plan fit my lot?". The reference itself stays a separate saved field.
+  const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
+    const area = findPreapprovedPlan(reference)?.sqft;
+    if (area === undefined) return;
+    const applied = configForPlanArea(area, config);
+    if (applied.width === config.width && applied.length === config.length) return;
+    setPlanSizing({ key: sceneKey, previous: config, applied });
+    setConfig(applied);
+  };
+  const planSizeUndo = planSizing && preapprovedPlan && planSizing.key === sceneKey
+    && planSizing.applied.width === config.width && planSizing.applied.length === config.length
+    && planSizing.applied.footprint === config.footprint ? planSizing : null;
+  const planBrowser = (
+    <PreapprovedPlansSection
+      key={sceneKey}
+      parcel={activeParcel}
+      layout={isDesktop ? "panel" : "inline"}
+      selected={preapprovedPlan}
+      onSelect={(reference) => {
+        setPlanState({ key: sceneKey, reference });
+        sizeModelToPlan(reference);
+      }}
+      onRemove={() => setPlanState({ key: sceneKey, reference: null })}
+      model={{
+        config,
+        fit: describePlacementWithEvidence(result.placement, activeParcel),
+        onSizeToPlan: () => { if (preapprovedPlan) sizeModelToPlan(preapprovedPlan); },
+        onUndoSize: planSizeUndo ? () => {
+          setConfig({ ...config, width: planSizeUndo.previous.width, length: planSizeUndo.previous.length, footprint: planSizeUndo.previous.footprint });
+          setPlanSizing(null);
+        } : undefined,
+        onViewModel: () => document.getElementById(MODEL_STAGE_ID)?.scrollIntoView?.({
+          block: "start",
+          behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        }),
+      }}
+    />
+  );
   // The handed-off address once consumed from session storage. `undefined`
   // means "not consumed yet". A ref (not module state) so it survives Strict
   // Mode's dev-only remount — the second effects pass finds session storage
@@ -734,6 +782,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
     setPlanState({ key: parcelPresets[0].id, reference: null });
+    setPlanSizing(null);
     setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
@@ -947,6 +996,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setParcelId(restored.parcelId);
     setConfig(restored.config);
     setPlanState({ key: restored.poseKey, reference: restored.preapprovedPlan });
+    setPlanSizing(null);
     setPoseState({ key: restored.poseKey, pose: restored.pose });
     setAssumptions(restored.assumptions);
     setProjectBriefState(restored.briefState);
@@ -1735,6 +1785,7 @@ function SceneSection({
     // floor is explicit on desktop: the scene's percentage heights make the
     // automatic (content) minimum circular, and the stage would never shrink.
     <section
+      id={MODEL_STAGE_ID}
       aria-label="Parcel massing scene"
       className="lf-entrance flex flex-1 shrink-0 flex-col border-b border-lot-line bg-lot-ink lg:min-h-[clamp(480px,72dvh,720px)] lg:border-b-0 lg:border-r"
     >

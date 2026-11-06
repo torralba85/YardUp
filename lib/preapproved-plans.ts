@@ -1,4 +1,5 @@
 import type { Parcel } from "./parcel-types";
+import type { ADUConfig } from "./feasibility";
 import { certificateKey } from "./certificate-key";
 import { preapprovedPlans, preapprovedPrograms } from "./preapproved-plans-data";
 
@@ -28,8 +29,11 @@ export interface PreapprovedPlan {
   provider: string;
   sqft?: number;
   bedrooms?: number;
+  bathrooms?: number;
   sourceUrl: string;
   documentUrl?: string;
+  /** Link text when the published document is not the full permit set (e.g. a preview). */
+  documentLabel?: string;
   verifiedAt: string;
   restrictions: string;
   feeNote?: string;
@@ -54,15 +58,71 @@ export function findPreapprovedPlan(reference: PreapprovedPlanReference): Preapp
 
 const normalizeCity = (city: string) => city.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
-/** Suggest a postal match; the homeowner must still confirm the permitting authority. */
-export function suggestPlanJurisdiction(parcel: Pick<Parcel, "city"> & { state?: string }): PreapprovedProgram | undefined {
+type PostalLot = Pick<Parcel, "city"> & { state?: string };
+
+/** Postal city and state; a conflicting explicit state and "City, ST" suffix yields no state. */
+function postalLocation(parcel: PostalLot): { city: string; state?: string } {
   const [city, suffix] = parcel.city.split(",");
   const suffixState = suffix?.trim().match(/^([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?$/i)?.[1].toUpperCase();
   const explicitState = parcel.state?.trim().toUpperCase();
-  if (explicitState && suffixState && explicitState !== suffixState) return undefined;
-  const state = explicitState || suffixState;
+  if (explicitState && suffixState && explicitState !== suffixState) return { city };
+  return { city, state: explicitState || suffixState };
+}
+
+/** Suggest a postal match; the homeowner must still confirm the permitting authority. */
+export function suggestPlanJurisdiction(parcel: PostalLot): PreapprovedProgram | undefined {
+  const { city, state } = postalLocation(parcel);
   if (!state) return undefined;
   return preapprovedPrograms.find(program => program.state === state && normalizeCity(program.city) === normalizeCity(city));
+}
+
+/**
+ * Authorities a homeowner can pick for this lot: the lot's own state when it is
+ * known (a San Diego lot is never permitted by Seattle), alphabetically, plus
+ * any authority a restored reference already names.
+ */
+export function planProgramsForLot(parcel: PostalLot, keepId?: string): PreapprovedProgram[] {
+  const { state } = postalLocation(parcel);
+  return preapprovedPrograms
+    .filter(program => !state || program.state === state || program.id === keepId)
+    .sort((a, b) => a.state.localeCompare(b.state) || a.city.localeCompare(b.city));
+}
+
+/** The Studio's width/length controls move in half-foot steps. */
+const DIMENSION_STEP_FT = 0.5;
+const toStep = (value: number) => Math.round(value / DIMENSION_STEP_FT) * DIMENSION_STEP_FT;
+
+const planAreaTolerance = (sqft: number) => Math.max(2, sqft * 0.01);
+
+/** Whether the modeled footprint is close enough to a plan's published floor area to stand in for it. */
+export function modelMatchesPlanArea(footprint: number, sqft: number): boolean {
+  return Math.abs(footprint - sqft) <= planAreaTolerance(sqft);
+}
+
+/**
+ * Size the 3D model to a plan's published floor area. Official listings publish
+ * area, not footprint dimensions, so the model keeps its own proportions on the
+ * half-foot grid and only its area matches the plan. width \u00d7 length stays exact,
+ * as every stored design requires; roof, finish, height and openings are kept.
+ */
+export function configForPlanArea(sqft: number, config: ADUConfig): ADUConfig {
+  const ratio = config.length / config.width;
+  const center = toStep(Math.sqrt(sqft / ratio));
+  const tolerance = planAreaTolerance(sqft);
+  // Within the match tolerance, weigh area error (as a share of the tolerance)
+  // against the change in proportions (10% counts as much as the whole tolerance).
+  const cost = (areaError: number, shapeError: number) => areaError <= tolerance ? areaError / tolerance + shapeError / 0.1 : Infinity;
+  let best: { width: number; length: number; areaError: number; cost: number } | undefined;
+  for (let width = Math.max(DIMENSION_STEP_FT, center - 3); width <= center + 3; width += DIMENSION_STEP_FT) {
+    const length = toStep(sqft / width);
+    if (width > 80 || length < DIMENSION_STEP_FT || length > 80 || width * length > 2000) continue;
+    const areaError = Math.abs(width * length - sqft);
+    const candidate = { width, length, areaError, cost: cost(areaError, Math.abs(Math.log(length / width / ratio))) };
+    if (!best || candidate.cost < best.cost || (candidate.cost === Infinity && best.cost === Infinity && areaError < best.areaError)) {
+      best = candidate;
+    }
+  }
+  return best ? { ...config, width: best.width, length: best.length, footprint: best.width * best.length } : config;
 }
 
 /** Non-authoritative identity hint: prevent a URL choice from moving to another lot.

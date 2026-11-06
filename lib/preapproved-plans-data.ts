@@ -1,4 +1,4 @@
-/** Official listings reviewed 2026-11-06. See docs/preapproved-plans.md for evidence and maintenance. */
+/** Official listings reviewed 2026-11-03 to 2026-11-06. See docs/preapproved-plans.md for evidence and maintenance. */
 import type { PreapprovedPlan, PreapprovedProgram } from "./preapproved-plans";
 
 export const preapprovedPrograms: readonly PreapprovedProgram[] = [
@@ -12,17 +12,19 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "catalogUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "verifiedAt": "2026-11-06",
     "reviewedAt": "2026-11-06",
-    "notes": "The City explicitly lists County of San Diego standard plans as accepted preapproved plans. Current adopted codes, licensing and lot-specific review still apply."
+    "notes": "The City accepts the County of San Diego standard plans, plus Chula Vista's and Encinitas's preapproved plans, with a 30-day review. Plans must meet the currently adopted codes and the San Diego Municipal Code; ask the plan's provider about licensing."
   },
   {
     "id": "ca-chula-vista",
     "city": "Chula Vista",
     "state": "CA",
     "authority": "city",
-    "status": "needs-verification",
-    "sourceUrl": "https://www.chulavistaca.gov/departments/development-services",
-    "reviewedAt": "2026-11-06",
-    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+    "status": "verified",
+    "sourceUrl": "https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units",
+    "catalogUrl": "https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "Chula Vista publishes standard ADU plans with a flat building-permit review fee, and the City of San Diego lists them among the plans it accepts. Individual plans are not listed here yet; use the City's catalog."
   },
   {
     "id": "ca-oceanside",
@@ -52,7 +54,7 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "status": "needs-verification",
     "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
     "reviewedAt": "2026-11-06",
-    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+    "notes": "Carlsbad has a permit-ready ADU program, but on 2026-10-10 the City listed its plans as temporarily unavailable while they are updated to the 2025 building codes. Check the City's page for current availability."
   },
   {
     "id": "ca-imperial-beach",
@@ -62,9 +64,9 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "status": "verified",
     "sourceUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
     "catalogUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "reviewedAt": "2026-11-06",
-    "notes": "City program verified. Individual plan details still need verification; use the City’s official catalog."
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City publishes one pre-approved detached ADU plan set. Check the FEMA flood map first: the plans cannot be used in a Special Flood Hazard Area."
   },
   {
     "id": "ca-la-mesa",
@@ -74,9 +76,9 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "status": "verified",
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
     "catalogUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "reviewedAt": "2026-11-06",
-    "notes": "Official program listing checked. Confirm current-code acceptance, lot-specific requirements and permission to use the documents before applying."
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City publishes previews of five pre-approved plans. Email Planning@cityoflamesa.gov for the official construction set of the one you choose."
   },
   {
     "id": "ca-san-marcos",
@@ -86,9 +88,9 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "status": "verified",
     "sourceUrl": "https://www.sanmarcosca.gov/Business-Services/Building-Division/Permit-Ready-ADUs",
     "catalogUrl": "https://www.sanmarcosca.gov/Business-Services/Building-Division/Permit-Ready-ADUs",
-    "verifiedAt": "2026-11-06",
-    "reviewedAt": "2026-11-06",
-    "notes": "City program verified. Individual plans are linked through the City’s external catalog and have not been curated here yet. Plan alterations are not allowed."
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City offers pre-approved one-story detached plans and decides within 30 days of a complete application. No alterations are allowed. Individual plans are not listed here yet; use the City's catalog."
   },
   {
     "id": "ca-san-diego-county",
@@ -119,20 +121,24 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "city": "San José",
     "state": "CA",
     "authority": "city",
-    "status": "needs-verification",
+    "status": "verified",
     "sourceUrl": "https://www.sanjoseca.gov/business/development-services-permit-center/accessory-dwelling-units-adus/preapproved-adus",
-    "reviewedAt": "2026-11-06",
-    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+    "catalogUrl": "https://www.sanjoseca.gov/business/development-services-permit-center/accessory-dwelling-units-adus/preapproved-adus",
+    "verifiedAt": "2026-11-03",
+    "reviewedAt": "2026-11-03",
+    "notes": "Vendors offer City-reviewed plans for detached ADUs from 476 to 991 sq ft. On a qualifying lot outside geohazard, flood and wildland-urban interface zones, the permit can be issued the same day as the plan review meeting. Individual plans are not listed here yet; use the City's page."
   },
   {
     "id": "ca-encinitas",
     "city": "Encinitas",
     "state": "CA",
     "authority": "city",
-    "status": "needs-verification",
-    "sourceUrl": "https://www.encinitasca.gov/government/departments/development-services/permits",
-    "reviewedAt": "2026-11-06",
-    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+    "status": "verified",
+    "sourceUrl": "https://www.encinitasca.gov/government/departments/development-services/policy-planning-housing/policy-planning/accessory-dwelling-units",
+    "catalogUrl": "https://www.encinitasca.gov/government/departments/development-services/policy-planning-housing/policy-planning/accessory-dwelling-units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "Encinitas runs the Permit-Ready ADU (PRADU) program, and the City of San Diego lists its plans among those it accepts. Individual plans are not listed here yet; use the City's catalog."
   },
   {
     "id": "ca-el-cajon",
@@ -267,8 +273,10 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "sqft": 224,
     "bedrooms": 0,
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "restrictions": "Request the official construction permitting set from City Planning. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; soils report required over 500 sq ft.",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24808/PLAN-A---224-SQFT---STUDIO-ADU",
+    "documentLabel": "Plan preview",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
     "status": "active"
   },
   {
@@ -279,8 +287,10 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "sqft": 400,
     "bedrooms": 1,
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "restrictions": "Request the official construction permitting set from City Planning. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; soils report required over 500 sq ft.",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24937/PLAN-B---400-SQFT---ONE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
     "status": "active"
   },
   {
@@ -291,8 +301,10 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "sqft": 499,
     "bedrooms": 1,
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "restrictions": "Request the official construction permitting set from City Planning. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; soils report required over 500 sq ft.",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/25024/PLAN-C---499-SQFT---ONE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
     "status": "active"
   },
   {
@@ -303,8 +315,10 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "sqft": 990,
     "bedrooms": 2,
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "restrictions": "Request the official construction permitting set from City Planning. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; soils report required over 500 sq ft.",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24945/PLAN-D---990-SQFT---TWO-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
     "status": "active"
   },
   {
@@ -315,8 +329,23 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "sqft": 1199,
     "bedrooms": 3,
     "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
-    "verifiedAt": "2026-11-06",
-    "restrictions": "Request the official construction permitting set from City Planning. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; soils report required over 500 sq ft.",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24809/PLAN-E---1199-SQFT---THREE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "imperial-beach-600",
+    "jurisdictionId": "ca-imperial-beach",
+    "name": "Imperial Beach Pre-Approved ADU",
+    "provider": "City of Imperial Beach",
+    "sqft": 600,
+    "bedrooms": 1,
+    "sourceUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
+    "documentUrl": "https://imperialbeachca.gov/DocumentCenter/View/346/Pre-Approved-ADU-Plans-600-SF-PDF",
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Detached unit. Not for lots in a FEMA Special Flood Hazard Area. Drawn to the 2019 California codes, so ask the Building Division what the current code cycle changes; add site-specific information.",
     "status": "active"
   },
   {
@@ -326,6 +355,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 3,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds670_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -339,6 +369,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 2,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds673_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -352,6 +383,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 2,
+    "bathrooms": 2,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds675_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -365,6 +397,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1000,
     "bedrooms": 1,
+    "bathrooms": 1.5,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds674_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -378,6 +411,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 800,
     "bedrooms": 1,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds672_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -391,6 +425,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 600,
     "bedrooms": 1,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds671_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -404,6 +439,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 3,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds670_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -417,6 +453,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 2,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds673_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -430,6 +467,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1200,
     "bedrooms": 2,
+    "bathrooms": 2,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds675_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -443,6 +481,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 1000,
     "bedrooms": 1,
+    "bathrooms": 1.5,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds674_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -456,6 +495,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 800,
     "bedrooms": 1,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds672_24x36.pdf",
     "verifiedAt": "2026-11-06",
@@ -469,6 +509,7 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "provider": "County of San Diego",
     "sqft": 600,
     "bedrooms": 1,
+    "bathrooms": 1,
     "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
     "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds671_24x36.pdf",
     "verifiedAt": "2026-11-06",
