@@ -26,6 +26,7 @@ export const sanDiegoCounty: JurisdictionContent = {
   slug: "san-diego-county",
   county: "San Diego County",
   asOf: "2026-10-24",
+  published: "2026-10-24",
   metaTitle: "Unincorporated San Diego County ADU Rules (2026)",
   metaDescription:
     "Unincorporated San Diego County ADU rules: 1,200 sq ft detached, up to 25 ft tall, 4 ft setbacks plus fire setbacks, septic and fee rules. Check your lot.",

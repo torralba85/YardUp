@@ -16,6 +16,7 @@ export const sanDiego: JurisdictionContent = {
   slug: "san-diego",
   county: "San Diego County",
   asOf: "2026-11-03",
+  published: "2026-09-18",
   // Rules-first title and H1 come from the shared template, like the other
   // guides. Cost moved to `san-diego-cost.ts` (`/adu/ca/san-diego/cost`).
   metaDescription:

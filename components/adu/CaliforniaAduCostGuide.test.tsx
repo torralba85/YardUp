@@ -61,6 +61,11 @@ describe("CaliforniaAduCostGuide", () => {
     expect(faq.mainEntity.map((entry: { name: string }) => entry.name)).toContain(
       "How much does it cost to build an ADU in California?",
     );
-    expect(jsonLd(container, "Article").dateModified).toBe("2026-10-07");
+    // Reviewed 2026-10-07, published 2026-10-08: markup never dates an edit before release.
+    expect(jsonLd(container, "Article")).toMatchObject({
+      datePublished: "2026-10-08",
+      dateModified: "2026-10-08",
+      image: "https://lotfoundry.net/adu/ca/cost/opengraph-image",
+    });
   });
 });

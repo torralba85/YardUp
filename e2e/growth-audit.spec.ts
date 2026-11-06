@@ -46,7 +46,8 @@ test("homepage server HTML has one slash-form canonical and alt text on both par
     '<link rel="canonical" href="https://lotfoundry.net/"/>',
   ]);
   for (const image of ["parcel-after", "parcel-before"]) {
-    const tag = html.match(new RegExp(`<img[^>]*src="/landing/a-lot-more/${image}\\.webp"[^>]*>`))?.[0];
+    // Served under a content hash from /_next/static/media (components/landing/lot-more/landing-images.ts).
+    const tag = html.match(new RegExp(`<img[^>]*src="/_next/static/media/${image}\\.[\\w-]+\\.webp"[^>]*>`))?.[0];
     expect(tag).toMatch(/ alt="[^"]+"/);
     expect(tag).not.toContain("aria-hidden");
   }
@@ -70,7 +71,7 @@ test("city pages have static local numbers, a self canonical, and the matching d
     expect(html).toContain(`${label} ADU Feasibility`);
     expect(html).toContain(rent);
     await page.goto(`/${city}`, { waitUntil: "domcontentloaded" });
-    const link = page.getByRole("link", { name: `Open the ${label} sample lot in the 3D studio` });
+    const link = page.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${label}`, "i") });
     await expect(link).toContainText(rent);
     expect(new URLSearchParams((await link.getAttribute("href"))!.split("?")[1]).get("parcel")).toBe(parcel);
   }

@@ -17,6 +17,9 @@ import type { BedroomClass } from "@/lib/market/market-types";
 /** ISO date every figure below was read from HUD's FY2027 documentation pages. */
 export const CA_RENT_VERIFIED = "2026-10-28";
 
+/** ISO date the rent page first went live: its first commit on master. */
+export const CA_RENT_PUBLISHED = "2026-10-28";
+
 /** HUD fiscal year of the current figures and the date they took effect. */
 export const HUD_FMR_YEAR = "FY2027";
 export const HUD_FMR_EFFECTIVE = "2026-10-01";

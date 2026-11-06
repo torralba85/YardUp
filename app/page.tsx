@@ -32,6 +32,8 @@ export const metadata: Metadata = {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
     images: [LANDING_OG_IMAGE],
+    // This block replaces the layout's, so it restates the type too.
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",

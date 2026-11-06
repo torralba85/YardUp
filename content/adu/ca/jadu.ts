@@ -21,6 +21,9 @@ import type { AduFaq, AduGlanceRow, AduSource } from "@/lib/adu/types";
 /** ISO date the rules below were last checked against the handbook. */
 export const JADU_AS_OF = "2026-10-28";
 
+/** ISO date the JADU guide first went live: its first commit on master. */
+export const JADU_PUBLISHED = "2026-10-29";
+
 /** The rules at a glance, each tied to the statute that sets it. */
 export const JADU_GLANCE: AduGlanceRow[] = [
   { label: "Size", value: "Up to 500 sq ft of interior livable space", note: "Gov. Code §66313(d)" },

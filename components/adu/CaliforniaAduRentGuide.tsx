@@ -4,6 +4,7 @@ import { AduStudioCta } from "./AduStudioCta";
 import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
   CA_COUNTY_RENTS,
+  CA_RENT_PUBLISHED,
   CA_RENT_VERIFIED,
   HUD_FMR_EFFECTIVE,
   HUD_FMR_FY2027_URL,
@@ -14,7 +15,14 @@ import {
   rentChangePercent,
   type CountyRent,
 } from "@/content/adu/ca/rent";
-import { hubUrl, rentCsvPath, rentCsvUrl, rentUrl } from "@/lib/adu/content";
+import {
+  aduArticleJsonLd,
+  hubUrl,
+  opengraphImageUrl,
+  rentCsvPath,
+  rentCsvUrl,
+  rentUrl,
+} from "@/lib/adu/content";
 import { RENT_SCENARIO_SPREADS } from "@/lib/adu/market-aggregate";
 import { formatCurrency } from "@/lib/feasibility";
 
@@ -102,13 +110,12 @@ export function CaliforniaAduRentGuide() {
       { "@type": "ListItem", position: 3, name: "California ADU rent", item: rentUrl() },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: `ADU Rent in California by County (${HUD_FMR_YEAR} HUD Fair Market Rents)`,
+    image: opengraphImageUrl(rentUrl()),
+    datePublished: CA_RENT_PUBLISHED,
     dateModified: CA_RENT_VERIFIED,
-    author: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
-  };
+  });
   const datasetJsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",

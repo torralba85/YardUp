@@ -112,6 +112,8 @@ export interface JurisdictionContent {
   county: string;
   /** ISO date (`YYYY-MM-DD`) the city's figures were last verified. */
   asOf: string;
+  /** ISO date (`YYYY-MM-DD`) the guide first went live: its first commit on master. */
+  published: string;
   /** 2–3 sentence direct answer to the permission question. Unique per city. */
   introAnswer: string[];
   /** Optional override for page <title> and OpenGraph title. */
@@ -189,6 +191,8 @@ export interface JurisdictionCostContent {
   slug: string;
   /** ISO date (`YYYY-MM-DD`) the fee and scope copy was last checked. */
   asOf: string;
+  /** ISO date (`YYYY-MM-DD`) the page first went live: its first commit on master. */
+  published: string;
   /** Page <title> and OpenGraph title, 60 characters or fewer. */
   metaTitle: string;
   /** Meta description, 70–160 characters. */

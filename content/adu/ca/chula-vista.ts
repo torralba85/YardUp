@@ -17,6 +17,7 @@ export const chulaVista: JurisdictionContent = {
   slug: "chula-vista",
   county: "San Diego County",
   asOf: "2026-10-25",
+  published: "2026-09-18",
   metaTitle: "Chula Vista ADU Rules (2026): Size, Setbacks & Permits",
   metaDescription:
     "Chula Vista ADU rules: 850–1,000 sq ft allowances, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",

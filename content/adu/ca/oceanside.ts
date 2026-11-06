@@ -17,6 +17,7 @@ export const oceanside: JurisdictionContent = {
   slug: "oceanside",
   county: "San Diego County",
   asOf: "2026-10-25",
+  published: "2026-09-18",
   metaDescription:
     "Oceanside ADU rules: ordinance impact-fee relief, 850–1,000 sq ft at 4 ft setbacks, coastal review near the beach. See what fits your lot, free.",
   introAnswer: [

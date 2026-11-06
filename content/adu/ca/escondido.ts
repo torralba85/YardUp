@@ -17,6 +17,7 @@ export const escondido: JurisdictionContent = {
   slug: "escondido",
   county: "San Diego County",
   asOf: "2026-10-25",
+  published: "2026-09-18",
   metaDescription:
     "Escondido ADU rules: 850–1,000 sq ft allowances, an 800 sq ft unit exempt from FAR and lot coverage, and 4 ft setbacks. Run the numbers on your lot, free.",
   introAnswer: [

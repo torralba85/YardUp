@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ADU_COST_PAGES,
+  aduArticleJsonLd,
   aduCostStaticParams,
   aduStaticParams,
   buildCityMetadata,
@@ -10,7 +11,9 @@ import {
   getCity,
   getCostPage,
   getCoveringCostPage,
+  getOtherCountyLeads,
   hubUrl,
+  opengraphImageUrl,
   stateCostPath,
   stateCostUrl,
 } from "./content";
@@ -196,5 +199,43 @@ describe("adu cost pages", () => {
     expect(escondido?.metaDescription).not.toMatch(/850–1,000 sq ft minimums/i);
     expect(JSON.stringify(carlsbad?.glance)).toContain("850 sq ft (studio/1BR) or 1,000 sq ft (2+ BR)");
     expect(JSON.stringify(oceanside)).toContain("66314(d)(7)");
+  });
+});
+
+describe("adu article markup helpers", () => {
+  it("dates every guide's first release as an ISO day", () => {
+    for (const page of [...ADU_CITIES, ...ADU_COST_PAGES]) {
+      expect(page.published, page.slug).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("raises dateModified to the publish date when the review predates release", () => {
+    const base = { headline: "H", image: "https://lotfoundry.net/x/opengraph-image" };
+    expect(aduArticleJsonLd({ ...base, datePublished: "2026-10-29", dateModified: "2026-10-28" }).dateModified).toBe(
+      "2026-10-29",
+    );
+    expect(aduArticleJsonLd({ ...base, datePublished: "2026-09-18", dateModified: "2026-11-03" })).toMatchObject({
+      "@type": "Article",
+      image: base.image,
+      datePublished: "2026-09-18",
+      dateModified: "2026-11-03",
+    });
+  });
+
+  it("points Article images at each page's generated share card", () => {
+    expect(opengraphImageUrl(cityUrl(ADU_CITIES[0]))).toBe(`${cityUrl(ADU_CITIES[0])}/opengraph-image`);
+  });
+
+  it("gives only neighbor-less guides the other counties' lead guides", () => {
+    for (const city of ADU_CITIES) {
+      const leads = getOtherCountyLeads(city);
+      if (city.neighbors.length > 0) {
+        expect(leads, city.slug).toEqual([]);
+      } else {
+        expect(leads.length, city.slug).toBeGreaterThan(0);
+        expect(leads.every((lead) => lead.county !== city.county), city.slug).toBe(true);
+      }
+    }
+    expect(getOtherCountyLeads(getCity("ca", "sacramento")!).map((lead) => lead.slug)).toEqual(["san-diego", "san-jose"]);
   });
 });

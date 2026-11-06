@@ -20,6 +20,7 @@ export const sanDiegoCost: JurisdictionCostContent = {
   state: "ca",
   slug: "san-diego",
   asOf: "2026-10-06",
+  published: "2026-10-06",
   metaTitle: "ADU Cost in San Diego (2026): Build, Rent & Payback",
   metaDescription:
     "What a San Diego ADU costs to build, rents for and takes to pay back, by size from 400 to 1,200 sq ft, plus City permit fees and a free calculator.",

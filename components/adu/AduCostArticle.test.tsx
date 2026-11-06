@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { sanDiego } from "@/content/adu/ca/san-diego";
+import { sacramento } from "@/content/adu/ca/sacramento";
+import { sanJose } from "@/content/adu/ca/san-jose";
 import { AduArticle } from "./AduArticle";
 import { AduCostArticle } from "./AduCostArticle";
 
@@ -108,5 +110,43 @@ describe("AduArticle breadcrumb markup", () => {
     expect(items.map((entry) => entry.position)).toEqual([1, 2, 3]);
     expect(items.map((entry) => entry.name)).toEqual(["Home", "California ADU rules", "San Diego"]);
     expect(new Set(items.map((entry) => entry.item)).size).toBe(items.length);
+  });
+});
+
+describe("AduArticle article markup and related guides", () => {
+  function articleJsonLd(container: HTMLElement) {
+    return Array.from(container.querySelectorAll('script[type="application/ld+json"]'))
+      .map((node) => JSON.parse(node.textContent ?? "{}"))
+      .find((entry) => entry["@type"] === "Article");
+  }
+
+  it("gives the Article its share image and publish date", () => {
+    const { container } = render(<AduArticle content={sanDiego} />);
+    const article = articleJsonLd(container);
+    expect(article.image).toBe("https://lotfoundry.net/adu/ca/san-diego/opengraph-image");
+    expect(article.datePublished).toBe(sanDiego.published);
+    expect(article.dateModified).toBe(sanDiego.asOf);
+  });
+
+  it("never dates the last edit before publication", () => {
+    // Sacramento's rules were checked the day before the guide went live.
+    expect(sacramento.asOf < sacramento.published).toBe(true);
+    const { container } = render(<AduArticle content={sacramento} />);
+    expect(articleJsonLd(container).dateModified).toBe(sacramento.published);
+  });
+
+  it("links a metro's first guide to the other counties' guides", () => {
+    render(<AduArticle content={sanJose} />);
+    const nav = screen.getByRole("navigation", { name: "Neighboring jurisdictions" });
+    expect(within(nav).getByRole("heading", { name: "ADU rules elsewhere in California" })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "ADU rules in San Diego" })).toHaveAttribute("href", "/adu/ca/san-diego");
+    expect(within(nav).getByRole("link", { name: "ADU rules in Sacramento" })).toHaveAttribute("href", "/adu/ca/sacramento");
+  });
+
+  it("keeps nearby cities, not other counties, on guides that have neighbors", () => {
+    render(<AduArticle content={chulaVista} />);
+    const nav = screen.getByRole("navigation", { name: "Neighboring jurisdictions" });
+    expect(within(nav).getByRole("heading", { name: "ADU rules in nearby cities" })).toBeInTheDocument();
+    expect(within(nav).queryByRole("link", { name: "ADU rules in Sacramento" })).not.toBeInTheDocument();
   });
 });

@@ -20,7 +20,9 @@ describe("sitemap", () => {
       expect(entry.lastModified).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
     const byUrl = new Map(entries.map((entry) => [entry.url, entry.lastModified]));
-    expect(byUrl.get("https://lotfoundry.net/privacy")).toBe(CURRENT_LEGAL_CONSENT.privacyVersion);
-    expect(byUrl.get("https://lotfoundry.net/terms")).toBe(CURRENT_LEGAL_CONSENT.termsVersion);
+    // Never older than the published version; later when the page was edited in place.
+    expect(byUrl.get("https://lotfoundry.net/privacy")! >= CURRENT_LEGAL_CONSENT.privacyVersion).toBe(true);
+    expect(byUrl.get("https://lotfoundry.net/terms")! >= CURRENT_LEGAL_CONSENT.termsVersion).toBe(true);
+    expect(byUrl.get("https://lotfoundry.net/terms")).toBe("2026-11-03");
   });
 });

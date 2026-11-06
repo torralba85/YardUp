@@ -19,7 +19,7 @@ test("property entry supports skip navigation and a visible field focus", async 
   await expect(field).toHaveCSS("box-shadow", /rgb\(196, 55, 8\).*2px/);
 
   await page.getByRole("link", { name: "LotFoundry home", exact: true }).click();
-  await page.getByRole("link", { name: "Open the Seattle sample lot in the 3D studio" }).click();
+  await page.getByRole("link", { name: /^Just looking\? See a sample result.*Seattle/i }).click();
   await expect(page.getByRole("heading", { name: "Start with your property." })).toBeHidden();
   await expect(page.getByRole("button", { name: /^Reset (scenario|Project)$/ })).toBeVisible();
   await expect(page).toHaveURL(/parcel=oak-street/);

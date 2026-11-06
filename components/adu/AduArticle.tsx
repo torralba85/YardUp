@@ -5,11 +5,14 @@ import {
 } from "@/content/adu/state-baseline";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
 import {
+  aduArticleJsonLd,
   cityUrl,
   costPagePath,
   getCoveringCostPage,
   getNeighbors,
+  getOtherCountyLeads,
   hubUrl,
+  opengraphImageUrl,
   stateCostPath,
 } from "@/lib/adu/content";
 import type { JurisdictionContent } from "@/lib/adu/types";
@@ -31,6 +34,8 @@ import { SetbackDiagram } from "./SetbackDiagram";
  */
 export function AduArticle({ content }: { content: JurisdictionContent }) {
   const neighbors = getNeighbors(content);
+  // A metro's first guide has no neighbors yet; link the other counties' lead guides instead.
+  const relatedGuides = neighbors.length > 0 ? neighbors : getOtherCountyLeads(content);
   // A city with its own cost page shows its figures there, not here; any
   // guide its county cost page covers links to it from the fees section.
   const costPage = getCoveringCostPage(content);
@@ -62,17 +67,12 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: `ADU Rules in ${content.city}, ${content.stateName} (2026)`,
+    image: opengraphImageUrl(cityUrl(content)),
+    datePublished: content.published,
     dateModified: content.asOf,
-    author: {
-      "@type": "Organization",
-      name: "LotFoundry",
-      url: "https://lotfoundry.net/",
-    },
-  };
+  });
 
   return (
     <>
@@ -344,7 +344,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
 
       <nav aria-label="Neighboring jurisdictions" className="mt-12">
         <h2 className="lf-card-heading text-lot-ink">
-          ADU rules in nearby cities
+          {neighbors.length > 0 ? "ADU rules in nearby cities" : "ADU rules elsewhere in California"}
         </h2>
         <ul className="mt-4 flex flex-wrap gap-2">
           <li>
@@ -355,7 +355,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
               California ADU rules hub
             </Link>
           </li>
-          {neighbors.map((neighbor) => (
+          {relatedGuides.map((neighbor) => (
             <li key={neighbor.slug}>
               <Link
                 href={`/adu/${neighbor.state}/${neighbor.slug}`}

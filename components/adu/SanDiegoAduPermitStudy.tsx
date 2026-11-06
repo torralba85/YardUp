@@ -5,9 +5,17 @@ import {
   PERMIT_DATASET_URL,
   PLAN_AREAS_DATASET_URL,
   SAN_DIEGO_PERMIT_STUDY,
+  SAN_DIEGO_PERMIT_STUDY_PUBLISHED,
   type PermitStudy,
 } from "@/content/adu/ca/san-diego-permits";
-import { hubUrl, permitStudyCsvPath, permitStudyCsvUrl, permitStudyUrl } from "@/lib/adu/content";
+import {
+  aduArticleJsonLd,
+  hubUrl,
+  opengraphImageUrl,
+  permitStudyCsvPath,
+  permitStudyCsvUrl,
+  permitStudyUrl,
+} from "@/lib/adu/content";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -96,13 +104,12 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
       { "@type": "ListItem", position: 4, name: "San Diego ADU permits", item: permitStudyUrl() },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: "San Diego ADU Permits by Neighborhood",
+    image: opengraphImageUrl(permitStudyUrl()),
+    datePublished: SAN_DIEGO_PERMIT_STUDY_PUBLISHED,
     dateModified: study.generatedAt,
-    author: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
-  };
+  });
   const datasetJsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",

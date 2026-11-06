@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { Segmented } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import { ParcelMark } from "@/components/ui/BrandLockup";
+import { HERO_PHOTO, PARCEL_AFTER, PARCEL_BEFORE, STUDIO_DEMO } from "./landing-images";
 import { configForFootprint } from "@/lib/feasibility";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
@@ -533,19 +534,21 @@ export function LotMoreLanding({
               {/* Full-bleed photograph under a carbon scrim. It paints on the
                   first frame (only its transform animates), so it stays a
                   fast LCP element. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className={styles.heroPhoto}
-                src="/landing/a-lot-more/backyard-life.webp"
-                srcSet="/landing/a-lot-more/backyard-life-mobile.webp 768w, /landing/a-lot-more/backyard-life.webp 1536w"
-                sizes="100vw"
-                width={1536}
-                height={1024}
-                fetchPriority="high"
-                loading="eager"
-                decoding="async"
-                alt="Illustrative concept of an orange backyard home with full-height glazing and a timber deck in a planted garden"
-              />
+              <picture className={styles.pictureContents}>
+                <source type="image/avif" srcSet={HERO_PHOTO.avifSrcSet} sizes="100vw" />
+                <img
+                  className={styles.heroPhoto}
+                  src={HERO_PHOTO.src}
+                  srcSet={HERO_PHOTO.srcSet}
+                  sizes="100vw"
+                  width={1536}
+                  height={1024}
+                  fetchPriority="high"
+                  loading="eager"
+                  decoding="async"
+                  alt="Illustrative concept of an orange backyard home with full-height glazing and a timber deck in a planted garden"
+                />
+              </picture>
             </div>
             <div className={styles.heroCopy}>
               <p className={styles.heroKicker}>
@@ -574,13 +577,14 @@ export function LotMoreLanding({
               {/* A real engine result, one tap from the address box. A cold
                   visitor who is not ready to type an address can still see
                   what the studio produces, which the photograph alone
-                  does not show. */}
+                  does not show. Its visible text is its accessible name
+                  (WCAG 2.5.3), so "See a sample result" works for voice
+                  control and the CTA line names the demo and city. */}
               <Link
                 className={styles.sampleResult}
                 href={sampleHref}
                 prefetch={false}
                 data-ui
-                aria-label={`Open the ${demo.city} sample lot in the 3D studio`}
                 onClick={() => {
                   stashAddressQuery("");
                   stashEntrySource("landing_cta");
@@ -662,33 +666,45 @@ export function LotMoreLanding({
                   <span>LOT — 001 / ORTHO 3D</span>
                 </div>
                 <div className={styles.parcelCanvas} data-scene={scene}>
-                  {/* Pre-sized local WebP variants keep the hero useful before JS. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className={styles.parcelImage}
-                    src="/landing/a-lot-more/parcel-after.webp"
-                    srcSet="/landing/a-lot-more/parcel-after-mobile.webp 768w, /landing/a-lot-more/parcel-after.webp 1536w"
-                    sizes="(max-width: 800px) 100vw, 60vw"
-                    width={1536}
-                    height={1024}
-                    fetchPriority="high"
-                    loading="eager"
-                    decoding="async"
-                    alt="Illustrative miniature lot with an existing house and an orange backyard home"
-                  />
+                  {/* Pre-sized local AVIF/WebP variants keep the hero useful before JS. */}
+                  <picture className={styles.pictureContents}>
+                    <source
+                      type="image/avif"
+                      srcSet={PARCEL_AFTER.avifSrcSet}
+                      sizes="(max-width: 800px) 100vw, 60vw"
+                    />
+                    <img
+                      className={styles.parcelImage}
+                      src={PARCEL_AFTER.src}
+                      srcSet={PARCEL_AFTER.srcSet}
+                      sizes="(max-width: 800px) 100vw, 60vw"
+                      width={1536}
+                      height={1024}
+                      fetchPriority="high"
+                      loading="eager"
+                      decoding="async"
+                      alt="Illustrative miniature lot with an existing house and an orange backyard home"
+                    />
+                  </picture>
                   {/* Each layer describes its own picture (Bing flags an empty alt);
                       the live figcaption announces which scene is showing. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className={`${styles.parcelImage} ${styles.beforeImage}`}
-                    src="/landing/a-lot-more/parcel-before.webp"
-                    srcSet="/landing/a-lot-more/parcel-before-mobile.webp 768w, /landing/a-lot-more/parcel-before.webp 1536w"
-                    sizes="(max-width: 800px) 100vw, 60vw"
-                    width={1536}
-                    height={1024}
-                    loading="lazy"
-                    alt="Illustrative miniature lot with an existing house and an empty yard"
-                  />
+                  <picture className={styles.pictureContents}>
+                    <source
+                      type="image/avif"
+                      srcSet={PARCEL_BEFORE.avifSrcSet}
+                      sizes="(max-width: 800px) 100vw, 60vw"
+                    />
+                    <img
+                      className={`${styles.parcelImage} ${styles.beforeImage}`}
+                      src={PARCEL_BEFORE.src}
+                      srcSet={PARCEL_BEFORE.srcSet}
+                      sizes="(max-width: 800px) 100vw, 60vw"
+                      width={1536}
+                      height={1024}
+                      loading="lazy"
+                      alt="Illustrative miniature lot with an existing house and an empty yard"
+                    />
+                  </picture>
                   <svg
                     className={styles.cadGridOverlay}
                     viewBox="0 0 1536 1024"
@@ -879,13 +895,13 @@ export function LotMoreLanding({
                 <picture>
                   <source
                     media="(max-width: 800px)"
-                    srcSet="/landing/studio-demo-mobile.webp"
+                    srcSet={STUDIO_DEMO.mobile}
                     width={780}
                     height={1046}
                   />
                   {/* Pre-sized local captures preserve the actual demo UI. */}
                   <img
-                    src="/landing/studio-demo-desktop.webp"
+                    src={STUDIO_DEMO.desktop}
                     width={1200}
                     height={1202}
                     loading="lazy"

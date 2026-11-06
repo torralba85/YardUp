@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import userEvent from "@testing-library/user-event";
 import { CookieConsentBanner } from "./CookieConsentBanner";
 import { CONSENT_VERSION, CONSENT_STORAGE_KEY, readConsent } from "@/lib/analytics/consent";
@@ -103,5 +104,61 @@ describe("CookieConsentBanner", () => {
 
     expect(accept.className).toBe(decline.className);
     expect(accept.className).toContain("border-lot-stone");
+  });
+  it("renders the banner into the server HTML, hidden until the pre-paint script runs", () => {
+    // Painting with the page keeps the banner from becoming a late
+    // Largest Contentful Paint; the stylesheet hides [data-pending] until the
+    // script marks the visitor as undecided.
+    const html = renderToString(<CookieConsentBanner />);
+
+    expect(html).toContain('aria-label="Cookie consent"');
+    expect(html).toMatch(/data-consent-banner="" data-pending=""/);
+    expect(html.indexOf("<script>")).toBeGreaterThan(-1);
+    expect(html.indexOf("<script>")).toBeLessThan(html.indexOf("data-consent-banner"));
+  });
+
+  it("drops the pending flag once the client confirms the visitor has not decided", async () => {
+    render(<CookieConsentBanner />);
+
+    const banner = await screen.findByRole("region", { name: /cookie consent/i });
+    expect(banner).not.toHaveAttribute("data-pending");
+  });
+
+  describe("pre-paint script", () => {
+    function runPrepaintScript() {
+      const html = renderToString(<CookieConsentBanner />);
+      const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+      expect(script).toBeDefined();
+      new Function(script!.replace(/&quot;/g, '"').replace(/&amp;/g, "&"))();
+      return document.documentElement.getAttribute("data-lf-consent");
+    }
+
+    afterEach(() => {
+      document.documentElement.removeAttribute("data-lf-consent");
+    });
+
+    it("marks a visitor with no stored decision as unset", () => {
+      expect(runPrepaintScript()).toBe("unset");
+    });
+
+    it.each(["granted", "denied"] as const)("leaves a visitor who %s consent unmarked", (decision) => {
+      storeDecision(decision);
+      expect(runPrepaintScript()).toBeNull();
+    });
+
+    it("treats a decision from an older consent version as unset, like readConsent", () => {
+      window.localStorage.setItem(
+        CONSENT_STORAGE_KEY,
+        JSON.stringify({ decision: "granted", version: CONSENT_VERSION - 1, decidedAt: "2026-08-31T00:00:00Z" }),
+      );
+      expect(readConsent()).toBe("unset");
+      expect(runPrepaintScript()).toBe("unset");
+    });
+
+    it("treats unreadable storage as unset, like readConsent", () => {
+      window.localStorage.setItem(CONSENT_STORAGE_KEY, "{not json");
+      expect(readConsent()).toBe("unset");
+      expect(runPrepaintScript()).toBe("unset");
+    });
   });
 });

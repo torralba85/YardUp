@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
 import {
+  aduArticleJsonLd,
   cityUrl,
   costPagePath,
   costPageUrl,
   getCity,
   hubUrl,
   methodologyPath,
+  opengraphImageUrl,
 } from "@/lib/adu/content";
 import type { AduFaq, JurisdictionCostContent } from "@/lib/adu/types";
 import {
@@ -104,13 +106,12 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
       { "@type": "ListItem", position: 4, name: `${city.city} ADU cost`, item: costPageUrl(cost) },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: cost.h1,
+    image: opengraphImageUrl(costPageUrl(cost)),
+    datePublished: cost.published,
     dateModified: cost.asOf,
-    author: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
-  };
+  });
   const ctaSlug = `${cost.slug}-cost`;
 
   return (

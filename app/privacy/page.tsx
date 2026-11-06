@@ -4,7 +4,7 @@ import { CookiePreferences } from "@/components/analytics/CookiePreferences";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "Privacy Policy | LotFoundry";
+const title = "Privacy Policy: Your Data & Your Rights | LotFoundry";
 const description =
   "Learn what LotFoundry collects, how property, account, payment, analytics, and AI data are used, and how to exercise your privacy rights.";
 

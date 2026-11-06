@@ -5,7 +5,7 @@ import { pageOpenGraph } from "@/lib/og-images";
 
 const title = "About LotFoundry: Free ADU Feasibility Check";
 const description =
-  "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own.";
+  "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners check ADU rent, build cost and payback estimates for a lot they already own.";
 
 export const metadata: Metadata = {
   title,

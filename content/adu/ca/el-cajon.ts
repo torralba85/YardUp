@@ -25,6 +25,7 @@ export const elCajon: JurisdictionContent = {
   slug: "el-cajon",
   county: "San Diego County",
   asOf: "2026-10-30",
+  published: "2026-10-30",
   metaTitle: "El Cajon ADU Rules (2026): Size, Setback Tiers & Cost",
   metaDescription:
     "El Cajon ADU rules: 1,200 sq ft detached units, unique 3-5 ft setback-height tiers, trolley transit waivers, and permit steps. Calculate feasibility free.",

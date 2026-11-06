@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { METHODOLOGY_AS_OF, hubUrl, methodologyUrl } from "@/lib/adu/content";
+import {
+  METHODOLOGY_AS_OF,
+  METHODOLOGY_PUBLISHED,
+  aduArticleJsonLd,
+  hubUrl,
+  methodologyUrl,
+} from "@/lib/adu/content";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
+import { SITE_OG_IMAGE } from "@/lib/og-images";
 import {
   CITY_MARKET_SIZES,
   RENT_SCENARIO_SPREADS,
@@ -139,11 +147,13 @@ export function AduMethodology() {
   );
 
   const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: "How LotFoundry estimates ADU cost, rent and payback",
-    dateModified: METHODOLOGY_AS_OF,
-    author: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
+    ...aduArticleJsonLd({
+      headline: "How LotFoundry estimates ADU cost, rent and payback",
+      // No route-level share image here; the page shares the site card.
+      image: `${CANONICAL_ORIGIN}${SITE_OG_IMAGE.url}`,
+      datePublished: METHODOLOGY_PUBLISHED,
+      dateModified: METHODOLOGY_AS_OF,
+    }),
     publisher: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
     mainEntityOfPage: methodologyUrl(),
   };

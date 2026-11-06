@@ -19,6 +19,7 @@ export const sanMarcos: JurisdictionContent = {
   slug: "san-marcos",
   county: "San Diego County",
   asOf: "2026-10-24",
+  published: "2026-10-24",
   metaTitle: "San Marcos ADU Rules (2026): Size, Placement & Permits",
   metaDescription:
     "San Marcos ADU rules: 850–1,000 sq ft caps, the rear half of the lot, 4 ft setbacks, design matching and permit-ready plans with 30-day review.",

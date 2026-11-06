@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
+import { laterDate } from "./sitemap-adu.xml/build-xml";
 
 const baseUrl = CANONICAL_ORIGIN;
 
@@ -20,16 +21,18 @@ const baseUrl = CANONICAL_ORIGIN;
  * `lastmod` is the date the page's content last changed, never the build time:
  * Bing and Google stop trusting a sitemap whose dates move on every deploy.
  * Bump a page's date when you change what it shows. The legal pages follow
- * their published versions.
+ * their published versions, or a later edit that kept the version.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-11-01",
-  "/studio": "2026-11-01",
-  "/about": "2026-11-01",
-  "/help": "2026-10-21",
-  "/feedback": "2026-10-21",
-  "/privacy": CURRENT_LEGAL_CONSENT.privacyVersion,
-  "/terms": CURRENT_LEGAL_CONSENT.termsVersion,
+  "/": "2026-11-06",
+  "/studio": "2026-11-06",
+  "/about": "2026-11-06",
+  "/help": "2026-11-06",
+  "/feedback": "2026-11-06",
+  // #362 added processors to both policies on 2026-11-03 without a new
+  // version, and /privacy was retitled on 2026-11-06.
+  "/privacy": laterDate(CURRENT_LEGAL_CONSENT.privacyVersion, "2026-11-06"),
+  "/terms": laterDate(CURRENT_LEGAL_CONSENT.termsVersion, "2026-11-03"),
 };
 
 export default function sitemap(): MetadataRoute.Sitemap {

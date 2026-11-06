@@ -3,7 +3,7 @@ import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
 import { HUD_FMR_FY2027_URL, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
-import { hubUrl, stateCostUrl } from "@/lib/adu/content";
+import { aduArticleJsonLd, hubUrl, opengraphImageUrl, stateCostUrl } from "@/lib/adu/content";
 import { countyMarketAggregate } from "@/lib/adu/market-aggregate";
 import {
   defaultFinancialAssumptions,
@@ -12,6 +12,9 @@ import {
 } from "@/lib/feasibility";
 
 export const CALIFORNIA_COST_GUIDE_AS_OF = "2026-10-07";
+
+/** ISO date the guide first went live: its first commit on master. */
+const CALIFORNIA_COST_GUIDE_PUBLISHED = "2026-10-08";
 
 const HCD_HANDBOOK_URL =
   "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf";
@@ -121,17 +124,12 @@ export function CaliforniaAduCostGuide() {
       },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: "ADU Cost in California (2026): What to Budget",
+    image: opengraphImageUrl(stateCostUrl()),
+    datePublished: CALIFORNIA_COST_GUIDE_PUBLISHED,
     dateModified: CALIFORNIA_COST_GUIDE_AS_OF,
-    author: {
-      "@type": "Organization",
-      name: "LotFoundry",
-      url: "https://lotfoundry.net/",
-    },
-  };
+  });
 
   return (
     <>
