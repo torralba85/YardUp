@@ -33,7 +33,7 @@ async function mockLookup(page: Page) {
 test("sample card preserves its advertised market scenario", async ({ page, isMobile }) => {
   await mockTestOwnerAuth(page);
   await page.goto("/");
-  const card = page.getByRole("link", { name: /Open the Seattle sample lot/ });
+  const card = page.getByRole("link", { name: /^Just looking\? See a sample result.*Seattle/i });
   await expect(card).toContainText("2,350");
   await expect(card).toContainText("13.2");
   const href = await card.getAttribute("href");
