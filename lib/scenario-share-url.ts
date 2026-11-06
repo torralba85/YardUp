@@ -1,3 +1,5 @@
+import { planScopeForLot } from "./preapproved-plans";
+import { getParcelById, type Parcel } from "./feasibility";
 import { CANONICAL_ORIGIN } from "./canonical-origin";
 import { serializeScenarioParams, type ScenarioState } from "./scenario-url";
 
@@ -6,9 +8,9 @@ export function validLayoutToken(token: string): boolean {
 }
 
 /** Keep the established design serializer; the opaque ID restores the real parcel and all assumptions. */
-export function buildScenarioShareUrl(scenario: ScenarioState, token?: string): string {
+export function buildScenarioShareUrl(scenario: ScenarioState & { liveParcel?: Pick<Parcel, "address" | "city"> }, token?: string): string {
   const url = new URL("/studio", CANONICAL_ORIGIN);
-  url.search = serializeScenarioParams(scenario);
+  url.search = serializeScenarioParams({ ...scenario, ...(scenario.preapprovedPlan ? { preapprovedPlanScope: planScopeForLot(scenario.liveParcel ?? getParcelById(scenario.parcelId), scenario.liveParcel ? "live" : "preset") } : {}) });
   if (token) {
     if (!validLayoutToken(token)) throw new Error("Invalid layout link.");
     url.searchParams.set("layout", token);

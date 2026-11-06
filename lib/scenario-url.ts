@@ -13,12 +13,18 @@ import {
 } from "./feasibility";
 import { defaultPose, HEIGHT_CONVENTION, isValidAduConfig, isValidFinancialAssumptions, isValidPose, SCENARIO_VERSION } from "./scenario-design";
 import type { Pose2D } from "./scene-model";
+import { normalizePlanReference, type PreapprovedPlanReference } from "./preapproved-plans";
 
 /**
  * The minimal scenario state that can be encoded in, and restored from, the
  * studio URL's query string. This makes a configured study shareable via link.
  */
 export interface ScenarioState {
+  preapprovedPlan?: PreapprovedPlanReference;
+  /** URL-only lot identity hint; never an approval or access-control claim. */
+  preapprovedPlanScope?: string;
+  /** URL-only removal marker for a reference inherited from a saved layout. */
+  clearPreapprovedPlan?: boolean;
   version?: 2;
   heightConvention?: "wall";
   pose?: Pose2D;
@@ -140,6 +146,13 @@ export function serializeScenarioParams(state: ScenarioState): string {
   for (const finish of validFinishes) params.set(`cost_${finish}`, String(state.assumptions.costPerSqft[finish]));
   params.set("soft", String(state.assumptions.softCostMultiplier));
   params.set("opex", String(state.assumptions.operatingExpenseRatio));
+  if (state.clearPreapprovedPlan && !state.preapprovedPlan) params.set("plan", "none");
+  const reference = normalizePlanReference(state.preapprovedPlan);
+  if (reference) {
+    params.set("plan", reference.planId);
+    params.set("planJurisdiction", reference.jurisdictionId);
+    if (/^[a-f0-9]{16}$/.test(state.preapprovedPlanScope ?? "")) params.set("planScope", state.preapprovedPlanScope!);
+  }
   return params.toString();
 }
 
@@ -149,6 +162,13 @@ function parseCurrentParams(params: URLSearchParams): Partial<ScenarioState> {
     return value !== null && value.trim() !== "" ? Number(value) : NaN;
   };
   const partial: Partial<ScenarioState> = {};
+  const preapprovedPlan = normalizePlanReference({ planId: params.get("plan"), jurisdictionId: params.get("planJurisdiction") });
+  if (params.get("plan") === "none") partial.clearPreapprovedPlan = true;
+  else if (preapprovedPlan) {
+    partial.preapprovedPlan = preapprovedPlan;
+    const scope = params.get("planScope");
+    if (scope && /^[a-f0-9]{16}$/.test(scope)) partial.preapprovedPlanScope = scope;
+  }
   const parcelId = params.get("parcel");
   if (parcelId && validParcelIds.has(parcelId)) partial.parcelId = parcelId;
   const config = {
@@ -206,11 +226,15 @@ export function isNonDefaultScenario(partial: Partial<ScenarioState>): boolean {
 export function mergeScenarioPartial(partial: Partial<ScenarioState>): ScenarioState {
   const parcelId = partial.parcelId ?? defaultScenarioState.parcelId;
   const config = partial.config ?? { ...defaultScenarioState.config };
+  const preapprovedPlan = normalizePlanReference(partial.preapprovedPlan);
   return {
     version: SCENARIO_VERSION,
     heightConvention: HEIGHT_CONVENTION,
     pose: partial.pose ? { ...partial.pose } : defaultPose(getParcelById(parcelId), config),
     parcelId,
+    ...(preapprovedPlan ? { preapprovedPlan } : {}),
+    ...(partial.preapprovedPlanScope && /^[a-f0-9]{16}$/.test(partial.preapprovedPlanScope) ? { preapprovedPlanScope: partial.preapprovedPlanScope } : {}),
+    ...(partial.clearPreapprovedPlan ? { clearPreapprovedPlan: true } : {}),
     config,
     assumptions: partial.assumptions ?? { ...defaultScenarioState.assumptions, costPerSqft: { ...defaultScenarioState.assumptions.costPerSqft } },
   };

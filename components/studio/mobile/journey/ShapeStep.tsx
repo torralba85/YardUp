@@ -28,6 +28,7 @@ const FINISHES = Object.keys(finishLabels) as ExteriorFinish[];
 
 /** Props for {@link ShapeStep}. */
 export interface ShapeStepProps {
+  planBrowser?: ReactNode;
   certificateUnlocked?: boolean;
   /** The active ADU configuration. */
   config: ADUConfig;
@@ -50,6 +51,7 @@ export interface ShapeStepProps {
  * dimensions, roof, and assumptions stay behind the optional Fine-tune action.
  */
 export default function ShapeStep({
+  planBrowser,
   certificateUnlocked = false,
   config,
   onConfigChange,
@@ -158,6 +160,8 @@ export default function ShapeStep({
           <SlidersHorizontal size={15} />
           Fine-tune dimensions &amp; assumptions
         </button>
+
+        {planBrowser && <div className="mt-5">{planBrowser}</div>}
 
         <div className="mt-auto pt-6">
           <Button

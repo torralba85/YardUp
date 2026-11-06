@@ -66,6 +66,8 @@ import BuilderLeadPanel, {
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
+import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
+import { normalizePlanReference, planScopeForLot, type PreapprovedPlanReference } from "@/lib/preapproved-plans";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -187,6 +189,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
     defaultFinancialAssumptions,
   );
+  const [planState, setPlanState] = useState<{ key: string; reference: PreapprovedPlanReference | null }>({ key: parcelPresets[0].id, reference: null });
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -339,6 +342,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // render identically to before.)
   const sceneParcel = activeParcel;
   const sceneKey = parcelMode === "preset" ? parcelId : `${activeParcel.address}|${activeParcel.city}`;
+  // Scope the reference to the lot, using the same synchronous reset as placement.
+  const preapprovedPlan = planState.key === sceneKey ? planState.reference : null;
+  if (planState.key !== sceneKey) setPlanState({ key: sceneKey, reference: null });
+  const planBrowser = <PreapprovedPlansSection key={sceneKey} parcel={activeParcel}
+    selected={preapprovedPlan} onSelect={reference => setPlanState({ key: sceneKey, reference })}
+    onRemove={() => setPlanState({ key: sceneKey, reference: null })} />;
   const pose = poseState.key===sceneKey ? poseState.pose : defaultPose(activeParcel,config);
   if(poseState.key!==sceneKey) setPoseState({key:sceneKey,pose});
   const commitPose=useCallback((next:Pose2D)=>{ if(isValidPose(next)) setPoseState({key:sceneKey,pose:next}); },[sceneKey]);
@@ -532,6 +541,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setParcelId(merged.parcelId);
     if (parsed.parcelId) setPresetFromLink(true);
     setConfig(merged.config);
+    const hydrationParcel = parcelMode === "preset" ? getParcelById(merged.parcelId) : activeParcel;
+    const queryPlanMatchesLot = parsed.preapprovedPlanScope
+      ? parsed.preapprovedPlanScope === planScopeForLot(hydrationParcel, parcelMode)
+      : parcelMode === "preset" && !initialScenario?.liveParcel;
+    const restoredPlan = parsed.clearPreapprovedPlan ? undefined
+      : queryPlanMatchesLot && parsed.preapprovedPlan ? parsed.preapprovedPlan : initialScenario?.preapprovedPlan;
+    setPlanState({ key: parcelMode === "preset" ? merged.parcelId : sceneKey, reference: normalizePlanReference(restoredPlan) ?? null });
     // Explicit placement from the URL or a restored layout takes precedence;
     // otherwise calculate placement from the active parcel (preset or live).
     const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
@@ -621,7 +637,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const certificateUnlocked = certificateRecovery.access.purchased;
 
   const emailScenario: SavedScenario | null = parcelMode === "live" && !parcelLoading && "source" in activeParcel && activeParcel.source !== "estimated"
-    ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel }
+    ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel, ...(preapprovedPlan ? { preapprovedPlan } : {}) }
     : null;
   const hasSavedActiveAddress = savedScenarios.some((scenario) => scenario.liveParcel && certificateKey(scenario.liveParcel) === certificateKey(activeParcel));
   const emailLinkCard = emailScenario && !authLoading && !certificateRecovery.access.loading && !certificateRecovery.access.purchased && !hasSavedActiveAddress
@@ -638,7 +654,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     if (!isValidAduConfig(config) || !isValidFinancialAssumptions(assumptions) || !isValidPose(pose)) {
       return;
     }
-    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
+    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall", ...(preapprovedPlan ? { preapprovedPlan, preapprovedPlanScope: planScopeForLot(activeParcel, parcelMode) } : initialScenario?.preapprovedPlan ? { clearPreapprovedPlan: true } : {}) });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
     const layoutParam = initialScenario?.liveParcel && certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)
@@ -666,7 +682,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // Next.js's own router state on this entry, since replaceState's first
     // argument replaces the whole state object, not just the URL.
     window.history.replaceState(window.history.state, "", next);
-  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose]);
+  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose, preapprovedPlan, parcelMode]);
 
   // Track feasibility result review once per parcel context when reached
   const reviewedParcelsRef = useRef<Set<string>>(new Set());
@@ -717,6 +733,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
+    setPlanState({ key: parcelPresets[0].id, reference: null });
     setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
@@ -866,6 +883,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     ) {
       entry.liveParcel = activeParcel;
     }
+    if (preapprovedPlan) entry.preapprovedPlan = preapprovedPlan;
     if (projectBrief) {
       entry.projectBrief = projectBrief;
     }
@@ -928,6 +946,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     else resetToPreset(restored.preset);
     setParcelId(restored.parcelId);
     setConfig(restored.config);
+    setPlanState({ key: restored.poseKey, reference: restored.preapprovedPlan });
     setPoseState({ key: restored.poseKey, pose: restored.pose });
     setAssumptions(restored.assumptions);
     setProjectBriefState(restored.briefState);
@@ -1234,6 +1253,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       stepContent = (
         <ShapeStep
           certificateUnlocked={certificateUnlocked}
+          planBrowser={planBrowser}
           config={config}
           onConfigChange={setConfig}
           result={result}
@@ -1545,6 +1565,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onViewModeChange={changeViewMode}
                 hasScan={Boolean(splatScene)}
               />
+              {planBrowser}
               <details className="group border-t border-lot-line bg-lot-chalk">
                 <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Browse designs

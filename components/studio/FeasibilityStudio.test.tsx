@@ -281,6 +281,89 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
   });
 
+  it("selects a reference without changing geometry, shares it, saves it and clears it on lot change", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: "2026-11-06T00:00:00Z" }));
+    window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
+    const before = new URLSearchParams(window.location.search);
+    fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
+    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan F" })).getByRole("button", { name: "Select plan" }));
+    expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
+    const after = new URLSearchParams(window.location.search);
+    for (const key of ["w", "l", "h", "x", "z", "rotation", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
+    expect(after.get("plan")).toBe("san-diego-city-plan-f");
+    fireEvent.click(screen.getByRole("button", { name: "Save this design" }));
+    await waitFor(() => expect(savedMocks.save).toHaveBeenCalled());
+    expect(savedMocks.save.mock.calls[0][1].preapprovedPlan).toEqual({ planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" });
+    fireEvent.click(stepButton(/Your Lot/));
+    fireEvent.change(screen.getByLabelText("Sample Property"), { target: { value: "corner-lot" } });
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
+    expect(new URLSearchParams(window.location.search).has("plan")).toBe(false);
+  });
+
+  it("restores plan references from a study and clears them when loading an older study on the same lot", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    const base = { createdAt: "2026-11-06T00:00:00Z", parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions };
+    savedMocks.fetch.mockResolvedValueOnce([
+      { ...base, id: "with-plan", name: "Plan study", preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } },
+      { ...base, id: "legacy", name: "Legacy study" },
+    ]);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
+    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Plan study" }));
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
+    fireEvent.click(screen.getByRole("button", { name: "Legacy study" }));
+    expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
+  });
+
+  it("does not restore a live-lot plan onto the demo lot encoded in a copied URL", async () => {
+    const initial = { ...EMAIL_SCENARIO, preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } };
+    stashInitialParcel(initial.liveParcel!);
+    const first = render(<FeasibilityStudio initialScenario={initial} />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.getByRole("region", { name: "Selected plan reference" })).toBeInTheDocument();
+    const query = window.location.search;
+    first.unmount();
+    clearInitialParcel();
+    window.history.replaceState(null, "", `/studio${query}`);
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a removed plan removed when reopening an emailed snapshot with its updated URL", async () => {
+    const initial = { id: "shared", name: "Shared study", createdAt: "2026-11-06T00:00:00Z", parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } };
+    const first = render(<FeasibilityStudio initialScenario={initial} />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    fireEvent.click(screen.getByRole("button", { name: "Remove plan reference" }));
+    const query = window.location.search;
+    first.unmount();
+    window.history.replaceState(null, "", `/studio${query}`);
+    render(<FeasibilityStudio initialScenario={initial} />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
+  });
+
+  it("shows the shared plan reference on mobile Shape", async () => {
+    stubMobileMatchMedia();
+    window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
+    const initial = { id: "shared", name: "Shared study", createdAt: "2026-11-06T00:00:00Z", parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } };
+    render(<FeasibilityStudio demoChosen initialScenario={initial} />, { wrapper: TestWrapper });
+    fireEvent.click(await screen.findByRole("button", { name: "Shape your ADU" }));
+    expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
+  });
+
   it("preserves saved concepts on cancel and deletes only after confirmation", async () => {
     authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
     savedMocks.fetch.mockResolvedValueOnce([{

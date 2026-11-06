@@ -93,6 +93,19 @@ describe("saved scenario Firestore helpers", () => {
     expect(firestoreMocks.addDoc).not.toHaveBeenCalled();
   });
 
+  it("round-trips safe pre-approved plan IDs through Firestore", async () => {
+    const preapprovedPlan = { planId: "sacramento-studio-367", jurisdictionId: "ca-sacramento" };
+    firestoreMocks.addDoc.mockResolvedValue({ id: "plan-study" });
+    const saved = await saveSavedScenario("user-1", {
+      name: "Reference study", parcelId: "oak-street", config: defaultAduConfig,
+      assumptions: defaultFinancialAssumptions, preapprovedPlan,
+    });
+    expect(firestoreMocks.addDoc.mock.calls[0][1]).toHaveProperty("preapprovedPlan", preapprovedPlan);
+    expect(saved.preapprovedPlan).toEqual(preapprovedPlan);
+    firestoreMocks.getDocs.mockResolvedValue({ docs: [{ id: "plan-study", data: () => ({ ...saved, createdAt: saved.createdAt }) }] });
+    expect((await fetchSavedScenarios("user-1"))[0].preapprovedPlan).toEqual(preapprovedPlan);
+  });
+
   it("queries the rules-backed savedScenarios subcollection", async () => {
     firestoreMocks.getDocs.mockResolvedValue({
       docs: [

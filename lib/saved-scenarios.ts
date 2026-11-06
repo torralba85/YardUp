@@ -13,6 +13,7 @@ import type { ADUConfig, FinancialAssumptions } from "./feasibility";
 import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario-design";
 export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-design";
 import type { Pose2D } from "./scene-model";
+import { normalizePlanReference, type PreapprovedPlanReference } from "./preapproved-plans";
 import type { ExistingBuildingGeometry, GeoJsonPolygon, LiveParcelData, ParcelFireHazard } from "./parcel-types";
 import { FIRE_HAZARD_ZONES } from "./fire-hazard";
 import type { AIProjectBrief, AIRiskLevel } from "./ai-types";
@@ -53,6 +54,8 @@ export interface SavedScenario {
   projectBrief?: AIProjectBrief;
   /** Optional style-matched concept generated from user reference photo. */
   styleMatchConcept?: SavedScenarioStyleMatch;
+  /** Official plan reference; independent of the modeled design. */
+  preapprovedPlan?: PreapprovedPlanReference;
 }
 
 /** A storage-backed CRUD interface over {@link SavedScenario} records. */
@@ -566,7 +569,8 @@ export function isValidSavedScenario(value: unknown): value is SavedScenario {
     isValidAduConfig(value.config) &&
     isValidFinancialAssumptions(value.assumptions) &&
     (value.projectBrief === undefined || isValidProjectBrief(value.projectBrief)) &&
-    (value.styleMatchConcept === undefined || isValidStyleMatchConcept(value.styleMatchConcept))
+    (value.styleMatchConcept === undefined || isValidStyleMatchConcept(value.styleMatchConcept)) &&
+    (value.preapprovedPlan === undefined || normalizePlanReference(value.preapprovedPlan) !== undefined)
   );
 }
 
@@ -580,6 +584,7 @@ export function migrateSavedScenario(value: unknown): SavedScenario | null {
   }
   const projectBrief = normalizeProjectBrief(value.projectBrief);
   const styleMatchConcept = normalizeStyleMatchConcept(value.styleMatchConcept);
+  const preapprovedPlan = normalizePlanReference(value.preapprovedPlan);
   const design = migrateDesign(value, liveParcel);
   if (!design) return null;
   // Pick the core fields so rejected optional snapshots cannot leak back in
@@ -594,6 +599,7 @@ export function migrateSavedScenario(value: unknown): SavedScenario | null {
     ...(liveParcel ? { liveParcel } : {}),
     ...(projectBrief ? { projectBrief } : {}),
     ...(styleMatchConcept ? { styleMatchConcept } : {}),
+    ...(preapprovedPlan ? { preapprovedPlan } : {}),
   };
   return isValidSavedScenario(migrated) ? migrated : null;
 }

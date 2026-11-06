@@ -137,6 +137,7 @@ function firestoreToScenario(
     assumptions: data.assumptions,
     ...(data.projectBrief !== undefined ? { projectBrief: data.projectBrief } : {}),
     ...(data.styleMatchConcept !== undefined ? { styleMatchConcept: data.styleMatchConcept } : {}),
+    ...(data.preapprovedPlan !== undefined ? { preapprovedPlan: data.preapprovedPlan } : {}),
   };
 
   return migrateSavedScenario(scenario);
@@ -194,6 +195,7 @@ export async function saveSavedScenario(
       : {}),
     ...(normalized.projectBrief ? { projectBrief: normalized.projectBrief } : {}),
     ...(normalized.styleMatchConcept ? { styleMatchConcept: normalized.styleMatchConcept } : {}),
+    ...(normalized.preapprovedPlan ? { preapprovedPlan: normalized.preapprovedPlan } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
