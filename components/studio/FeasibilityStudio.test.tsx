@@ -281,7 +281,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
   });
 
-  it("uses a plan whose area the model already matches without changing geometry, shares, saves and clears it on lot change", async () => {
+  it("uses a plan's real footprint, keeps placement and style, shares, saves and clears it on lot change", async () => {
     authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
     savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: "2026-11-06T00:00:00Z" }));
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
@@ -294,8 +294,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan F" })).getByRole("button", { name: "Use this plan" }));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
     const after = new URLSearchParams(window.location.search);
-    for (const key of ["w", "l", "h", "x", "z", "rotation", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
-    expect(after.get("plan")).toBe("san-diego-city-plan-f");
+    for (const key of ["h", "x", "z", "rotation", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
+    expect([after.get("w"), after.get("l"), after.get("plan")]).toEqual(["21", "28.58", "san-diego-city-plan-f"]);
     fireEvent.click(screen.getByRole("button", { name: "Save this design" }));
     await waitFor(() => expect(savedMocks.save).toHaveBeenCalled());
     expect(savedMocks.save.mock.calls[0][1].preapprovedPlan).toEqual({ planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" });
@@ -306,7 +306,28 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(new URLSearchParams(window.location.search).has("plan")).toBe(false);
   });
 
-  it("sizes the 3D model to a plan's floor area, reports the fit and undoes only the size", async () => {
+  it("gives the model a rectangular plan's footprint, reports the fit and undoes only the size", async () => {
+    window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
+    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan A" })).getByRole("button", { name: "Use this plan" }));
+    const summary = screen.getByRole("region", { name: "Selected plan reference" });
+    expect(summary).toHaveTextContent("3D model uses this plan's footprint: 30′-0″ × 40′-0″ (1,200 sq ft).");
+    expect(within(summary).getByText(/at this placement|closer look|estimated model/)).toBeInTheDocument();
+    let params = new URLSearchParams(window.location.search);
+    expect([params.get("w"), params.get("l"), params.get("size"), params.get("plan")]).toEqual(["30", "40", "1200", "san-diego-city-plan-a"]);
+    fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
+    params = new URLSearchParams(window.location.search);
+    expect([params.get("w"), params.get("l"), params.get("plan")]).toEqual(["20", "30", "san-diego-city-plan-a"]);
+    expect(summary).toHaveTextContent("Your 3D model is 20 × 30 ft, 600 sq ft; this plan is 30′-0″ × 40′-0″.");
+    fireEvent.click(within(summary).getByRole("button", { name: "Use the plan's footprint" }));
+    expect(new URLSearchParams(window.location.search).get("size")).toBe("1200");
+  });
+
+  it("keeps an L-shaped plan's floor area in the model and checks its full outline", async () => {
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     await screen.findByTestId("parcel-scene");
@@ -315,16 +336,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
     fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan E" })).getByRole("button", { name: "Use this plan" }));
     const summary = screen.getByRole("region", { name: "Selected plan reference" });
-    expect(summary).toHaveTextContent("3D model sized to this plan: 23.5 × 34 ft, 799 sq ft.");
-    expect(within(summary).getByText(/at this placement|closer look/)).toBeInTheDocument();
-    let params = new URLSearchParams(window.location.search);
-    expect([params.get("w"), params.get("l"), params.get("size"), params.get("plan")]).toEqual(["23.5", "34", "799", "san-diego-city-plan-e"]);
-    fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
-    params = new URLSearchParams(window.location.search);
-    expect([params.get("w"), params.get("l"), params.get("plan")]).toEqual(["20", "30", "san-diego-city-plan-e"]);
-    expect(summary).toHaveTextContent("Your 3D model is 600 sq ft; this plan is 800 sq ft.");
-    fireEvent.click(within(summary).getByRole("button", { name: "Size 3D model to 800 sq ft" }));
-    expect(new URLSearchParams(window.location.search).get("size")).toBe("799");
+    expect(summary).toHaveTextContent("this plan's floor area in its outer proportions");
+    expect(summary).toHaveTextContent("Full outer outline, 25′-0″ × 42′-2″:");
+    const size = Number(new URLSearchParams(window.location.search).get("size"));
+    expect(Math.abs(size - 800)).toBeLessThanOrEqual(8);
   });
 
   it("restores plan references from a study and clears them when loading an older study on the same lot", async () => {

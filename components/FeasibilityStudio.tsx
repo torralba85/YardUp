@@ -68,13 +68,16 @@ import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
 import {
-  configForPlanArea,
+  configForPlan,
   findPreapprovedPlan,
+  modelMatchesPlan,
+  planOutline,
   normalizePlanReference,
   planScopeForLot,
   type PreapprovedPlanReference,
 } from "@/lib/preapproved-plans";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
+import { getScenePlacement } from "@/lib/site-fit";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -454,17 +457,27 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
 
-  // A plan in use drives the model: its floor area sizes the ADU (proportions,
-  // roof and finish stay), so the scene, fit check and estimates answer "does
-  // this plan fit my lot?". The reference itself stays a separate saved field.
+  // A plan in use drives the model: its recorded footprint (or, without one, its
+  // floor area) sizes the ADU while roof and finish stay, so the scene, fit check
+  // and estimates answer "does this plan fit my lot?". The reference itself
+  // stays a separate saved field.
   const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
-    const area = findPreapprovedPlan(reference)?.sqft;
-    if (area === undefined) return;
-    const applied = configForPlanArea(area, config);
+    const plan = findPreapprovedPlan(reference);
+    if (!plan) return;
+    const applied = configForPlan(plan, config);
     if (applied.width === config.width && applied.length === config.length) return;
     setPlanSizing({ key: sceneKey, previous: config, applied });
     setConfig(applied);
   };
+  // The Studio models rectangles. A plan that isn't one keeps its floor area in the
+  // model, and its full outer rectangle is checked at the same pose, so "fits"
+  // there means the real plan fits too.
+  const planInUse = preapprovedPlan ? findPreapprovedPlan(preapprovedPlan) : undefined;
+  const planOutlineFit = useMemo(() => {
+    if (!planInUse || planInUse.footprint?.shape !== "irregular" || !modelMatchesPlan(planInUse, config)) return undefined;
+    const outline = planOutline(planInUse, config);
+    return outline && describePlacementWithEvidence(getScenePlacement(activeParcel, outline, pose), activeParcel);
+  }, [planInUse, config, activeParcel, pose]);
   const planSizeUndo = planSizing && preapprovedPlan && planSizing.key === sceneKey
     && planSizing.applied.width === config.width && planSizing.applied.length === config.length
     && planSizing.applied.footprint === config.footprint ? planSizing : null;
@@ -482,6 +495,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       model={{
         config,
         fit: describePlacementWithEvidence(result.placement, activeParcel),
+        outlineFit: planOutlineFit,
         onSizeToPlan: () => { if (preapprovedPlan) sizeModelToPlan(preapprovedPlan); },
         onUndoSize: planSizeUndo ? () => {
           setConfig({ ...config, width: planSizeUndo.previous.width, length: planSizeUndo.previous.length, footprint: planSizeUndo.previous.footprint });

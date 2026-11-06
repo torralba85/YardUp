@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("uses a plan to size the 3D model, restores it on reload and keeps the model when removed", async ({ page, isMobile }, testInfo) => {
+test("uses a plan's real footprint in the 3D model, restores it on reload and keeps the model when removed", async ({ page, isMobile }, testInfo) => {
   test.setTimeout(90_000);
   await page.goto("/studio?parcel=coyote-brush");
   await openDesign(page, isMobile);
@@ -21,7 +21,7 @@ test("uses a plan to size the 3D model, restores it on reload and keeps the mode
   await openCatalog(page);
   const browser = page.getByRole("region", { name: "Pre-approved plan browser" });
   await expect(browser.getByRole("combobox", { name: "Permitting authority for this lot" })).toHaveValue("ca-san-diego");
-  const card = browser.getByRole("article", { name: "County Standard Plan E" });
+  const card = browser.getByRole("article", { name: "County Standard Plan A" });
   await expect(card.getByRole("button", { name: "Use this plan" })).toBeDisabled();
   const checkbox = browser.getByRole("checkbox");
   await checkbox.focus();
@@ -29,12 +29,12 @@ test("uses a plan to size the 3D model, restores it on reload and keeps the mode
   const before = new URL(page.url()).searchParams;
   await card.getByRole("button", { name: "Use this plan" }).click();
   const summary = page.getByRole("region", { name: "Selected plan reference" });
-  await expect(summary).toContainText("County Standard Plan E");
-  await expect(summary).toContainText("3D model sized to this plan: 23.5 × 34 ft, 799 sq ft.");
-  await expect(summary.getByRole("heading", { name: "County Standard Plan E" })).toBeFocused();
-  await expect.poll(() => new URL(page.url()).searchParams.get("plan")).toBe("san-diego-city-plan-e");
+  await expect(summary).toContainText("County Standard Plan A");
+  await expect(summary).toContainText("3D model uses this plan's footprint: 30′-0″ × 40′-0″ (1,200 sq ft).");
+  await expect(summary.getByRole("heading", { name: "County Standard Plan A" })).toBeFocused();
+  await expect.poll(() => new URL(page.url()).searchParams.get("plan")).toBe("san-diego-city-plan-a");
   const after = new URL(page.url()).searchParams;
-  expect([after.get("w"), after.get("l"), after.get("size")]).toEqual(["23.5", "34", "799"]);
+  expect([after.get("w"), after.get("l"), after.get("size")]).toEqual(["30", "40", "1200"]);
   for (const key of ["h", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
   await summary.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("plan-in-use.png") });
@@ -43,12 +43,12 @@ test("uses a plan to size the 3D model, restores it on reload and keeps the mode
   await expect(page.locator("#studio-model-stage")).toBeInViewport();
   await page.reload();
   await openDesign(page, isMobile);
-  await expect(summary).toContainText("County Standard Plan E");
-  await expect(summary).toContainText("23.5 × 34 ft");
+  await expect(summary).toContainText("County Standard Plan A");
+  await expect(summary).toContainText("30′-0″ × 40′-0″");
   await summary.getByRole("button", { name: "Remove plan" }).click();
   await expect(summary).toHaveCount(0);
   await expect.poll(() => new URL(page.url()).searchParams.has("plan")).toBe(false);
-  expect(new URL(page.url()).searchParams.get("size")).toBe("799");
+  expect(new URL(page.url()).searchParams.get("size")).toBe("1200");
   await page.reload();
   await openDesign(page, isMobile);
   await expect(summary).toHaveCount(0);

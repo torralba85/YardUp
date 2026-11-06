@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { preapprovedPlans, preapprovedPrograms } from "@/lib/preapproved-plans-data";
 import {
   findPreapprovedPlan,
-  modelMatchesPlanArea,
+  formatFeetInches,
+  modelMatchesPlan,
   planProgramsForLot,
   suggestPlanJurisdiction,
   type PreapprovedPlan,
@@ -23,7 +24,9 @@ export interface PlanModelLink {
   config: Pick<ADUConfig, "width" | "length" | "footprint">;
   /** Placement verdict for the current model, in the scene's own wording. */
   fit: PlacementFitStatus;
-  /** Resize the model to the selected plan's floor area. */
+  /** For a plan that isn't rectangular: the verdict for its full outer rectangle at the same placement. */
+  outlineFit?: PlacementFitStatus;
+  /** Give the model the selected plan's footprint (or, without one, its floor area). */
   onSizeToPlan: () => void;
   /** Present while the model's size came from a plan and the earlier size can be restored. */
   onUndoSize?: () => void;
@@ -34,7 +37,7 @@ export interface PlanModelLink {
 interface Props {
   parcel: { city: string; state?: string };
   selected: PreapprovedPlanReference | null;
-  /** Use a plan. In the Studio this also sizes the model to the plan's floor area. */
+  /** Use a plan. In the Studio this also gives the model the plan's footprint. */
   onSelect: (reference: PreapprovedPlanReference) => void;
   onRemove: () => void;
   model?: PlanModelLink;
@@ -45,6 +48,9 @@ interface Props {
 const linkClass = "inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink";
 const sqft = (value: number) => `${value.toLocaleString()} sq ft`;
 const feet = (value: number) => `${Number(value.toFixed(2))}`;
+/** "21′-0″ × 28′-7″" from a recorded footprint, short side first. */
+const footprintLabel = ({ width, length }: { width: number; length: number }) =>
+  `${formatFeetInches(Math.min(width, length))} × ${formatFeetInches(Math.max(width, length))}`;
 const authorityLabel = (program: PreapprovedProgram) => `${program.city}, ${program.state}`;
 
 /** "600 sq ft · 1 bed · 1 bath": only the facts the official listing publishes. */
@@ -72,8 +78,12 @@ export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "pa
   const plan = findPreapprovedPlan(selected);
   const program = preapprovedPrograms.find(item => item.id === selected.jurisdictionId);
   const available = plan?.status === "active" && program?.status === "verified";
-  const planArea = available ? plan.sqft : undefined;
-  const sized = planArea !== undefined && model !== undefined && modelMatchesPlanArea(model.config.footprint, planArea);
+  const footprint = available ? plan.footprint : undefined;
+  const rectangle = footprint?.shape === "rectangle";
+  const sizable = available && (footprint !== undefined || plan.sqft !== undefined);
+  const sized = sizable && model !== undefined && modelMatchesPlan(plan, model.config);
+  const areaTarget = available && plan.sqft !== undefined ? sqft(plan.sqft) : "";
+  const modelSize = model ? `${feet(model.config.width)} × ${feet(model.config.length)} ft, ${sqft(Math.round(model.config.footprint))}` : "";
   return (
     <section aria-label="Selected plan reference" className={`space-y-3 border-b border-lot-line bg-lot-surface py-4 ${layout === "inline" ? "px-4" : "px-6"}`}>
       <StatusChip status={available ? "clear" : "review"} label={available ? "Plan in use" : "Plan unavailable"} />
@@ -81,24 +91,36 @@ export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "pa
         <h3 ref={headingRef} tabIndex={-1} className="font-semibold text-lot-ink focus:outline-none">{plan?.name ?? selected.planId}</h3>
         <p className="text-sm text-lot-stone">{[plan ? planFacts(plan) : "", program ? authorityLabel(program) : selected.jurisdictionId].filter(Boolean).join(" · ")}</p>
       </div>
-      {planArea !== undefined && model && (sized ? (
+      {sizable && model && (sized ? (
         <div className="space-y-2">
           <p className="text-sm leading-relaxed text-lot-ink">
-            3D model sized to this plan: <span className="tabular-nums">{feet(model.config.width)} × {feet(model.config.length)} ft, {sqft(model.config.footprint)}</span>.
+            {rectangle && footprint
+              ? <>3D model uses this plan&apos;s footprint: <span className="tabular-nums">{footprintLabel(footprint)} ({sqft(Math.round(model.config.footprint))})</span>.</>
+              : footprint
+                ? <>3D model: <span className="tabular-nums">{modelSize}</span>, this plan&apos;s floor area in its outer proportions.</>
+                : <>3D model sized to this plan&apos;s floor area: <span className="tabular-nums">{modelSize}</span>.</>}
           </p>
           <StatusChip status={model.fit.tone} label={model.fit.title} />
+          {footprint && !rectangle && model.outlineFit && <div className="space-y-1">
+            <p className="text-sm leading-relaxed text-lot-ink">Full outer outline, <span className="tabular-nums">{footprintLabel(footprint)}</span>:</p>
+            <StatusChip status={model.outlineFit.tone} label={model.outlineFit.title} />
+          </div>}
         </div>
       ) : (
         <div className="space-y-2">
           <p className="text-sm leading-relaxed text-lot-ink">
-            Your 3D model is <span className="tabular-nums">{sqft(model.config.footprint)}</span>; this plan is <span className="tabular-nums">{sqft(planArea)}</span>.
+            Your 3D model is <span className="tabular-nums">{modelSize}</span>; this plan is <span className="tabular-nums">{rectangle && footprint ? footprintLabel(footprint) : areaTarget}</span>.
           </p>
-          <Button variant="secondary" size="sm" onClick={model.onSizeToPlan}>Size 3D model to {sqft(planArea)}</Button>
+          <Button variant="secondary" size="sm" onClick={model.onSizeToPlan}>{rectangle ? "Use the plan's footprint" : `Size 3D model to ${areaTarget}`}</Button>
         </div>
       ))}
-      <p className="text-xs leading-relaxed text-lot-stone">{available
-        ? "The model matches the plan's floor area, not its exact footprint or layout; check the official sheets. Lot-specific review and permits still apply."
-        : "This saved reference is no longer in our verified catalog. Check with the permitting authority or choose another plan."}</p>
+      <p className="text-xs leading-relaxed text-lot-stone">{!available
+        ? "This saved reference is no longer in our verified catalog. Check with the permitting authority or choose another plan."
+        : footprint && !rectangle
+          ? "This plan isn't rectangular, and the Studio models rectangles. The model keeps the plan's floor area so size limits and estimates stay right, and the full outer outline is checked at the same placement: if the outline fits, the plan fits. Lot-specific review and permits still apply."
+          : footprint
+            ? "Dimensions are to the outside of the walls, from the official floor plan, so the area can exceed the listed living area. Lot-specific review and permits still apply."
+            : "This listing publishes floor area but not dimensions, so the model matches the area, not the plan's shape. Check the official sheets. Lot-specific review and permits still apply."}</p>
       {available && <PlanLinks plan={plan} />}
       <div className="flex flex-wrap gap-2">
         {sized && model?.onViewModel && <Button variant="secondary" size="sm" onClick={model.onViewModel}>View on your lot</Button>}
@@ -140,7 +162,7 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
 
   return (
     <section aria-label="Pre-approved plan browser" className={`min-w-0 space-y-5 pb-6 pt-1 ${pad}`}>
-      <p className="text-sm leading-relaxed text-lot-stone">Start from a plan your permitting authority has already reviewed. Using one sizes your 3D model to the plan&apos;s floor area so you can check how it fits this lot.</p>
+      <p className="text-sm leading-relaxed text-lot-stone">Start from a plan your permitting authority has already reviewed. Using one gives your 3D model the plan&apos;s footprint from its official drawings, so you can check how it fits this lot.</p>
       <div className="space-y-2">
         <FieldLabel htmlFor={`${id}-authority`}>Permitting authority for this lot</FieldLabel>
         <Select id={`${id}-authority`} value={authorityId} onChange={event => {
@@ -194,12 +216,13 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
                 <p className="text-xs text-lot-stone">{plan.provider}</p>
               </div>
               <p className="text-sm font-semibold tabular-nums text-lot-ink">{planFacts(plan)}</p>
+              {plan.footprint && <p className="text-xs text-lot-stone">{plan.footprint.shape === "irregular" ? "Not rectangular; outer " : ""}{footprintLabel(plan.footprint)} outside walls</p>}
               <p className="text-sm leading-relaxed text-lot-stone">{plan.restrictions}</p>
               {plan.feeNote && <p className="text-sm leading-relaxed text-lot-stone">{plan.feeNote}</p>}
               <PlanLinks plan={plan} />
               <Button fullWidth variant="secondary" disabled={!canUse || isSelected} aria-describedby={canUse ? undefined : `${id}-hint`} onClick={() => {
                 onSelect({ planId: plan.id, jurisdictionId: plan.jurisdictionId });
-                setNotice({ text: model && plan.sqft !== undefined ? `${plan.name} is in use. 3D model sized to match its floor area.` : `${plan.name} is in use.`, visible: false });
+                setNotice({ text: model && (plan.footprint || plan.sqft !== undefined) ? `${plan.name} is in use. 3D model updated to match it.` : `${plan.name} is in use.`, visible: false });
               }}>{isSelected ? "In use" : selected ? "Use this plan instead" : "Use this plan"}</Button>
               <p className="text-xs text-lot-stone">Listing checked {plan.verifiedAt}</p>
             </article>

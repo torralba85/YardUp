@@ -34,6 +34,12 @@ export interface PreapprovedPlan {
   documentUrl?: string;
   /** Link text when the published document is not the full permit set (e.g. a preview). */
   documentLabel?: string;
+  /**
+   * Overall outside-of-wall dimensions read from the plan's own floor-plan sheet, in feet
+   * (rounded to 0.01), and the sheet they came from. An irregular (L-shaped or stepped)
+   * plan records its outer bounds. Omitted when no sheet has been read.
+   */
+  footprint?: { width: number; length: number; shape: "rectangle" | "irregular"; sheet: string };
   verifiedAt: string;
   restrictions: string;
   feeNote?: string;
@@ -123,6 +129,44 @@ export function configForPlanArea(sqft: number, config: ADUConfig): ADUConfig {
     }
   }
   return best ? { ...config, width: best.width, length: best.length, footprint: best.width * best.length } : config;
+}
+
+/** A plan's recorded outer rectangle, oriented like the current model (a long model stays long). */
+export function planOutline(plan: PreapprovedPlan, config: ADUConfig): ADUConfig | undefined {
+  if (!plan.footprint) return undefined;
+  const short = Math.min(plan.footprint.width, plan.footprint.length);
+  const long = Math.max(plan.footprint.width, plan.footprint.length);
+  const [width, length] = config.length >= config.width ? [short, long] : [long, short];
+  return { ...config, width, length, footprint: width * length };
+}
+
+/**
+ * The model a plan stands for. The Studio models rectangles, so a rectangular plan
+ * takes its exact recorded footprint. An irregular plan, or one with no sheet read,
+ * takes its published floor area ({@link configForPlanArea}), in its outer
+ * proportions when known: its outer rectangle would overstate size, cost and
+ * size-limit checks. Roof, finish, height and openings are kept.
+ */
+export function configForPlan(plan: PreapprovedPlan, config: ADUConfig): ADUConfig {
+  const outline = planOutline(plan, config);
+  if (outline && plan.footprint?.shape === "rectangle") return outline;
+  return plan.sqft !== undefined ? configForPlanArea(plan.sqft, outline ?? config) : outline ?? config;
+}
+
+/** Whether the model currently stands for the plan: a rectangular plan's exact footprint (either way round), otherwise its floor area. */
+export function modelMatchesPlan(plan: PreapprovedPlan, config: Pick<ADUConfig, "width" | "length" | "footprint">): boolean {
+  if (plan.footprint?.shape === "rectangle") {
+    const same = (a: number, b: number) => Math.abs(a - b) < 0.01;
+    const { width, length } = plan.footprint;
+    return (same(config.width, width) && same(config.length, length)) || (same(config.width, length) && same(config.length, width));
+  }
+  return plan.sqft !== undefined && modelMatchesPlanArea(config.footprint, plan.sqft);
+}
+
+/** Feet as a drawing would print them, to the nearest inch: 28.58 → 28′-7″. */
+export function formatFeetInches(feet: number): string {
+  const inches = Math.round(feet * 12);
+  return `${Math.floor(inches / 12)}′-${inches % 12}″`;
 }
 
 /** Non-authoritative identity hint: prevent a URL choice from moving to another lot.

@@ -82,24 +82,35 @@ describe("pre-approved plan browser", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Plan removed: it belongs to a different permitting authority.");
   });
 
-  it("compares the model with the plan and offers to size it, then reports the fit once sized", () => {
+  it("compares the model with the plan's real footprint and offers it, then reports the fit once used", () => {
     const onSizeToPlan = vi.fn();
     const model = { config: { width: 20, length: 20, footprint: 400 }, fit: fits, onSizeToPlan };
     const { rerender } = render(<Harness initial={{ planId: "sacramento-one-bedroom-559", jurisdictionId: "ca-sacramento" }} model={model} />);
     const summary = screen.getByRole("region", { name: "Selected plan reference" });
-    expect(summary).toHaveTextContent("Your 3D model is 400 sq ft; this plan is 559 sq ft.");
-    fireEvent.click(within(summary).getByRole("button", { name: "Size 3D model to 559 sq ft" }));
+    expect(summary).toHaveTextContent("Your 3D model is 20 × 20 ft, 400 sq ft; this plan is 20′-0″ × 30′-0″.");
+    fireEvent.click(within(summary).getByRole("button", { name: "Use the plan's footprint" }));
     expect(onSizeToPlan).toHaveBeenCalledOnce();
     const onUndoSize = vi.fn();
     const onViewModel = vi.fn();
     rerender(<Harness initial={{ planId: "sacramento-one-bedroom-559", jurisdictionId: "ca-sacramento" }}
-      model={{ ...model, config: { width: 23.5, length: 24, footprint: 564 }, onUndoSize, onViewModel }} />);
-    expect(summary).toHaveTextContent("3D model sized to this plan: 23.5 × 24 ft, 564 sq ft.");
+      model={{ ...model, config: { width: 30, length: 20, footprint: 600 }, onUndoSize, onViewModel }} />);
+    expect(summary).toHaveTextContent("3D model uses this plan's footprint: 20′-0″ × 30′-0″ (600 sq ft).");
     expect(summary).toHaveTextContent("Fits at this placement");
     fireEvent.click(within(summary).getByRole("button", { name: "View on your lot" }));
     fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
     expect(onViewModel).toHaveBeenCalledOnce();
     expect(onUndoSize).toHaveBeenCalledOnce();
+  });
+
+  it("checks a non-rectangular plan's full outer outline beside the area-matched model", () => {
+    const blocked = { title: "Doesn't fit at this placement", detail: "", tone: "blocked" } as const;
+    render(<Harness initial={{ planId: "san-diego-county-plan-b", jurisdictionId: "ca-san-diego-county" }} parcel={{ city: "San Diego, CA" }}
+      model={{ config: { width: 26.5, length: 45, footprint: 1192.5 }, fit: fits, outlineFit: blocked, onSizeToPlan: () => {} }} />);
+    const summary = screen.getByRole("region", { name: "Selected plan reference" });
+    expect(summary).toHaveTextContent("3D model: 26.5 × 45 ft, 1,193 sq ft, this plan's floor area in its outer proportions.");
+    expect(summary).toHaveTextContent("Full outer outline, 32′-0″ × 54′-0″:");
+    expect(summary).toHaveTextContent("Doesn't fit at this placement");
+    expect(summary).toHaveTextContent(/isn't rectangular/);
   });
 
   it("retains unknown/withdrawn references with an unavailable notice and no invented title, link or sizing", () => {

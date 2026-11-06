@@ -4,8 +4,11 @@ import { defaultAduConfig, footprintOptions } from "./feasibility";
 import { isValidAduConfig } from "./scenario-design";
 import { preapprovedPrograms, preapprovedPlans } from "./preapproved-plans-data";
 import {
+  configForPlan,
   configForPlanArea,
   findPreapprovedPlan,
+  formatFeetInches,
+  modelMatchesPlan,
   modelMatchesPlanArea,
   normalizePlanReference,
   planProgramsForLot,
@@ -38,6 +41,39 @@ describe("sizing the 3D model to a plan", () => {
     expect(configForPlanArea(800, defaultAduConfig)).toMatchObject({ width: 23.5, length: 34, footprint: 799 });
     expect(modelMatchesPlanArea(600, 559)).toBe(false);
     expect(modelMatchesPlanArea(564, 559)).toBe(true);
+  });
+});
+
+describe("plan footprints read from the official sheets", () => {
+  const plan = (id: string) => preapprovedPlans.find(item => item.id === id)!;
+  it("records a footprint for every active plan that agrees with its listed floor area", () => {
+    for (const item of preapprovedPlans.filter(entry => entry.status === "active")) {
+      const footprint = item.footprint!;
+      expect(footprint, item.id).toBeDefined();
+      const ratio = (footprint.width * footprint.length) / item.sqft!;
+      // Outside-wall rectangles run a little over the listed living area (wall
+      // thickness, porches under the roof); irregular outer bounds run well over it.
+      if (footprint.shape === "rectangle") expect(ratio, item.id).toBeGreaterThanOrEqual(0.99);
+      if (footprint.shape === "rectangle") expect(ratio, item.id).toBeLessThanOrEqual(1.1);
+      else expect(ratio, item.id).toBeGreaterThan(1.1);
+    }
+  });
+  it("gives a rectangular plan its exact footprint, oriented like the model, and keeps the rest of the design", () => {
+    const long = configForPlan(plan("san-diego-county-plan-f"), { ...defaultAduConfig, roof: "gable" });
+    expect(long).toMatchObject({ width: 21, length: 28.58, footprint: 21 * 28.58, roof: "gable", finish: defaultAduConfig.finish });
+    expect(isValidAduConfig(long)).toBe(true);
+    expect(configForPlan(plan("san-diego-county-plan-f"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 28.58, length: 21 });
+    expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 28.58, length: 21, footprint: 600.18 })).toBe(true);
+    expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 20, length: 30, footprint: 600 })).toBe(false);
+  });
+  it("keeps an irregular plan's floor area, in its outer proportions, instead of its larger outer rectangle", () => {
+    const sized = configForPlan(plan("san-diego-county-plan-b"), defaultAduConfig);
+    expect(modelMatchesPlanArea(sized.footprint, 1200)).toBe(true);
+    expect(sized.length / sized.width).toBeCloseTo(54 / 32, 1);
+    expect(modelMatchesPlan(plan("san-diego-county-plan-b"), sized)).toBe(true);
+  });
+  it("prints feet the way the drawings do", () => {
+    expect([28.58, 21, 34.25, 42.17, 35.67].map(formatFeetInches)).toEqual(["28′-7″", "21′-0″", "34′-3″", "42′-2″", "35′-8″"]);
   });
 });
 
