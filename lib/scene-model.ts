@@ -25,7 +25,7 @@
 import type { ADUConfig, RoofStyle } from "./feasibility";
 import type { GeoJsonPolygon, Parcel, LiveParcelData } from "./parcel-types";
 import { FT_PER_DEG_LAT } from "./parcel-geometry";
-import { fitObservedRectangle, type ObservedRectangle } from "./observed-building-geometry";
+import { fitObservedCore, type ObservedRectangle } from "./observed-building-geometry";
 import { buildingOutlineAgreesWithFootprint, buildingOutlineFitsParcel } from "./building-outline-fit";
 
 function isFiniteNumber(n: unknown): n is number {
@@ -442,7 +442,12 @@ export function buildExistingHouseSceneModel(
       localFrame.bearingDeg,
       outerOnly,
     );
-    const localPolygon = projectedHouse ? stripClosingDuplicate(projectedHouse) : null;
+    const recordedPolygon = projectedHouse ? stripClosingDuplicate(projectedHouse) : null;
+    // A house that is mostly one block (a notched outline, or a small wing
+    // that is usually a mis-traced porch or neighbouring structure) is drawn
+    // and checked as that block, so it keeps a roof and its real heading.
+    const core = recordedPolygon && recordedPolygon.length >= 3 ? fitObservedCore(recordedPolygon) : null;
+    const localPolygon = core ? core.corners : recordedPolygon;
     if (localPolygon && localPolygon.length >= 3) {
       const xs = localPolygon.map((p) => p.x);
       const zs = localPolygon.map((p) => p.z);
@@ -457,8 +462,13 @@ export function buildExistingHouseSceneModel(
         z: (minZ + maxZ) / 2,
         rotationDeg: 0,
       };
-      const corners = rectangleCorners({ x: pose.x, z: pose.z }, polyWidth, polyDepth, 0);
-      const observedRectangle = fitObservedRectangle(localPolygon);
+      const observedRectangle: ObservedRectangle | null = core
+        ? { center: core.center, width: core.width, depth: core.depth, rotationY: core.rotationY }
+        : null;
+      // Placement checks the drawn rectangle when there is one, not its bounds.
+      const corners = core
+        ? core.corners
+        : rectangleCorners({ x: pose.x, z: pose.z }, polyWidth, polyDepth, 0);
       const ridgeRiseFt = deriveHouseRidgeRiseFt(observedRectangle?.depth ?? polyDepth, roofPitchDegrees);
       const boundsLocal = boundsOfCorners(
         localPolygon,

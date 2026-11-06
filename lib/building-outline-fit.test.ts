@@ -86,6 +86,25 @@ describe("existing house scene model with an implausible outline", () => {
     expect(model.observedRectangle!.width * model.observedRectangle!.depth).toBeCloseTo(661, -1);
   });
 
+  it("draws an L-shaped outline as its main 53 x 25 ft block, for the plan and placement too", () => {
+    // Lot axes in degrees: along A->D is the 137 ft length, along A->B the 34 ft width.
+    const at = (alongFt: number, acrossFt: number) => {
+      const p = lerp(A, D, alongFt / 137);
+      const q = lerp(B, C, alongFt / 137);
+      return lerp(p, q, acrossFt / 34);
+    };
+    const l: GeoJsonPolygon = {
+      type: "Polygon",
+      coordinates: [[at(20, 2), at(73, 2), at(92, 2), at(92, 10), at(73, 10), at(73, 27), at(20, 27), at(20, 2)]],
+    };
+    const model = buildExistingHouseSceneModel({ ...parcel, existingBuilding: { outlineGeoJson: l } });
+    const rect = model.observedRectangle!;
+    expect(Math.max(rect.width, rect.depth)).toBeCloseTo(53, -1);
+    expect(Math.min(rect.width, rect.depth)).toBeCloseTo(25, 0);
+    expect(model.localPolygon).toHaveLength(4);
+    expect(model.corners).toEqual(model.localPolygon);
+  });
+
   it("falls back to the measured area instead of drawing an oversized slab", () => {
     const model = buildExistingHouseSceneModel({ ...parcel, existingBuilding: { outlineGeoJson: SLAB } });
     expect(model.localPolygon).toBeUndefined();
