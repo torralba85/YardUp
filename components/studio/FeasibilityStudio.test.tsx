@@ -319,7 +319,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(within(summary).getByText(/at this placement|closer look|estimated model/)).toBeInTheDocument();
     let params = new URLSearchParams(window.location.search);
     expect([params.get("w"), params.get("l"), params.get("size"), params.get("plan")]).toEqual(["30", "40", "1200", "san-diego-city-plan-a"]);
-    fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
+    fireEvent.click(within(summary).getByRole("button", { name: "Undo plan change" }));
     params = new URLSearchParams(window.location.search);
     expect([params.get("w"), params.get("l"), params.get("plan")]).toEqual(["20", "30", "san-diego-city-plan-a"]);
     expect(summary).toHaveTextContent("Your 3D model is 20 × 30 ft, 600 sq ft; this plan is 30′-0″ × 40′-0″.");
@@ -327,7 +327,27 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(new URLSearchParams(window.location.search).get("size")).toBe("1200");
   });
 
-  it("keeps an L-shaped plan's floor area in the model and checks its full outline", async () => {
+  it("moves a plan that no longer fits its old spot to one where it fits, and undo puts the old model back", async () => {
+    window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    await screen.findByTestId("parcel-scene");
+    fireEvent.click(stepButton(/Design/));
+    const before = new URLSearchParams(window.location.search);
+    fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
+    fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan A" })).getByRole("button", { name: "Use this plan" }));
+    const summary = screen.getByRole("region", { name: "Selected plan reference" });
+    expect(within(summary).getByRole("status")).toHaveTextContent("Moved to a spot on this lot where it fits the modeled setbacks.");
+    expect(summary).toHaveTextContent("Fits at this placement");
+    expect(within(summary).queryByRole("button", { name: "Snap to fit" })).not.toBeInTheDocument();
+    const moved = new URLSearchParams(window.location.search);
+    expect([moved.get("x"), moved.get("z"), moved.get("rotation")]).not.toEqual([before.get("x"), before.get("z"), before.get("rotation")]);
+    fireEvent.click(within(summary).getByRole("button", { name: "Undo plan change" }));
+    const undone = new URLSearchParams(window.location.search);
+    for (const key of ["w", "l", "x", "z", "rotation"]) expect(undone.get(key)).toBe(before.get(key));
+  });
+
+  it("defaults an L-shaped plan to a usable rectangle and checks its full outline", async () => {
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     await screen.findByTestId("parcel-scene");
@@ -336,10 +356,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
     fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan E" })).getByRole("button", { name: "Use this plan" }));
     const summary = screen.getByRole("region", { name: "Selected plan reference" });
-    expect(summary).toHaveTextContent("this plan's floor area in its outer proportions");
+    expect(summary).toHaveTextContent("3D model uses a usable 25′-0″ × 32′-0″ rectangle with this plan's depth and floor area (800 sq ft).");
     expect(summary).toHaveTextContent("Full outer outline, 25′-0″ × 42′-2″:");
-    const size = Number(new URLSearchParams(window.location.search).get("size"));
-    expect(Math.abs(size - 800)).toBeLessThanOrEqual(8);
+    const params = new URLSearchParams(window.location.search);
+    expect([params.get("w"), params.get("l"), params.get("size")]).toEqual(["25", "32", "800"]);
   });
 
   it("restores plan references from a study and clears them when loading an older study on the same lot", async () => {

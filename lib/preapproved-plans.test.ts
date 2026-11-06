@@ -14,6 +14,7 @@ import {
   planProgramsForLot,
   planScopeForLot,
   suggestPlanJurisdiction,
+  usableRectangleForPlan,
 } from "./preapproved-plans";
 
 describe("sizing the 3D model to a plan", () => {
@@ -51,9 +52,10 @@ describe("plan footprints read from the official sheets", () => {
       const footprint = item.footprint!;
       expect(footprint, item.id).toBeDefined();
       const ratio = (footprint.width * footprint.length) / item.sqft!;
-      // Outside-wall rectangles run a little over the listed living area (wall
-      // thickness, porches under the roof); irregular outer bounds run well over it.
-      if (footprint.shape === "rectangle") expect(ratio, item.id).toBeGreaterThanOrEqual(0.99);
+      // Outside-wall rectangles sit near the listed area: a little over it for wall
+      // thickness and porches under the roof, a little under where a city rounds its
+      // listed size up (Carlsbad's run 1.4% under). Irregular outer bounds run well over it.
+      if (footprint.shape === "rectangle") expect(ratio, item.id).toBeGreaterThanOrEqual(0.98);
       if (footprint.shape === "rectangle") expect(ratio, item.id).toBeLessThanOrEqual(1.1);
       else expect(ratio, item.id).toBeGreaterThan(1.1);
     }
@@ -66,11 +68,17 @@ describe("plan footprints read from the official sheets", () => {
     expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 28.58, length: 21, footprint: 600.18 })).toBe(true);
     expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 20, length: 30, footprint: 600 })).toBe(false);
   });
-  it("keeps an irregular plan's floor area, in its outer proportions, instead of its larger outer rectangle", () => {
-    const sized = configForPlan(plan("san-diego-county-plan-b"), defaultAduConfig);
-    expect(modelMatchesPlanArea(sized.footprint, 1200)).toBe(true);
-    expect(sized.length / sized.width).toBeCloseTo(54 / 32, 1);
-    expect(modelMatchesPlan(plan("san-diego-county-plan-b"), sized)).toBe(true);
+  it("defaults an irregular plan to a usable rectangle: its real depth at its floor area", () => {
+    expect(configForPlan(plan("san-diego-county-plan-b"), defaultAduConfig)).toMatchObject({ width: 32, length: 37.5, footprint: 1200 });
+    expect(configForPlan(plan("san-diego-county-plan-e"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
+    expect(configForPlan(plan("la-mesa-plan-e"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 43, length: 28, footprint: 1204 });
+    for (const item of preapprovedPlans.filter(entry => entry.footprint?.shape === "irregular")) {
+      const usable = usableRectangleForPlan(item)!;
+      expect(modelMatchesPlanArea(usable.width * usable.length, item.sqft!), item.id).toBe(true);
+      expect(usable.length, item.id).toBeLessThanOrEqual(Math.max(item.footprint!.width, item.footprint!.length));
+    }
+    expect(modelMatchesPlan(plan("san-diego-county-plan-b"), { width: 37.5, length: 32, footprint: 1200 })).toBe(true);
+    expect(modelMatchesPlan(plan("san-diego-county-plan-b"), { width: 30, length: 40, footprint: 1200 })).toBe(false);
   });
   it("prints feet the way the drawings do", () => {
     expect([28.58, 21, 34.25, 42.17, 35.67].map(formatFeetInches)).toEqual(["28′-7″", "21′-0″", "34′-3″", "42′-2″", "35′-8″"]);

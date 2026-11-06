@@ -70,6 +70,7 @@ import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
 import {
   configForPlan,
   findPreapprovedPlan,
+  type PreapprovedPlan,
   modelMatchesPlan,
   planOutline,
   normalizePlanReference,
@@ -77,7 +78,7 @@ import {
   type PreapprovedPlanReference,
 } from "@/lib/preapproved-plans";
 import { describePlacementWithEvidence } from "@/lib/placement-evidence";
-import { getScenePlacement } from "@/lib/site-fit";
+import { getScenePlacement, getSnapToFitPose } from "@/lib/site-fit";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -202,7 +203,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [planState, setPlanState] = useState<{ key: string; reference: PreapprovedPlanReference | null }>({ key: parcelPresets[0].id, reference: null });
   // The size the model had before a plan resized it, offered back as an undo
   // only while the model still holds exactly the size the plan gave it.
-  const [planSizing, setPlanSizing] = useState<{ key: string; previous: ADUConfig; applied: ADUConfig } | null>(null);
+  const [planSizing, setPlanSizing] = useState<{ key: string; previous: ADUConfig; previousPose: Pose2D; applied: ADUConfig; appliedPose: Pose2D } | null>(null);
+  // Where using a plan left the model: moved to a spot that fits, or no fit found.
+  const [planPlacement, setPlanPlacement] = useState<{ key: string; outcome: "moved" | "none"; pose: Pose2D; config: ADUConfig } | null>(null);
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -461,17 +464,40 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // floor area) sizes the ADU while roof and finish stay, so the scene, fit check
   // and estimates answer "does this plan fit my lot?". The reference itself
   // stays a separate saved field.
+  const samePose = (a: Pose2D, b: Pose2D) => a.x === b.x && a.z === b.z && a.rotationDeg === b.rotationDeg;
+  const sameSize = (a: ADUConfig, b: ADUConfig) => a.width === b.width && a.length === b.length;
+  // A plan replaces the model's size, so its old spot may no longer work. Keep a
+  // spot that still fits; otherwise search the lot as Snap to fit does. A plan that
+  // isn't rectangular is searched with its full outline first, so the real plan fits.
+  const placeForPlan = (plan: PreapprovedPlan, next: ADUConfig, from: Pose2D) => {
+    const outline = plan.footprint?.shape === "irregular" ? planOutline(plan, next) : undefined;
+    for (const candidate of outline ? [outline, next] : [next]) {
+      if (getScenePlacement(activeParcel, candidate, from).status === "fits") return { pose: from, outcome: "kept" as const };
+      const snapped = getSnapToFitPose(activeParcel, candidate, from);
+      if (snapped) return { pose: snapped, outcome: "moved" as const };
+    }
+    const status = getScenePlacement(activeParcel, next, from).status;
+    return { pose: from, outcome: status === "blocked" || status === "invalid" ? "none" as const : "kept" as const };
+  };
+  // A plan in use drives the model: its recorded footprint (or the usable
+  // rectangle of a plan that isn't one) sizes the ADU while roof and finish stay,
+  // and the ADU moves to a spot where it fits, so the scene, fit check and
+  // estimates answer "does this plan fit my lot?". The reference itself stays a
+  // separate saved field.
   const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
     const plan = findPreapprovedPlan(reference);
     if (!plan) return;
     const applied = configForPlan(plan, config);
-    if (applied.width === config.width && applied.length === config.length) return;
-    setPlanSizing({ key: sceneKey, previous: config, applied });
+    const placed = placeForPlan(plan, applied, pose);
+    if (sameSize(applied, config) && placed.outcome === "kept") return;
     setConfig(applied);
+    if (!samePose(placed.pose, pose)) commitPose(placed.pose);
+    setPlanSizing({ key: sceneKey, previous: config, previousPose: pose, applied, appliedPose: placed.pose });
+    setPlanPlacement(placed.outcome === "kept" ? null : { key: sceneKey, outcome: placed.outcome, pose: placed.pose, config: applied });
   };
-  // The Studio models rectangles. A plan that isn't one keeps its floor area in the
-  // model, and its full outer rectangle is checked at the same pose, so "fits"
-  // there means the real plan fits too.
+  // The Studio models rectangles. A plan that isn't one keeps its depth and floor
+  // area in the model, and its full outer rectangle is checked at the same pose,
+  // so "fits" there means the real plan fits too.
   const planInUse = preapprovedPlan ? findPreapprovedPlan(preapprovedPlan) : undefined;
   const planOutlineFit = useMemo(() => {
     if (!planInUse || planInUse.footprint?.shape !== "irregular" || !modelMatchesPlan(planInUse, config)) return undefined;
@@ -479,8 +505,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     return outline && describePlacementWithEvidence(getScenePlacement(activeParcel, outline, pose), activeParcel);
   }, [planInUse, config, activeParcel, pose]);
   const planSizeUndo = planSizing && preapprovedPlan && planSizing.key === sceneKey
-    && planSizing.applied.width === config.width && planSizing.applied.length === config.length
-    && planSizing.applied.footprint === config.footprint ? planSizing : null;
+    && sameSize(planSizing.applied, config) && samePose(planSizing.appliedPose, pose) ? planSizing : null;
+  const planPlacementNote = planPlacement && preapprovedPlan && planPlacement.key === sceneKey
+    && sameSize(planPlacement.config, config) && samePose(planPlacement.pose, pose)
+    ? planPlacement.outcome === "moved"
+      ? { tone: "info" as const, text: "Moved to a spot on this lot where it fits the modeled setbacks." }
+      : { tone: "review" as const, text: "It doesn't fit within the modeled setbacks anywhere we searched on this lot. Before ruling it out, confirm your property lines and setbacks with your local planning office: a survey, a corrected boundary or a setback exception can change the answer." }
+    : undefined;
   const planBrowser = (
     <PreapprovedPlansSection
       key={sceneKey}
@@ -496,10 +527,18 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         config,
         fit: describePlacementWithEvidence(result.placement, activeParcel),
         outlineFit: planOutlineFit,
+        placementNote: planPlacementNote,
         onSizeToPlan: () => { if (preapprovedPlan) sizeModelToPlan(preapprovedPlan); },
+        onSnapToFit: planInUse && result.placement.status !== "fits" && !planPlacementNote ? () => {
+          const placed = placeForPlan(planInUse, config, pose);
+          if (!samePose(placed.pose, pose)) commitPose(placed.pose);
+          setPlanPlacement(placed.outcome === "kept" ? null : { key: sceneKey, outcome: placed.outcome, pose: placed.pose, config });
+        } : undefined,
         onUndoSize: planSizeUndo ? () => {
           setConfig({ ...config, width: planSizeUndo.previous.width, length: planSizeUndo.previous.length, footprint: planSizeUndo.previous.footprint });
+          commitPose(planSizeUndo.previousPose);
           setPlanSizing(null);
+          setPlanPlacement(null);
         } : undefined,
         onViewModel: () => document.getElementById(MODEL_STAGE_ID)?.scrollIntoView?.({
           block: "start",
@@ -797,6 +836,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setConfig(defaultAduConfig);
     setPlanState({ key: parcelPresets[0].id, reference: null });
     setPlanSizing(null);
+    setPlanPlacement(null);
     setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
@@ -1011,6 +1051,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setConfig(restored.config);
     setPlanState({ key: restored.poseKey, reference: restored.preapprovedPlan });
     setPlanSizing(null);
+    setPlanPlacement(null);
     setPoseState({ key: restored.poseKey, pose: restored.pose });
     setAssumptions(restored.assumptions);
     setProjectBriefState(restored.briefState);

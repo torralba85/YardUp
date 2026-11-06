@@ -28,6 +28,10 @@ export interface PlanModelLink {
   outlineFit?: PlacementFitStatus;
   /** Give the model the selected plan's footprint (or, without one, its floor area). */
   onSizeToPlan: () => void;
+  /** What happened to the model's placement when the plan was used: moved to fit, or no fit found. */
+  placementNote?: { tone: "info" | "review"; text: string };
+  /** Search the lot for a spot where the plan fits; present while the current spot doesn't. */
+  onSnapToFit?: () => void;
   /** Present while the model's size came from a plan and the earlier size can be restored. */
   onUndoSize?: () => void;
   /** Bring the 3D model into view. */
@@ -97,10 +101,11 @@ export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "pa
             {rectangle && footprint
               ? <>3D model uses this plan&apos;s footprint: <span className="tabular-nums">{footprintLabel(footprint)} ({sqft(Math.round(model.config.footprint))})</span>.</>
               : footprint
-                ? <>3D model: <span className="tabular-nums">{modelSize}</span>, this plan&apos;s floor area in its outer proportions.</>
+                ? <>3D model uses a usable <span className="tabular-nums">{footprintLabel(model.config)}</span> rectangle with this plan&apos;s depth and floor area (<span className="tabular-nums">{sqft(Math.round(model.config.footprint))}</span>).</>
                 : <>3D model sized to this plan&apos;s floor area: <span className="tabular-nums">{modelSize}</span>.</>}
           </p>
           <StatusChip status={model.fit.tone} label={model.fit.title} />
+          {model.placementNote && <p role="status" className={`text-sm leading-relaxed ${model.placementNote.tone === "review" ? "font-semibold text-status-review" : "text-lot-ink"}`}>{model.placementNote.text}</p>}
           {footprint && !rectangle && model.outlineFit && <div className="space-y-1">
             <p className="text-sm leading-relaxed text-lot-ink">Full outer outline, <span className="tabular-nums">{footprintLabel(footprint)}</span>:</p>
             <StatusChip status={model.outlineFit.tone} label={model.outlineFit.title} />
@@ -117,14 +122,15 @@ export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "pa
       <p className="text-xs leading-relaxed text-lot-stone">{!available
         ? "This saved reference is no longer in our verified catalog. Check with the permitting authority or choose another plan."
         : footprint && !rectangle
-          ? "This plan isn't rectangular, and the Studio models rectangles. The model keeps the plan's floor area so size limits and estimates stay right, and the full outer outline is checked at the same placement: if the outline fits, the plan fits. Lot-specific review and permits still apply."
+          ? "This plan isn't rectangular, and the Studio models rectangles. The model keeps the plan's depth and floor area, so size limits and estimates stay right, and the full outer outline is checked at the same spot: if the outline fits, the plan fits. Lot-specific review and permits still apply."
           : footprint
             ? "Dimensions are to the outside of the walls, from the official floor plan, so the area can exceed the listed living area. Lot-specific review and permits still apply."
             : "This listing publishes floor area but not dimensions, so the model matches the area, not the plan's shape. Check the official sheets. Lot-specific review and permits still apply."}</p>
       {available && <PlanLinks plan={plan} />}
       <div className="flex flex-wrap gap-2">
+        {sized && model?.onSnapToFit && <Button variant="secondary" size="sm" onClick={model.onSnapToFit}>Snap to fit</Button>}
         {sized && model?.onViewModel && <Button variant="secondary" size="sm" onClick={model.onViewModel}>View on your lot</Button>}
-        {model?.onUndoSize && <Button variant="ghost" size="sm" onClick={model.onUndoSize}>Undo size change</Button>}
+        {model?.onUndoSize && <Button variant="ghost" size="sm" onClick={model.onUndoSize}>Undo plan change</Button>}
         <Button variant="ghost" size="sm" onClick={onRemove}>Remove plan</Button>
       </div>
     </section>

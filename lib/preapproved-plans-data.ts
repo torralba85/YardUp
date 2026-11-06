@@ -24,7 +24,7 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "catalogUrl": "https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units",
     "verifiedAt": "2026-11-05",
     "reviewedAt": "2026-11-05",
-    "notes": "Six City Standard plans by SnapADU, from 498 to 1,199 sq ft (three are L-shaped), are reviewed in 14 business days instead of 21, with about $1,000 less in plan review fees. You contract with the designer to use one. Individual plans are not listed here yet; use the City's page."
+    "notes": "The City's standard ADU plans, from 498 to 1,199 sq ft, are reviewed in 14 business days instead of 21, with about $1,000 less in plan review fees. Using one requires a contract with its designer. Individual plans are not listed here yet; use the City's page."
   },
   {
     "id": "ca-oceanside",
@@ -402,6 +402,82 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     },
     "verifiedAt": "2026-11-05",
     "restrictions": "Detached unit. Not for lots in a FEMA Special Flood Hazard Area. Drawn to the 2019 California codes, so ask the Building Division what the current code cycle changes; add site-specific information.",
+    "status": "active"
+  },
+  {
+    "id": "carlsbad-studio-400",
+    "jurisdictionId": "ca-carlsbad",
+    "name": "Carlsbad Permit-Ready Studio",
+    "provider": "City of Carlsbad",
+    "sqft": 400,
+    "bedrooms": 0,
+    "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "documentUrl": "https://www.carlsbadca.gov/home/showpublisheddocument/28336",
+    "footprint": {
+      "width": 16.67,
+      "length": 23.67,
+      "shape": "rectangle",
+      "sheet": "Carlsbad permit-ready studio set, sheet A1.1 (all three styles share the footprint; porches excluded)"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Single-story detached unit in one of three architectural styles. Submit it with the City's B-75 checklist, hold-harmless agreement, B-1 application and a site plan; lots in the Coastal Zone also need a minor coastal development permit.",
+    "status": "active"
+  },
+  {
+    "id": "carlsbad-one-bedroom-680",
+    "jurisdictionId": "ca-carlsbad",
+    "name": "Carlsbad Permit-Ready One-bedroom",
+    "provider": "City of Carlsbad",
+    "sqft": 680,
+    "bedrooms": 1,
+    "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "documentUrl": "https://www.carlsbadca.gov/home/showpublisheddocument/28330",
+    "footprint": {
+      "width": 16.83,
+      "length": 39.83,
+      "shape": "rectangle",
+      "sheet": "Carlsbad permit-ready one-bedroom set, sheet A1.1 (all three styles share the footprint; porches excluded)"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Single-story detached unit in one of three architectural styles. Submit it with the City's B-75 checklist, hold-harmless agreement, B-1 application and a site plan; lots in the Coastal Zone also need a minor coastal development permit.",
+    "status": "active"
+  },
+  {
+    "id": "carlsbad-two-bedroom-800",
+    "jurisdictionId": "ca-carlsbad",
+    "name": "Carlsbad Permit-Ready Two-bedroom",
+    "provider": "City of Carlsbad",
+    "sqft": 800,
+    "bedrooms": 2,
+    "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "documentUrl": "https://www.carlsbadca.gov/home/showpublisheddocument/28332",
+    "footprint": {
+      "width": 18,
+      "length": 43.83,
+      "shape": "rectangle",
+      "sheet": "Carlsbad permit-ready two-bedroom set, sheet A1.1 (all three styles share the footprint; porches excluded)"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Single-story detached unit in one of three architectural styles. Submit it with the City's B-75 checklist, hold-harmless agreement, B-1 application and a site plan; lots in the Coastal Zone also need a minor coastal development permit.",
+    "status": "active"
+  },
+  {
+    "id": "carlsbad-three-bedroom-999",
+    "jurisdictionId": "ca-carlsbad",
+    "name": "Carlsbad Permit-Ready Three-bedroom",
+    "provider": "City of Carlsbad",
+    "sqft": 999,
+    "bedrooms": 3,
+    "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "documentUrl": "https://www.carlsbadca.gov/home/showpublisheddocument/28334",
+    "footprint": {
+      "width": 29.58,
+      "length": 47.67,
+      "shape": "irregular",
+      "sheet": "Carlsbad permit-ready three-bedroom set, sheet A1.1 (all three styles share the footprint; porches excluded)"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Single-story detached unit in one of three architectural styles. Submit it with the City's B-75 checklist, hold-harmless agreement, B-1 application and a site plan; lots in the Coastal Zone also need a minor coastal development permit.",
     "status": "active"
   },
   {

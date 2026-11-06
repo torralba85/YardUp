@@ -97,20 +97,35 @@ describe("pre-approved plan browser", () => {
     expect(summary).toHaveTextContent("3D model uses this plan's footprint: 20′-0″ × 30′-0″ (600 sq ft).");
     expect(summary).toHaveTextContent("Fits at this placement");
     fireEvent.click(within(summary).getByRole("button", { name: "View on your lot" }));
-    fireEvent.click(within(summary).getByRole("button", { name: "Undo size change" }));
+    fireEvent.click(within(summary).getByRole("button", { name: "Undo plan change" }));
     expect(onViewModel).toHaveBeenCalledOnce();
     expect(onUndoSize).toHaveBeenCalledOnce();
   });
 
-  it("checks a non-rectangular plan's full outer outline beside the area-matched model", () => {
+  it("uses a usable rectangle for a non-rectangular plan and checks its full outer outline", () => {
     const blocked = { title: "Doesn't fit at this placement", detail: "", tone: "blocked" } as const;
     render(<Harness initial={{ planId: "san-diego-county-plan-b", jurisdictionId: "ca-san-diego-county" }} parcel={{ city: "San Diego, CA" }}
-      model={{ config: { width: 26.5, length: 45, footprint: 1192.5 }, fit: fits, outlineFit: blocked, onSizeToPlan: () => {} }} />);
+      model={{ config: { width: 32, length: 37.5, footprint: 1200 }, fit: fits, outlineFit: blocked, onSizeToPlan: () => {} }} />);
     const summary = screen.getByRole("region", { name: "Selected plan reference" });
-    expect(summary).toHaveTextContent("3D model: 26.5 × 45 ft, 1,193 sq ft, this plan's floor area in its outer proportions.");
+    expect(summary).toHaveTextContent("3D model uses a usable 32′-0″ × 37′-6″ rectangle with this plan's depth and floor area (1,200 sq ft).");
     expect(summary).toHaveTextContent("Full outer outline, 32′-0″ × 54′-0″:");
     expect(summary).toHaveTextContent("Doesn't fit at this placement");
     expect(summary).toHaveTextContent(/isn't rectangular/);
+  });
+
+  it("reports where using a plan left the model and offers Snap to fit while it doesn't fit", () => {
+    const blocked = { title: "Doesn't fit at this placement", detail: "", tone: "blocked" } as const;
+    const onSnapToFit = vi.fn();
+    const ref = { planId: "san-diego-county-plan-a", jurisdictionId: "ca-san-diego-county" };
+    const config = { width: 30, length: 40, footprint: 1200 };
+    const { rerender } = render(<Harness initial={ref} parcel={{ city: "San Diego, CA" }} model={{ config, fit: blocked, onSizeToPlan: () => {}, onSnapToFit }} />);
+    const summary = screen.getByRole("region", { name: "Selected plan reference" });
+    fireEvent.click(within(summary).getByRole("button", { name: "Snap to fit" }));
+    expect(onSnapToFit).toHaveBeenCalledOnce();
+    const none = { tone: "review" as const, text: "It doesn't fit within the modeled setbacks anywhere we searched on this lot. Before ruling it out, confirm your property lines and setbacks with your local planning office." };
+    rerender(<Harness initial={ref} parcel={{ city: "San Diego, CA" }} model={{ config, fit: blocked, onSizeToPlan: () => {}, placementNote: none }} />);
+    expect(within(summary).getByRole("status")).toHaveTextContent("local planning office");
+    expect(within(summary).queryByRole("button", { name: "Snap to fit" })).not.toBeInTheDocument();
   });
 
   it("retains unknown/withdrawn references with an unavailable notice and no invented title, link or sizing", () => {
