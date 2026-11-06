@@ -51,25 +51,15 @@ export function ParcelPlan({
           <path d="M5 0 H0 V5" fill="none" stroke={COLOR["lot-ink"]} strokeOpacity={0.08} strokeWidth={0.2} />
         </pattern>
       </defs>
-      {model.parcelOutline.localPolygon && model.parcelOutline.localPolygon.length >= 3 ? (
-        <polygon
-          data-testid="plan-parcel-boundary"
-          points={points(model.parcelOutline.localPolygon)}
-          fill={`url(#${grid})`}
-          stroke={COLOR["lot-ink"]}
-          strokeWidth={0.5}
-        />
-      ) : (
-        <rect
-          x={-parcel.lotWidth / 2}
-          y={-parcel.lotLength / 2}
-          width={parcel.lotWidth}
-          height={parcel.lotLength}
-          fill={`url(#${grid})`}
-          stroke={COLOR["lot-ink"]}
-          strokeWidth={0.5}
-        />
-      )}
+      <rect
+        x={-parcel.lotWidth / 2}
+        y={-parcel.lotLength / 2}
+        width={parcel.lotWidth}
+        height={parcel.lotLength}
+        fill={`url(#${grid})`}
+        stroke={COLOR["lot-ink"]}
+        strokeWidth={0.5}
+      />
       {envelope && envelope.length > 0 && (
         <polygon
           points={points(envelope)}
@@ -79,20 +69,10 @@ export function ParcelPlan({
           strokeDasharray="2 1"
         />
       )}
-      {model.existingHouse.detachedPolygons?.map((detPoly, idx) => (
-        <polygon
-          key={idx}
-          data-testid="plan-detached-structure"
-          points={points(detPoly)}
-          fill={COLOR["lot-surface"]}
-          stroke={COLOR["lot-stone"]}
-          strokeWidth={0.4}
-        />
-      ))}
-      {(model.existingHouse.localPolygon ?? model.existingHouse.corners) && (
+      {model.existingHouse.corners && (
         <polygon
           data-testid="plan-existing-house"
-          points={points(model.existingHouse.localPolygon ?? model.existingHouse.corners)}
+          points={points(model.existingHouse.corners)}
           fill={COLOR["lot-surface"]}
           stroke={COLOR["lot-ink"]}
           strokeWidth={0.5}

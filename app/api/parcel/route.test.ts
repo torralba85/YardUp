@@ -1244,25 +1244,5 @@ describe("GET /api/parcel — zoning shadow classification", () => {
       "situs street address (999 Different Ave) differs",
     );
   });
-
-  it("computes bearingDeg from the parcel boundary polygon on Regrid responses", async () => {
-    vi.stubEnv("TYPESAFE_ZONING_SHADOW", "");
-    const geom = rotatedRectPolygon(47.65, -122.31, 50, 100, 15);
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: unknown) => {
-        const url = String(input);
-        if (url.includes("regrid.com")) return regridResponse(SHADOW_FIELDS, geom);
-        return EMPTY_FEATURES;
-      }),
-    );
-
-    const res = await GET(makeRequest(47.65, -122.31));
-    const data = (await res.json()) as LiveParcelData;
-
-    expect(res.status).toBe(200);
-    expect(typeof data.bearingDeg).toBe("number");
-    expect(Number.isFinite(data.bearingDeg)).toBe(true);
-  });
 });
 

@@ -316,56 +316,6 @@ describe("CesiumNeighborhoodView", () => {
       expect(boundary).toBeDefined();
       expect(boundary?.polygon.classificationType).toBe(mockCesium.ClassificationType.BOTH);
     });
-
-    it("adds Existing Building Outline and Proposed ADU 3D massing when parcel bearingDeg and existingBuilding are present", async () => {
-      renderView({
-        parcel: {
-          ...sampleParcel,
-          bearingDeg: 90,
-          boundaryGeoJson: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [-122.3323, 47.6061],
-                [-122.3319, 47.6061],
-                [-122.3319, 47.6063],
-                [-122.3323, 47.6063],
-                [-122.3323, 47.6061],
-              ],
-            ],
-          },
-          existingBuilding: {
-            outlineGeoJson: {
-              type: "Polygon",
-              coordinates: [
-                [
-                  [-122.33205, 47.60616],
-                  [-122.33195, 47.60616],
-                  [-122.33195, 47.60624],
-                  [-122.33205, 47.60624],
-                  [-122.33205, 47.60616],
-                ],
-              ],
-            },
-            detachedOutlinesGeoJson: [],
-            roofPitchDegrees: 22,
-            roofAzimuthDegrees: 180,
-            footprintSqft: 1600,
-            entranceLatLng: null,
-            geometrySource: "usa-structures",
-          },
-        },
-      });
-
-      await waitFor(() => {
-        expect(mockEntitiesAdd).toHaveBeenCalled();
-      });
-
-      const names = mockEntitiesAdd.mock.calls.map((call) => call[0].name);
-      expect(names).toContain("Parcel Boundary");
-      expect(names).toContain("Existing Building Outline");
-      expect(names).toContain("Proposed ADU");
-    });
   });
 
   describe("photorealistic basemap ladder", () => {

@@ -73,64 +73,14 @@ describe("fetchBuildingFootprint", () => {
     expect(url.pathname).toContain("/USA_Structures_View/FeatureServer/0/query");
     expect(url.searchParams.get("geometryType")).toBe("esriGeometryEnvelope");
     expect(url.searchParams.get("inSR")).toBe("4326");
-    expect(url.searchParams.get("outSR")).toBe("4326");
     expect(url.searchParams.get("outFields")).toBe("SQFEET,LONGITUDE,LATITUDE");
-    expect(url.searchParams.get("returnGeometry")).toBe("true");
+    expect(url.searchParams.get("returnGeometry")).toBe("false");
     expect(JSON.parse(url.searchParams.get("geometry")!)).toEqual({
       xmin: -122.1,
       ymin: 47,
       xmax: -122,
       ymax: 47.1,
       spatialReference: { wkid: 4326 },
-    });
-  });
-
-  it("extracts primary and detached structure footprint polygons when geometry rings are returned", async () => {
-    const garageRing = [
-      [-122.012, 47.088],
-      [-122.008, 47.088],
-      [-122.008, 47.092],
-      [-122.012, 47.092],
-      [-122.012, 47.088],
-    ];
-    const mainHouseRing = [
-      [-122.095, 47.005],
-      [-122.085, 47.005],
-      [-122.085, 47.015],
-      [-122.095, 47.015],
-      [-122.095, 47.005],
-    ];
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        structuresResponse([
-          {
-            attributes: { SQFEET: 320, LONGITUDE: -122.01, LATITUDE: 47.09 },
-            geometry: { rings: [garageRing] },
-          },
-          {
-            attributes: { SQFEET: 1480, LONGITUDE: -122.09, LATITUDE: 47.01 },
-            geometry: { rings: [mainHouseRing] },
-          },
-        ]),
-      ),
-    );
-
-    await expect(fetchBuildingFootprint(PARCEL)).resolves.toEqual({
-      totalSqft: 1800,
-      largestSqft: 1480,
-      structureCount: 2,
-      primaryOutlineGeoJson: {
-        type: "Polygon",
-        coordinates: [mainHouseRing],
-      },
-      detachedOutlinesGeoJson: [
-        {
-          type: "Polygon",
-          coordinates: [garageRing],
-        },
-      ],
     });
   });
 

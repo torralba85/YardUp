@@ -512,44 +512,4 @@ describe("buildSceneModel — end-to-end contract", () => {
     expect(model.origin.lat).toBe(rotatedLiveParcel.lat);
     expect(model.origin.bearingDeg).toBeNull();
   });
-
-  it("projects localPolygon for the parcel and existing building when bearingDeg and existingBuilding are present", () => {
-    const buildingRing: GeoJsonPolygon = {
-      type: "Polygon",
-      coordinates: [
-        [
-          // Inside irregularLiveParcel's full-width front, ~31 x 25 ft.
-          [-97.75005, 30.2499],
-          [-97.74995, 30.2499],
-          [-97.74995, 30.24997],
-          [-97.75005, 30.24997],
-          [-97.75005, 30.2499],
-        ],
-      ],
-    };
-    const enrichedParcel = {
-      ...irregularLiveParcel,
-      bearingDeg: 0,
-      existingBuilding: {
-        outlineGeoJson: buildingRing,
-        roofPitchDegrees: 22,
-        geometrySource: "google-geocoding-v4" as const,
-      },
-    };
-    const model = buildSceneModel(
-      enrichedParcel,
-      defaultAduConfig,
-      { x: 0, z: -20, rotationDeg: 0 },
-      "ground-footprint",
-    );
-    expect(model.origin.bearingDeg).toBe(0);
-    expect(model.origin.source).toBe("source-provided");
-    expect(model.parcelOutline.localPolygon).toBeDefined();
-    expect(model.parcelOutline.localPolygon!.length).toBe(6);
-    expect(model.existingHouse.localPolygon).toBeDefined();
-    expect(model.existingHouse.localPolygon!.length).toBe(4);
-    expect(model.existingHouse.footprint.source).toBe("source-provided");
-    expect(model.existingHouse.roofPitchDegrees).toBe(22);
-    expect(model.existingHouse.ridgeRiseFt).toBeGreaterThan(1.8);
-  });
 });

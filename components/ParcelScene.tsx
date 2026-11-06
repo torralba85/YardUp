@@ -5,7 +5,6 @@ import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Box, Home, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
-import { buildBuildingMassing } from "@/lib/building-massing";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
@@ -22,7 +21,6 @@ import {
   EXISTING_HOUSE_ROOF_OVERHANG_FT,
   SLAB_DATUM_FT,
   type LocalBounds,
-  type LocalPoint,
   type Pose2D,
 } from "@/lib/scene-model";
 import { SCENE_QUALITY, type SceneQuality } from "@/lib/scene-quality";
@@ -281,33 +279,7 @@ function ContactShadow({
 function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: boolean }) {
   const y = 0.14;
   const color = isCompliant ? SCENE.ink : SCENE.review;
-  const outline = useMemo(() => buildParcelOutline(parcel), [parcel]);
   const { loop, ticks } = useMemo(() => {
-    const tickLen = 3;
-    const tickGap = 1.1;
-    const ticks: [number, number, number][][] = [];
-
-    if (outline.localPolygon && outline.localPolygon.length >= 3) {
-      const vertices = outline.localPolygon;
-      const loop: [number, number, number][] = [
-        ...vertices.map((pt): [number, number, number] => [pt.x, y, pt.z]),
-        [vertices[0].x, y, vertices[0].z],
-      ];
-      for (const pt of vertices) {
-        const sx = Math.sign(pt.x) || 1;
-        const sz = Math.sign(pt.z) || 1;
-        ticks.push([
-          [pt.x + sx * tickGap, y, pt.z],
-          [pt.x + sx * (tickGap + tickLen), y, pt.z],
-        ]);
-        ticks.push([
-          [pt.x, y, pt.z + sz * tickGap],
-          [pt.x, y, pt.z + sz * (tickGap + tickLen)],
-        ]);
-      }
-      return { loop, ticks };
-    }
-
     const hw = parcel.lotWidth / 2;
     const hl = parcel.lotLength / 2;
     const loop: [number, number, number][] = [
@@ -317,6 +289,9 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
       [-hw, y, hl],
       [-hw, y, -hl],
     ];
+    const tickLen = 3;
+    const tickGap = 1.1;
+    const ticks: [number, number, number][][] = [];
     for (const [cx, , cz] of loop.slice(0, 4)) {
       const sx = Math.sign(cx);
       const sz = Math.sign(cz);
@@ -330,7 +305,7 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
       ]);
     }
     return { loop, ticks };
-  }, [outline.localPolygon, parcel.lotLength, parcel.lotWidth]);
+  }, [parcel.lotLength, parcel.lotWidth]);
 
   return (
     <group>
@@ -588,18 +563,6 @@ function GableRoof({
   );
 }
 
-/** Observed footprint extruded as-is; caps take the roof colour, walls the wall colour. */
-function ObservedBuilding({ points, height }: { points: LocalPoint[]; height: number }) {
-  const geometry = useMemo(() => buildBuildingMassing(points, height), [points, height]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return (
-    <mesh geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial attach="material-0" color={SCENE.roof} roughness={0.8} />
-      <meshStandardMaterial attach="material-1" color={SCENE.wall} roughness={0.85} />
-    </mesh>
-  );
-}
-
 /**
  * The existing house, sized and placed by T01's shared scene model rather than
  * by a second copy of the sizing formula. The audit found Seattle's coverage
@@ -607,43 +570,17 @@ function ObservedBuilding({ points, height }: { points: LocalPoint[]; height: nu
  * read `buildExistingHouseSceneModel`, so they cannot disagree. An unknown
  * footprint renders nothing instead of a guessed box.
  */
-export function ExistingHouse({ parcel }: { parcel: Parcel }) {
+function ExistingHouse({ parcel }: { parcel: Parcel }) {
   const model = buildExistingHouseSceneModel(parcel);
-  const modelWidth = model.footprint.width;
-  const modelDepth = model.footprint.depth;
-  const detached = model.detachedPolygons?.map((points, index) => (
-    <ObservedBuilding key={index} points={points} height={8} />
-  ));
-  if (modelWidth === null || modelDepth === null || model.pose === null) return <>{detached}</>;
-  const wallHeight = model.wallHeightFt ?? 9;
-  const ridgeHeight = model.ridgeRiseFt ?? 5;
-  const isFlatRoof =
-    typeof model.roofPitchDegrees === "number" &&
-    Number.isFinite(model.roofPitchDegrees) &&
-    model.roofPitchDegrees <= 5;
-
-  // An observed outline draws at its true size and heading, never boxed to its
-  // bounds. A rectangle keeps the detailed house; any other shape is extruded
-  // as-is, because a predominant pitch does not describe its roof planes.
-  const observed = model.localPolygon && model.localPolygon.length >= 3 ? model.localPolygon : null;
-  const rectangle = model.observedRectangle ?? null;
-  if (observed && !rectangle) {
-    return (
-      <>
-        <ObservedBuilding points={observed} height={wallHeight} />
-        {detached}
-      </>
-    );
-  }
-  const width = rectangle?.width ?? modelWidth;
-  const depth = rectangle?.depth ?? modelDepth;
-  const xPos = rectangle?.center.x ?? model.pose.x;
-  const zPos = rectangle?.center.z ?? model.pose.z;
+  const width = model.footprint.width;
+  const depth = model.footprint.depth;
+  if (width === null || depth === null || model.pose === null) return null;
+  const wallHeight = 9;
+  const ridgeHeight = 5;
+  const zPos = model.pose.z;
 
   return (
-    <>
-      {detached}
-      <group position={[xPos, 0, zPos]} rotation={[0, rectangle?.rotationY ?? 0, 0]}>
+    <group position={[0, 0, zPos]}>
       {/* Soft contact shadow grounding the house */}
       <ContactShadow width={width + 6} length={depth + 6} opacity={0.34} />
 
@@ -663,21 +600,12 @@ export function ExistingHouse({ parcel }: { parcel: Parcel }) {
         <meshStandardMaterial color={SCENE.wall} roughness={0.82} metalness={0.02} />
       </mesh>
 
-      {/* Roof massing: flat parapet when Solar API reports <= 5° pitch, else gable roof */}
-      {isFlatRoof ? (
-        <mesh position={[0, wallHeight + 0.45, 0]} castShadow receiveShadow>
-          <boxGeometry args={[width + 1.2, 0.9, depth + 1.2]} />
-          <meshStandardMaterial color={SCENE.roof} roughness={0.55} metalness={0.2} />
-        </mesh>
-      ) : (
-        <>
-          <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
-          <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
-            <boxGeometry args={existingHouseRidgeCapSize(width)} />
-            <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
-          </mesh>
-        </>
-      )}
+      {/* Proper gable roof + ridge beam cap + eave fascia trim */}
+      <GableRoof width={width} depth={depth} wallHeight={wallHeight} ridgeHeight={ridgeHeight} />
+      <mesh position={[0, wallHeight + ridgeHeight + 0.08, 0]} castShadow>
+        <boxGeometry args={existingHouseRidgeCapSize(width)} />
+        <meshStandardMaterial color={SCENE.ink} roughness={0.42} metalness={0.35} />
+      </mesh>
 
       {/* Architectural masonry chimney with metal flue cap */}
       <group position={[-width * 0.28, wallHeight + ridgeHeight * 0.42, -depth * 0.18]}>
@@ -760,8 +688,7 @@ export function ExistingHouse({ parcel }: { parcel: Parcel }) {
         <boxGeometry args={[3, 0.2, 7]} />
         <meshStandardMaterial color={SCENE.slab} roughness={0.92} />
       </mesh>
-      </group>
-    </>
+    </group>
   );
 }
 
@@ -1176,9 +1103,6 @@ export default function ParcelScene({
   // position edits therefore never start a camera flight (D8); re-tapping the
   // current view button bumps `frameCommand` to reframe deliberately.
   const existingHouse = useMemo(() => buildExistingHouseSceneModel(parcel), [parcel]);
-  // A stable element lets React skip ExistingHouse while the ADU is dragged,
-  // so observed footprints aren't re-extruded on every pose change.
-  const existingHouseMassing = useMemo(() => <ExistingHouse parcel={parcel} />, [parcel]);
   const parcelOutline = useMemo(() => buildParcelOutline(parcel), [parcel]);
   const aduModel = useMemo(() => buildAduSceneModel(config, activePose), [config, activePose]);
   const existingHouseMaxY = existingHouse.boundsLocal?.maxY;
@@ -1572,7 +1496,7 @@ export default function ParcelScene({
                   majorAlpha={0.13}
                   y={-0.08}
                 />
-                {existingHouseMassing}
+                <ExistingHouse parcel={parcel} />
                 <Tree position={[-parcel.lotWidth / 2 + 3, 0, parcel.lotLength / 2 - 6]} height={10} radius={4} />
                 <Tree position={[parcel.lotWidth / 2 - 3, 0, parcel.lotLength / 2 - 4]} height={8} radius={3} />
                 <Tree position={[-parcel.lotWidth / 2 + 4, 0, -parcel.lotLength / 2 + 5]} height={7} radius={2.5} />
@@ -1690,13 +1614,8 @@ export default function ParcelScene({
           })}
         </div>
 
-        <div
-          data-testid="scene-compass-badge"
-          className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tabular-nums tracking-[0.08em] text-lot-chalk"
-        >
-          {typeof parcel.bearingDeg === "number" && Number.isFinite(parcel.bearingDeg)
-            ? `N · ${Math.round(parcel.bearingDeg)}°`
-            : "N"}
+        <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
+          N
         </div>
       </div>
 

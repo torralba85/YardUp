@@ -1,14 +1,8 @@
 import type { ADUConfig, Parcel } from "./feasibility";
-import type { GeoJsonPolygon } from "./parcel-types";
 import {
   buildAduHeightModel,
   buildExistingHouseSceneModel,
-  buildParcelOutline,
-  buildSceneOrigin,
   EXISTING_HOUSE_ROOF_OVERHANG_FT,
-  projectPolygonToLocal,
-  rectangleCorners,
-  type LocalPoint,
   type Pose2D,
 } from "./scene-model";
 import { buildSetbackEnvelope, REVIEW_SEPARATION_FT, validatePlacement, type PlacementResult } from "./placement-validation";
@@ -17,37 +11,10 @@ import { aduSetbacks, type AduFootprint, type AduSetbacks } from "./adu-setbacks
 import type { CapacityBasis } from "./zoning";
 import { findBestFitPose } from "./placement-search";
 
-function pointBounds(points: LocalPoint[]) {
-  const xs = points.map((p) => p.x), zs = points.map((p) => p.z);
-  return { minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs) };
-}
-
-/**
- * Keep every placement path constrained by the recorded geometry, using the
- * same projections the scene draws so placement checks what the user sees.
- */
-function recordedConstraints(parcel: Parcel & { boundaryGeoJson?: GeoJsonPolygon | null }) {
-  const outer = buildParcelOutline(parcel).localPolygon;
-  const origin = buildSceneOrigin(parcel);
-  const holes = outer && origin.source === "source-provided" && origin.lat !== null && origin.lng !== null
-    ? (parcel.boundaryGeoJson?.coordinates.slice(1) ?? []).map((ring) =>
-      projectPolygonToLocal({ lat: origin.lat!, lng: origin.lng! }, origin.bearingDeg, { type: "Polygon", coordinates: [ring] }) ?? [])
-    : [];
-  const additionalStructureCorners = (buildExistingHouseSceneModel(parcel).detachedPolygons ?? []).map((points) => {
-    const b = pointBounds(points);
-    return rectangleCorners({ x: (b.minX + b.maxX) / 2, z: (b.minZ + b.maxZ) / 2 }, b.maxX - b.minX, b.maxZ - b.minZ, 0);
-  });
-  return {
-    ...(outer ? { parcelRings: [outer, ...holes] } : {}),
-    ...(additionalStructureCorners.length ? { additionalStructureCorners } : {}),
-  };
-}
-
 export function getSnapToFitPose(parcel: Parcel, config: ADUConfig, pose: Pose2D): Pose2D | null {
   const height = buildAduHeightModel(config);
   if (!height) return null;
   return findBestFitPose({
-    ...recordedConstraints(parcel),
     aduWidth: config.width, aduLength: config.length, pose,
     envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
     existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
@@ -69,7 +36,7 @@ export function getScenePlacement(
     config.height !== undefined && config.roof !== undefined
       ? buildAduHeightModel({ width: config.width, length: config.length, height: config.height, roof: config.roof })
       : null;
-  return validatePlacement({ ...recordedConstraints(parcel), aduWidth: config.width, aduLength: config.length, pose,
+  return validatePlacement({ aduWidth: config.width, aduLength: config.length, pose,
     envelope: buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, aduSetbacks(parcel, config)),
     existingHouseCorners: buildExistingHouseSceneModel(parcel).corners,
     ...(heightModel && {
@@ -106,13 +73,10 @@ export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D 
   const bounds = placementBounds(parcel, setbacks, config);
   const rearBiased: Pose2D = { x: 0, z: Math.min(bounds.minZ + REAR_SETBACK_OFFSET_FT, bounds.maxZ), rotationDeg: 0 };
   const houseModel = buildExistingHouseSceneModel(parcel);
-  // With no modeled main house, still keep the start off recorded detached structures.
-  const detached = houseModel.detachedPolygons ?? [];
-  const house = houseModel.boundsLocal ?? (detached.length ? pointBounds(detached.flat()) : null);
+  const house = houseModel.boundsLocal;
   if (!house || !Number.isFinite(config.width) || !Number.isFinite(config.length)) return rearBiased;
 
   const envelope = buildSetbackEnvelope(parcel.lotWidth, parcel.lotLength, setbacks);
-  const constraints = recordedConstraints(parcel);
   const candidates: { pose: Pose2D; placement: PlacementResult }[] = [];
   for (const rotationDeg of [0, 90]) {
     const turned = rotationDeg === 90;
@@ -125,13 +89,10 @@ export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D 
       b.minZ,
       clamp((house.minZ + house.maxZ) / 2, b.minZ, b.maxZ),
     ];
-    // A detached structure often sits in the rear yard, so also try in front of it.
-    if (!houseModel.boundsLocal) zs.push(clamp(house.maxZ + REVIEW_SEPARATION_FT + span.length / 2, b.minZ, b.maxZ));
     for (const z of zs) {
       for (const x of xs) {
         const pose = { x, z, rotationDeg };
         const placement = validatePlacement({
-          ...constraints,
           aduWidth: config.width, aduLength: config.length, pose, envelope, existingHouseCorners: houseModel.corners,
         });
         if (placement.envelopeStatus === "fits") candidates.push({ pose, placement });
@@ -141,11 +102,8 @@ export function getDefaultAduPose(parcel: Parcel, config: AduFootprint): Pose2D 
 
   const separated = candidates.find((c) => c.placement.houseStatus === "clear");
   if (separated) return separated.pose;
-  // Prefer any start that doesn't overlap a structure, even when one is unmeasured.
-  const unblocked = candidates.filter((c) => c.placement.status !== "blocked");
-  const pool = unblocked.length ? unblocked : candidates;
-  let best = pool[0];
-  for (const c of pool) {
+  let best = candidates[0];
+  for (const c of candidates) {
     if ((c.placement.houseClearanceFt ?? -Infinity) > (best.placement.houseClearanceFt ?? -Infinity) + 0.01) best = c;
   }
   return best?.pose ?? rearBiased;

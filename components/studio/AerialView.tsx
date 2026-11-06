@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RefreshCw, TriangleAlert } from "lucide-react";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
-import { buildSceneModel, projectLocalToGeodetic, type Pose2D } from "@/lib/scene-model";
+import type { Pose2D } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { latLngToPixel } from "@/lib/map-utils";
 import { useAuth } from "@/lib/auth-context";
@@ -39,9 +39,6 @@ export interface AerialViewProps {
  */
 export default function AerialView({
   parcel,
-  config,
-  isCompliant,
-  pose,
   onReturnToModel,
 }: AerialViewProps) {
   const { user } = useAuth();
@@ -119,38 +116,6 @@ export default function AerialView({
       .join(" ");
   }, [parcel.boundaryGeoJson, lat, lng, resolvedZoom]);
 
-  const existingHousePoints = useMemo(() => {
-    const ring = parcel.existingBuilding?.outlineGeoJson?.coordinates?.[0];
-    if (!ring || ring.length < 3) return null;
-    return ring
-      .map(([pLng, pLat]) => {
-        const { x, y } = latLngToPixel(pLat, pLng, lat, lng, resolvedZoom, IMG_W, IMG_H);
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ");
-  }, [parcel.existingBuilding, lat, lng, resolvedZoom]);
-
-  const aduPoints = useMemo(() => {
-    if (!parcel.boundaryGeoJson || typeof parcel.bearingDeg !== "number" || !Number.isFinite(parcel.bearingDeg)) {
-      return null;
-    }
-    const model = buildSceneModel(parcel, config, pose);
-    const { origin } = model;
-    const corners = model.adu.footprintCorners;
-    if (origin.lat === null || origin.lng === null || origin.bearingDeg === null || !corners) {
-      return null;
-    }
-    const geoOrigin = { lat: origin.lat, lng: origin.lng };
-    const points: string[] = [];
-    for (const corner of corners) {
-      const geo = projectLocalToGeodetic(geoOrigin, origin.bearingDeg, corner);
-      if (!geo) return null;
-      const { x, y } = latLngToPixel(geo.lat, geo.lng, lat, lng, resolvedZoom, IMG_W, IMG_H);
-      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-    }
-    return points.join(" ");
-  }, [parcel, config, pose, lat, lng, resolvedZoom]);
-
   return (
     <div
       className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden bg-lot-ink"
@@ -196,32 +161,12 @@ export default function AerialView({
         </div>
       )}
 
-      {/* Address coordinates cannot establish building placement or bearing unless boundary + bearing are present. */}
+      {/* Address coordinates cannot establish building placement or bearing. */}
       {boundaryPoints && aerialSrc && !aerialError && (
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMG_W} ${IMG_H}`}
           preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <polygon points={boundaryPoints} fill="none" stroke={COLOR["lot-ink"]} strokeWidth="5" strokeDasharray="8 4" />
           <polygon points={boundaryPoints} fill="none" stroke={COLOR["lot-chalk"]} strokeWidth="2.5" strokeDasharray="8 4" />
-          {existingHousePoints && (
-            <polygon
-              data-testid="aerial-house-polygon"
-              points={existingHousePoints}
-              fill={COLOR["lot-paper"]}
-              fillOpacity="0.45"
-              stroke={COLOR["lot-chalk"]}
-              strokeWidth="2"
-            />
-          )}
-          {aduPoints && (
-            <polygon
-              data-testid="aerial-adu-polygon"
-              points={aduPoints}
-              fill={isCompliant ? COLOR["status-eligible-on-dark"] : COLOR["status-blocked-on-dark"]}
-              fillOpacity="0.45"
-              stroke={COLOR["lot-chalk"]}
-              strokeWidth="2.5"
-            />
-          )}
         </svg>
       )}
 

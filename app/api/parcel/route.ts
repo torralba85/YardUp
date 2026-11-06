@@ -1,9 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import type {
-  ExistingBuildingGeometry,
-  GeoJsonPolygon,
-  LiveParcelData,
-} from "@/lib/parcel-types";
+import type { LiveParcelData } from "@/lib/parcel-types";
 import type {
   DataEvidence,
   EvidenceStatus,
@@ -13,9 +9,7 @@ import type {
 import { parcelPresets } from "@/lib/feasibility";
 import { extractZip, parseParcelCityState } from "@/lib/marketplace";
 import {
-  deriveParcelBearingDeg,
   estimateLotDimensions,
-  interiorPoint,
   orientedLotDimensions,
   polygonContainsPoint,
 } from "@/lib/parcel-geometry";
@@ -23,12 +17,7 @@ import {
   type CensusLocation,
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
-import {
-  type BuildingFootprintResult,
-  fetchBuildingFootprint,
-} from "@/lib/server/building-footprints";
-import { fetchGoogleBuildingGeometry } from "@/lib/server/google-building-insights";
-import { buildingOutlineAgreesWithFootprint } from "@/lib/building-outline-fit";
+import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
 import { fetchFireHazardZone } from "@/lib/server/fire-hazard-zones";
 import {
   type StreetAddress,
@@ -114,47 +103,17 @@ export async function GET(request: NextRequest) {
   const requestedAddress = sanitizeAddress(searchParams.get("address"));
 
   // Autocomplete selections bypass /api/geocode, so check their address here
-  // too. Verify the token before spending ATTOM or Google Building/Solar quota,
-  // and overlap the lookup with the existing parcel providers. Guests keep the
-  // keyless chain.
+  // too. Verify the token before spending ATTOM quota, and overlap the lookup
+  // with the existing parcel providers. Guests keep the keyless chain.
   let attomLookup: Promise<AttomLookup> | undefined;
-  let googleBuildingKey: string | undefined;
-  const candidateGoogleKey =
-    process.env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_GEOCODING_KEY;
-  const wantsAttom = Boolean(
-    process.env.ATTOM_API_KEY &&
-      requestedAddress &&
-      canLookUpAttomAddress(requestedAddress),
-  );
-  if (!guest && (wantsAttom || candidateGoogleKey)) {
+  if (!guest && process.env.ATTOM_API_KEY && requestedAddress && canLookUpAttomAddress(requestedAddress)) {
     const auth = await requireApiAuth(request);
-    if (!(auth instanceof NextResponse)) {
-      if (wantsAttom && requestedAddress) {
-        attomLookup = fetchAttomAddress(requestedAddress);
-      }
-      if (candidateGoogleKey) {
-        googleBuildingKey = candidateGoogleKey;
-      }
-    }
+    if (!(auth instanceof NextResponse)) attomLookup = fetchAttomAddress(requestedAddress);
   }
   const response = await resolveParcel(lat, lng, requestedAddress, guest);
-  if ((!attomLookup && !googleBuildingKey) || !response.ok) return response;
-  let data = (await response.json()) as LiveParcelData;
-  if (attomLookup) {
-    data = withAttomAddressEvidence(data, await attomLookup);
-  }
-  if (googleBuildingKey && data.source !== "fallback") {
-    const googleBuilding = await fetchGoogleBuildingGeometry({
-      lat: data.lat,
-      lng: data.lng,
-      apiKey: googleBuildingKey,
-      parcelPolygon: data.boundaryGeoJson,
-    });
-    if (googleBuilding) {
-      data = withGoogleBuildingEnrichment(data, googleBuilding);
-    }
-  }
-  return NextResponse.json(data, {
+  if (!attomLookup || !response.ok) return response;
+  const data = await response.json() as LiveParcelData;
+  return NextResponse.json(withAttomAddressEvidence(data, await attomLookup), {
     status: response.status,
     headers: response.headers,
   });
@@ -461,7 +420,6 @@ async function resolveParcel(
       county: loc.county,
       marketData,
       ...(fireHazard ? { fireHazard } : {}),
-      ...deriveParcelSceneEnrichment(boundaryGeoJson, structures),
       dataQuality: {
         version: 1,
         fields: {
@@ -924,7 +882,6 @@ async function countyGisResponse(
     county: loc.county,
     marketData,
     ...(fireHazard ? { fireHazard } : {}),
-    ...deriveParcelSceneEnrichment(countyParcel.polygon, structures),
     dataQuality: {
       version: 1,
       fields: {
@@ -1418,91 +1375,4 @@ function formatCity(
   const zip = fields.szip5 ?? fields.zip ?? "";
   if (city && state) return `${city}, ${state} ${zip}`.trim();
   return String(city || "");
-}
-
-function deriveParcelSceneEnrichment(
-  boundaryGeoJson: GeoJsonPolygon | null,
-  structures: BuildingFootprintResult | null,
-): {
-  bearingDeg?: number;
-  existingBuilding?: ExistingBuildingGeometry;
-} {
-  const primaryOutline = structures?.primaryOutlineGeoJson ?? null;
-  const detachedOutlines = structures?.detachedOutlinesGeoJson;
-  const frontageHint = primaryOutline ? interiorPoint(primaryOutline) : null;
-  const bearingDeg = boundaryGeoJson
-    ? deriveParcelBearingDeg(boundaryGeoJson, frontageHint)
-    : null;
-
-  const existingBuilding: ExistingBuildingGeometry | undefined = primaryOutline
-    ? {
-        outlineGeoJson: primaryOutline,
-        ...(detachedOutlines && detachedOutlines.length > 0
-          ? { detachedOutlinesGeoJson: detachedOutlines }
-          : {}),
-        ...(structures?.largestSqft && structures.largestSqft > 0
-          ? { footprintSqft: structures.largestSqft }
-          : {}),
-        geometrySource: "usa-structures",
-      }
-    : undefined;
-
-  return {
-    ...(bearingDeg !== null ? { bearingDeg } : {}),
-    ...(existingBuilding ? { existingBuilding } : {}),
-  };
-}
-
-function withGoogleBuildingEnrichment(
-  data: LiveParcelData,
-  rawGoogleBuilding: ExistingBuildingGeometry,
-): LiveParcelData {
-  const prior = data.existingBuilding;
-  // A Google outline far larger than the independently measured footprint is
-  // a merged or grounds polygon, not the house: keep the observed outline and
-  // its area, and take only Google's roof insights.
-  const referenceSqft = prior?.footprintSqft ?? (data.existingHouseSqft > 0 ? data.existingHouseSqft : null);
-  const googleBuilding: ExistingBuildingGeometry =
-    !rawGoogleBuilding.outlineGeoJson ||
-    buildingOutlineAgreesWithFootprint(rawGoogleBuilding.outlineGeoJson, referenceSqft)
-      ? rawGoogleBuilding
-      : { ...rawGoogleBuilding, outlineGeoJson: null, footprintSqft: null, entranceLatLng: null };
-  const outlineGeoJson =
-    googleBuilding.outlineGeoJson ?? prior?.outlineGeoJson ?? null;
-  const entranceLatLng =
-    googleBuilding.entranceLatLng ?? prior?.entranceLatLng ?? null;
-  const frontageHint =
-    entranceLatLng ?? (outlineGeoJson ? interiorPoint(outlineGeoJson) : null);
-  const bearingDeg = data.boundaryGeoJson
-    ? deriveParcelBearingDeg(data.boundaryGeoJson, frontageHint)
-    : (data.bearingDeg ?? null);
-
-  const mergedBuilding: ExistingBuildingGeometry = {
-    ...(prior ?? {}),
-    outlineGeoJson,
-    ...(googleBuilding.roofPitchDegrees !== undefined &&
-    googleBuilding.roofPitchDegrees !== null
-      ? { roofPitchDegrees: googleBuilding.roofPitchDegrees }
-      : {}),
-    ...(googleBuilding.roofAzimuthDegrees !== undefined &&
-    googleBuilding.roofAzimuthDegrees !== null
-      ? { roofAzimuthDegrees: googleBuilding.roofAzimuthDegrees }
-      : {}),
-    ...(googleBuilding.footprintSqft !== undefined &&
-    googleBuilding.footprintSqft !== null
-      ? { footprintSqft: googleBuilding.footprintSqft }
-      : {}),
-    ...(entranceLatLng ? { entranceLatLng } : {}),
-    geometrySource: googleBuilding.outlineGeoJson
-      ? "google-geocoding-v4"
-      : prior?.outlineGeoJson
-        ? (prior.geometrySource ?? "usa-structures")
-        : (googleBuilding.geometrySource ?? "google-solar"),
-  };
-
-  return {
-    ...data,
-    ...(bearingDeg !== null ? { bearingDeg } : {}),
-    existingBuilding: mergedBuilding,
-  };
 }

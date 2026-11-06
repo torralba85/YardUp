@@ -25,8 +25,6 @@
 import type { ADUConfig, RoofStyle } from "./feasibility";
 import type { GeoJsonPolygon, Parcel, LiveParcelData } from "./parcel-types";
 import { FT_PER_DEG_LAT } from "./parcel-geometry";
-import { fitObservedRectangle, type ObservedRectangle } from "./observed-building-geometry";
-import { buildingOutlineAgreesWithFootprint, buildingOutlineFitsParcel } from "./building-outline-fit";
 
 function isFiniteNumber(n: unknown): n is number {
   return typeof n === "number" && Number.isFinite(n);
@@ -170,76 +168,14 @@ export interface ParcelOutline {
    */
   isProxy: boolean;
   source: GeometrySource;
-  /** The real boundary ring, kept for aerial overlay and future irregular-placement work. */
+  /** The real boundary ring, kept for aerial overlay and future irregular-placement work. Not reprojected or validated by this module — see {@link projectPolygonToLocal}. */
   boundaryGeoJson: GeoJsonPolygon | null;
-  /**
-   * Outer parcel boundary vertices projected into local feet (centered on the
-   * parcel's oriented bounding box) when `boundaryGeoJson`, `lat`/`lng`, and a
-   * finite `bearingDeg` are present.
-   */
-  localPolygon?: LocalPoint[] | null;
 }
 
 /** Parcel shape narrow enough to describe a live (Regrid-backed) lookup without importing the full LiveParcelData type. */
-interface ParcelOutlineInput extends Pick<Parcel, "lotWidth" | "lotLength" | "bearingDeg" | "existingBuilding"> {
+interface ParcelOutlineInput extends Pick<Parcel, "lotWidth" | "lotLength"> {
   boundaryGeoJson?: GeoJsonPolygon | null;
   source?: "regrid" | "county-gis" | "fallback";
-  lat?: number;
-  lng?: number;
-}
-
-function stripClosingDuplicate(pts: LocalPoint[]): LocalPoint[] {
-  if (pts.length < 2) return pts;
-  const first = pts[0];
-  const last = pts[pts.length - 1];
-  if (Math.hypot(first.x - last.x, first.z - last.z) < 0.05) {
-    return pts.slice(0, -1);
-  }
-  return pts;
-}
-
-function computeParcelLocalFrame(parcel: {
-  boundaryGeoJson?: GeoJsonPolygon | null;
-  lat?: number;
-  lng?: number;
-  bearingDeg?: number | null;
-}): {
-  anchor: GeodeticAnchor;
-  bearingDeg: number;
-  offsetX: number;
-  offsetZ: number;
-  localPolygon: LocalPoint[];
-} | null {
-  const { boundaryGeoJson, lat, lng, bearingDeg } = parcel;
-  if (!boundaryGeoJson || !isFiniteLatLng(lat, lng) || !isFiniteNumber(bearingDeg)) {
-    return null;
-  }
-  const outerOnly: GeoJsonPolygon = {
-    type: "Polygon",
-    coordinates: [boundaryGeoJson.coordinates[0] ?? []],
-  };
-  const raw = projectPolygonToLocal({ lat: lat!, lng: lng! }, bearingDeg, outerOnly);
-  if (!raw || raw.length < 4) return null;
-  const xs = raw.map((p) => p.x);
-  const zs = raw.map((p) => p.z);
-  const offsetX = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const offsetZ = (Math.min(...zs) + Math.max(...zs)) / 2;
-  const localPolygon = stripClosingDuplicate(
-    raw.map((p) => ({ x: p.x - offsetX, z: p.z - offsetZ })),
-  );
-  if (localPolygon.length < 3) return null;
-  const shiftedAnchor =
-    projectLocalToGeodetic({ lat: lat!, lng: lng! }, bearingDeg, {
-      x: offsetX,
-      z: offsetZ,
-    }) ?? { lat: lat!, lng: lng! };
-  return {
-    anchor: shiftedAnchor,
-    bearingDeg,
-    offsetX,
-    offsetZ,
-    localPolygon,
-  };
 }
 
 export function buildParcelOutline(parcel: ParcelOutlineInput): ParcelOutline {
@@ -252,15 +188,10 @@ export function buildParcelOutline(parcel: ParcelOutlineInput): ParcelOutline {
     return { width: lotWidth, length: lotLength, isProxy: false, source: "preset", boundaryGeoJson: null };
   }
   if (boundaryGeoJson) {
-    const localFrame = computeParcelLocalFrame(parcel);
-    return {
-      width: lotWidth,
-      length: lotLength,
-      isProxy: true,
-      source: "source-provided",
-      boundaryGeoJson,
-      ...(localFrame ? { localPolygon: localFrame.localPolygon } : {}),
-    };
+    // The API returned a boundary polygon, but this module only renders its
+    // oriented bounding rectangle — that rectangle is always a proxy for
+    // the true (possibly rotated/concave) edges (D3).
+    return { width: lotWidth, length: lotLength, isProxy: true, source: "source-provided", boundaryGeoJson };
   }
   return { width: lotWidth, length: lotLength, isProxy: true, source: "estimated", boundaryGeoJson: null };
 }
@@ -331,18 +262,6 @@ export interface ExistingHouseSceneModel {
   pose: Pose2D | null;
   corners: LocalPoint[] | null;
   boundsLocal: LocalBounds | null;
-  /** Observed primary building footprint vertices in local feet when available. */
-  localPolygon?: LocalPoint[] | null;
-  /** Fitted wall dimensions and heading shared with detailed-house rendering. */
-  observedRectangle?: ObservedRectangle | null;
-  /** Observed secondary/detached structure footprints in local feet when available. */
-  detachedPolygons?: LocalPoint[][];
-  /** Wall plate height in feet (defaults to 9 ft). */
-  wallHeightFt?: number;
-  /** Roof ridge rise above wall plate in feet (derived from Solar API roofPitchDegrees when available, else 5 ft). */
-  ridgeRiseFt?: number;
-  /** Observed predominant roof pitch in degrees from Google Solar API when available. */
-  roofPitchDegrees?: number | null;
 }
 
 const EXISTING_HOUSE_WALL_HEIGHT_FT = 9;
@@ -351,28 +270,10 @@ const EXISTING_HOUSE_RIDGE_RISE_FT = 5;
 export const EXISTING_HOUSE_ROOF_OVERHANG_FT = 0.8;
 
 /**
- * Ridge rise for the rendered gable. Its slopes run front to back (eaves at
- * ±depth/2, ridge along x), so the run of each slope is half the depth.
- */
-function deriveHouseRidgeRiseFt(
-  spanDepthFt: number,
-  roofPitchDegrees: number | null | undefined,
-): number {
-  if (!isFiniteNumber(roofPitchDegrees) || roofPitchDegrees < 0) {
-    return EXISTING_HOUSE_RIDGE_RISE_FT;
-  }
-  if (roofPitchDegrees <= 5) {
-    return 1.0;
-  }
-  const rad = (Math.min(roofPitchDegrees, 60) * Math.PI) / 180;
-  const computed = (spanDepthFt / 2) * Math.tan(rad);
-  return Math.round(Math.min(Math.max(computed, 1.8), 10) * 100) / 100;
-}
-
-/**
  * Center the existing house on the width axis with its front wall on the
- * front setback unless an observed building footprint polygon (`existingBuilding.outlineGeoJson`)
- * and parcel coordinate frame are available to position it directly on the lot.
+ * front setback. The pose locates the center, so subtract half the depth.
+ * This is an estimated placement convention, not evidence of the property's
+ * true orientation or building placement. Depth is never shortened to fit.
  *
  * Returns `pose: null` when the footprint is unknown, or when `lotLength` is
  * missing, non-positive, or not finite, or `setbacks.front` is missing,
@@ -380,36 +281,13 @@ function deriveHouseRidgeRiseFt(
  * not).
  */
 export function buildExistingHouseSceneModel(
-  parcel: Pick<Parcel, "lotWidth" | "lotLength" | "existingHouseSqft" | "setbacks" | "bearingDeg" | "existingBuilding"> & {
-    boundaryGeoJson?: GeoJsonPolygon | null;
-    lat?: number;
-    lng?: number;
-    source?: LiveParcelData["source"] | "estimated";
-    dataQuality?: LiveParcelData["dataQuality"];
-  },
+  parcel: Pick<Parcel, "lotWidth" | "lotLength" | "existingHouseSqft" | "setbacks">,
   areaBasis: ExistingAreaBasis = "unknown",
 ): ExistingHouseSceneModel {
   const footprint = buildExistingHouseFootprint(parcel, areaBasis);
-  const localFrame = computeParcelLocalFrame(parcel);
-  const detachedPolygons: LocalPoint[][] = [];
-  if (localFrame) {
-    for (const detPoly of parcel.existingBuilding?.detachedOutlinesGeoJson ?? []) {
-      const detOuter: GeoJsonPolygon = {
-        type: "Polygon",
-        coordinates: [detPoly.coordinates[0] ?? []],
-      };
-      const detPts = projectPolygonToLocal(
-        localFrame.anchor,
-        localFrame.bearingDeg,
-        detOuter,
-      );
-      const stripped = detPts ? stripClosingDuplicate(detPts) : null;
-      if (stripped && stripped.length >= 3) {
-        detachedPolygons.push(stripped);
-      }
-    }
+  if (footprint.width === null || footprint.depth === null) {
+    return { footprint, pose: null, corners: null, boundsLocal: null };
   }
-
   const { lotLength, setbacks } = parcel;
   const poseInputsValid =
     isFiniteNumber(lotLength) &&
@@ -417,100 +295,17 @@ export function buildExistingHouseSceneModel(
     isFiniteNumber(setbacks?.front) &&
     setbacks.front >= 0;
   if (!poseInputsValid) {
-    return { footprint, pose: null, corners: null, boundsLocal: null, ...(detachedPolygons.length ? { detachedPolygons } : {}) };
+    return { footprint, pose: null, corners: null, boundsLocal: null };
   }
-
-  const roofPitchDegrees = parcel.existingBuilding?.roofPitchDegrees ?? null;
-  // Saved layouts can carry an outline from before the provider checks in
-  // /api/parcel, so an implausible one (mostly off the lot, the lot itself, or
-  // far larger than the observed house) falls back to the estimated house.
-  const rawOutline = parcel.existingBuilding?.outlineGeoJson ?? null;
-  const outlineGeoJson =
-    rawOutline &&
-    (!parcel.boundaryGeoJson || buildingOutlineFitsParcel(rawOutline, parcel.boundaryGeoJson)) &&
-    buildingOutlineAgreesWithFootprint(rawOutline, parcel.existingHouseSqft)
-      ? rawOutline
-      : null;
-
-  if (localFrame && outlineGeoJson) {
-    const outerOnly: GeoJsonPolygon = {
-      type: "Polygon",
-      coordinates: [outlineGeoJson.coordinates[0] ?? []],
-    };
-    const projectedHouse = projectPolygonToLocal(
-      localFrame.anchor,
-      localFrame.bearingDeg,
-      outerOnly,
-    );
-    const localPolygon = projectedHouse ? stripClosingDuplicate(projectedHouse) : null;
-    if (localPolygon && localPolygon.length >= 3) {
-      const xs = localPolygon.map((p) => p.x);
-      const zs = localPolygon.map((p) => p.z);
-      const minX = Math.min(...xs);
-      const maxX = Math.max(...xs);
-      const minZ = Math.min(...zs);
-      const maxZ = Math.max(...zs);
-      const polyWidth = Math.max(maxX - minX, MIN_HOUSE_WIDTH_FT);
-      const polyDepth = Math.max(maxZ - minZ, MIN_HOUSE_WIDTH_FT);
-      const pose: Pose2D = {
-        x: (minX + maxX) / 2,
-        z: (minZ + maxZ) / 2,
-        rotationDeg: 0,
-      };
-      const corners = rectangleCorners({ x: pose.x, z: pose.z }, polyWidth, polyDepth, 0);
-      const observedRectangle = fitObservedRectangle(localPolygon);
-      const ridgeRiseFt = deriveHouseRidgeRiseFt(observedRectangle?.depth ?? polyDepth, roofPitchDegrees);
-      const boundsLocal = boundsOfCorners(
-        localPolygon,
-        SLAB_DATUM_FT,
-        EXISTING_HOUSE_WALL_HEIGHT_FT + ridgeRiseFt,
-      );
-      return {
-        footprint: {
-          ...footprint,
-          width: polyWidth,
-          depth: polyDepth,
-          source: "source-provided",
-        },
-        pose,
-        corners,
-        boundsLocal,
-        localPolygon,
-        observedRectangle,
-        ...(detachedPolygons.length > 0 ? { detachedPolygons } : {}),
-        wallHeightFt: EXISTING_HOUSE_WALL_HEIGHT_FT,
-        ridgeRiseFt,
-        ...(roofPitchDegrees !== null ? { roofPitchDegrees } : {}),
-      };
-    }
-  }
-
-  if (footprint.width === null || footprint.depth === null) {
-    return { footprint, pose: null, corners: null, boundsLocal: null, ...(detachedPolygons.length ? { detachedPolygons } : {}) };
-  }
-  const ridgeRiseFt = deriveHouseRidgeRiseFt(footprint.depth, roofPitchDegrees);
   const z = lotLength / 2 - footprint.depth / 2 - setbacks.front;
   const pose: Pose2D = { x: 0, z, rotationDeg: 0 };
   const corners = rectangleCorners({ x: pose.x, z: pose.z }, footprint.width, footprint.depth, 0);
   const boundsLocal = boundsOfCorners(
     corners,
     SLAB_DATUM_FT,
-    EXISTING_HOUSE_WALL_HEIGHT_FT + ridgeRiseFt,
+    EXISTING_HOUSE_WALL_HEIGHT_FT + EXISTING_HOUSE_RIDGE_RISE_FT,
   );
-  return {
-    footprint,
-    pose,
-    corners,
-    boundsLocal,
-    ...(detachedPolygons.length ? { detachedPolygons } : {}),
-    ...(roofPitchDegrees !== null
-      ? {
-          wallHeightFt: EXISTING_HOUSE_WALL_HEIGHT_FT,
-          ridgeRiseFt,
-          roofPitchDegrees,
-        }
-      : {}),
-  };
+  return { footprint, pose, corners, boundsLocal };
 }
 
 // --- ADU footprint, height, and pose ---------------------------------------
@@ -793,31 +588,8 @@ export interface SceneOrigin {
   source: GeometrySource;
 }
 
-export function buildSceneOrigin(parcel: {
-  lat?: number;
-  lng?: number;
-  bearingDeg?: number | null;
-  boundaryGeoJson?: GeoJsonPolygon | null;
-}): SceneOrigin {
+export function buildSceneOrigin(parcel: { lat?: number; lng?: number }): SceneOrigin {
   if (isFiniteLatLng(parcel.lat, parcel.lng)) {
-    const validBearing = isFiniteNumber(parcel.bearingDeg) ? parcel.bearingDeg : null;
-    if (validBearing !== null) {
-      const localFrame = computeParcelLocalFrame(parcel);
-      if (localFrame) {
-        return {
-          lat: localFrame.anchor.lat,
-          lng: localFrame.anchor.lng,
-          bearingDeg: validBearing,
-          source: "source-provided",
-        };
-      }
-      return {
-        lat: parcel.lat!,
-        lng: parcel.lng!,
-        bearingDeg: validBearing,
-        source: "geocoded",
-      };
-    }
     return { lat: parcel.lat!, lng: parcel.lng!, bearingDeg: null, source: "geocoded" };
   }
   return { lat: null, lng: null, bearingDeg: null, source: "unknown" };

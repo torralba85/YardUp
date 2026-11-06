@@ -1,14 +1,12 @@
-import { Children, isValidElement, type PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
 import { getDefaultAduPose } from "@/lib/site-fit";
 import { EXISTING_HOUSE_ROOF_OVERHANG_FT } from "@/lib/scene-model";
-import { rectPolygon } from "@/lib/scene-model-fixtures";
 import ParcelScene, {
   computeShadowFrustumHalfExtent,
   existingHouseRidgeCapSize,
-  ExistingHouse,
   placementToneColor,
 } from "./ParcelScene";
 
@@ -40,22 +38,6 @@ afterEach(() => {
 });
 
 describe("ParcelScene controls", () => {
-  it("keeps detached massing in the render tree when the main house is unknown", () => {
-    const parcel = {
-      ...parcelPresets[0], lat: 32.8, lng: -117.1, bearingDeg: 0, existingHouseSqft: 0,
-      boundaryGeoJson: rectPolygon(32.8, -117.1, 60, 120, 0),
-      existingBuilding: { detachedOutlinesGeoJson: [rectPolygon(32.8, -117.1, 12, 18, 0)] },
-    };
-    const rendered = ExistingHouse({ parcel });
-    const children = Children.toArray(rendered.props.children);
-    expect(children).toHaveLength(1);
-    const building = children[0];
-    expect(isValidElement<{ points: { x: number; z: number }[]; height: number }>(building)).toBe(true);
-    if (isValidElement<{ points: { x: number; z: number }[]; height: number }>(building)) {
-      expect(building.props.points).toHaveLength(4);
-      expect(building.props.height).toBeGreaterThan(0);
-    }
-  });
   it("presents an honest, adjustable shadow preview without a fake satellite mode", () => {
     render(
       <ParcelScene
@@ -220,20 +202,6 @@ describe("ParcelScene controls", () => {
     expect(sunBtn).toHaveTextContent("Solar · 5 PM");
     fireEvent.click(sunBtn);
     expect(sunBtn).toHaveTextContent("Solar · 9 AM");
-  });
-
-  it("displays real parcel frontage bearing in the compass badge when parcel.bearingDeg is provided", () => {
-    render(
-      <ParcelScene
-        parcel={{ ...parcelPresets[0], bearingDeg: 180 }}
-        config={defaultAduConfig}
-        isCompliant
-        remainingCapacity={20}
-      />,
-    );
-
-    const badge = screen.getByTestId("scene-compass-badge");
-    expect(badge).toHaveTextContent("N · 180°");
   });
 });
 
