@@ -257,6 +257,9 @@ service cloud.firestore {
     // the evaluated-expression count, and a scenario carrying a full liveParcel
     // then blew Firestore's hard 1000-expression-per-request ceiling. Keep
     // hasOnly() (it rejects unknown fields) and do not reintroduce hasAll().
+    // Range comparisons reject non-numeric values too. Avoid duplicate numeric
+    // type expressions so full live-parcel saves plus plan IDs fit the 1000
+    // expression ceiling. Bounds, key allowlists and ownership remain enforced.
     function isValidAduConfig(config) {
       return config is map &&
         config.keys().hasOnly([
@@ -268,16 +271,12 @@ service cloud.firestore {
           "finish",
           "includeOpenings"
         ]) &&
-        config.footprint is number &&
         config.footprint > 0 &&
         config.footprint <= 2000 &&
-        config.width is number &&
         config.width > 0 &&
         config.width <= 80 &&
-        config.length is number &&
         config.length > 0 &&
         config.length <= 80 &&
-        config.height is number &&
         config.height > 0 &&
         config.height <= 30 &&
         config.roof in ["shed", "gable", "flat"] &&
@@ -288,16 +287,12 @@ service cloud.firestore {
     function isValidCostPerSqft(costs) {
       return costs is map &&
         costs.keys().hasOnly(["cedar", "lap", "stucco", "board"]) &&
-        costs.cedar is number &&
         costs.cedar >= 100 &&
         costs.cedar <= 1000 &&
-        costs.lap is number &&
         costs.lap >= 100 &&
         costs.lap <= 1000 &&
-        costs.stucco is number &&
         costs.stucco >= 100 &&
         costs.stucco <= 1000 &&
-        costs.board is number &&
         costs.board >= 100 &&
         costs.board <= 1000;
     }
@@ -311,10 +306,8 @@ service cloud.firestore {
           "rentScenario"
         ]) &&
         isValidCostPerSqft(assumptions.costPerSqft) &&
-        assumptions.softCostMultiplier is number &&
         assumptions.softCostMultiplier >= 1 &&
         assumptions.softCostMultiplier <= 3 &&
-        assumptions.operatingExpenseRatio is number &&
         assumptions.operatingExpenseRatio >= 0 &&
         assumptions.operatingExpenseRatio <= 1 &&
         assumptions.rentScenario in ["conservative", "market", "optimistic"];
@@ -323,11 +316,8 @@ service cloud.firestore {
     function isValidSetbacks(setbacks) {
       return setbacks is map &&
         setbacks.keys().hasOnly(["front", "rear", "side"]) &&
-        setbacks.front is number &&
         setbacks.front >= 0 &&
-        setbacks.rear is number &&
         setbacks.rear >= 0 &&
-        setbacks.side is number &&
         setbacks.side >= 0;
     }
 
@@ -343,13 +333,10 @@ service cloud.firestore {
     function isValidPose(pose) {
       return pose is map &&
         pose.keys().hasOnly(["x", "z", "rotationDeg"]) &&
-        pose.x is number &&
         pose.x >= -10000 &&
         pose.x <= 10000 &&
-        pose.z is number &&
         pose.z >= -10000 &&
         pose.z <= 10000 &&
-        pose.rotationDeg is number &&
         pose.rotationDeg >= -360 &&
         pose.rotationDeg <= 360;
     }
@@ -435,15 +422,10 @@ service cloud.firestore {
         parcel.city is string &&
         parcel.city.size() > 0 &&
         parcel.city.size() <= 120 &&
-        parcel.lotArea is number &&
         parcel.lotArea > 0 &&
-        parcel.lotWidth is number &&
         parcel.lotWidth > 0 &&
-        parcel.lotLength is number &&
         parcel.lotLength > 0 &&
-        parcel.existingHouseSqft is number &&
         parcel.existingHouseSqft >= 0 &&
-        parcel.maxLotCoveragePercent is number &&
         parcel.maxLotCoveragePercent > 0 &&
         parcel.maxLotCoveragePercent <= 100 &&
         isValidSetbacks(parcel.setbacks) &&
@@ -451,10 +433,8 @@ service cloud.firestore {
         parcel.zoning.size() > 0 &&
         parcel.zoning.size() <= 80 &&
         isValidBoundaryGeoJson(parcel.boundaryGeoJson) &&
-        parcel.lat is number &&
         parcel.lat >= -90 &&
         parcel.lat <= 90 &&
-        parcel.lng is number &&
         parcel.lng >= -180 &&
         parcel.lng <= 180 &&
         parcel.source in ["regrid", "county-gis", "fallback"] &&
@@ -470,6 +450,16 @@ service cloud.firestore {
         // normalizeLiveParcel keeps only known fields and re-checks every
         // polygon and range when the scenario is read back.
         (!("existingBuilding" in parcel) || parcel.existingBuilding is map);
+    }
+
+    // Reference IDs only. Approval details always come from the curated catalog.
+    function isValidPreapprovedPlan(reference) {
+      return reference is map &&
+        reference.keys().hasOnly(["planId", "jurisdictionId"]) &&
+        reference.planId is string && reference.planId.size() <= 100 &&
+        reference.planId.matches('^[a-z0-9]+(-[a-z0-9]+)*$') &&
+        reference.jurisdictionId is string && reference.jurisdictionId.size() <= 100 &&
+        reference.jurisdictionId.matches('^[a-z0-9]+(-[a-z0-9]+)*$');
     }
 
     function isValidNewScenario() {
@@ -489,6 +479,7 @@ service cloud.firestore {
         "pose",
         "projectBrief",
         "styleMatchConcept",
+        "preapprovedPlan",
         "createdAt",
         "updatedAt"
       ]) &&
@@ -503,6 +494,7 @@ service cloud.firestore {
       isValidFinancialAssumptions(data.assumptions) &&
       (!("projectBrief" in data) || data.projectBrief is map) &&
       (!("styleMatchConcept" in data) || data.styleMatchConcept is map) &&
+      (!("preapprovedPlan" in data) || isValidPreapprovedPlan(data.preapprovedPlan)) &&
       // version/heightConvention/pose travel together, mirroring
       // isValidSavedScenario in lib/saved-scenarios.ts. Accepting `version: 2`
       // on its own would store a document migrateDesign refuses to hydrate, so

@@ -64,6 +64,6 @@ export function restoreScenario(scenario: SavedScenario) {
     preset, liveParcel: scenario.liveParcel ?? null,
     parcelId: scenario.parcelId, config: scenario.config, assumptions: scenario.assumptions,
     pose, poseKey: scenario.liveParcel ? `${parcel.address}|${parcel.city}` : scenario.parcelId,
-    briefState, concept,
+    briefState, concept, preapprovedPlan: scenario.preapprovedPlan ?? null,
   };
 }

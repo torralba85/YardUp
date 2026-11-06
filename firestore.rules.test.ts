@@ -381,6 +381,32 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     return { ...SAMPLE_LIVE_PARCEL, ...overrides };
   }
 
+  it("rejects non-numeric bounded fields without separate numeric type expressions", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const ref = doc(db, "users", OWNER_ID, "savedScenarios", "bad-number");
+    const sample = sampleScenario();
+    for (const value of ["600", true, null, [], {}]) {
+      await assertFails(setDoc(ref, sampleScenario({ config: { ...sample.config, footprint: value } })));
+      await assertFails(setDoc(ref, sampleScenario({ assumptions: { ...sample.assumptions, softCostMultiplier: value } })));
+      await assertFails(setDoc(ref, sampleScenario({ liveParcel: sampleLiveParcel({ lotArea: value }) })));
+    }
+  });
+
+  it("allows safe plan references within the live-parcel expression budget and rejects metadata or malformed IDs", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const ref = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+    const preapprovedPlan = { planId: "sacramento-studio-367", jurisdictionId: "ca-sacramento" };
+    await assertSucceeds(setDoc(ref, sampleScenario({ liveParcel: SAMPLE_LIVE_PARCEL_MAX, preapprovedPlan })));
+    for (const value of [null, {}, { ...preapprovedPlan, planId: "../invalid" }, { ...preapprovedPlan, planId: "a".repeat(101) }, { ...preapprovedPlan, approval: "guaranteed" }]) {
+      await assertFails(setDoc(doc(db, "users", OWNER_ID, "savedScenarios", "bad-plan"), sampleScenario({ preapprovedPlan: value })));
+    }
+    for (const context of [rulesEnv().unauthenticatedContext(), rulesEnv().authenticatedContext("other-user")]) {
+      const foreign = doc(context.firestore(), "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+      await assertFails(getDoc(foreign));
+      await assertFails(setDoc(foreign, sampleScenario({ preapprovedPlan })));
+    }
+  });
+
   it("allows owner to create a scenario with scene model fields", async () => {
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
     const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);

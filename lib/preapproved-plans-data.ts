@@ -1,0 +1,647 @@
+/** Official listings reviewed 2026-11-03 to 2026-11-06. See docs/preapproved-plans.md for evidence and maintenance. */
+import type { PreapprovedPlan, PreapprovedProgram } from "./preapproved-plans";
+
+export const preapprovedPrograms: readonly PreapprovedProgram[] = [
+  {
+    "id": "ca-san-diego",
+    "city": "San Diego",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "catalogUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The City accepts the County of San Diego standard plans, plus Chula Vista's and Encinitas's preapproved plans, with a 30-day review. Plans must meet the currently adopted codes and the San Diego Municipal Code; ask the plan's provider about licensing."
+  },
+  {
+    "id": "ca-chula-vista",
+    "city": "Chula Vista",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units",
+    "catalogUrl": "https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "Six City Standard plans by SnapADU, from 498 to 1,199 sq ft (three are L-shaped), are reviewed in 14 business days instead of 21, with about $1,000 less in plan review fees. You contract with the designer to use one. Individual plans are not listed here yet; use the City's page."
+  },
+  {
+    "id": "ca-oceanside",
+    "city": "Oceanside",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.ci.oceanside.ca.us/gov/dev/planning",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "ca-escondido",
+    "city": "Escondido",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.escondido.gov/DocumentCenter/View/544/City-ADU-Handout-PDF",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "ca-carlsbad",
+    "city": "Carlsbad",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "catalogUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "Four permit-ready single-story detached plans: studio 400, one-bedroom 680, two-bedroom 800 and three-bedroom 999 sq ft, each in three architectural styles. Individual plans are not listed here yet; use the City's page."
+  },
+  {
+    "id": "ca-imperial-beach",
+    "city": "Imperial Beach",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
+    "catalogUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City publishes one pre-approved detached ADU plan set. Check the FEMA flood map first: the plans cannot be used in a Special Flood Hazard Area."
+  },
+  {
+    "id": "ca-la-mesa",
+    "city": "La Mesa",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "catalogUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City publishes previews of five pre-approved plans. Email Planning@cityoflamesa.gov for the official construction set of the one you choose."
+  },
+  {
+    "id": "ca-san-marcos",
+    "city": "San Marcos",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.sanmarcosca.gov/Business-Services/Building-Division/Permit-Ready-ADUs",
+    "catalogUrl": "https://www.sanmarcosca.gov/Business-Services/Building-Division/Permit-Ready-ADUs",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "The City offers pre-approved one-story detached plans and decides within 30 days of a complete application. No alterations are allowed. Individual plans are not listed here yet; use the City's catalog."
+  },
+  {
+    "id": "ca-san-diego-county",
+    "city": "Unincorporated San Diego County",
+    "state": "CA",
+    "authority": "county",
+    "status": "verified",
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "catalogUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "Official program listing checked. Confirm current-code acceptance, lot-specific requirements and permission to use the documents before applying."
+  },
+  {
+    "id": "ca-sacramento",
+    "city": "Sacramento",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://adu.cityofsacramento.org/Shelf-ready-plans",
+    "catalogUrl": "https://adu.cityofsacramento.org/Shelf-ready-plans",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "Shelf Ready plans are published to the 2022 Residential Building Code. Confirm current-code acceptance before applying."
+  },
+  {
+    "id": "ca-san-jose",
+    "city": "San José",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.sanjoseca.gov/business/development-services-permit-center/accessory-dwelling-units-adus/preapproved-adus",
+    "catalogUrl": "https://www.sanjoseca.gov/business/development-services-permit-center/accessory-dwelling-units-adus/preapproved-adus",
+    "verifiedAt": "2026-11-03",
+    "reviewedAt": "2026-11-03",
+    "notes": "Vendors offer City-reviewed plans for detached ADUs from 476 to 991 sq ft. On a qualifying lot outside geohazard, flood and wildland-urban interface zones, the permit can be issued the same day as the plan review meeting. Individual plans are not listed here yet; use the City's page."
+  },
+  {
+    "id": "ca-encinitas",
+    "city": "Encinitas",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.encinitasca.gov/government/departments/development-services/policy-planning-housing/policy-planning/accessory-dwelling-units",
+    "catalogUrl": "https://www.encinitasca.gov/government/departments/development-services/policy-planning-housing/policy-planning/accessory-dwelling-units",
+    "verifiedAt": "2026-11-05",
+    "reviewedAt": "2026-11-05",
+    "notes": "Permit-Ready ADU (PRADU) plans from two architects, studio to three bedrooms, kept current with the building code, with customizable exterior materials and openings. The City of San Diego accepts them too. Individual plans are not listed here yet; use the City's page."
+  },
+  {
+    "id": "ca-el-cajon",
+    "city": "El Cajon",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.elcajon.gov/your-government/departments/community-development",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "ca-vista",
+    "city": "Vista",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.cityofvista.com/",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "wa-seattle",
+    "city": "Seattle",
+    "state": "WA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.seattle.gov/sdci/permits/common-projects/accessory-dwelling-units",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "or-portland",
+    "city": "Portland",
+    "state": "OR",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.portland.gov/",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "tx-austin",
+    "city": "Austin",
+    "state": "TX",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.austintexas.gov/development-services/additional-dwelling-units",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "ca-los-angeles",
+    "city": "Los Angeles",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://dbs.lacity.gov/",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "ca-oakland",
+    "city": "Oakland",
+    "state": "CA",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.oaklandca.gov/",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  },
+  {
+    "id": "co-denver",
+    "city": "Denver",
+    "state": "CO",
+    "authority": "city",
+    "status": "needs-verification",
+    "sourceUrl": "https://www.denvergov.org/",
+    "reviewedAt": "2026-11-06",
+    "notes": "Individual plans and current program availability need verification. Check with the permitting authority; an empty catalog does not mean no program exists."
+  }
+];
+
+export const preapprovedPlans: readonly PreapprovedPlan[] = [
+  {
+    "id": "sacramento-studio-367",
+    "jurisdictionId": "ca-sacramento",
+    "name": "Shelf Ready Studio",
+    "provider": "City of Sacramento",
+    "sqft": 367,
+    "bedrooms": 0,
+    "sourceUrl": "https://adu.cityofsacramento.org/Shelf-ready-plans",
+    "documentUrl": "https://adu.cityofsacramento.org/content/dam/cityofsacramento/adu/plan/ADU_STUDIO.pdf",
+    "footprint": {
+      "width": 20,
+      "length": 20,
+      "shape": "rectangle",
+      "sheet": "Shelf Ready studio plan set, sheet A2.1 (20x20; recessed porch under the roof)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "All-electric; published to the 2022 Residential Building Code. No modifications; mirroring allowed. Add a lot-specific site plan and confirm current-code acceptance.",
+    "feeNote": "City publishes these plan sets as free. Permit, construction and lot-specific preparation costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "sacramento-one-bedroom-559",
+    "jurisdictionId": "ca-sacramento",
+    "name": "Shelf Ready One-bedroom",
+    "provider": "City of Sacramento",
+    "sqft": 559,
+    "bedrooms": 1,
+    "sourceUrl": "https://adu.cityofsacramento.org/Shelf-ready-plans",
+    "documentUrl": "https://adu.cityofsacramento.org/content/dam/cityofsacramento/adu/plan/ADU_1_BEDROOM.pdf",
+    "footprint": {
+      "width": 20,
+      "length": 30,
+      "shape": "rectangle",
+      "sheet": "Shelf Ready one-bedroom plan set, sheet A2.1 (20x30; recessed porch under the roof)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "All-electric; published to the 2022 Residential Building Code. No modifications; mirroring allowed. Add a lot-specific site plan and confirm current-code acceptance.",
+    "feeNote": "City publishes these plan sets as free. Permit, construction and lot-specific preparation costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "sacramento-two-bedroom-747",
+    "jurisdictionId": "ca-sacramento",
+    "name": "Shelf Ready Two-bedroom",
+    "provider": "City of Sacramento",
+    "sqft": 747,
+    "bedrooms": 2,
+    "sourceUrl": "https://adu.cityofsacramento.org/Shelf-ready-plans",
+    "documentUrl": "https://adu.cityofsacramento.org/content/dam/cityofsacramento/adu/plan/ADU_2_BEDROOM.pdf",
+    "footprint": {
+      "width": 20,
+      "length": 40,
+      "shape": "rectangle",
+      "sheet": "Shelf Ready two-bedroom plan set, sheet A2.1 (20x40; recessed porch under the roof)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "All-electric; published to the 2022 Residential Building Code. No modifications; mirroring allowed. Add a lot-specific site plan and confirm current-code acceptance.",
+    "feeNote": "City publishes these plan sets as free. Permit, construction and lot-specific preparation costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "la-mesa-plan-a",
+    "jurisdictionId": "ca-la-mesa",
+    "name": "La Mesa Plan A",
+    "provider": "City of La Mesa",
+    "sqft": 224,
+    "bedrooms": 0,
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24808/PLAN-A---224-SQFT---STUDIO-ADU",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 14,
+      "length": 16,
+      "shape": "rectangle",
+      "sheet": "La Mesa Plan A preview, floor plan page 7"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "la-mesa-plan-b",
+    "jurisdictionId": "ca-la-mesa",
+    "name": "La Mesa Plan B",
+    "provider": "City of La Mesa",
+    "sqft": 400,
+    "bedrooms": 1,
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24937/PLAN-B---400-SQFT---ONE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 16,
+      "length": 25,
+      "shape": "rectangle",
+      "sheet": "La Mesa Plan B preview, floor plan page 7"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "la-mesa-plan-c",
+    "jurisdictionId": "ca-la-mesa",
+    "name": "La Mesa Plan C",
+    "provider": "City of La Mesa",
+    "sqft": 499,
+    "bedrooms": 1,
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/25024/PLAN-C---499-SQFT---ONE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 14,
+      "length": 35.67,
+      "shape": "rectangle",
+      "sheet": "La Mesa Plan C preview, floor plan page 7"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "la-mesa-plan-d",
+    "jurisdictionId": "ca-la-mesa",
+    "name": "La Mesa Plan D",
+    "provider": "City of La Mesa",
+    "sqft": 990,
+    "bedrooms": 2,
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24945/PLAN-D---990-SQFT---TWO-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 30,
+      "length": 33,
+      "shape": "rectangle",
+      "sheet": "La Mesa Plan D preview, floor plan page 7"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "la-mesa-plan-e",
+    "jurisdictionId": "ca-la-mesa",
+    "name": "La Mesa Plan E",
+    "provider": "City of La Mesa",
+    "sqft": 1199,
+    "bedrooms": 3,
+    "sourceUrl": "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+    "documentUrl": "https://www.cityoflamesa.gov/DocumentCenter/View/24809/PLAN-E---1199-SQFT---THREE-BEDROOM-ADU",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 28,
+      "length": 48.75,
+      "shape": "irregular",
+      "sheet": "La Mesa Plan E preview, sheet a1.0 (stepped; optional trellis excluded)"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Email Planning@cityoflamesa.gov for the official construction set. Add a lot-specific site plan, Title 24 energy calculations and supplemental documents; a soils report is required over 500 sq ft.",
+    "status": "active"
+  },
+  {
+    "id": "imperial-beach-600",
+    "jurisdictionId": "ca-imperial-beach",
+    "name": "Imperial Beach Pre-Approved ADU",
+    "provider": "City of Imperial Beach",
+    "sqft": 600,
+    "bedrooms": 1,
+    "sourceUrl": "https://imperialbeachca.gov/268/Accessory-Dwelling-Units",
+    "documentUrl": "https://imperialbeachca.gov/DocumentCenter/View/346/Pre-Approved-ADU-Plans-600-SF-PDF",
+    "footprint": {
+      "width": 21,
+      "length": 28.58,
+      "shape": "rectangle",
+      "sheet": "Imperial Beach pre-approved plan set, floor plan page 2"
+    },
+    "verifiedAt": "2026-11-05",
+    "restrictions": "Detached unit. Not for lots in a FEMA Special Flood Hazard Area. Drawn to the 2019 California codes, so ask the Building Division what the current code cycle changes; add site-specific information.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-a",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan A",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds670_24x36.pdf",
+    "footprint": {
+      "width": 30,
+      "length": 40,
+      "shape": "rectangle",
+      "sheet": "County pds670 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-b",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan B",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds673_24x36.pdf",
+    "footprint": {
+      "width": 32,
+      "length": 54,
+      "shape": "irregular",
+      "sheet": "County pds673 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-c",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan C",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds675_24x36.pdf",
+    "footprint": {
+      "width": 34.25,
+      "length": 35,
+      "shape": "rectangle",
+      "sheet": "County pds675 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-d",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan D",
+    "provider": "County of San Diego",
+    "sqft": 1000,
+    "bedrooms": 1,
+    "bathrooms": 1.5,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds674_24x36.pdf",
+    "footprint": {
+      "width": 31.5,
+      "length": 31.75,
+      "shape": "rectangle",
+      "sheet": "County pds674 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-e",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan E",
+    "provider": "County of San Diego",
+    "sqft": 800,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds672_24x36.pdf",
+    "footprint": {
+      "width": 25,
+      "length": 42.17,
+      "shape": "irregular",
+      "sheet": "County pds672 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-county-plan-f",
+    "jurisdictionId": "ca-san-diego-county",
+    "name": "County Standard Plan F",
+    "provider": "County of San Diego",
+    "sqft": 600,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds671_24x36.pdf",
+    "footprint": {
+      "width": 21,
+      "length": 28.58,
+      "shape": "rectangle",
+      "sheet": "County pds671 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-a",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan A",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds670_24x36.pdf",
+    "footprint": {
+      "width": 30,
+      "length": 40,
+      "shape": "rectangle",
+      "sheet": "County pds670 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-b",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan B",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds673_24x36.pdf",
+    "footprint": {
+      "width": 32,
+      "length": 54,
+      "shape": "irregular",
+      "sheet": "County pds673 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-c",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan C",
+    "provider": "County of San Diego",
+    "sqft": 1200,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds675_24x36.pdf",
+    "footprint": {
+      "width": 34.25,
+      "length": 35,
+      "shape": "rectangle",
+      "sheet": "County pds675 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-d",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan D",
+    "provider": "County of San Diego",
+    "sqft": 1000,
+    "bedrooms": 1,
+    "bathrooms": 1.5,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds674_24x36.pdf",
+    "footprint": {
+      "width": 31.5,
+      "length": 31.75,
+      "shape": "rectangle",
+      "sheet": "County pds674 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-e",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan E",
+    "provider": "County of San Diego",
+    "sqft": 800,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds672_24x36.pdf",
+    "footprint": {
+      "width": 25,
+      "length": 42.17,
+      "shape": "irregular",
+      "sheet": "County pds672 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  },
+  {
+    "id": "san-diego-city-plan-f",
+    "jurisdictionId": "ca-san-diego",
+    "name": "County Standard Plan F",
+    "provider": "County of San Diego",
+    "sqft": 600,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units",
+    "documentUrl": "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/pds671_24x36.pdf",
+    "footprint": {
+      "width": 21,
+      "length": 28.58,
+      "shape": "rectangle",
+      "sheet": "County pds671 floor plan, sheet A1 (rev. 01/01/2026)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. The City of San Diego expressly lists these County plans as accepted.",
+    "status": "active"
+  }
+];

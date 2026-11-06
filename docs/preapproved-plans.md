@@ -1,0 +1,64 @@
+# Pre-approved ADU plans in the Studio
+
+Implemented in the free desktop Design and mobile Shape flows. Using a plan records a reference to official documents and gives the 3D model the plan's real footprint, read from its official floor-plan sheet, so the scene, placement check and estimates answer "does this plan fit my lot?". It is not a permit, a lot-eligibility finding, or a promise of faster approval.
+
+## Sources and coverage
+
+The catalog covers the union of the 14 entries in `ADU_CITIES` and Seattle, Portland, Austin, Los Angeles, Oakland and Denver: 20 permitting jurisdictions. Listings were first read on 2026-11-06 (UTC) and re-checked on 2026-11-05 (Pacific) during the Studio integration audit. An unsuccessful verification attempt is not evidence that a program is unavailable.
+
+| Authority | Verified evidence and selection |
+| --- | --- |
+| [Sacramento](https://adu.cityofsacramento.org/Shelf-ready-plans) | Shelf Ready Studio 367 sq ft, one-bedroom 559 sq ft, two-bedroom 747 sq ft. City calls plans free and all-electric; mirroring allowed, modifications prohibited, site plan required. Listing still specifies the 2022 code, so current-code acceptance must be checked. All three document links return PDFs. |
+| [Unincorporated San Diego County](https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html) | ADU/SFD Plans A–F: 1,200 sq ft 3 bed 1 bath (pds670), 1,200 2 bed 1 bath (pds673), 1,200 2 bed 2 bath (pds675), 1,000 1 bed 1.5 bath (pds674), 800 1 bed 1 bath (pds672), 600 1 bed 1 bath (pds671). Approximately 85% complete; project information and checklist required. G/H are SFD-only and excluded. Re-checked 2026-11-05 against the page HTML. |
+| [City of San Diego](https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units) | The "Preapproved ADU Plans" section accepts County standard plans, Chula Vista standard plans and Encinitas permit-ready plans, under AB 1332, with a 30-day review. Plans must meet currently adopted codes and the San Diego Municipal Code; applicants contact the provider about licensing. County A–F appear as separate City references with this acceptance source. |
+| [La Mesa](https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units) | Plans A–E: 224 studio, 400 one-bedroom, 499 one-bedroom, 990 two-bedroom, 1,199 three-bedroom sq ft. The City's preview PDFs resolve again (2026-11-05) and are linked as "Plan preview"; the official construction set is requested from Planning by email. Site plan, energy calculations, supplemental documents and a soils report over 500 sq ft are required. |
+| [Imperial Beach](https://imperialbeachca.gov/268/Accessory-Dwelling-Units) | One pre-approved plan set, read 2026-11-05: a 600 sq ft detached one-bedroom ADU. Its cover sheet bars projects in a FEMA Special Flood Hazard Area and cites the 2019 California codes. |
+| [San Marcos](https://www.sanmarcosca.gov/Business-Services/Building-Division/Permit-Ready-ADUs) | Pre-approved one-story detached plans, decided within 30 days of a complete application; no alterations. Plans sit in an external Dropbox catalog and are not curated here; the program links to the City's page. |
+| [Chula Vista](https://www.chulavistaca.gov/departments/development-services/permit-information/city-permits/accessory-dwelling-units) | Read in Chrome 2026-11-05: six City Standard plans by SnapADU (498 Square, 748 Long, 749 Square, 749 L-Shape, 999 L-Shape, 1,199 L-Shape), each with a reversed version; 14 business-day review instead of 21 and about $1,000 less in plan review fees; owners contract with the designer and sign a hold-harmless agreement. The plan PDFs refuse automated downloads, so individual plans are not curated yet. |
+| [Encinitas](https://www.encinitasca.gov/government/departments/development-services/policy-planning-housing/policy-planning/accessory-dwelling-units) | Read in Chrome 2026-11-05: PRADU plans from Design Path Studio and DZN Partners, studio to three bedrooms, updated to current code, with customizable exteriors; private master plans pre-approved under AB 1332 since 2025. Not curated yet. |
+| [Carlsbad](https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program) | Read in Chrome 2026-11-05: four permit-ready single-story detached plans (studio 400, one-bedroom 680, two-bedroom 800, three-bedroom 999 sq ft), three architectural styles; the earlier "temporarily unavailable" notice is gone. Not curated yet. |
+| [San José](https://www.sanjoseca.gov/business/development-services-permit-center/accessory-dwelling-units-adus/preapproved-adus) | Program read in Chrome on 2026-11-03 for the city guide: vendor plans for detached ADUs of 476–991 sq ft, same-day permits on qualifying lots. Individual plans are not curated. |
+
+Still `needs-verification`: Oceanside, Escondido, El Cajon, Vista, Seattle, Portland, Austin, Los Angeles, Oakland, Denver. Escondido's source is an ADU handout, not evidence of a program.
+
+### Footprints
+
+Every curated plan records its overall outside-of-wall footprint from its official floor-plan sheet. Each sheet was read four ways: the PDF's dimension text, a visual read, and independent blind reads by Codex and by Gemini (3.8 Flash) of renders under opaque IDs. All four agreed on every plan, including the L-shape notches and Sacramento's recessed porches. A unit test checks each footprint against the listed area (rectangles 0.99–1.10×, irregular outer bounds above 1.10×).
+
+| Plan | Footprint | Shape |
+| --- | --- | --- |
+| County A / C / D / F (and City references) | 30′×40′, 34′-3″×35′, 31′-6″×31′-9″, 21′×28′-7″ | rectangle |
+| County B / E (and City references) | outer 32′×54′, 25′×42′-2″ | L (notches 33′×16′, 24′-2″×10′-6″) |
+| Imperial Beach | 21′×28′-7″ | rectangle (same shell as County F) |
+| La Mesa A–D | 14′×16′, 16′×25′, 14′×35′-8″, 30′×33′ | rectangle |
+| La Mesa E | outer 28′×48′-9″ | stepped (optional trellis excluded) |
+| Sacramento studio / one / two bedroom | 20′×20′, 20′×30′, 20′×40′ | rectangle (porch recessed under the roof) |
+
+## Data and behavior
+
+- `lib/preapproved-plans-data.ts` maintains program availability and at most six curated plans per jurisdiction; `lib/preapproved-plans.ts` defines types, reference validation, exact city/state suggestions, the authority list for a lot and the model sizing.
+- **3D integration.** "Use this plan" attaches the reference and calls `configForPlan`. A rectangular plan gives the model its exact recorded footprint, oriented like the current model; roof, finish, height and openings are kept. The Studio models rectangles, so an L-shaped or stepped plan keeps its published floor area in its outer proportions (`configForPlanArea`, half-foot grid): its outer rectangle would overstate size, cost and size-limit checks. The Studio then runs the placement check on the plan's full outer rectangle at the same pose and shows it as a second verdict; if the outline fits, the real plan fits. A plan with no recorded footprint falls back to area sizing with its own wording. `width × length` stays exact, as stored designs require. Placement is unchanged, as with any size change; the existing fit check and Snap to fit apply. Outside-wall footprints can exceed the listed living area, which the summary says.
+- **Not yet modeled:** true L-shaped massing. Rendering, placement validation, persistence and rules all assume a rectangle; supporting two-rectangle footprints is the follow-up that would let irregular plans use their exact shape.
+- The selected-plan summary stays visible above the collapsed catalog. It shows the plan's facts, the model's size and the scene's own placement verdict (`describePlacementWithEvidence`), a "View on your lot" action that scrolls to the model, and "Undo size change", which restores only the earlier width and length while the model still has the size the plan gave it. If the model is later resized, the summary compares it with the plan and offers "Use the plan's footprint" (or, for area-sized plans, "Size 3D model to N sq ft").
+- Focus moves to the summary heading after a plan is used, and a polite live region announces the change; the scene's own status region announces the fit.
+- A postal city only suggests the authority. The authority list is limited to the lot's state when it is known. The homeowner must confirm the authority, including unincorporated county where appropriate, before any plan can be used. Changing or unconfirming the authority removes an attached plan and says why. Removing a plan leaves the model at its current size.
+- Persist only `{ planId, jurisdictionId }` through saved scenarios, Firestore, restoration, shared URLs and emailed layout snapshots. Never persist user-authored approval metadata or document URLs. Restoring a study never resizes its model.
+- Optional metadata is additive to scenario v2. Unknown/withdrawn IDs remain readable, show "Plan unavailable" and offer no sizing or links.
+- Shared references carry a URL-only checksum of lot identity and parcel mode; it contains no raw address and is not an access-control token. Hydration rejects a scope mismatch so a live-lot reference cannot silently attach to a demo or another lot. Emailed layout links continue to restore the real lot through the existing opaque snapshot token.
+- Switching lots or resetting clears the active reference. Reopening a saved study restores only its own reference. `plan=none` clears a reference inherited from an emailed snapshot, so removing it survives reload.
+
+## Maintenance and release
+
+Recheck official program acceptance and individual listings before adding/updating entries. Record verification dates, published code edition, licensing/cost conditions and restrictions. Use `needs-verification` when evidence is incomplete; use `unavailable` only with a current source explicitly reporting unavailability. Retire plans with `status: "withdrawn"` instead of reassigning IDs. Keep document links optional when publishers require contact or their links no longer resolve. Do not invent prices, dimensions or approval timelines.
+
+Deploy application and Firestore rules together after the release gate and local rules emulator pass. The additional reference checks must remain inside Firestore's 1,000-expression ceiling for a maximal live parcel. Bounded numeric comparisons already fail closed for non-numeric inputs; avoid duplicating numeric type expressions that consume this budget. Regression tests cover maximal payloads, non-numeric data, malformed references and cross-user access. No new indexes or collections are required. Rollback the app first; leaving the additive optional-field rules in place preserves new saved records.
+
+## Review evidence
+
+The first implementation received an independent code review. Two Important findings were reproduced and fixed with failing-then-passing tests: URL references attaching to a different lot, and restored authority disagreeing with a saved county reference.
+
+The 2026-11-05 Studio integration audit found the plan browser disconnected from the 3D model (a 1,200 sq ft plan could be "selected" on a 400 sq ft model with no fit signal), two near-identical authority and browse selects listing out-of-state cities, a duplicated heading and three overlapping disclaimers, doubled padding inside mobile Shape, and stale catalog data (La Mesa previews, Imperial Beach's plan, Chula Vista, Encinitas and San José programs, the City of San Diego's full acceptance list). Those are fixed as described above.
+
+Screenshots: [desktop](verification/preapproved-plans-desktop.png), [mobile](verification/preapproved-plans-mobile.png).
+
+Local verification (2026-11-05, real footprints): lint, TypeScript and the production build passed; Vitest 3,031 passed / 89 skipped; Firestore emulator 31/31 (rules unchanged since); Playwright desktop and mobile Chromium 4/4 against the production build on port 4571. Not deployed or checked on production.

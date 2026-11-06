@@ -66,6 +66,18 @@ import BuilderLeadPanel, {
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
+import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
+import {
+  configForPlan,
+  findPreapprovedPlan,
+  modelMatchesPlan,
+  planOutline,
+  normalizePlanReference,
+  planScopeForLot,
+  type PreapprovedPlanReference,
+} from "@/lib/preapproved-plans";
+import { describePlacementWithEvidence } from "@/lib/placement-evidence";
+import { getScenePlacement } from "@/lib/site-fit";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -76,7 +88,7 @@ import MobileHeader from "./studio/mobile/MobileHeader";
 import MobileJourney from "./studio/mobile/journey/MobileJourney";
 import FindStep from "./studio/mobile/journey/FindStep";
 import EarnStep from "./studio/mobile/journey/EarnStep";
-import ShapeStep from "./studio/mobile/journey/ShapeStep";
+import ShapeStep, { MODEL_STAGE_ID } from "./studio/mobile/journey/ShapeStep";
 import CheckStep from "./studio/mobile/journey/CheckStep";
 import ActStep from "./studio/mobile/journey/ActStep";
 import FineTuneDrawer from "./studio/mobile/journey/FineTuneDrawer";
@@ -187,6 +199,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
     defaultFinancialAssumptions,
   );
+  const [planState, setPlanState] = useState<{ key: string; reference: PreapprovedPlanReference | null }>({ key: parcelPresets[0].id, reference: null });
+  // The size the model had before a plan resized it, offered back as an undo
+  // only while the model still holds exactly the size the plan gave it.
+  const [planSizing, setPlanSizing] = useState<{ key: string; previous: ADUConfig; applied: ADUConfig } | null>(null);
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -339,6 +355,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // render identically to before.)
   const sceneParcel = activeParcel;
   const sceneKey = parcelMode === "preset" ? parcelId : `${activeParcel.address}|${activeParcel.city}`;
+  // Scope the reference to the lot, using the same synchronous reset as placement.
+  const preapprovedPlan = planState.key === sceneKey ? planState.reference : null;
+  if (planState.key !== sceneKey) setPlanState({ key: sceneKey, reference: null });
   const pose = poseState.key===sceneKey ? poseState.pose : defaultPose(activeParcel,config);
   if(poseState.key!==sceneKey) setPoseState({key:sceneKey,pose});
   const commitPose=useCallback((next:Pose2D)=>{ if(isValidPose(next)) setPoseState({key:sceneKey,pose:next}); },[sceneKey]);
@@ -437,6 +456,58 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     projectBriefState?.key === projectBriefKey ? projectBriefState.error : null;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
+
+  // A plan in use drives the model: its recorded footprint (or, without one, its
+  // floor area) sizes the ADU while roof and finish stay, so the scene, fit check
+  // and estimates answer "does this plan fit my lot?". The reference itself
+  // stays a separate saved field.
+  const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
+    const plan = findPreapprovedPlan(reference);
+    if (!plan) return;
+    const applied = configForPlan(plan, config);
+    if (applied.width === config.width && applied.length === config.length) return;
+    setPlanSizing({ key: sceneKey, previous: config, applied });
+    setConfig(applied);
+  };
+  // The Studio models rectangles. A plan that isn't one keeps its floor area in the
+  // model, and its full outer rectangle is checked at the same pose, so "fits"
+  // there means the real plan fits too.
+  const planInUse = preapprovedPlan ? findPreapprovedPlan(preapprovedPlan) : undefined;
+  const planOutlineFit = useMemo(() => {
+    if (!planInUse || planInUse.footprint?.shape !== "irregular" || !modelMatchesPlan(planInUse, config)) return undefined;
+    const outline = planOutline(planInUse, config);
+    return outline && describePlacementWithEvidence(getScenePlacement(activeParcel, outline, pose), activeParcel);
+  }, [planInUse, config, activeParcel, pose]);
+  const planSizeUndo = planSizing && preapprovedPlan && planSizing.key === sceneKey
+    && planSizing.applied.width === config.width && planSizing.applied.length === config.length
+    && planSizing.applied.footprint === config.footprint ? planSizing : null;
+  const planBrowser = (
+    <PreapprovedPlansSection
+      key={sceneKey}
+      parcel={activeParcel}
+      layout={isDesktop ? "panel" : "inline"}
+      selected={preapprovedPlan}
+      onSelect={(reference) => {
+        setPlanState({ key: sceneKey, reference });
+        sizeModelToPlan(reference);
+      }}
+      onRemove={() => setPlanState({ key: sceneKey, reference: null })}
+      model={{
+        config,
+        fit: describePlacementWithEvidence(result.placement, activeParcel),
+        outlineFit: planOutlineFit,
+        onSizeToPlan: () => { if (preapprovedPlan) sizeModelToPlan(preapprovedPlan); },
+        onUndoSize: planSizeUndo ? () => {
+          setConfig({ ...config, width: planSizeUndo.previous.width, length: planSizeUndo.previous.length, footprint: planSizeUndo.previous.footprint });
+          setPlanSizing(null);
+        } : undefined,
+        onViewModel: () => document.getElementById(MODEL_STAGE_ID)?.scrollIntoView?.({
+          block: "start",
+          behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        }),
+      }}
+    />
+  );
   // The handed-off address once consumed from session storage. `undefined`
   // means "not consumed yet". A ref (not module state) so it survives Strict
   // Mode's dev-only remount — the second effects pass finds session storage
@@ -532,6 +603,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setParcelId(merged.parcelId);
     if (parsed.parcelId) setPresetFromLink(true);
     setConfig(merged.config);
+    const hydrationParcel = parcelMode === "preset" ? getParcelById(merged.parcelId) : activeParcel;
+    const queryPlanMatchesLot = parsed.preapprovedPlanScope
+      ? parsed.preapprovedPlanScope === planScopeForLot(hydrationParcel, parcelMode)
+      : parcelMode === "preset" && !initialScenario?.liveParcel;
+    const restoredPlan = parsed.clearPreapprovedPlan ? undefined
+      : queryPlanMatchesLot && parsed.preapprovedPlan ? parsed.preapprovedPlan : initialScenario?.preapprovedPlan;
+    setPlanState({ key: parcelMode === "preset" ? merged.parcelId : sceneKey, reference: normalizePlanReference(restoredPlan) ?? null });
     // Explicit placement from the URL or a restored layout takes precedence;
     // otherwise calculate placement from the active parcel (preset or live).
     const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
@@ -621,7 +699,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const certificateUnlocked = certificateRecovery.access.purchased;
 
   const emailScenario: SavedScenario | null = parcelMode === "live" && !parcelLoading && "source" in activeParcel && activeParcel.source !== "estimated"
-    ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel }
+    ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel, ...(preapprovedPlan ? { preapprovedPlan } : {}) }
     : null;
   const hasSavedActiveAddress = savedScenarios.some((scenario) => scenario.liveParcel && certificateKey(scenario.liveParcel) === certificateKey(activeParcel));
   const emailLinkCard = emailScenario && !authLoading && !certificateRecovery.access.loading && !certificateRecovery.access.purchased && !hasSavedActiveAddress
@@ -638,7 +716,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     if (!isValidAduConfig(config) || !isValidFinancialAssumptions(assumptions) || !isValidPose(pose)) {
       return;
     }
-    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall" });
+    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall", ...(preapprovedPlan ? { preapprovedPlan, preapprovedPlanScope: planScopeForLot(activeParcel, parcelMode) } : initialScenario?.preapprovedPlan ? { clearPreapprovedPlan: true } : {}) });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
     const layoutParam = initialScenario?.liveParcel && certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)
@@ -666,7 +744,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // Next.js's own router state on this entry, since replaceState's first
     // argument replaces the whole state object, not just the URL.
     window.history.replaceState(window.history.state, "", next);
-  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose]);
+  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose, preapprovedPlan, parcelMode]);
 
   // Track feasibility result review once per parcel context when reached
   const reviewedParcelsRef = useRef<Set<string>>(new Set());
@@ -717,6 +795,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     resetToPreset(parcelPresets[0]);
     setParcelId(parcelPresets[0].id);
     setConfig(defaultAduConfig);
+    setPlanState({ key: parcelPresets[0].id, reference: null });
+    setPlanSizing(null);
     setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
     setAssumptions(defaultFinancialAssumptions);
     setReportOpen(false);
@@ -866,6 +946,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     ) {
       entry.liveParcel = activeParcel;
     }
+    if (preapprovedPlan) entry.preapprovedPlan = preapprovedPlan;
     if (projectBrief) {
       entry.projectBrief = projectBrief;
     }
@@ -928,6 +1009,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     else resetToPreset(restored.preset);
     setParcelId(restored.parcelId);
     setConfig(restored.config);
+    setPlanState({ key: restored.poseKey, reference: restored.preapprovedPlan });
+    setPlanSizing(null);
     setPoseState({ key: restored.poseKey, pose: restored.pose });
     setAssumptions(restored.assumptions);
     setProjectBriefState(restored.briefState);
@@ -1234,6 +1317,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       stepContent = (
         <ShapeStep
           certificateUnlocked={certificateUnlocked}
+          planBrowser={planBrowser}
           config={config}
           onConfigChange={setConfig}
           result={result}
@@ -1545,6 +1629,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onViewModeChange={changeViewMode}
                 hasScan={Boolean(splatScene)}
               />
+              {planBrowser}
               <details className="group border-t border-lot-line bg-lot-chalk">
                 <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Browse designs
@@ -1714,6 +1799,7 @@ function SceneSection({
     // floor is explicit on desktop: the scene's percentage heights make the
     // automatic (content) minimum circular, and the stage would never shrink.
     <section
+      id={MODEL_STAGE_ID}
       aria-label="Parcel massing scene"
       className="lf-entrance flex flex-1 shrink-0 flex-col border-b border-lot-line bg-lot-ink lg:min-h-[clamp(480px,72dvh,720px)] lg:border-b-0 lg:border-r"
     >
