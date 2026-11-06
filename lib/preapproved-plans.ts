@@ -108,7 +108,7 @@ export function modelMatchesPlanArea(footprint: number, sqft: number): boolean {
 /**
  * Size the 3D model to a plan's published floor area. Official listings publish
  * area, not footprint dimensions, so the model keeps its own proportions on the
- * half-foot grid and only its area matches the plan. width \u00d7 length stays exact,
+ * half-foot grid and only its area matches the plan. width × length stays exact,
  * as every stored design requires; roof, finish, height and openings are kept.
  */
 export function configForPlanArea(sqft: number, config: ADUConfig): ADUConfig {
@@ -141,23 +141,42 @@ export function planOutline(plan: PreapprovedPlan, config: ADUConfig): ADUConfig
 }
 
 /**
+ * The usable rectangle that stands in for an irregular (L-shaped or stepped) plan:
+ * the plan's real overall depth (its shorter outer side) by the half-foot length
+ * that gives its floor area. It fits within the plan's outer rectangle and keeps
+ * size limits and estimates right, where that rectangle would overstate them.
+ */
+export function usableRectangleForPlan(plan: PreapprovedPlan): { width: number; length: number } | undefined {
+  if (!plan.footprint || plan.sqft === undefined) return undefined;
+  const depth = Math.min(plan.footprint.width, plan.footprint.length);
+  const length = Math.min(toStep(plan.sqft / depth), Math.max(plan.footprint.width, plan.footprint.length));
+  return { width: Math.min(depth, length), length: Math.max(depth, length) };
+}
+
+/**
  * The model a plan stands for. The Studio models rectangles, so a rectangular plan
- * takes its exact recorded footprint. An irregular plan, or one with no sheet read,
- * takes its published floor area ({@link configForPlanArea}), in its outer
- * proportions when known: its outer rectangle would overstate size, cost and
- * size-limit checks. Roof, finish, height and openings are kept.
+ * takes its exact recorded footprint and an irregular one its
+ * {@link usableRectangleForPlan}, both oriented like the current model (a long
+ * model stays long). A plan with no sheet read takes its published floor area
+ * ({@link configForPlanArea}). Roof, finish, height and openings are kept.
  */
 export function configForPlan(plan: PreapprovedPlan, config: ADUConfig): ADUConfig {
   const outline = planOutline(plan, config);
   if (outline && plan.footprint?.shape === "rectangle") return outline;
+  const usable = usableRectangleForPlan(plan);
+  if (usable) {
+    const [width, length] = config.length >= config.width ? [usable.width, usable.length] : [usable.length, usable.width];
+    return { ...config, width, length, footprint: width * length };
+  }
   return plan.sqft !== undefined ? configForPlanArea(plan.sqft, outline ?? config) : outline ?? config;
 }
 
-/** Whether the model currently stands for the plan: a rectangular plan's exact footprint (either way round), otherwise its floor area. */
+/** Whether the model currently stands for the plan: its footprint or usable rectangle (either way round), otherwise its floor area. */
 export function modelMatchesPlan(plan: PreapprovedPlan, config: Pick<ADUConfig, "width" | "length" | "footprint">): boolean {
-  if (plan.footprint?.shape === "rectangle") {
+  const target = plan.footprint?.shape === "rectangle" ? plan.footprint : usableRectangleForPlan(plan);
+  if (target) {
     const same = (a: number, b: number) => Math.abs(a - b) < 0.01;
-    const { width, length } = plan.footprint;
+    const { width, length } = target;
     return (same(config.width, width) && same(config.length, length)) || (same(config.width, length) && same(config.length, width));
   }
   return plan.sqft !== undefined && modelMatchesPlanArea(config.footprint, plan.sqft);
