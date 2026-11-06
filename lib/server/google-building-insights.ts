@@ -12,8 +12,9 @@
  *   local fallback, so the shared key does not need Solar API access in production.
  */
 import type { ExistingBuildingGeometry, GeoJsonPolygon } from "@/lib/parcel-types";
-import { interiorPoint, polygonAreaSqft, polygonContainsPoint } from "@/lib/parcel-geometry";
+import { polygonAreaSqft, polygonContainsPoint } from "@/lib/parcel-geometry";
 import { getGoogleAuthHeaders } from "@/lib/server/google-runtime-auth";
+import { buildingOutlineFitsParcel } from "@/lib/building-outline-fit";
 
 const GEOCODE_DESTINATIONS_URL = "https://geocode.googleapis.com/v4/geocode/destinations";
 const SOLAR_BUILDING_INSIGHTS_URL = "https://solar.googleapis.com/v1/buildingInsights:findClosest";
@@ -129,17 +130,21 @@ export async function fetchGoogleBuildingOutline(
     const dest = data?.destinations?.[0];
     if (!dest) return null;
 
-    const primaryPoly = parseDisplayPolygon(dest.primary?.displayPolygon);
+    // Only a BUILDING outline describes the house. GROUNDS and SECTION
+    // polygons cover a lot, campus or complex and would draw the house as
+    // large as the land around it.
+    const buildingPolygon = (place: { structureType?: string; displayPolygon?: unknown } | undefined) =>
+      place?.structureType === "BUILDING" ? parseDisplayPolygon(place.displayPolygon) : null;
     const containingPoly =
-      primaryPoly ??
+      buildingPolygon(dest.primary) ??
       dest.containingPlaces
-        ?.map((place) => parseDisplayPolygon(place?.displayPolygon))
+        ?.map((place) => buildingPolygon(place))
         .find((poly): poly is GeoJsonPolygon => poly !== null) ??
       null;
 
     if (!containingPoly) return null;
 
-    if (parcelPolygon && !buildingMatchesParcel(containingPoly, parcelPolygon)) {
+    if (parcelPolygon && !buildingOutlineFitsParcel(containingPoly, parcelPolygon)) {
       return null;
     }
 
@@ -342,13 +347,4 @@ function parseDisplayPolygon(raw: unknown): GeoJsonPolygon | null {
     type: "Polygon",
     coordinates: validRings,
   };
-}
-
-function buildingMatchesParcel(building: GeoJsonPolygon, parcel: GeoJsonPolygon): boolean {
-  const pt = interiorPoint(building);
-  if (pt && polygonContainsPoint(parcel, pt.lng, pt.lat)) {
-    return true;
-  }
-  const ring = building.coordinates[0] ?? [];
-  return ring.some(([lng, lat]) => polygonContainsPoint(parcel, lng, lat));
 }

@@ -26,6 +26,7 @@ import type { ADUConfig, RoofStyle } from "./feasibility";
 import type { GeoJsonPolygon, Parcel, LiveParcelData } from "./parcel-types";
 import { FT_PER_DEG_LAT } from "./parcel-geometry";
 import { fitObservedRectangle, type ObservedRectangle } from "./observed-building-geometry";
+import { buildingOutlineAgreesWithFootprint, buildingOutlineFitsParcel } from "./building-outline-fit";
 
 function isFiniteNumber(n: unknown): n is number {
   return typeof n === "number" && Number.isFinite(n);
@@ -420,7 +421,16 @@ export function buildExistingHouseSceneModel(
   }
 
   const roofPitchDegrees = parcel.existingBuilding?.roofPitchDegrees ?? null;
-  const outlineGeoJson = parcel.existingBuilding?.outlineGeoJson ?? null;
+  // Saved layouts can carry an outline from before the provider checks in
+  // /api/parcel, so an implausible one (mostly off the lot, the lot itself, or
+  // far larger than the observed house) falls back to the estimated house.
+  const rawOutline = parcel.existingBuilding?.outlineGeoJson ?? null;
+  const outlineGeoJson =
+    rawOutline &&
+    (!parcel.boundaryGeoJson || buildingOutlineFitsParcel(rawOutline, parcel.boundaryGeoJson)) &&
+    buildingOutlineAgreesWithFootprint(rawOutline, parcel.existingHouseSqft)
+      ? rawOutline
+      : null;
 
   if (localFrame && outlineGeoJson) {
     const outerOnly: GeoJsonPolygon = {
