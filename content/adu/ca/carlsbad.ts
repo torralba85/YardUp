@@ -20,6 +20,7 @@ export const carlsbad: JurisdictionContent = {
   slug: "carlsbad",
   county: "San Diego County",
   asOf: "2026-10-25",
+  published: "2026-09-18",
   metaDescription:
     "Carlsbad ADU rules for 2026: up to 1,200 sq ft detached, 4 ft setbacks, 18 ft near Coaster stations, and the permit steps. See what fits your lot, free.",
   introAnswer: [

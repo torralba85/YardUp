@@ -12,22 +12,31 @@ import {
   rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
-import { buildAduSitemapXml } from "./build-xml";
+import { CITY_NAV_UPDATED, PLANNING_LINKS_UPDATED, buildAduSitemapXml, laterDate } from "./build-xml";
+
+/** Map each `<loc>` to its `<lastmod>`. */
+function lastmodByLoc(xml: string): Map<string, string> {
+  return new Map(
+    Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g), (match) => [match[1], match[2]]),
+  );
+}
 
 describe("sitemap-adu.xml", () => {
   it("lists the hub, statewide cost guide, calculator, every jurisdiction page, and every cost page with as-of lastmod", () => {
     const xml = buildAduSitemapXml();
-    expect(xml).toContain(`<loc>${hubUrl()}</loc>`);
-    expect(xml).toContain(`<loc>${stateCostUrl()}</loc>`);
-    expect(xml).toContain("<lastmod>2026-10-29</lastmod>");
-    expect(xml).toContain(`<loc>${calculatorUrl()}</loc>`);
+    const lastmod = lastmodByLoc(xml);
+    expect(lastmod.get(hubUrl())).toBe(PLANNING_LINKS_UPDATED);
+    expect(lastmod.get(stateCostUrl())).toBe(PLANNING_LINKS_UPDATED);
+    expect(lastmod.get(calculatorUrl())).toBe(PLANNING_LINKS_UPDATED);
     expect(xml).toContain(`<loc>${methodologyUrl()}</loc>`);
     for (const city of ADU_CITIES) {
-      expect(xml).toContain(`<loc>${cityUrl(city)}</loc>`);
-      expect(xml).toContain(`<lastmod>${city.asOf}</lastmod>`);
+      // The as-of date, unless the guide's links changed later.
+      expect(lastmod.get(cityUrl(city))).toBe(laterDate(city.asOf, CITY_NAV_UPDATED[city.slug] ?? city.asOf));
+      expect(lastmod.get(cityUrl(city))! >= city.asOf).toBe(true);
     }
+    expect(lastmod.get("https://lotfoundry.net/adu/ca/san-diego-county")).toBe("2026-11-05");
     for (const cost of ADU_COST_PAGES) {
-      expect(xml).toContain(`<loc>${costPageUrl(cost)}</loc>`);
+      expect(lastmod.get(costPageUrl(cost))).toBe(laterDate(cost.asOf, PLANNING_LINKS_UPDATED));
     }
     expect(xml).toContain("<loc>https://lotfoundry.net/adu/ca/san-diego/cost</loc>");
     // Well-formed entries only: one <url> block per page, XML-escaped.

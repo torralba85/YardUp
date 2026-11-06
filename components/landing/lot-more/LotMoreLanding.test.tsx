@@ -70,8 +70,8 @@ describe("landing address handoff", () => {
     expect(sanDiegoMetadata.alternates?.canonical).toBe("https://lotfoundry.net/san-diego");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
     expect(screen.getByText("San Diego ADU feasibility · see what fits your lot")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("$2,615");
-    expect(screen.getByRole("link", { name: "Open the San Diego sample lot in the 3D studio" })).toHaveTextContent("Coyote Brush Court");
+    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
+    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("Coyote Brush Court");
     fireEvent.click(screen.getByText("What’s behind these numbers?"));
     const note = "Rent bands start from HUD's FY2027 Fair Market Rent for a one-bedroom in San Diego County ($2,335/mo), plus the studio's standard 12% and 25% spreads. The lot follows San Diego's RS-1-7 minimums; the address is fictional, and coverage is modeled at 60% because the city limits floor area (0.60 FAR), not flat-lot coverage.";
     expect(landingDemos["san-diego"].note).toBe(note);
@@ -118,7 +118,7 @@ describe("landing address handoff", () => {
   it.each(["seattle", "portland", "austin", "san-diego"] as const)("names the %s demo consistently and keeps the Seattle capture label", (city) => {
     render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
     const demo = landingDemos[city];
-    const sample = screen.getByRole("link", { name: `Open the ${demo.city} sample lot in the 3D studio` });
+    const sample = screen.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${demo.city}`, "i") });
     expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · market rent · open it in 3D`);
     expect(screen.getByText(`${demo.name.toUpperCase()} DEMO, ${demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT`)).toBeVisible();
     expect(screen.getByText("Oak Street demo, Seattle", { selector: "span" })).toBeVisible();
@@ -172,7 +172,7 @@ describe("landing address handoff", () => {
   it.each(["portland", "austin"] as const)("opens the matching %s demo with matching engine figures", (city) => {
     render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
     const name = city === "portland" ? "Portland" : "Austin";
-    const sample = screen.getByRole("link", { name: `Open the ${name} sample lot in the 3D studio` });
+    const sample = screen.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${name}`, "i") });
     const restored = mergeScenarioPartial(parseScenarioParams(new URLSearchParams(sample.getAttribute("href")!.split("?")[1])));
     expect(restored.parcelId).toBe(city === "portland" ? "corner-lot" : "compact-lot");
     const result = calculateFeasibility(getParcelById(restored.parcelId), restored.config, restored.assumptions);
@@ -419,7 +419,7 @@ describe("landing address handoff", () => {
   it("shows the engine's market-case result in the hero and opens the demo lot from it", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     const sample = screen.getByRole("link", {
-      name: "Open the Seattle sample lot in the 3D studio",
+      name: /^Just looking\? See a sample result.*Seattle/i,
     });
     const market = scenarios[1];
     const usd = (value: number) =>
@@ -441,7 +441,7 @@ describe("landing address handoff", () => {
   it("reproduces the advertised market figures through the scenario parser", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     const href = screen
-      .getByRole("link", { name: "Open the Seattle sample lot in the 3D studio" })
+      .getByRole("link", { name: /^Just looking\? See a sample result.*Seattle/i })
       .getAttribute("href")!;
     const merged = mergeScenarioPartial(
       parseScenarioParams(new URLSearchParams(href.split("?")[1])),
@@ -478,7 +478,7 @@ describe("landing address handoff", () => {
     expect(example).toHaveAttribute(
       "href",
       screen.getByRole("link", {
-        name: "Open the Seattle sample lot in the 3D studio",
+        name: /^Just looking\? See a sample result.*Seattle/i,
       }).getAttribute("href"),
     );
     fireEvent.click(example);

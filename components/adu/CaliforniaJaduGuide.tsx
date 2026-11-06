@@ -5,11 +5,19 @@ import {
   JADU_AS_OF,
   JADU_FAQS,
   JADU_GLANCE,
+  JADU_PUBLISHED,
   JADU_SECTIONS,
   JADU_SOURCES,
   JADU_VS_ADU,
 } from "@/content/adu/ca/jadu";
-import { hubUrl, jaduPath, jaduUrl, stateCostPath } from "@/lib/adu/content";
+import {
+  aduArticleJsonLd,
+  hubUrl,
+  jaduPath,
+  jaduUrl,
+  opengraphImageUrl,
+  stateCostPath,
+} from "@/lib/adu/content";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -40,13 +48,12 @@ export function CaliforniaJaduGuide() {
       { "@type": "ListItem", position: 3, name: "Junior ADU (JADU) rules", item: jaduUrl() },
     ],
   };
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = aduArticleJsonLd({
     headline: "Junior ADU (JADU) Rules in California (2026)",
+    image: opengraphImageUrl(jaduUrl()),
+    datePublished: JADU_PUBLISHED,
     dateModified: JADU_AS_OF,
-    author: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
-  };
+  });
 
   return (
     <>

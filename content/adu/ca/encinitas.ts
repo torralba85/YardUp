@@ -25,6 +25,7 @@ export const encinitas: JurisdictionContent = {
   slug: "encinitas",
   county: "San Diego County",
   asOf: "2026-10-30",
+  published: "2026-10-30",
   metaTitle: "Encinitas ADU Rules (2026): PRADU Plans, Coastal & Cost",
   metaDescription:
     "Encinitas ADU rules: up to 1,200 sq ft detached, 4 ft setbacks, free PRADU plans, and Coastal Zone permit rules. See instant feasibility for your lot.",

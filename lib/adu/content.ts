@@ -99,6 +99,9 @@ export function stateCostUrl(): string {
 /** ISO date the methodology page was last reviewed against the engine. */
 export const METHODOLOGY_AS_OF = "2026-10-24";
 
+/** ISO date the methodology page first went live: its first commit on master. */
+export const METHODOLOGY_PUBLISHED = "2026-10-24";
+
 /** Site-relative path for the cost, rent and payback methodology page. */
 export function methodologyPath(): string {
   return "/adu/how-we-estimate";
@@ -219,6 +222,18 @@ export function getNeighbors(content: JurisdictionContent): JurisdictionContent[
 }
 
 /**
+ * For a guide with no geographic neighbors (a metro's first guide), the first
+ * guide of every other county, so the guide links somewhere besides the hub.
+ * Guides that have neighbors get none: their nearby cities come first.
+ */
+export function getOtherCountyLeads(content: JurisdictionContent): JurisdictionContent[] {
+  if (content.neighbors.length > 0) return [];
+  return aduCounties()
+    .filter((county) => county !== content.county)
+    .flatMap((county) => ADU_CITIES.find((entry) => entry.county === county) ?? []);
+}
+
+/**
  * Per-page metadata following the program spec: answer-first description,
  * self-referencing absolute canonical, brand kept only when the title fits
  * in 60 characters.
@@ -269,6 +284,35 @@ export function buildCostMetadata(cost: JurisdictionCostContent): Metadata {
       url: costPageUrl(cost),
       type: "article",
     },
+  };
+}
+
+/** The share image Next generates for a page with an `opengraph-image` route. */
+export function opengraphImageUrl(pageUrl: string): string {
+  return `${pageUrl}/opengraph-image`;
+}
+
+/**
+ * Article markup for an ADU guide. Google recommends `image` and
+ * `datePublished` alongside `dateModified`. `dateModified` is the content's
+ * as-of date, raised to the publish date when a review predates the release,
+ * so the markup never dates an edit before publication.
+ */
+export function aduArticleJsonLd(article: {
+  headline: string;
+  image: string;
+  datePublished: string;
+  dateModified: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.headline,
+    image: article.image,
+    datePublished: article.datePublished,
+    dateModified:
+      article.dateModified > article.datePublished ? article.dateModified : article.datePublished,
+    author: { "@type": "Organization", name: "LotFoundry", url: `${BASE_URL}/` },
   };
 }
 

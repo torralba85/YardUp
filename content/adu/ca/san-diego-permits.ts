@@ -61,6 +61,9 @@ export interface PermitStudy {
 
 export const SAN_DIEGO_PERMIT_STUDY: PermitStudy = data as PermitStudy;
 
+/** ISO date the permit study page first went live: its first commit on master. */
+export const SAN_DIEGO_PERMIT_STUDY_PUBLISHED = "2026-10-28";
+
 /** City of San Diego open-data catalog page for the permit file. */
 export const PERMIT_DATASET_URL = "https://data.sandiego.gov/datasets/development-permits-set2/";
 /** City of San Diego open-data catalog page for community planning areas. */

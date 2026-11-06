@@ -4,8 +4,9 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "Help | LotFoundry";
-const description = "Getting started with LotFoundry: studio, account, payments, AI photos, and deletion.";
+const title = "Help Center: Studio, Account & Payments | LotFoundry";
+const description =
+  "How to use the LotFoundry studio: explore demo lots, save concepts, buy a Certificate of Feasibility, manage your account, and delete your data.";
 
 export const metadata: Metadata = {
   title,

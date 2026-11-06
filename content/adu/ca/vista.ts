@@ -26,6 +26,7 @@ export const vista: JurisdictionContent = {
   slug: "vista",
   county: "San Diego County",
   asOf: "2026-10-30",
+  published: "2026-10-30",
   metaTitle: "Vista ADU Rules (2026): Size, Fee Waivers & Setbacks",
   metaDescription:
     "Vista ADU rules: 1,200 sq ft detached units, 4 ft setbacks, 5 ft building separation, and the local fee waiver program. Check your lot, free.",

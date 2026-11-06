@@ -20,6 +20,7 @@ export const imperialBeach: JurisdictionContent = {
   slug: "imperial-beach",
   county: "San Diego County",
   asOf: "2026-10-24",
+  published: "2026-10-24",
   metaTitle: "Imperial Beach ADU Rules (2026): Coastal Permit & Size",
   metaDescription:
     "Imperial Beach ADU rules: 1,200 sq ft detached, 4 ft side and rear setbacks, and when a $1,000 coastal permit comes first. See what fits your lot, free.",

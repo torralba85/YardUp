@@ -26,6 +26,7 @@ export const sacramento: JurisdictionContent = {
   slug: "sacramento",
   county: "Sacramento County",
   asOf: "2026-10-28",
+  published: "2026-10-29",
   metaTitle: "Sacramento ADU Rules (2026): Size, Setbacks & Cost",
   metaDescription:
     "Sacramento ADU rules: a 1,200 sq ft detached ADU with 3 ft setbacks, or three units under the state option. No parking minimums. See cost, rent, payback.",

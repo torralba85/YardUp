@@ -24,6 +24,7 @@ export const laMesa: JurisdictionContent = {
   slug: "la-mesa",
   county: "San Diego County",
   asOf: "2026-10-24",
+  published: "2026-10-24",
   metaTitle: "La Mesa ADU Rules (2026): Size, Height & No Parking",
   metaDescription:
     "La Mesa ADU rules: up to 3 ADUs plus a JADU on a single-family lot, 1,200 sq ft detached, 20 ft height, no parking required. Check what fits your lot.",

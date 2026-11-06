@@ -1,9 +1,31 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, type Plugin } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const publicDir = fileURLToPath(new URL("./public/", import.meta.url));
+
+/**
+ * Next resolves a static image import to `{ src, width, height }`; Vite would
+ * hand back a bare URL string. Mirror Next's shape, with `src` as the file's
+ * `public/` path, so components read `image.src` the same way in tests.
+ */
+function nextStaticImages(): Plugin {
+  return {
+    name: "next-static-images",
+    enforce: "pre",
+    load(id) {
+      const file = id.split("?")[0];
+      if (!/\.(avif|webp|png|jpe?g|gif)$/i.test(file)) return null;
+      const relative = path.relative(publicDir, file).split(path.sep).join("/");
+      const src = relative.startsWith("..") ? `/_next/static/media/${path.basename(file)}` : `/${relative}`;
+      return `export default { src: ${JSON.stringify(src)}, width: 0, height: 0 };`;
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [nextStaticImages(), react()],
   test: {
     environment: "jsdom",
     setupFiles: ["test/setup.ts"],

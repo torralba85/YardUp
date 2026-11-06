@@ -306,6 +306,11 @@
   object-fit: cover;
   object-position: 62% 46%;
 }
+/* The AVIF <picture> wrappers add no box, so each image still sizes against
+   its own container. */
+.pictureContents {
+  display: contents;
+}
 .heroCopy {
   grid-area: copy;
   position: relative;

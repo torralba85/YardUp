@@ -382,6 +382,16 @@ summary {
   background: var(--color-lot-chalk);
 }
 
+/* Server-rendered cookie banner: hidden until CookieConsentBanner's pre-paint
+   script finds no stored decision, so it paints with the page for a first
+   visit and never flashes for a returning one (or shows without JS). */
+[data-consent-banner][data-pending] {
+  display: none;
+}
+html[data-lf-consent="unset"] [data-consent-banner][data-pending] {
+  display: block;
+}
+
 /* Committed-state stamp/settle (6A): a granted unlock lands at 1.02→1, it
    never flips or bounces. Reduced-motion users get an instant swap. */
 @media (prefers-reduced-motion: no-preference) {

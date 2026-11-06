@@ -16,6 +16,28 @@ import { JADU_AS_OF } from "@/content/adu/ca/jadu";
 import { CA_RENT_VERIFIED } from "@/content/adu/ca/rent";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 
+/** The later of two ISO (`YYYY-MM-DD`) dates. */
+export function laterDate(a: string, b: string): string {
+  return a > b ? a : b;
+}
+
+/**
+ * When pages' links changed without a new content review. A page's displayed
+ * as-of date stays put; its sitemap date takes the later of the two. The
+ * planning-links list gained the San José and Sacramento guides, and those two
+ * guides gained links to the other counties' guides.
+ */
+export const PLANNING_LINKS_UPDATED = "2026-11-06";
+
+/** Per-guide navigation changes, by slug. */
+export const CITY_NAV_UPDATED: Record<string, string> = {
+  // #371 linked the County guide to Carlsbad's rules; it shipped 2026-11-05.
+  "san-diego-county": "2026-11-05",
+  "san-diego": PLANNING_LINKS_UPDATED,
+  "san-jose": PLANNING_LINKS_UPDATED,
+  sacramento: PLANNING_LINKS_UPDATED,
+};
+
 /** XML-escape a sitemap value. */
 function escapeXml(value: string): string {
   return value
@@ -34,13 +56,28 @@ function escapeXml(value: string): string {
  */
 export function buildAduSitemapXml(): string {
   const urls = [
-    // Hub copy and city list last changed with the Encinitas, El Cajon and Vista guides.
-    { loc: hubUrl(), lastmod: "2026-10-30", changefreq: "monthly", priority: "0.8" },
-    { loc: stateCostUrl(), lastmod: "2026-10-29", changefreq: "monthly", priority: "0.8" },
-    { loc: calculatorUrl(), lastmod: "2026-11-01", changefreq: "monthly", priority: "0.8" },
-    { loc: methodologyUrl(), lastmod: METHODOLOGY_AS_OF, changefreq: "monthly", priority: "0.6" },
-    { loc: rentUrl(), lastmod: CA_RENT_VERIFIED, changefreq: "monthly", priority: "0.8" },
-    { loc: jaduUrl(), lastmod: JADU_AS_OF, changefreq: "monthly", priority: "0.8" },
+    // The hub, statewide cost guide and calculator last changed with the planning links.
+    { loc: hubUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
+    { loc: stateCostUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
+    { loc: calculatorUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
+    {
+      loc: methodologyUrl(),
+      lastmod: laterDate(METHODOLOGY_AS_OF, PLANNING_LINKS_UPDATED),
+      changefreq: "monthly",
+      priority: "0.6",
+    },
+    {
+      loc: rentUrl(),
+      lastmod: laterDate(CA_RENT_VERIFIED, PLANNING_LINKS_UPDATED),
+      changefreq: "monthly",
+      priority: "0.8",
+    },
+    {
+      loc: jaduUrl(),
+      lastmod: laterDate(JADU_AS_OF, PLANNING_LINKS_UPDATED),
+      changefreq: "monthly",
+      priority: "0.8",
+    },
     {
       loc: permitStudyUrl(),
       lastmod: SAN_DIEGO_PERMIT_STUDY.generatedAt,
@@ -49,14 +86,14 @@ export function buildAduSitemapXml(): string {
     },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
-      // County navigation changed without a new regulatory review.
-      lastmod: city.slug === "san-diego-county" ? "2026-10-31" : city.asOf,
+      lastmod: laterDate(city.asOf, CITY_NAV_UPDATED[city.slug] ?? city.asOf),
       changefreq: "monthly",
       priority: "0.7",
     })),
     ...ADU_COST_PAGES.map((cost) => ({
       loc: costPageUrl(cost),
-      lastmod: cost.asOf,
+      // Every cost page renders the planning links.
+      lastmod: laterDate(cost.asOf, PLANNING_LINKS_UPDATED),
       changefreq: "monthly",
       priority: "0.7",
     })),

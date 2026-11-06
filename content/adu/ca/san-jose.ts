@@ -31,6 +31,7 @@ export const sanJose: JurisdictionContent = {
   slug: "san-jose",
   county: "Santa Clara County",
   asOf: "2026-11-03",
+  published: "2026-10-29",
   metaTitle: "San José ADU Rules (2026): Size, Height & Cost",
   metaDescription:
     "San José ADU rules: detached ADUs of 1,000–1,200 sq ft by lot size, 4 ft setbacks, no parking, and a City-or-State choice. Plus cost, rent and payback.",
