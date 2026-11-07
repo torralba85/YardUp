@@ -26,8 +26,11 @@ describe("BuilderLeadPanel mobile accessibility", () => {
         config={defaultAduConfig}
         assumptions={defaultFinancialAssumptions}
         result={result}
+        signedIn
+        matches={{ status: "ready", count: 1 }}
         onClose={vi.fn()}
         onSubmit={vi.fn().mockResolvedValue({ matchedCount: 1 })}
+        onRequestSignIn={vi.fn()}
       />,
     );
 

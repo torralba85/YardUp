@@ -1114,7 +1114,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
 
     const step = screen.getByRole("region", { name: "Builders" });
-    const submit = screen.getByRole("button", { name: /Submit snapshot/i });
+    // A guest's Submit asks them to sign in rather than failing after they fill it in.
+    const submit = screen.getByRole("button", { name: "Sign in to send" });
     expect(step).toContainElement(submit);
     const pane = submit.closest(".overflow-y-auto");
     expect(pane).not.toBeNull();
@@ -1122,8 +1123,26 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.queryByText(/Step 5 · Builders/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Close builder connection form/i }));
-    expect(screen.queryByRole("button", { name: /Submit snapshot/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sign in to send" })).not.toBeInTheDocument();
     expect(screen.getByText(/Step 5 · Builders/)).toBeInTheDocument();
+  });
+
+  it("opens sign-in over the builder connect form for a guest who sends it", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Builders/));
+    await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
+    await user.type(screen.getByRole("textbox", { name: "Name" }), "Jane Owner");
+    await user.type(screen.getByRole("textbox", { name: "Email" }), "jane@example.com");
+    await user.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await user.click(screen.getByRole("button", { name: "Sign in to send" }));
+
+    expect(
+      await screen.findByText(/Create a free account to send your snapshot to local builders/),
+    ).toBeInTheDocument();
+    // The form stays mounted under the dialog.
+    expect(document.getElementById("builder-lead-email")).toHaveValue("jane@example.com");
   });
 
   it("opens the builder connect form as a focused Act destination on mobile", async () => {

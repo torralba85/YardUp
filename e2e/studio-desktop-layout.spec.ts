@@ -124,7 +124,8 @@ test("the builder connect form scrolls to its Submit button", async ({ page }) =
   await page.mouse.move(formBox.x + formBox.width / 2, formBox.y + 40);
   await page.mouse.wheel(0, 2_000);
 
-  const submit = page.getByRole("button", { name: "Submit snapshot" });
+  // Signed out, Submit reads "Sign in to send"; its place in the form is the same.
+  const submit = page.getByRole("button", { name: "Sign in to send" });
   await expect(submit).toBeInViewport();
   const submitBox = (await submit.boundingBox())!;
   const overviewBox = (await page.getByTestId("studio-overview").boundingBox())!;

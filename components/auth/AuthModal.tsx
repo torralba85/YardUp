@@ -71,6 +71,8 @@ function signUpBlurb(source: AuthPromptSource): string {
       return "Create a free account to save this lot and come back to your numbers and 3D design any time. No card needed.";
     case "certificate_purchase":
       return "Create a free account to keep this property and continue to checkout. No charge is made until you review and confirm the one-time purchase.";
+    case "builder_connect":
+      return "Create a free account to send your snapshot to local builders. It's free for homeowners; builders pay for the introduction.";
     default:
       return "Create an account to save ADU estimates, reports, and builder-ready snapshots.";
   }

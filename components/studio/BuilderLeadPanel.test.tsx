@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
 import {
   defaultAduConfig,
   defaultFinancialAssumptions,
@@ -34,22 +35,30 @@ const result = {
   operatingExpenseRatio: 0.325,
 };
 
+function renderPanel(props: Partial<ComponentProps<typeof BuilderLeadPanel>> = {}) {
+  return render(
+    <BuilderLeadPanel
+      open
+      userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
+      parcelKey="oak-street"
+      parcel={parcelPresets[0]}
+      config={defaultAduConfig}
+      assumptions={defaultFinancialAssumptions}
+      result={result}
+      signedIn
+      matches={{ status: "ready", count: 2 }}
+      onClose={vi.fn()}
+      onSubmit={vi.fn()}
+      onRequestSignIn={vi.fn()}
+      {...props}
+    />,
+  );
+}
+
 describe("BuilderLeadPanel", () => {
   it("requires consent before submit", async () => {
     const submit = vi.fn();
-    render(
-      <BuilderLeadPanel
-        open
-        userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
-        parcelKey="oak-street"
-        parcel={parcelPresets[0]}
-        config={defaultAduConfig}
-        assumptions={defaultFinancialAssumptions}
-        result={result}
-        onClose={vi.fn()}
-        onSubmit={submit}
-      />,
-    );
+    renderPanel({ onSubmit: submit });
 
     await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
 
@@ -59,19 +68,7 @@ describe("BuilderLeadPanel", () => {
 
   it("shows the result beside Submit, after the fields", async () => {
     // The form is taller than most screens; a message at its top was out of view.
-    render(
-      <BuilderLeadPanel
-        open
-        userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
-        parcelKey="oak-street"
-        parcel={parcelPresets[0]}
-        config={defaultAduConfig}
-        assumptions={defaultFinancialAssumptions}
-        result={result}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-      />,
-    );
+    renderPanel();
 
     const submitButton = screen.getByRole("button", { name: /Submit snapshot/i });
     await userEvent.click(submitButton);
@@ -82,9 +79,74 @@ describe("BuilderLeadPanel", () => {
     expect(alert.compareDocumentPosition(submitButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("submits validated contact and snapshot", async () => {
+  it("says how many builders the snapshot goes to", () => {
+    renderPanel({ matches: { status: "ready", count: 2 } });
+    expect(screen.getByText("Goes to 2 builders who serve this area.")).toBeInTheDocument();
+  });
+
+  it("submits validated contact and snapshot, then replaces the form so it cannot be sent twice", async () => {
     const submit = vi.fn().mockResolvedValue({ matchedCount: 1 });
-    render(
+    const close = vi.fn();
+    renderPanel({ onSubmit: submit, onClose: close });
+
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+    const status = await screen.findByRole("status");
+    expect(status).toHaveTextContent(/Sent to 1 local builder/i);
+    expect(status).toHaveFocus();
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: expect.objectContaining({ email: "jane@example.com" }),
+        snapshot: expect.objectContaining({ parcelCity: "Seattle" }),
+      }),
+    );
+    expect(screen.queryByRole("button", { name: /Submit snapshot/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Email" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks a guest to sign in instead of failing after they fill it in", async () => {
+    const submit = vi.fn();
+    const requestSignIn = vi.fn();
+    renderPanel({ signedIn: false, matches: { status: "guest" }, onSubmit: submit, onRequestSignIn: requestSignIn });
+
+    expect(screen.getByText("Sign in or create a free account to send it.")).toBeInTheDocument();
+    const send = screen.getByRole("button", { name: "Sign in to send" });
+
+    // Validation still comes first, so the form is ready to send after sign-in.
+    await userEvent.click(send);
+    expect(screen.getByRole("alert")).toHaveTextContent(/Consent is required/i);
+    expect(requestSignIn).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(send);
+    expect(requestSignIn).toHaveBeenCalledTimes(1);
+    expect(submit).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows that no builder serves the area instead of the form", async () => {
+    const close = vi.fn();
+    renderPanel({ matches: { status: "ready", count: 0 }, onClose: close });
+
+    expect(screen.getByText("No builders are registered for this area yet.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Submit snapshot/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Name" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the form usable while the builder check is loading or failed", () => {
+    const { rerender } = renderPanel({ matches: { status: "loading" } });
+    expect(screen.getByText("Checking which builders serve this area…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Submit snapshot/i })).toBeEnabled();
+
+    rerender(
       <BuilderLeadPanel
         open
         userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
@@ -93,20 +155,14 @@ describe("BuilderLeadPanel", () => {
         config={defaultAduConfig}
         assumptions={defaultFinancialAssumptions}
         result={result}
+        signedIn
+        matches={{ status: "error" }}
         onClose={vi.fn()}
-        onSubmit={submit}
+        onSubmit={vi.fn()}
+        onRequestSignIn={vi.fn()}
       />,
     );
-
-    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
-    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
-
-    expect(await screen.findByText(/Sent to 1 local builder/i)).toBeInTheDocument();
-    expect(submit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        contact: expect.objectContaining({ email: "jane@example.com" }),
-        snapshot: expect.objectContaining({ parcelCity: "Seattle" }),
-      }),
-    );
+    expect(screen.queryByText(/Checking which builders/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Submit snapshot/i })).toBeEnabled();
   });
 });

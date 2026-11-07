@@ -99,6 +99,7 @@ import {
   type MobileJourneyStep,
 } from "@/lib/mobile-journey";
 import { useJourneyHistory } from "@/lib/use-journey-history";
+import { useBuilderMatches } from "@/lib/use-builder-matches";
 // ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
@@ -1086,6 +1087,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setTimeout(() => setShareNotice(null), 2500);
   }
 
+  const builderMatches = useBuilderMatches(Boolean(user), activeParcel, builderLeadOpen);
+
   async function handleBuilderLeadSubmit(input: BuilderLeadSubmitInput) {
     if (!user) {
       throw new Error("Sign in before connecting with builders.");
@@ -1410,8 +1413,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           config={config}
           assumptions={assumptions}
           result={result}
+          signedIn={Boolean(user)}
+          matches={builderMatches}
           onClose={() => setBuilderLeadOpen(false)}
           onSubmit={handleBuilderLeadSubmit}
+          onRequestSignIn={() => openSignup("builder_connect")}
         />
       ) : (
         <ActStep
@@ -1738,8 +1744,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               config={config}
               assumptions={assumptions}
               result={result}
+              signedIn={Boolean(user)}
+              matches={builderMatches}
               onClose={() => setBuilderLeadOpen(false)}
               onSubmit={handleBuilderLeadSubmit}
+              onRequestSignIn={() => openSignup("builder_connect")}
             />
           </div>
         ) : (
