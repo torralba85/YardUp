@@ -34,7 +34,7 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      kicker="Effective October 30, 2026 · Version 2026-10-30"
+      kicker="Effective November 6, 2026 · Version 2026-11-06"
     >
       <LegalSection title="Who We Are &amp; Scope">
         <p>

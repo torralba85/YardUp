@@ -10,6 +10,7 @@ const eslintConfig = [
       "node_modules/**",
       ".claude/**",
       ".codex/**",
+      ".worktrees/**",
       "next-env.d.ts",
       "tsconfig.tsbuildinfo",
       "test-results/**",

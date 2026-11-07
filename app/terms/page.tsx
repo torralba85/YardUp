@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="Terms & Conditions"
-      kicker="Effective October 30, 2026 · Version 2026-10-30"
+      kicker="Effective November 6, 2026 · Version 2026-11-06"
     >
       <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
@@ -72,8 +72,9 @@ export default function TermsPage() {
           LotFoundry provides early-stage software tools for accessory dwelling unit (ADU) and junior
           ADU feasibility planning, including parcel visualization, configurable unit footprints,
           zoning and setback signals, cost, rent, payback, and financing estimates, optional
-          AI-generated concept imagery and AI Project Briefs, city rule guides, Certificates of
-          Feasibility, a builder lead marketplace, and optional partner referrals.
+          AI-generated concept imagery and AI Project Briefs, city rule guides, pre-approved standard
+          plan references, Certificates of Feasibility, a builder lead marketplace, and optional
+          partner referrals.
         </p>
         <p>
           <strong>PLANNING ESTIMATES ONLY.</strong> All feasibility, dimensional, zoning, setback,
@@ -110,6 +111,21 @@ export default function TermsPage() {
             expense, payback, and loan scenarios use public benchmarks and modeled assumptions. They
             ignore or simplify taxes, reassessment, appreciation, and local rental restrictions. We do
             not guarantee any rent, return, payback period, or loan approval.
+          </li>
+          <li>
+            <strong>
+              An architectural license, engineered plan set, or approval guarantee for pre-approved
+              plans.
+            </strong>{" "}
+            Standard, permit-ready, or pre-approved ADU plans referenced or modeled in the Studio are
+            public municipal or third-party designs. LotFoundry is not the architect, engineer,
+            designer, or licensing agent for any standard or pre-approved plan. Applying a
+            pre-approved plan&rsquo;s footprint or dimensions to your lot does not license the design
+            for construction, guarantee that it complies with current building or fire codes on your
+            lot, or guarantee expedited or ministerial approval from your local jurisdiction.
+            Construction requires official stamped drawings, required site-specific engineering and
+            Title 24 calculations, and local permits obtained directly from the responsible authority
+            or authorized designer.
           </li>
         </ul>
         <p>
@@ -302,6 +318,15 @@ export default function TermsPage() {
           covers. If you share a Certificate with anyone (including a builder, lender, partner, or
           buyer), you must tell them it is an early planning estimate subject to Section 2. No third
           party may rely on a Certificate as a survey, appraisal, permit, loan approval, or guarantee.
+        </p>
+        <p>
+          <strong>Pre-approved and standard plan intellectual property.</strong> Pre-approved,
+          shelf-ready, and standard ADU plans referenced or linked in the Studio are the property of
+          their respective municipal authors, publishers, or third-party design professionals.
+          LotFoundry claims no ownership in third-party architectural drawings or plan sets, and
+          displaying them in the Studio grants you no copyright license to build or reproduce those
+          plans. Any licensing fees, builder agreements, or designer contracts required to use a
+          pre-approved design must be arranged directly with the plan provider or city.
         </p>
         <p>
           We may use any suggestions or feedback you send without compensation or obligation to you.

@@ -179,20 +179,23 @@ service cloud.firestore {
 
     function isCurrentLegalConsent(consent) {
       return isWellFormedLegalConsent(consent) &&
-        consent.termsVersion == "2026-10-30" &&
-        consent.privacyVersion == "2026-10-30" &&
+        consent.termsVersion == "2026-11-06" &&
+        consent.privacyVersion == "2026-11-06" &&
         consent.acceptedAt == request.time;
     }
 
-    // Pages loaded before the 2026-10-30 release (open tabs, the Android app)
-    // still send the previous versions when they register a new account.
-    // Accept that receipt only where none exists yet, so a stale page can still
-    // sign up during the rollout; LegalReacceptGate then asks the account to
-    // accept the current documents. Remove once old pages have aged out.
+    // Pages loaded before the 2026-11-06 and 2026-10-30 releases (open tabs,
+    // the Android app) still send the previous versions when they register a
+    // new account. Accept that receipt only where none exists yet, so a stale
+    // page can still sign up during the rollout; LegalReacceptGate then asks
+    // the account to accept the current documents. Remove once old pages have
+    // aged out.
     function isPreviousLegalConsent(consent) {
       return isWellFormedLegalConsent(consent) &&
-        consent.termsVersion == "2026-08-26" &&
-        consent.privacyVersion == "2026-08-26" &&
+        ((consent.termsVersion == "2026-10-30" &&
+          consent.privacyVersion == "2026-10-30") ||
+          (consent.termsVersion == "2026-08-26" &&
+            consent.privacyVersion == "2026-08-26")) &&
         consent.acceptedAt == request.time;
     }
 
@@ -212,8 +215,8 @@ service cloud.firestore {
           isPreviousLegalConsent(request.resource.data.legalConsent)) ||
         (hasConsent && isCurrentLegalConsent(request.resource.data.legalConsent) &&
           (!hadConsent ||
-            resource.data.legalConsent.termsVersion != "2026-10-30" ||
-            resource.data.legalConsent.privacyVersion != "2026-10-30"));
+            resource.data.legalConsent.termsVersion != "2026-11-06" ||
+            resource.data.legalConsent.privacyVersion != "2026-11-06"));
     }
 
     function isValidUserProfile(userId) {

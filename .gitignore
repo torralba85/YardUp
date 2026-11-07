@@ -41,6 +41,7 @@ firestore-debug.log
 .superdesign/
 .gmp_cache/
 terminals/
+.worktrees/
 
 # OS and editor noise
 .DS_Store
