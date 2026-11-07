@@ -11,6 +11,7 @@ export const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/lot_foundry",
   youtube: "https://www.youtube.com/@lotfoundry",
   x: "https://x.com/lot_foundry",
+  linkedin: "https://www.linkedin.com/company/lotfoundry/",
 } as const;
 
 export const SOCIAL_URLS: readonly string[] = Object.values(SOCIAL_LINKS);

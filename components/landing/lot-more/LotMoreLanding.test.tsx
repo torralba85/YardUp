@@ -367,6 +367,10 @@ describe("landing address handoff", () => {
       "href",
       "https://x.com/lot_foundry",
     );
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
+      "href",
+      "https://www.linkedin.com/company/lotfoundry/",
+    );
   });
 
   it("gives every single-choice group a checked option and one keyboard tab stop", () => {
