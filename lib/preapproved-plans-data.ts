@@ -131,6 +131,18 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "notes": "The County's own Standard Plans A, B and C are free to use. They must be built as designed, though they can be turned to face any direction or mirrored. Each needs a site-specific plot plan approved by Regional Planning and site-specific Title 24 energy calculations. Design firms' plans in the County's catalog are bought from their owners and are not listed here."
   },
   {
+    "id": "ca-pasadena",
+    "city": "Pasadena",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.cityofpasadena.net/planning/planning-division/community-planning/accessory-dwelling-units/adu-standard-plans-program/",
+    "catalogUrl": "https://www.cityofpasadena.net/planning/planning-division/community-planning/accessory-dwelling-units/adu-standard-plans-program/",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The City's own Prototype A studio is free and, updated to the 2025 building code, can be used on most single-family lots citywide. The City's other standard plans are now limited to lots red-tagged in the Eaton Fire and are not listed here. No modifications are allowed, and a Hold Harmless Agreement is required."
+  },
+  {
     "id": "ca-sacramento",
     "city": "Sacramento",
     "state": "CA",
@@ -727,6 +739,27 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "verifiedAt": "2026-11-06",
     "restrictions": "Detached one-story unit drawn to the 2025 California codes, for unincorporated areas. Build it as designed; turning or mirroring it is allowed. Add a Regional Planning-approved site-specific plot plan, site-specific Title 24 calculations and the agency approvals on the County's referral sheet.",
     "feeNote": "The County owns these plans and lets homeowners use them free. Plan check, permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "pasadena-prototype-a-374",
+    "jurisdictionId": "ca-pasadena",
+    "name": "Pasadena Prototype A Studio",
+    "provider": "City of Pasadena",
+    "sqft": 374,
+    "bedrooms": 0,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.cityofpasadena.net/planning/planning-division/community-planning/accessory-dwelling-units/adu-standard-plans-program/",
+    "documentUrl": "https://www.cityofpasadena.net/planning/wp-content/uploads/sites/30/Prototype-A-Updated.pdf",
+    "footprint": {
+      "width": 17,
+      "length": 22,
+      "shape": "rectangle",
+      "sheet": "Pasadena Prototype A (updated to the 2025 CBC), sheet A-2.0 (02-03-2026; 65 sq ft covered porch excluded)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached studio drawn to the 2025 California codes. No modifications, however minor; a licensed professional can change it, but it then loses pre-review. The lot must be zoned residential and not on a slope, hillside or expansive soil. Keep 4 ft side and rear setbacks, and walls with openings 5 ft from side and rear lines. Sign the City's Hold Harmless Agreement and add a site plan.",
+    "feeNote": "The City offers this plan free. Permit, construction and site work costs remain.",
     "status": "active"
   },
   {

@@ -102,9 +102,9 @@ describe("authority choices for a lot", () => {
 });
 
 describe("pre-approved plan catalog", () => {
-  it("covers every content jurisdiction, all six additional studio markets and two more county programs", () => {
-    expect(preapprovedPrograms).toHaveLength(22);
-    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
+  it("covers every content jurisdiction, all six additional studio markets and three more free programs", () => {
+    expect(preapprovedPrograms).toHaveLength(23);
+    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
     for (const city of ADU_CITIES) expect(preapprovedPrograms.some(p => p.id === `${city.state}-${city.slug}`)).toBe(true);
     for (const id of ["wa-seattle", "or-portland", "tx-austin", "ca-los-angeles", "ca-oakland", "co-denver"]) {
       expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
@@ -120,6 +120,7 @@ describe("pre-approved plan catalog", () => {
     expect(suggestPlanJurisdiction({ city: "Unincorporated Santa Clara County", state: "CA" })?.id).toBe("ca-santa-clara-county");
     expect(suggestPlanJurisdiction({ city: "Santa Clara", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Los Angeles", state: "CA" })?.id).toBe("ca-los-angeles");
+    expect(suggestPlanJurisdiction({ city: "Pasadena, CA 91103" })?.id).toBe("ca-pasadena");
     expect(suggestPlanJurisdiction({ city: "1 San Diego Street", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Seattle, WA", state: "CA" })).toBeUndefined();
   });
