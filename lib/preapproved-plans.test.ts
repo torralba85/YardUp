@@ -79,6 +79,7 @@ describe("plan footprints read from the official sheets", () => {
     expect(configForPlan(plan("los-angeles-county-plan-c"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
     expect(configForPlan(plan("los-altos-one-bedroom-854"), defaultAduConfig)).toMatchObject({ width: 22.08, length: 38.5 });
     expect(configForPlan(plan("los-altos-two-bedroom-1190"), defaultAduConfig)).toMatchObject({ width: 32.5, length: 36.75 });
+    expect(configForPlan(plan("davis-two-bedroom-742"), defaultAduConfig)).toMatchObject({ width: 25, length: 29.5 });
     expect(configForPlan(plan("la-mesa-plan-e"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 43, length: 28, footprint: 1204 });
     for (const item of preapprovedPlans.filter(entry => entry.footprint?.shape === "irregular")) {
       const usable = usableRectangleForPlan(item)!;
@@ -105,9 +106,9 @@ describe("authority choices for a lot", () => {
 });
 
 describe("pre-approved plan catalog", () => {
-  it("covers every content jurisdiction, all six additional studio markets and four more free programs", () => {
-    expect(preapprovedPrograms).toHaveLength(24);
-    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena", "ca-los-altos"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
+  it("covers every content jurisdiction, all six additional studio markets and five more free programs", () => {
+    expect(preapprovedPrograms).toHaveLength(25);
+    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena", "ca-los-altos", "ca-davis"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
     for (const city of ADU_CITIES) expect(preapprovedPrograms.some(p => p.id === `${city.state}-${city.slug}`)).toBe(true);
     for (const id of ["wa-seattle", "or-portland", "tx-austin", "ca-los-angeles", "ca-oakland", "co-denver"]) {
       expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
@@ -126,6 +127,7 @@ describe("pre-approved plan catalog", () => {
     expect(suggestPlanJurisdiction({ city: "Pasadena, CA 91103" })?.id).toBe("ca-pasadena");
     expect(suggestPlanJurisdiction({ city: "Los Altos", state: "CA" })?.id).toBe("ca-los-altos");
     expect(suggestPlanJurisdiction({ city: "Los Altos Hills", state: "CA" })).toBeUndefined();
+    expect(suggestPlanJurisdiction({ city: "Davis, CA 95616" })?.id).toBe("ca-davis");
     expect(suggestPlanJurisdiction({ city: "1 San Diego Street", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Seattle, WA", state: "CA" })).toBeUndefined();
   });
