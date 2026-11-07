@@ -67,10 +67,15 @@ describe("plan footprints read from the official sheets", () => {
     expect(configForPlan(plan("san-diego-county-plan-f"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 28.58, length: 21 });
     expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 28.58, length: 21, footprint: 600.18 })).toBe(true);
     expect(modelMatchesPlan(plan("san-diego-county-plan-f"), { width: 20, length: 30, footprint: 600 })).toBe(false);
+    const scc = configForPlan(plan("santa-clara-county-three-bedroom-1200"), defaultAduConfig);
+    expect(scc).toMatchObject({ width: 29.94, length: 39.94, footprint: 29.94 * 39.94 });
+    expect(isValidAduConfig(scc)).toBe(true);
   });
   it("defaults an irregular plan to a usable rectangle: its real depth at its floor area", () => {
     expect(configForPlan(plan("san-diego-county-plan-b"), defaultAduConfig)).toMatchObject({ width: 32, length: 37.5, footprint: 1200 });
     expect(configForPlan(plan("san-diego-county-plan-e"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
+    expect(configForPlan(plan("los-angeles-county-plan-b"), defaultAduConfig)).toMatchObject({ width: 32, length: 37.5, footprint: 1200 });
+    expect(configForPlan(plan("los-angeles-county-plan-c"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
     expect(configForPlan(plan("la-mesa-plan-e"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 43, length: 28, footprint: 1204 });
     for (const item of preapprovedPlans.filter(entry => entry.footprint?.shape === "irregular")) {
       const usable = usableRectangleForPlan(item)!;
@@ -97,8 +102,9 @@ describe("authority choices for a lot", () => {
 });
 
 describe("pre-approved plan catalog", () => {
-  it("covers every content jurisdiction and all six additional studio markets", () => {
-    expect(preapprovedPrograms).toHaveLength(20);
+  it("covers every content jurisdiction, all six additional studio markets and three more free programs", () => {
+    expect(preapprovedPrograms).toHaveLength(23);
+    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
     for (const city of ADU_CITIES) expect(preapprovedPrograms.some(p => p.id === `${city.state}-${city.slug}`)).toBe(true);
     for (const id of ["wa-seattle", "or-portland", "tx-austin", "ca-los-angeles", "ca-oakland", "co-denver"]) {
       expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
@@ -111,6 +117,10 @@ describe("pre-approved plan catalog", () => {
     expect(suggestPlanJurisdiction({ city: "Portland" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "San Diego", state: "CA" })?.id).toBe("ca-san-diego");
     expect(suggestPlanJurisdiction({ city: "Unincorporated San Diego County", state: "CA" })?.id).toBe("ca-san-diego-county");
+    expect(suggestPlanJurisdiction({ city: "Unincorporated Santa Clara County", state: "CA" })?.id).toBe("ca-santa-clara-county");
+    expect(suggestPlanJurisdiction({ city: "Santa Clara", state: "CA" })).toBeUndefined();
+    expect(suggestPlanJurisdiction({ city: "Los Angeles", state: "CA" })?.id).toBe("ca-los-angeles");
+    expect(suggestPlanJurisdiction({ city: "Pasadena, CA 91103" })?.id).toBe("ca-pasadena");
     expect(suggestPlanJurisdiction({ city: "1 San Diego Street", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Seattle, WA", state: "CA" })).toBeUndefined();
   });
@@ -120,6 +130,12 @@ describe("pre-approved plan catalog", () => {
     expect(planScopeForLot(lot, "live")).not.toBe(planScopeForLot(lot, "preset"));
     expect(planScopeForLot(lot, "live")).not.toBe(planScopeForLot({ ...lot, address: "456 Other Street" }, "live"));
     expect(planScopeForLot(lot, "live")).toBe(planScopeForLot({ ...lot, address: "123 MAIN STREET" }, "live"));
+  });
+  it("never tells homeowners an authority's plans aren't listed when some are", () => {
+    for (const program of preapprovedPrograms) {
+      const listed = preapprovedPlans.some(p => p.jurisdictionId === program.id && p.status === "active");
+      if (listed) expect(program.notes, program.id).not.toMatch(/individual plans are not listed/i);
+    }
   });
   it("has unique sourced plans and no more than six per authority", () => {
     expect(preapprovedPlans.length).toBeGreaterThan(0);
