@@ -4,12 +4,14 @@ Implemented in the free desktop Design and mobile Shape flows. Using a plan reco
 
 ## Sources and coverage
 
-The catalog covers the union of the 14 entries in `ADU_CITIES` and Seattle, Portland, Austin, Los Angeles, Oakland and Denver: 20 permitting jurisdictions. Listings were first read on 2026-11-06 (UTC) and re-checked on 2026-11-05 (Pacific) during the Studio integration audit. An unsuccessful verification attempt is not evidence that a program is unavailable.
+The catalog covers the union of the 14 entries in `ADU_CITIES` and Seattle, Portland, Austin, Los Angeles, Oakland and Denver, plus unincorporated Santa Clara and Los Angeles Counties (added 2026-11-06): 22 permitting jurisdictions. Listings were first read on 2026-11-06 (UTC) and re-checked on 2026-11-05 (Pacific) during the Studio integration audit. An unsuccessful verification attempt is not evidence that a program is unavailable.
 
 | Authority | Verified evidence and selection |
 | --- | --- |
 | [Sacramento](https://adu.cityofsacramento.org/Shelf-ready-plans) | Shelf Ready Studio 367 sq ft, one-bedroom 559 sq ft, two-bedroom 747 sq ft. City calls plans free and all-electric; mirroring allowed, modifications prohibited, site plan required. Listing still specifies the 2022 code, so current-code acceptance must be checked. All three document links return PDFs. |
 | [Unincorporated San Diego County](https://www.sandiegocounty.gov/content/sdc/pds/bldg/adu_plans.html) | ADU/SFD Plans A–F: 1,200 sq ft 3 bed 1 bath (pds670), 1,200 2 bed 1 bath (pds673), 1,200 2 bed 2 bath (pds675), 1,000 1 bed 1.5 bath (pds674), 800 1 bed 1 bath (pds672), 600 1 bed 1 bath (pds671). Approximately 85% complete; project information and checklist required. G/H are SFD-only and excluded. Re-checked 2026-11-05 against the page HTML. |
+| [Unincorporated Santa Clara County](https://plandev.santaclaracounty.gov/services/development-services/building/pre-approved-adu-program) | Read in Chrome 2026-11-06 (the site refuses automated readers): the County's own plans, free to unincorporated residents, an 800 sq ft 2 bed 1 bath and a 1,200 sq ft 3 bed 2 bath, each in a Standard (Traditional) or Contemporary style, with PDF sets and CAD files. Site plan, Title 24 CF-1R forms and a truss design are required; unmodified plans pay the minimum (2-hour) review fee; CAD-modified plans need a licensed professional's stamp and lose expedited review; no expedited permitting in the Wildland Urban Interface or flood or geologic hazard zones. Sheets dated 04/13–14/2026, drawn to the 2025 California codes. Both curated. The County's separate list of builder and designer pre-approved plans is not curated. |
+| [Unincorporated Los Angeles County](https://pw.lacounty.gov/building-and-safety/adu/pre-approved) | Read 2026-11-06: County-owned Standard Plans A (1,200 sq ft 3 bed 1 bath), B (1,200 2 bed 1 bath) and C (800 1 bed 1 bath), free for homeowners; built as designed, though they may be turned or mirrored. A Regional Planning-approved site-specific plot plan, site-specific Title 24 calculations and referral-sheet agency approvals are required; EPIC-LA submission is for unincorporated areas. Sheets are titled 2026 and cite the 2025 California codes. A, B and C use the same shells as San Diego County's A, B and E. All three curated; design firms' plans in the Regional Planning catalog are sold by their owners and not curated. |
 | [City of San Diego](https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units) | The "Preapproved ADU Plans" section accepts County standard plans, Chula Vista standard plans and Encinitas permit-ready plans, under AB 1332, with a 30-day review. Plans must meet currently adopted codes and the San Diego Municipal Code; applicants contact the provider about licensing. County A–F appear as separate City references with this acceptance source. |
 | [La Mesa](https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units) | Plans A–E: 224 studio, 400 one-bedroom, 499 one-bedroom, 990 two-bedroom, 1,199 three-bedroom sq ft. The City's preview PDFs resolve again (2026-11-05) and are linked as "Plan preview"; the official construction set is requested from Planning by email. Site plan, energy calculations, supplemental documents and a soils report over 500 sq ft are required. |
 | [Imperial Beach](https://imperialbeachca.gov/268/Accessory-Dwelling-Units) | One pre-approved plan set, read 2026-11-05: a 600 sq ft detached one-bedroom ADU. Its cover sheet bars projects in a FEMA Special Flood Hazard Area and cites the 2019 California codes. |
@@ -23,18 +25,20 @@ Still `needs-verification`: Oceanside, Escondido, El Cajon, Vista, Seattle, Port
 
 ### Footprints
 
-Every curated plan records its overall outside-of-wall footprint from its official floor-plan sheet. Each original sheet was read four ways: the PDF's dimension text, a visual read, and independent blind reads by Codex and by Gemini (3.8 Flash) of renders under opaque IDs. All four agreed on every plan, including the L-shape notches and Sacramento's recessed porches. Carlsbad's sheets were read by text, visually and blind by Codex and Gemini. A unit test checks each footprint against the listed area (rectangles 0.98–1.10×, since Carlsbad's listed sizes run 1.4% over its walls; irregular outer bounds above 1.10×).
+Every curated plan records its overall outside-of-wall footprint from its official floor-plan sheet. Each original sheet was read four ways: the PDF's dimension text, a visual read, and independent blind reads by Codex and by Gemini (3.8 Flash) of renders under opaque IDs. All four agreed on every plan, including the L-shape notches and Sacramento's recessed porches. Carlsbad's sheets were read by text, visually and blind by Codex and Gemini. Santa Clara County's two sheets (A.2) were read by text and visually, and each side's dimension chain sums to the overall size. Los Angeles County's three A1 sheets were read by text and visually and match San Diego County's A, B and E in overall size and notch. A unit test checks each footprint against the listed area (rectangles 0.98–1.10×, since Carlsbad's listed sizes run 1.4% over its walls; irregular outer bounds above 1.10×).
 
 | Plan | Footprint | Shape |
 | --- | --- | --- |
 | County A / C / D / F (and City references) | 30′×40′, 34′-3″×35′, 31′-6″×31′-9″, 21′×28′-7″ | rectangle |
 | County B / E (and City references) | outer 32′×54′, 25′×42′-2″ | L (notches 33′×16′, 24′-2″×10′-6″) |
+| Los Angeles County A / B / C | 30′×40′; outer 32′×54′, 25′×42′-2″ | rectangle; L (same shells as San Diego County A, B, E) |
 | Imperial Beach | 21′×28′-7″ | rectangle (same shell as County F) |
 | La Mesa A–D | 14′×16′, 16′×25′, 14′×35′-8″, 30′×33′ | rectangle |
 | La Mesa E | outer 28′×48′-9″ | stepped (optional trellis excluded) |
 | Sacramento studio / one / two bedroom | 20′×20′, 20′×30′, 20′×40′ | rectangle (porch recessed under the roof) |
 | Carlsbad studio / one / two bedroom | 16′-8″×23′-8″, 16′-10″×39′-10″, 18′×43′-10″ | rectangle (all three styles share it; porches excluded) |
 | Carlsbad three bedroom | outer 29′-7″×47′-8″ | L (a 12′-9″ notch holds a trellis) |
+| Santa Clara County two / three bedroom | 25′×32′, 29′-11¼″×39′-11¼″ | rectangle (both styles share it; optional porches excluded) |
 
 ## Data and behavior
 

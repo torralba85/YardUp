@@ -107,6 +107,30 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "notes": "Official program listing checked. Confirm current-code acceptance, lot-specific requirements and permission to use the documents before applying."
   },
   {
+    "id": "ca-santa-clara-county",
+    "city": "Unincorporated Santa Clara County",
+    "state": "CA",
+    "authority": "county",
+    "status": "verified",
+    "sourceUrl": "https://plandev.santaclaracounty.gov/services/development-services/building/pre-approved-adu-program",
+    "catalogUrl": "https://plandev.santaclaracounty.gov/services/development-services/building/pre-approved-adu-program",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The County's own 800 and 1,200 sq ft plans are free to residents of unincorporated areas. Unmodified plans are charged the minimum two hours of plan review. Expedited permitting isn't available in the Wildland Urban Interface or in special flood hazard or geologic hazard zones. The County also lists builders and designers with pre-approved plans; use its page."
+  },
+  {
+    "id": "ca-los-angeles-county",
+    "city": "Unincorporated Los Angeles County",
+    "state": "CA",
+    "authority": "county",
+    "status": "verified",
+    "sourceUrl": "https://pw.lacounty.gov/building-and-safety/adu/pre-approved",
+    "catalogUrl": "https://pw.lacounty.gov/building-and-safety/adu/pre-approved",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The County's own Standard Plans A, B and C are free to use. They must be built as designed, though they can be turned to face any direction or mirrored. Each needs a site-specific plot plan approved by Regional Planning and site-specific Title 24 energy calculations. Design firms' plans in the County's catalog are bought from their owners and are not listed here."
+  },
+  {
     "id": "ca-sacramento",
     "city": "Sacramento",
     "state": "CA",
@@ -598,6 +622,111 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     },
     "verifiedAt": "2026-11-06",
     "restrictions": "Plans are approximately 85% complete. Complete project-specific information and required checklist; confirm current adopted codes and licensing. County program applies to unincorporated areas; approval elsewhere requires that authority’s acceptance.",
+    "status": "active"
+  },
+  {
+    "id": "santa-clara-county-two-bedroom-800",
+    "jurisdictionId": "ca-santa-clara-county",
+    "name": "County Pre-Approved Two-bedroom",
+    "provider": "County of Santa Clara",
+    "sqft": 800,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sourceUrl": "https://plandev.santaclaracounty.gov/services/development-services/building/pre-approved-adu-program",
+    "documentUrl": "https://stgenpln.blob.core.windows.net/document/SCC_Preapproved_ADU_Plans_800SF.pdf",
+    "footprint": {
+      "width": 25,
+      "length": 32,
+      "shape": "rectangle",
+      "sheet": "SCC Standard ADU 800 SF set, sheet A.2 (04/14/2026; both styles share it; optional expanded porch excluded)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit in a Standard (Traditional) or Contemporary style, drawn to the 2025 California codes, for unincorporated lots only. Add a project-specific site plan, Title 24 energy forms and a stamped roof truss design. Changes beyond the plan's options need a licensed professional's stamp and lose the expedited review.",
+    "feeNote": "The County publishes these plans free, with CAD files. Unmodified plans pay its minimum plan review fee; permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "santa-clara-county-three-bedroom-1200",
+    "jurisdictionId": "ca-santa-clara-county",
+    "name": "County Pre-Approved Three-bedroom",
+    "provider": "County of Santa Clara",
+    "sqft": 1200,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "sourceUrl": "https://plandev.santaclaracounty.gov/services/development-services/building/pre-approved-adu-program",
+    "documentUrl": "https://stgenpln.blob.core.windows.net/document/SCC_Preapproved_ADU_Plans_1200SF.pdf",
+    "footprint": {
+      "width": 29.94,
+      "length": 39.94,
+      "shape": "rectangle",
+      "sheet": "SCC Standard ADU 1200 SF set, sheet A.2 (04/14/2026; both styles share it; optional expanded porch excluded)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit in a Standard (Traditional) or Contemporary style, drawn to the 2025 California codes, for unincorporated lots only. Add a project-specific site plan, Title 24 energy forms and a stamped roof truss design. Changes beyond the plan's options need a licensed professional's stamp and lose the expedited review.",
+    "feeNote": "The County publishes these plans free, with CAD files. Unmodified plans pay its minimum plan review fee; permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-angeles-county-plan-a",
+    "jurisdictionId": "ca-los-angeles-county",
+    "name": "County Standard ADU Plan A",
+    "provider": "County of Los Angeles",
+    "sqft": 1200,
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "sourceUrl": "https://pw.lacounty.gov/building-and-safety/adu/pre-approved",
+    "documentUrl": "https://pw.lacounty.gov/building-and-safety/docs/ADU_A_1200.pdf",
+    "footprint": {
+      "width": 30,
+      "length": 40,
+      "shape": "rectangle",
+      "sheet": "2026 Los Angeles County Standard Plan A (No. 27001), sheet A1"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit drawn to the 2025 California codes, for unincorporated areas. Build it as designed; turning or mirroring it is allowed. Add a Regional Planning-approved site-specific plot plan, site-specific Title 24 calculations and the agency approvals on the County's referral sheet.",
+    "feeNote": "The County owns these plans and lets homeowners use them free. Plan check, permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-angeles-county-plan-b",
+    "jurisdictionId": "ca-los-angeles-county",
+    "name": "County Standard ADU Plan B",
+    "provider": "County of Los Angeles",
+    "sqft": 1200,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sourceUrl": "https://pw.lacounty.gov/building-and-safety/adu/pre-approved",
+    "documentUrl": "https://pw.lacounty.gov/building-and-safety/docs/ADU_B_1200.pdf",
+    "footprint": {
+      "width": 32,
+      "length": 54,
+      "shape": "irregular",
+      "sheet": "2026 Los Angeles County Standard Plan B (No. 27002), sheet A1 (L; 33′×16′ notch)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit drawn to the 2025 California codes, for unincorporated areas. Build it as designed; turning or mirroring it is allowed. Add a Regional Planning-approved site-specific plot plan, site-specific Title 24 calculations and the agency approvals on the County's referral sheet.",
+    "feeNote": "The County owns these plans and lets homeowners use them free. Plan check, permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-angeles-county-plan-c",
+    "jurisdictionId": "ca-los-angeles-county",
+    "name": "County Standard ADU Plan C",
+    "provider": "County of Los Angeles",
+    "sqft": 800,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://pw.lacounty.gov/building-and-safety/adu/pre-approved",
+    "documentUrl": "https://pw.lacounty.gov/building-and-safety/docs/ADU_C_800.pdf",
+    "footprint": {
+      "width": 25,
+      "length": 42.17,
+      "shape": "irregular",
+      "sheet": "2026 Los Angeles County Standard Plan C (No. 27003), sheet A1 (L; 24′-2″×10′-6″ notch)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit drawn to the 2025 California codes, for unincorporated areas. Build it as designed; turning or mirroring it is allowed. Add a Regional Planning-approved site-specific plot plan, site-specific Title 24 calculations and the agency approvals on the County's referral sheet.",
+    "feeNote": "The County owns these plans and lets homeowners use them free. Plan check, permit, construction and site work costs remain.",
     "status": "active"
   },
   {
