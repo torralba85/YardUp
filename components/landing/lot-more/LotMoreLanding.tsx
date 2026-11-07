@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   Facebook,
   Instagram,
+  Linkedin,
   MapPin,
   Menu,
   Plus,
@@ -1588,6 +1589,15 @@ export function LotMoreLanding({
                 className={styles.socialIconLink}
               >
                 <XLogo />
+              </a>
+              <a
+                href={SOCIAL_LINKS.linkedin}
+                rel="noopener noreferrer"
+                target="_blank"
+                aria-label="LinkedIn"
+                className={styles.socialIconLink}
+              >
+                <Linkedin size={18} strokeWidth={1.5} aria-hidden="true" />
               </a>
             </div>
             <div className={styles.footerLegal}>
