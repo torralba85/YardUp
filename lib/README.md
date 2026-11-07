@@ -658,6 +658,8 @@ Component package providing domain logic and interface implementations for lib.
 - `us-states.ts:normalizeStateCode` - Exported Function
 - `use-builder-inbox-view.ts:InboxFilter` - Type Definition
 - `use-builder-inbox-view.ts:useBuilderInboxView` - Exported Function
+- `use-builder-matches.ts:BuilderMatchState` - Type Definition
+- `use-builder-matches.ts:useBuilderMatches` - Exported Function
 - `use-journey-history.ts:JOURNEY_STEP_STATE_KEY` - Exported constant / variable
 - `use-journey-history.ts:JourneyHistoryControls` - TypeScript Interface
 - `use-journey-history.ts:useJourneyHistory` - Exported Function

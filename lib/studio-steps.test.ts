@@ -12,9 +12,10 @@ describe("STUDIO_STEPS", () => {
     ]);
   });
 
-  it("marks certificate and builders as the revenue destinations", () => {
+  it("marks only the certificate, where the homeowner pays, with the revenue $", () => {
+    // Builders is free to the homeowner (builders pay), so a $ there read as a cost.
     const revenue = STUDIO_STEPS.filter((s) => s.revenue).map((s) => s.id);
-    expect(revenue).toEqual(["certificate", "builders"]);
+    expect(revenue).toEqual(["certificate"]);
   });
 
   it("gates the revenue steps behind a resolved parcel", () => {

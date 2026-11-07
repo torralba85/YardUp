@@ -32,7 +32,7 @@ export interface OwnerContactFormInput {
 /** Result of validating an owner contact form: either a contact or an error. */
 export type OwnerContactValidation =
   | { ok: true; contact: OwnerContact }
-  | { ok: false; error: string };
+  | { ok: false; error: string; field: "name" | "email" | "phone" | "consent" };
 
 /**
  * Normalize a free-form city and state into a {@link ServiceArea} with a stable
@@ -110,11 +110,12 @@ export function getMatchedBuilders<T extends BuilderMatchCandidate>(
 
 /**
  * Validate and normalize owner contact form input, requiring a name, a
- * well-formed email, and explicit consent.
+ * well-formed email, a phone number with an area code when one is given, and
+ * explicit consent.
  *
  * @param input - The raw form values.
- * @returns `{ ok: true, contact }` on success, or `{ ok: false, error }` with
- *   a user-facing message.
+ * @returns `{ ok: true, contact }` on success, or `{ ok: false, error, field }`
+ *   with a user-facing message and the first field that needs fixing.
  */
 export function validateOwnerContact(
   input: OwnerContactFormInput,
@@ -124,12 +125,17 @@ export function validateOwnerContact(
   const phone = input.phone.trim();
   const message = input.message.trim();
 
-  if (!name) return { ok: false, error: "Name is required." };
+  if (!name) return { ok: false, error: "Name is required.", field: "name" };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return { ok: false, error: "A valid email is required." };
+    return { ok: false, error: "A valid email is required.", field: "email" };
+  }
+  // Builders call or text this number, so it needs an area code; 15 is E.164's ceiling.
+  const phoneDigits = phone.replace(/\D/g, "").length;
+  if (phone && (phoneDigits < 10 || phoneDigits > 15)) {
+    return { ok: false, error: "Enter a phone number with area code, or leave it blank.", field: "phone" };
   }
   if (!input.consent) {
-    return { ok: false, error: "Consent is required before sharing with builders." };
+    return { ok: false, error: "Consent is required before sharing with builders.", field: "consent" };
   }
 
   return {

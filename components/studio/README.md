@@ -23,6 +23,7 @@ Reusable user interface components and presentation widgets for studio.
 - `BeforeAfterBoard.tsx:BeforeAfterBoardProps` - TypeScript Interface
 - `BeforeAfterBoard.tsx:BeforeAfterBoard` - Exported Function (default)
 - `BuilderLeadPanel.tsx:BuilderLeadSubmitInput` - TypeScript Interface
+- `BuilderLeadPanel.tsx:BuilderLeadDraft` - TypeScript Interface
 - `BuilderLeadPanel.tsx:BuilderLeadPanel` - Exported Function (default)
 - `BuildersPanel.tsx:BuildersPanelProps` - TypeScript Interface
 - `BuildersPanel.tsx:BuildersPanel` - Exported Function (default)

@@ -20,7 +20,8 @@ describe("BuilderLeadPanel mobile accessibility", () => {
     render(
       <BuilderLeadPanel
         open
-        userDefaults={{ name: "Alma Reyes", email: "alma@example.com" }}
+        draft={{ name: "Alma Reyes", email: "alma@example.com", phone: "", message: "" }}
+        onDraftChange={vi.fn()}
         parcelKey={parcel.id}
         parcel={parcel}
         config={defaultAduConfig}
@@ -38,11 +39,11 @@ describe("BuilderLeadPanel mobile accessibility", () => {
       screen.getByRole("button", { name: "Close builder connection form" }),
     ).toHaveClass("min-h-11", "min-w-11");
 
-    for (const label of ["Name", "Email", "Phone optional", "Message optional"]) {
+    for (const label of ["Name", "Email", "Phone (optional)", "Message (optional)"]) {
       expect(screen.getByLabelText(label)).toHaveClass("text-base", "sm:text-sm");
     }
 
     expect(screen.getByLabelText("Email")).toHaveAttribute("type", "email");
-    expect(screen.getByLabelText("Phone optional")).toHaveAttribute("type", "tel");
+    expect(screen.getByLabelText("Phone (optional)")).toHaveAttribute("type", "tel");
   });
 });

@@ -62,6 +62,7 @@ import CertificatePanel from "./studio/CertificatePanel";
 import EmailScenarioLinkCard from "./studio/EmailScenarioLinkCard";
 import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
+  type BuilderLeadDraft,
   type BuilderLeadSubmitInput,
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
@@ -1088,6 +1089,22 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   const builderMatches = useBuilderMatches(Boolean(user), activeParcel, builderLeadOpen);
+  // Kept here, not in the form, so closing it or leaving the step loses nothing.
+  const [builderLeadDraft, setBuilderLeadDraft] = useState<BuilderLeadDraft | null>(null);
+  const leadDraft = builderLeadDraft ?? { name: user?.displayName || "", email: user?.email || "", phone: "", message: "" };
+  // The connect button remounts when the form closes; hand focus back to it.
+  const connectTriggerRef = useRef<HTMLButtonElement>(null);
+  const refocusConnectRef = useRef(false);
+  useEffect(() => {
+    if (builderLeadOpen || !refocusConnectRef.current) return;
+    refocusConnectRef.current = false;
+    connectTriggerRef.current?.focus();
+  }, [builderLeadOpen]);
+
+  function closeBuilderLead() {
+    refocusConnectRef.current = true;
+    setBuilderLeadOpen(false);
+  }
 
   async function handleBuilderLeadSubmit(input: BuilderLeadSubmitInput) {
     if (!user) {
@@ -1110,6 +1127,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       snapshot: input.snapshot,
       matchedBuilderIds: matchedBuilders.map((builder) => builder.id),
     });
+    setBuilderLeadDraft(null);
 
     const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
     trackBuilderConnectionSubmitted({
@@ -1404,10 +1422,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       stepContent = builderLeadOpen ? (
         <BuilderLeadPanel
           open
-          userDefaults={{
-            name: user?.displayName || "",
-            email: user?.email || "",
-          }}
+          draft={leadDraft}
+          onDraftChange={setBuilderLeadDraft}
           parcelKey={parcelId}
           parcel={activeParcel}
           config={config}
@@ -1415,7 +1431,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           result={result}
           signedIn={Boolean(user)}
           matches={builderMatches}
-          onClose={() => setBuilderLeadOpen(false)}
+          onClose={closeBuilderLead}
           onSubmit={handleBuilderLeadSubmit}
           onRequestSignIn={() => openSignup("builder_connect")}
         />
@@ -1446,6 +1462,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onShare={() => void handleShareLink()}
           shareNotice={shareNotice}
           onConnectBuilders={() => setBuilderLeadOpen(true)}
+          connectRef={connectTriggerRef}
         />
       );
     }
@@ -1735,10 +1752,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           <div className="flex-1 overflow-y-auto">
             <BuilderLeadPanel
               open
-              userDefaults={{
-                name: user?.displayName || "",
-                email: user?.email || "",
-              }}
+              draft={leadDraft}
+              onDraftChange={setBuilderLeadDraft}
               parcelKey={parcelId}
               parcel={activeParcel}
               config={config}
@@ -1746,7 +1761,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               result={result}
               signedIn={Boolean(user)}
               matches={builderMatches}
-              onClose={() => setBuilderLeadOpen(false)}
+              onClose={closeBuilderLead}
               onSubmit={handleBuilderLeadSubmit}
               onRequestSignIn={() => openSignup("builder_connect")}
             />
@@ -1759,6 +1774,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               parcelCounty={"county" in activeParcel ? String(activeParcel.county) : undefined}
               feasibilityStatus={feasibilityStatus}
               onConnect={() => setBuilderLeadOpen(true)}
+              connectRef={connectTriggerRef}
             />
           </div>
         )}

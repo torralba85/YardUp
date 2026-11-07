@@ -8,7 +8,11 @@ export interface StudioStepMeta {
   id: StudioStep;
   /** Human label shown in the rail. */
   label: string;
-  /** A revenue destination (paid certificate / builder referral). */
+  /**
+   * Where the homeowner pays, marked `$` in the rail. Builders is revenue for
+   * LotFoundry too, but builders pay for it and it is free to the homeowner,
+   * so a `$` there read as a cost and is left off.
+   */
   revenue: boolean;
   /** Requires a resolved (non-demo) parcel before it can be reached. */
   requiresParcel: boolean;
@@ -25,7 +29,7 @@ export const STUDIO_STEPS: StudioStepMeta[] = [
   { id: "feasibility", label: "Rules & Fit", revenue: false, requiresParcel: false },
   { id: "design", label: "Design", revenue: false, requiresParcel: false },
   { id: "certificate", label: "Certificate", revenue: true, requiresParcel: true },
-  { id: "builders", label: "Builders", revenue: true, requiresParcel: true },
+  { id: "builders", label: "Builders", revenue: false, requiresParcel: true },
 ];
 
 /** Inputs that influence which steps are reachable. */

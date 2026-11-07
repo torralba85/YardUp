@@ -824,10 +824,11 @@ describe("FeasibilityStudio (guided spine)", () => {
     });
   });
 
-  it("marks certificate and builders as the revenue steps", () => {
+  it("marks only the certificate step with the revenue $", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    // The rail flags the two revenue destinations with a "$" signifier.
-    expect(within(stepRail()).getAllByText("$")).toHaveLength(2);
+    // Builders is free to the homeowner, so only the certificate carries the "$".
+    expect(within(stepRail()).getAllByText("$")).toHaveLength(1);
+    expect(within(stepButton(/Certificate/)).getByText("$")).toBeInTheDocument();
   });
 
   it("folds the local permit guide into the Rules & Fit step", () => {
@@ -1125,6 +1126,29 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(screen.getByRole("button", { name: /Close builder connection form/i }));
     expect(screen.queryByRole("button", { name: "Sign in to send" })).not.toBeInTheDocument();
     expect(screen.getByText(/Step 5 · Builders/)).toBeInTheDocument();
+  });
+
+  it("keeps what was typed in the builder connect form across close, reopen and step changes", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Builders/));
+    const connect = screen.getByRole("button", { name: /Connect with builders/i });
+    await user.click(connect);
+    expect(screen.getByRole("heading", { name: "Connect with local builders" })).toHaveFocus();
+    await user.type(screen.getByRole("textbox", { name: "Message (optional)" }), "Corner lot, alley access");
+    await user.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+
+    await user.click(screen.getByRole("button", { name: /Close builder connection form/i }));
+    // Focus goes back to the button that opened the form.
+    expect(screen.getByRole("button", { name: /Connect with builders/i })).toHaveFocus();
+
+    await user.click(stepButton(/Design/));
+    await user.click(stepButton(/Builders/));
+    await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
+    expect(screen.getByRole("textbox", { name: "Message (optional)" })).toHaveValue("Corner lot, alley access");
+    // Consent is asked again each time.
+    expect(screen.getByRole("checkbox", { name: /18 or older/i })).not.toBeChecked();
   });
 
   it("opens sign-in over the builder connect form for a guest who sends it", async () => {
