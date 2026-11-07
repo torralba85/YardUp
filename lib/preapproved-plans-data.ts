@@ -143,6 +143,30 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "notes": "The City's own Prototype A studio is free and, updated to the 2025 building code, can be used on most single-family lots citywide. The City's other standard plans are now limited to lots red-tagged in the Eaton Fire and are not listed here. No modifications are allowed, and a Hold Harmless Agreement is required."
   },
   {
+    "id": "ca-los-altos",
+    "city": "Los Altos",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "catalogUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The City's own Permit-Ready plans are free, each in a Mediterranean, Traditional or Contemporary style. Their architectural drawings are online; the full sets, with structural, mechanical, electrical and plumbing sheets, can be viewed at City Hall. Some options can be chosen, but the plans can't be modified. Privately designed plans the City also pre-approves are bought from their designers and are not listed here."
+  },
+  {
+    "id": "ca-davis",
+    "city": "Davis",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.cityofdavis.org/city-hall/community-development-and-sustainability/planning-and-zoning/accessory-dwelling-units-and-guest-houses/pre-designed-adu-plans",
+    "catalogUrl": "https://www.cityofdavis.org/city-hall/community-development-and-sustainability/planning-and-zoning/accessory-dwelling-units-and-guest-houses/pre-designed-adu-plans",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The City's own pre-designed plans are free, each in an Adobe, Agrarian or Mid-Mod style, with a quicker review and reduced plan check fees. They are drawn to the 2022 California codes. Only previews are online: file a wet-signed Hold Harmless and Indemnification Agreement at City Hall to receive the full set. No changes are accepted."
+  },
+  {
     "id": "ca-sacramento",
     "city": "Sacramento",
     "state": "CA",
@@ -760,6 +784,137 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "verifiedAt": "2026-11-06",
     "restrictions": "Detached studio drawn to the 2025 California codes. No modifications, however minor; a licensed professional can change it, but it then loses pre-review. The lot must be zoned residential and not on a slope, hillside or expansive soil. Keep 4 ft side and rear setbacks, and walls with openings 5 ft from side and rear lines. Sign the City's Hold Harmless Agreement and add a site plan.",
     "feeNote": "The City offers this plan free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-studio-one-bedroom-525",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos Studio or One-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 525,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/255",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 15,
+      "length": 35,
+      "shape": "rectangle",
+      "sheet": "Los Altos Permit-Ready Studio/1 Bedroom, Style A sheet A10 (1/9/2025): ±15′×35′ to the outside face of the walls, 14′-8″×34′-8″ to face of stud; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit with an optional wall that closes off the sleeping area. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-one-bedroom-854",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos One-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 854,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/264",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 22.08,
+      "length": 40.25,
+      "shape": "irregular",
+      "sheet": "Los Altos Permit-Ready 1 Bedroom, Style A sheet A10 (1/9/2025): outer ±22′-1″×40′-3″ to the outside face of the walls; the 11′-9″ bedroom wing steps back 3′; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-two-bedroom-1190",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos Two-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 1190,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/273",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 36.75,
+      "length": 42,
+      "shape": "irregular",
+      "sheet": "Los Altos Permit-Ready 2 Bedroom, Style A sheet A10 (1/9/2025): L, outer ±36′-9″×42′ to the outside face of the walls with a ±25′×14′-1″ notch; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "davis-studio-300",
+    "jurisdictionId": "ca-davis",
+    "name": "Davis Pre-Designed Studio",
+    "provider": "City of Davis",
+    "sqft": 300,
+    "bedrooms": 0,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.cityofdavis.org/city-hall/community-development-and-sustainability/planning-and-zoning/accessory-dwelling-units-and-guest-houses/pre-designed-adu-plans/pre-designed-studio-adu",
+    "documentUrl": "https://www.cityofdavis.org/home/showpublisheddocument/22130/639223149447170000",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 12,
+      "length": 25,
+      "shape": "rectangle",
+      "sheet": "City of Davis dimensioned floor plan on the studio's plan page (the online set has no floor-plan sheet); entry landing excluded"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached unit drawn to the 2022 California codes; ask the City whether it needs updating for the 2025 codes. No changes are accepted. Keep 4-ft setbacks. The online set is not for construction: file a wet-signed hold-harmless agreement and a site plan at City Hall for the full set. A California-licensed general contractor is required for the permit.",
+    "feeNote": "The City offers these plans free, with reduced plan check fees. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "davis-one-bedroom-612",
+    "jurisdictionId": "ca-davis",
+    "name": "Davis Pre-Designed One-bedroom",
+    "provider": "City of Davis",
+    "sqft": 612,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.cityofdavis.org/city-hall/community-development-and-sustainability/planning-and-zoning/accessory-dwelling-units-and-guest-houses/pre-designed-adu-plans/pre-designed-one-bedroom-adu",
+    "documentUrl": "https://www.cityofdavis.org/home/showpublisheddocument/22128/639223149444370000",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 21.83,
+      "length": 30.04,
+      "shape": "rectangle",
+      "sheet": "City of Davis dimensioned floor plan on the one-bedroom's plan page, 21′-10″×30′-0½″ (porch recessed under the roof at one corner)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached unit drawn to the 2022 California codes; ask the City whether it needs updating for the 2025 codes. No changes are accepted. Keep 4-ft setbacks. The online set is not for construction: file a wet-signed hold-harmless agreement and a site plan at City Hall for the full set. A California-licensed general contractor is required for the permit.",
+    "feeNote": "The City offers these plans free, with reduced plan check fees. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "davis-two-bedroom-742",
+    "jurisdictionId": "ca-davis",
+    "name": "Davis Pre-Designed Two-bedroom",
+    "provider": "City of Davis",
+    "sqft": 742,
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.cityofdavis.org/city-hall/community-development-and-sustainability/planning-and-zoning/accessory-dwelling-units-and-guest-houses/pre-designed-adu-plans/pre-designed-two-bedroom-adu",
+    "documentUrl": "https://www.cityofdavis.org/home/showpublisheddocument/22132/639223149450230000",
+    "documentLabel": "Plan preview",
+    "footprint": {
+      "width": 25,
+      "length": 34,
+      "shape": "irregular",
+      "sheet": "City of Davis dimensioned floor plan on the two-bedroom's plan page, outer 25′×34′ (two corners recessed under the roof)"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached unit drawn to the 2022 California codes; ask the City whether it needs updating for the 2025 codes. No changes are accepted. Keep 4-ft setbacks. The online set is not for construction: file a wet-signed hold-harmless agreement and a site plan at City Hall for the full set. A California-licensed general contractor is required for the permit.",
+    "feeNote": "The City offers these plans free, with reduced plan check fees. Permit, construction and site work costs remain.",
     "status": "active"
   },
   {
