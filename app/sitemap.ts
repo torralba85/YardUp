@@ -30,9 +30,10 @@ const lastModified: Record<string, string> = {
   "/help": "2026-11-06",
   "/feedback": "2026-11-06",
   // #362 added processors to both policies on 2026-11-03 without a new
-  // version, and /privacy was retitled on 2026-11-06.
+  // version, /privacy was retitled on 2026-11-06, and /terms added
+  // pre-approved municipal plan disclaimers on 2026-11-06.
   "/privacy": laterDate(CURRENT_LEGAL_CONSENT.privacyVersion, "2026-11-06"),
-  "/terms": laterDate(CURRENT_LEGAL_CONSENT.termsVersion, "2026-11-03"),
+  "/terms": laterDate(CURRENT_LEGAL_CONSENT.termsVersion, "2026-11-06"),
 };
 
 export default function sitemap(): MetadataRoute.Sitemap {
