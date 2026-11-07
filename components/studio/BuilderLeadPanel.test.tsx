@@ -57,6 +57,31 @@ describe("BuilderLeadPanel", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("shows the result beside Submit, after the fields", async () => {
+    // The form is taller than most screens; a message at its top was out of view.
+    render(
+      <BuilderLeadPanel
+        open
+        userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
+        parcelKey="oak-street"
+        parcel={parcelPresets[0]}
+        config={defaultAduConfig}
+        assumptions={defaultFinancialAssumptions}
+        result={result}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    const submitButton = screen.getByRole("button", { name: /Submit snapshot/i });
+    await userEvent.click(submitButton);
+
+    const alert = screen.getByRole("alert");
+    const consent = screen.getByRole("checkbox", { name: /18 or older/i });
+    expect(consent.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(alert.compareDocumentPosition(submitButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("submits validated contact and snapshot", async () => {
     const submit = vi.fn().mockResolvedValue({ matchedCount: 1 });
     render(

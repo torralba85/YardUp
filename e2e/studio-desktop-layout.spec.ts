@@ -110,6 +110,30 @@ test("a signed-in real lot leaves no blank page below the Studio", async ({ page
   }
 });
 
+test("the builder connect form scrolls to its Submit button", async ({ page }) => {
+  // The form rendered outside every scrolling pane, so the locked `main`
+  // clipped Submit below the planning guide bar. Scroll with the wheel, as a
+  // person would: scrollIntoView also moves overflow-hidden boxes and hides it.
+  await page.goto("/studio?parcel=coyote-brush");
+  await openStep(page, /Builders/);
+  await page.getByRole("button", { name: "Connect with builders" }).click();
+  const form = page.getByRole("region", { name: "Connect with local builders" });
+  await expect(form).toBeVisible();
+
+  const formBox = (await form.boundingBox())!;
+  await page.mouse.move(formBox.x + formBox.width / 2, formBox.y + 40);
+  await page.mouse.wheel(0, 2_000);
+
+  const submit = page.getByRole("button", { name: "Submit snapshot" });
+  await expect(submit).toBeInViewport();
+  const submitBox = (await submit.boundingBox())!;
+  const overviewBox = (await page.getByTestId("studio-overview").boundingBox())!;
+  expect(submitBox.y + submitBox.height).toBeLessThanOrEqual(overviewBox.y);
+  const geometry = await stepGeometry(page);
+  expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.viewportHeight);
+  expect(geometry.stepHeight).toBeLessThanOrEqual(geometry.mainHeight);
+});
+
 test("the planning guide opens over the Studio without scrolling the page", async ({ page }) => {
   await page.goto("/studio?parcel=coyote-brush");
   const overview = page.getByTestId("studio-overview");

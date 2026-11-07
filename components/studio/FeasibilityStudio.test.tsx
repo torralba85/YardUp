@@ -1104,6 +1104,28 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("button", { name: /Connect with builders/i })).toBeInTheDocument();
   });
 
+  it("opens the builder connect form inside the Builders step's scrolling pane on desktop", async () => {
+    // Rendered after the step section, the form sat outside every scrolling
+    // pane and the locked `main` clipped Submit below the planning guide bar.
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Builders/));
+    await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
+
+    const step = screen.getByRole("region", { name: "Builders" });
+    const submit = screen.getByRole("button", { name: /Submit snapshot/i });
+    expect(step).toContainElement(submit);
+    const pane = submit.closest(".overflow-y-auto");
+    expect(pane).not.toBeNull();
+    expect(step).toContainElement(pane as HTMLElement);
+    expect(screen.queryByText(/Step 5 · Builders/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Close builder connection form/i }));
+    expect(screen.queryByRole("button", { name: /Submit snapshot/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Step 5 · Builders/)).toBeInTheDocument();
+  });
+
   it("opens the builder connect form as a focused Act destination on mobile", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),

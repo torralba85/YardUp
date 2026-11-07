@@ -118,16 +118,6 @@ export default function BuilderLeadPanel({
       {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
 
       <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
-        {error && (
-          <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="md:col-span-2 text-sm font-semibold text-status-eligible">
-            {success}
-          </div>
-        )}
         <div>
           <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
           <Input
@@ -184,6 +174,18 @@ export default function BuilderLeadPanel({
             I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
           </span>
         </label>
+        {/* Beside Submit, not atop the form: the form is taller than most
+            screens, so a message up there appeared out of view. */}
+        {error && (
+          <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div role="status" className="md:col-span-2 text-sm font-semibold text-status-eligible">
+            {success}
+          </div>
+        )}
         <Button type="submit" variant="primary" size="md" loading={isPending}>
           {isPending ? "Submitting…" : "Submit snapshot"}
         </Button>
