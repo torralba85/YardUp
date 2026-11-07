@@ -131,6 +131,12 @@ describe("pre-approved plan catalog", () => {
     expect(planScopeForLot(lot, "live")).not.toBe(planScopeForLot({ ...lot, address: "456 Other Street" }, "live"));
     expect(planScopeForLot(lot, "live")).toBe(planScopeForLot({ ...lot, address: "123 MAIN STREET" }, "live"));
   });
+  it("never tells homeowners an authority's plans aren't listed when some are", () => {
+    for (const program of preapprovedPrograms) {
+      const listed = preapprovedPlans.some(p => p.jurisdictionId === program.id && p.status === "active");
+      if (listed) expect(program.notes, program.id).not.toMatch(/individual plans are not listed/i);
+    }
+  });
   it("has unique sourced plans and no more than six per authority", () => {
     expect(preapprovedPlans.length).toBeGreaterThan(0);
     expect(new Set(preapprovedPlans.map(p => p.id)).size).toBe(preapprovedPlans.length);

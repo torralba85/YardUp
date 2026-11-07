@@ -56,7 +56,7 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "catalogUrl": "https://www.carlsbadca.gov/departments/community-development/planning/adu-permit-ready-program",
     "verifiedAt": "2026-11-05",
     "reviewedAt": "2026-11-05",
-    "notes": "Four permit-ready single-story detached plans: studio 400, one-bedroom 680, two-bedroom 800 and three-bedroom 999 sq ft, each in three architectural styles. Individual plans are not listed here yet; use the City's page."
+    "notes": "Four permit-ready single-story detached plans: studio 400, one-bedroom 680, two-bedroom 800 and three-bedroom 999 sq ft, each in three architectural styles that share one footprint. All four are listed below; the City's page has the full sets and submittal forms."
   },
   {
     "id": "ca-imperial-beach",
