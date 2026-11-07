@@ -124,6 +124,12 @@ export function writeConsent(decision: ConsentDecision): void {
     // Non-fatal: fall through and still emit, so the banner dismisses.
   }
 
+  try {
+    document.documentElement.removeAttribute("data-lf-consent");
+  } catch {
+    // Non-browser or sandbox.
+  }
+
   pushConsentUpdate(decision);
   window.dispatchEvent(
     new CustomEvent<ConsentState>(CONSENT_CHANGE_EVENT, { detail: decision }),
@@ -143,6 +149,12 @@ export function clearConsent(): void {
     window.localStorage.removeItem(CONSENT_STORAGE_KEY);
   } catch {
     // Non-fatal; the emit below still resets in-memory state.
+  }
+
+  try {
+    document.documentElement.setAttribute("data-lf-consent", "unset");
+  } catch {
+    // Non-browser or sandbox.
   }
 
   pushConsentUpdate("denied");

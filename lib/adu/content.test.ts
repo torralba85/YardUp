@@ -219,6 +219,15 @@ describe("adu article markup helpers", () => {
       image: base.image,
       datePublished: "2026-09-18",
       dateModified: "2026-11-03",
+      publisher: {
+        "@type": "Organization",
+        name: "LotFoundry",
+        url: "https://lotfoundry.net/",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://lotfoundry.net/icon-512-transparent.png",
+        },
+      },
     });
   });
 

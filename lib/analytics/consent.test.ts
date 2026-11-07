@@ -188,4 +188,16 @@ describe("analytics consent", () => {
 
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it("synchronizes data-lf-consent DOM attribute on decision and reset", () => {
+    document.documentElement.setAttribute("data-lf-consent", "unset");
+    writeConsent("granted");
+    expect(document.documentElement.hasAttribute("data-lf-consent")).toBe(false);
+
+    clearConsent();
+    expect(document.documentElement.getAttribute("data-lf-consent")).toBe("unset");
+
+    writeConsent("denied");
+    expect(document.documentElement.hasAttribute("data-lf-consent")).toBe(false);
+  });
 });
