@@ -123,7 +123,29 @@ describe("marketplace domain helpers", () => {
         message: "",
         consent: false,
       }),
-    ).toEqual({ ok: false, error: "Consent is required before sharing with builders." });
+    ).toEqual({ ok: false, error: "Consent is required before sharing with builders.", field: "consent" });
+  });
+
+  it("names the first field that needs fixing", () => {
+    const base = { name: "Jane Owner", email: "jane@example.com", phone: "", message: "", consent: true };
+    expect(validateOwnerContact({ ...base, name: " " })).toMatchObject({ ok: false, field: "name" });
+    expect(validateOwnerContact({ ...base, email: "jane@" })).toMatchObject({ ok: false, field: "email" });
+    expect(validateOwnerContact({ ...base, name: "", email: "" })).toMatchObject({ ok: false, field: "name" });
+  });
+
+  it("accepts a phone number with area code and rejects one without", () => {
+    const base = { name: "Jane Owner", email: "jane@example.com", phone: "", message: "", consent: true };
+    expect(validateOwnerContact({ ...base, phone: "(619) 555-0123" })).toMatchObject({
+      ok: true,
+      contact: { phone: "(619) 555-0123" },
+    });
+    expect(validateOwnerContact({ ...base, phone: "+1 619 555 0123" })).toMatchObject({ ok: true });
+    expect(validateOwnerContact({ ...base, phone: "555-0123" })).toEqual({
+      ok: false,
+      error: "Enter a phone number with area code, or leave it blank.",
+      field: "phone",
+    });
+    expect(validateOwnerContact({ ...base, phone: "1234567890123456" })).toMatchObject({ ok: false, field: "phone" });
   });
 
   it("builds an immutable snapshot payload from the current scenario", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { Bookmark, Share2, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -22,6 +22,8 @@ export interface ActStepProps {
   shareNotice: string | null;
   /** Open the connect-with-builders flow. */
   onConnectBuilders: () => void;
+  /** The connect button, so focus can return to it when the form closes. */
+  connectRef?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -39,6 +41,7 @@ export default function ActStep({
   onShare,
   shareNotice,
   onConnectBuilders,
+  connectRef,
 }: ActStepProps) {
   return (
     <section
@@ -64,6 +67,7 @@ export default function ActStep({
             fullWidth
             leftIcon={<Users size={16} />}
             onClick={onConnectBuilders}
+            ref={connectRef}
           >
             Connect with matched builders
           </Button>

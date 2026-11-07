@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { Hammer, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -26,6 +26,8 @@ export interface BuildersPanelProps {
   onConnect: () => void;
   /** Feasibility status of the current scenario. */
   feasibilityStatus?: FeasibilityStatus;
+  /** The connect button, so focus can return to it when the form closes. */
+  connectRef?: Ref<HTMLButtonElement>;
 }
 
 /**
@@ -42,6 +44,7 @@ export default function BuildersPanel({
   parcelCounty,
   onConnect,
   feasibilityStatus = "unknown",
+  connectRef,
 }: BuildersPanelProps) {
   const { user } = useAuth();
   const [builders, setBuilders] = useState<BuilderDirectoryProfile[] | null>(null);
@@ -167,6 +170,7 @@ export default function BuildersPanel({
           size="lg"
           leftIcon={<Hammer size={17} />}
           onClick={onConnect}
+          ref={connectRef}
           disabled={Boolean(user) && (loading || noneMatched)}
         >
           Connect with builders

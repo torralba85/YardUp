@@ -24,6 +24,21 @@ export interface BuilderLeadSubmitInput {
 }
 
 /**
+ * What the homeowner has typed. The Studio holds it, so closing the form or
+ * leaving the step loses nothing; consent is not kept and is asked again.
+ */
+export interface BuilderLeadDraft {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
+
+type ContactField = "name" | "email" | "phone" | "consent";
+
+const ERROR_ID = "builder-lead-error";
+
+/**
  * Slide-over form that lets a homeowner share their feasibility study with
  * matched builders. Collects and validates contact details, assembles a
  * {@link ConnectionSnapshot} from the current parcel/config/result, and emits
@@ -33,13 +48,14 @@ export interface BuilderLeadSubmitInput {
  * Submit opens sign-in instead of failing after they fill everything in; and a
  * sent snapshot replaces the form so it cannot be sent twice.
  *
- * @param props - Open state, prefilled defaults, the parcel/config/result to
- *   snapshot, the sign-in and builder-match state, and the
- *   `onClose`/`onSubmit`/`onRequestSignIn` handlers.
+ * @param props - Open state, the contact draft and its setter, the
+ *   parcel/config/result to snapshot, the sign-in and builder-match state, and
+ *   the `onClose`/`onSubmit`/`onRequestSignIn` handlers.
  */
 export default function BuilderLeadPanel({
   open,
-  userDefaults,
+  draft,
+  onDraftChange,
   parcelKey,
   parcel,
   config,
@@ -52,7 +68,8 @@ export default function BuilderLeadPanel({
   onRequestSignIn,
 }: {
   open: boolean;
-  userDefaults: { name: string; email: string };
+  draft: BuilderLeadDraft;
+  onDraftChange: (draft: BuilderLeadDraft) => void;
   parcelKey: string;
   parcel: Parcel;
   config: ADUConfig;
@@ -66,20 +83,29 @@ export default function BuilderLeadPanel({
   onSubmit: (input: BuilderLeadSubmitInput) => Promise<{ matchedCount: number }>;
   onRequestSignIn: () => void;
 }) {
-  const [name, setName] = useState(userDefaults.name);
-  const [email, setEmail] = useState(userDefaults.email);
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // `field` is null for a failed send, which is reported beside Submit.
+  const [error, setError] = useState<{ field: ContactField | null; message: string } | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+
+  // The button that opened the form is gone; start keyboard and screen-reader
+  // users at the form's heading rather than at the top of the page.
+  useEffect(() => {
+    if (open) headingRef.current?.focus();
+  }, [open]);
 
   // Submit unmounts with the form; land focus on the confirmation instead.
   useEffect(() => {
     if (success) successRef.current?.focus();
   }, [success]);
+
+  // Take the person to the field that needs fixing (ids are `builder-lead-<field>`).
+  useEffect(() => {
+    if (error?.field) document.getElementById(`builder-lead-${error.field}`)?.focus();
+  }, [error]);
 
   if (!open) return null;
   const snapshot = buildConnectionSnapshot({ parcelKey, parcel, config, assumptions, result });
@@ -93,14 +119,31 @@ export default function BuilderLeadPanel({
           ? `Goes to ${matches.count} builder${matches.count === 1 ? "" : "s"} who serve${matches.count === 1 ? "s" : ""} this area.`
           : null;
 
+  function fieldProps(field: ContactField) {
+    const invalid = error?.field === field;
+    return {
+      "aria-invalid": invalid || undefined,
+      "aria-describedby": invalid ? ERROR_ID : undefined,
+    };
+  }
+
+  function fieldError(field: ContactField | null) {
+    if (!error || error.field !== field) return null;
+    return (
+      <p id={ERROR_ID} role="alert" className="mt-1 text-sm text-status-blocked md:col-span-2">
+        {error.message}
+      </p>
+    );
+  }
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setSuccess(null);
 
-    const validation = validateOwnerContact({ name, email, phone, message, consent });
+    const validation = validateOwnerContact({ ...draft, consent });
     if (!validation.ok) {
-      setError(validation.error);
+      setError({ field: validation.field, message: validation.error });
       return;
     }
     if (!signedIn) {
@@ -116,7 +159,7 @@ export default function BuilderLeadPanel({
             : `Sent to ${submitted.matchedCount} local builders.`,
         );
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not submit this snapshot.");
+        setError({ field: null, message: err instanceof Error ? err.message : "Could not submit this snapshot." });
       }
     });
   }
@@ -129,8 +172,10 @@ export default function BuilderLeadPanel({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2
+            ref={headingRef}
             id="builder-lead-heading"
-            className="font-display text-xl font-medium text-lot-ink"
+            tabIndex={-1}
+            className="font-display text-xl font-medium text-lot-ink outline-none"
           >
             Connect with local builders
           </h2>
@@ -178,9 +223,13 @@ export default function BuilderLeadPanel({
         </div>
       ) : (
         <>
-          {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
+          {snapshot.advisorIntake && (
+            <div className="mt-4">
+              <AdvisorIntakeSummary intake={snapshot.advisorIntake} title="Project details shared with builders" />
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
+          <form onSubmit={handleSubmit} noValidate className="mt-4 grid gap-3 md:grid-cols-2">
             <div>
               <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
               <Input
@@ -188,9 +237,11 @@ export default function BuilderLeadPanel({
                 type="text"
                 autoComplete="name"
                 className="mt-1"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                value={draft.name}
+                onChange={(event) => onDraftChange({ ...draft, name: event.target.value })}
+                {...fieldProps("name")}
               />
+              {fieldError("name")}
             </div>
             <div>
               <FieldLabel htmlFor="builder-lead-email">Email</FieldLabel>
@@ -199,28 +250,32 @@ export default function BuilderLeadPanel({
                 type="email"
                 autoComplete="email"
                 className="mt-1"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                value={draft.email}
+                onChange={(event) => onDraftChange({ ...draft, email: event.target.value })}
+                {...fieldProps("email")}
               />
+              {fieldError("email")}
             </div>
             <div>
-              <FieldLabel htmlFor="builder-lead-phone">Phone optional</FieldLabel>
+              <FieldLabel htmlFor="builder-lead-phone">Phone (optional)</FieldLabel>
               <Input
                 id="builder-lead-phone"
                 type="tel"
                 autoComplete="tel"
                 className="mt-1"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                value={draft.phone}
+                onChange={(event) => onDraftChange({ ...draft, phone: event.target.value })}
+                {...fieldProps("phone")}
               />
+              {fieldError("phone")}
             </div>
             <div className="md:col-span-2">
-              <FieldLabel htmlFor="builder-lead-message">Message optional</FieldLabel>
+              <FieldLabel htmlFor="builder-lead-message">Message (optional)</FieldLabel>
               <Textarea
                 id="builder-lead-message"
                 className="mt-1 min-h-20"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
+                value={draft.message}
+                onChange={(event) => onDraftChange({ ...draft, message: event.target.value })}
               />
             </div>
             <label
@@ -232,19 +287,17 @@ export default function BuilderLeadPanel({
                 checked={consent}
                 onChange={(event) => setConsent(event.target.checked)}
                 className="mt-0.5"
+                {...fieldProps("consent")}
               />
               <span>
                 I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
               </span>
             </label>
+            {fieldError("consent")}
             {matchNote && <p className="text-sm text-lot-stone md:col-span-2">{matchNote}</p>}
             {/* Beside Submit, not atop the form: the form is taller than most
                 screens, so a message up there appeared out of view. */}
-            {error && (
-              <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
-                {error}
-              </div>
-            )}
+            {fieldError(null)}
             <Button type="submit" variant="primary" size="md" loading={isPending}>
               {isPending ? "Submitting…" : signedIn ? "Submit snapshot" : "Sign in to send"}
             </Button>

@@ -15,7 +15,7 @@ export interface Step {
   label: string;
   /** Lifecycle state. */
   state: StepState;
-  /** Marks a revenue destination (certificate / builders) with a `$` signifier. */
+  /** Marks a step where the user pays (the certificate) with a `$` signifier. */
   revenue?: boolean;
 }
 

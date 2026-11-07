@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import {
   defaultAduConfig,
   defaultFinancialAssumptions,
   parcelPresets,
 } from "@/lib/feasibility";
-import BuilderLeadPanel from "./BuilderLeadPanel";
+import BuilderLeadPanel, { type BuilderLeadDraft } from "./BuilderLeadPanel";
 
 const result = {
   aduSqft: 600,
@@ -35,11 +35,22 @@ const result = {
   operatingExpenseRatio: 0.325,
 };
 
-function renderPanel(props: Partial<ComponentProps<typeof BuilderLeadPanel>> = {}) {
-  return render(
+const janeDraft: BuilderLeadDraft = { name: "Jane Owner", email: "jane@example.com", phone: "", message: "" };
+
+type PanelProps = ComponentProps<typeof BuilderLeadPanel>;
+
+/** The Studio owns the draft; this stands in for it. */
+function StatefulPanel({ initialDraft = janeDraft, ...props }: Partial<PanelProps> & { initialDraft?: BuilderLeadDraft }) {
+  const [draft, setDraft] = useState(initialDraft);
+  return <BaselinePanel draft={draft} onDraftChange={setDraft} {...props} />;
+}
+
+function BaselinePanel(props: Partial<PanelProps>) {
+  return (
     <BuilderLeadPanel
       open
-      userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
+      draft={janeDraft}
+      onDraftChange={vi.fn()}
       parcelKey="oak-street"
       parcel={parcelPresets[0]}
       config={defaultAduConfig}
@@ -51,8 +62,12 @@ function renderPanel(props: Partial<ComponentProps<typeof BuilderLeadPanel>> = {
       onSubmit={vi.fn()}
       onRequestSignIn={vi.fn()}
       {...props}
-    />,
+    />
   );
+}
+
+function renderPanel(props: Partial<PanelProps> & { initialDraft?: BuilderLeadDraft } = {}) {
+  return render(<StatefulPanel {...props} />);
 }
 
 describe("BuilderLeadPanel", () => {
@@ -149,7 +164,8 @@ describe("BuilderLeadPanel", () => {
     rerender(
       <BuilderLeadPanel
         open
-        userDefaults={{ name: "Jane Owner", email: "jane@example.com" }}
+        draft={janeDraft}
+        onDraftChange={vi.fn()}
         parcelKey="oak-street"
         parcel={parcelPresets[0]}
         config={defaultAduConfig}
@@ -164,5 +180,59 @@ describe("BuilderLeadPanel", () => {
     );
     expect(screen.queryByText(/Checking which builders/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Submit snapshot/i })).toBeEnabled();
+  });
+
+  it("starts focus at the form's heading", () => {
+    renderPanel();
+    expect(screen.getByRole("heading", { name: "Connect with local builders" })).toHaveFocus();
+  });
+
+  it("titles the project summary for the homeowner and labels optional fields", () => {
+    renderPanel();
+    expect(screen.getByRole("region", { name: "Project details shared with builders" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Phone (optional)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message (optional)")).toBeInTheDocument();
+  });
+
+  it("marks the field that needs fixing, explains it there and moves focus to it", async () => {
+    renderPanel({ initialDraft: { ...janeDraft, name: "" } });
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+    const name = screen.getByRole("textbox", { name: "Name" });
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Name is required.");
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(name).toHaveAttribute("aria-describedby", alert.id);
+    expect(name).toHaveFocus();
+    expect(screen.getByRole("textbox", { name: "Email" })).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("asks for an area code on a short phone number", async () => {
+    const submit = vi.fn();
+    renderPanel({ onSubmit: submit });
+    await userEvent.type(screen.getByRole("textbox", { name: "Phone (optional)" }), "555-0123");
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+    const phone = screen.getByRole("textbox", { name: "Phone (optional)" });
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a phone number with area code, or leave it blank.");
+    expect(phone).toHaveAttribute("aria-invalid", "true");
+    expect(phone).toHaveFocus();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("reports what the person types to the Studio, which keeps the draft", async () => {
+    const onDraftChange = vi.fn();
+    render(<BaselinePanel onDraftChange={onDraftChange} />);
+    await userEvent.type(screen.getByRole("textbox", { name: "Message (optional)" }), "H");
+    expect(onDraftChange).toHaveBeenLastCalledWith({ ...janeDraft, message: "H" });
+  });
+
+  it("does not keep consent in the draft", async () => {
+    const onDraftChange = vi.fn();
+    render(<BaselinePanel onDraftChange={onDraftChange} />);
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    expect(onDraftChange).not.toHaveBeenCalled();
   });
 });
