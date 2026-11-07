@@ -34,7 +34,7 @@ beforeAll(async () => {
       rules: readFileSync(resolve("firestore.rules"), "utf8"),
     },
   });
-});
+}, 30_000);
 
 afterEach(async () => {
   await testEnv?.clearFirestore();

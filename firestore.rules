@@ -1,159 +1,147 @@
 rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId} (Firebase Auth UID)
+// Fields:
+//   - email: string (required, 4-254 chars) - Homeowner or builder contact email
+//   - displayName: string (optional, nullable, <= 100 chars) - Member display name
+//   - role: string (required, "user" | "builder", immutable on update) - Account role
+//   - legalConsent: map (optional on create, receipt-bearing once accepted, immutable version/timestamps) - Legal consent record
+//   - createdAt: timestamp (required, immutable on update) - Account creation timestamp
+//   - updatedAt: timestamp (required) - Last profile modification timestamp
+//
+// Collection: users/{userId}/savedScenarios
+// Document ID: {scenarioId} (Auto-generated or client UUID)
+// Fields:
+//   - name: string (required, 1-160 chars) - Feasibility study scenario title
+//   - parcelId: string (required, 1-100 chars) - Preset lot identifier or live lot marker
+//   - liveParcel: map (optional) - Extended parcel boundaries, zoning, setbacks, and market data
+//   - config: map (required) - ADU dimensions, roof type, exterior finish, openings
+//   - assumptions: map (required) - Construction costs, soft-cost multipliers, opex, rent scenario
+//   - version: int (optional, 2) - Scenario data model schema version
+//   - heightConvention: string (optional, "wall") - Height calculation convention
+//   - pose: map (optional) - 2D lot placement coordinates and orientation angle
+//   - projectBrief: map (optional) - AI-generated feasibility summary and timeline
+//   - styleMatchConcept: map (optional) - Style-matched architecture concepts
+//   - preapprovedPlan: map (optional) - Curated municipal pre-approved plan reference
+//   - createdAt: timestamp (required, request.time) - Scenario save timestamp
+//   - updatedAt: timestamp (required, request.time) - Last update timestamp
+//   * Access pattern: Create and delete by owning user; update strictly disabled.
+//
+// Collection: builders
+// Document ID: {builderId} (Firebase Auth UID)
+// Fields:
+//   - ownerUid: string (required, matches builderId) - Owning builder Auth UID
+//   - companyName: string (required, 1-160 chars) - Contractor / business name
+//   - contactEmail: string (required, 4-254 chars) - Builder business contact email
+//   - phone: string (optional, nullable, <= 50 chars) - Phone number
+//   - licenseNumber: string (optional, nullable, <= 100 chars) - State contractor license number
+//   - serviceAreas: list (required, 1-25 items) - Covered geographic market regions
+//   - active: bool (required) - Whether builder is accepting new client matching
+//   - credits: number (optional, immutable by client, 0 on create) - Paid lead unlock balance
+//   - createdAt: timestamp (required, immutable on update) - Registration timestamp
+//   - updatedAt: timestamp (required) - Profile update timestamp
+//
+// Subcollection: builders/{builderId}/ledger
+// Document ID: {transactionId} (Transaction UUID / void reference)
+// Fields: Managed strictly by server Admin SDK. Read-only for owning builder.
+//
+// Collection: connectionRequests
+// Document ID: {requestId} (Unique connection request ID)
+// Fields:
+//   - ownerUid: string (required, matches request.auth.uid) - Homeowner UID
+//   - preview: map (required) - Redacted feasibility snapshot without street address or contact info
+//   - matchedBuilderIds: list (required, 1-25 items) - Matched eligible builder UIDs
+//   - status: string (required, "submitted") - Request lifecycle status
+//   - ownerVerified: bool (required, true) - Verification flag
+//   - headStartUntil: string (optional, null on create) - Early exclusive window for first unlocker
+//   - createdAt: timestamp (required) - Submission timestamp
+//   - updatedAt: timestamp (required) - Last update timestamp
+//   * Access pattern: Read by owner and matched builders; create-only by owner; updates/deletes disabled.
+//
+// Subcollection: connectionRequests/{requestId}/private
+// Document ID: contact (Gated contact PII subdocument)
+// Fields:
+//   - ownerContact: map (required) - Homeowner name, email, phone contact details
+//   - streetAddress: string (required, <= 200 chars) - Exact parcel street address
+//   - exactAPN: string (optional, nullable, <= 100 chars) - Assessor's parcel number
+//   - snapshot: map (required) - Full feasibility report data payload
+//   - createdAt: timestamp (required) - Creation timestamp
+//   * Access pattern: Read by owner or builders holding a leadUnlocks grant; create by owner; updates disabled.
+//
+// Subcollection: connectionRequests/{requestId}/builderResponses
+// Document ID: {builderId} (Responding builder Auth UID)
+// Fields:
+//   - builderId: string (required, matches path) - Builder Auth UID
+//   - status: string (required, "new" on create, enum: "new" | "interested" | "not-a-fit")
+//   - createdAt: timestamp (required, immutable on update)
+//   - updatedAt: timestamp (required)
+//   * Access pattern: Created by homeowner for matched builders; updated by matched builder; deletes disabled.
+//
+// Collection: leadUnlocks
+// Document ID: {builderId}_{requestId} (Deterministic idempotency key)
+// Fields: Managed strictly by Stripe webhook / server Admin SDK. Read-only for owning builder.
+//
+// Collection: certificatePurchases
+// Document ID: {uid}_{certKey} (Deterministic purchase key)
+// Fields: Managed strictly by Stripe webhook / server Admin SDK. Read-only for owning purchaser.
+//
+// Collection: purchaseGrants
+// Document ID: {grantId} (Deterministic grant key)
+// Fields: Managed strictly by store receipt verification / Admin SDK. Read-only for grantee.
+//
+// Collection: certificateCredits
+// Document ID: {uid} (User Auth UID)
+// Fields: Managed strictly by server Admin SDK. Read-only for owning user.
+//
+// Admin-Only Collections (Read and write strictly disabled for all clients):
+//   - studioScenarioLeads/{leadId}
+//   - agentPasses/{code} and agentPasses/{code}/redemptions/{uid}
+//   - feedback/{ticketId}
+//   - activeCheckoutSessions/{reservationId}
+//   - rtdnEvents/{messageId}
+//   - aiRateLimits/{limitId}
+//
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Private lead + durable email queue. Bearer API returns only a validated scenario projection.
-    match /studioScenarioLeads/{leadId} {
-      allow read, write: if false;
-    }
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
     function isBuilder(builderId) {
-      return request.auth != null && request.auth.uid == builderId;
-    }
-
-    function isValidBuilderProfile(builderId) {
-      return request.resource.data.keys().hasOnly([
-        "ownerUid",
-        "companyName",
-        "contactEmail",
-        "phone",
-        "licenseNumber",
-        "serviceAreas",
-        "active",
-        "credits",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.keys().hasAll([
-        "ownerUid",
-        "companyName",
-        "contactEmail",
-        "serviceAreas",
-        "active",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.ownerUid == builderId &&
-      request.resource.data.companyName is string &&
-      request.resource.data.companyName.size() > 0 &&
-      request.resource.data.companyName.size() <= 160 &&
-      request.resource.data.contactEmail is string &&
-      request.resource.data.contactEmail.size() > 3 &&
-      request.resource.data.contactEmail.size() <= 254 &&
-      request.resource.data.serviceAreas is list &&
-      request.resource.data.serviceAreas.size() > 0 &&
-      request.resource.data.serviceAreas.size() <= 25 &&
-      request.resource.data.active is bool &&
-      request.resource.data.createdAt is timestamp &&
-      request.resource.data.updatedAt is timestamp &&
-      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
-      (!("phone" in request.resource.data) ||
-        request.resource.data.phone == null ||
-        (request.resource.data.phone is string && request.resource.data.phone.size() <= 50)) &&
-      (!("licenseNumber" in request.resource.data) ||
-        request.resource.data.licenseNumber == null ||
-        (request.resource.data.licenseNumber is string && request.resource.data.licenseNumber.size() <= 100)) &&
-      (!("credits" in request.resource.data) ||
-        (request.resource.data.credits is number &&
-          ((resource == null && request.resource.data.credits == 0) ||
-           (resource != null && request.resource.data.credits == resource.data.credits))));
-    }
-
-    // 1A: the redacted ROOT doc holds no contact info and no street address —
-    // only the banded preview. PII lives in the private/contact subcollection.
-    function isValidConnectionRequest() {
-      return request.resource.data.keys().hasOnly([
-        "ownerUid",
-        "preview",
-        "matchedBuilderIds",
-        "status",
-        "ownerVerified",
-        "headStartUntil",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.keys().hasAll([
-        "ownerUid",
-        "preview",
-        "matchedBuilderIds",
-        "status",
-        "ownerVerified",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.ownerUid == request.auth.uid &&
-      request.resource.data.preview is map &&
-      !("ownerContact" in request.resource.data) &&
-      !("snapshot" in request.resource.data) &&
-      request.resource.data.matchedBuilderIds is list &&
-      request.resource.data.matchedBuilderIds.size() > 0 &&
-      request.resource.data.matchedBuilderIds.size() <= 25 &&
-      request.resource.data.status == "submitted" &&
-      request.resource.data.ownerVerified == true &&
-      request.resource.data.createdAt is timestamp &&
-      request.resource.data.updatedAt is timestamp &&
-      request.resource.data.headStartUntil == null;
-    }
-
-    // The gated PII payload. Only the owner may create it (at submit time);
-    // reads require ownership OR a leadUnlocks grant for this builder (T3).
-    function isValidContactSubdoc() {
-      return request.resource.data.keys().hasOnly([
-        "ownerContact",
-        "streetAddress",
-        "exactAPN",
-        "snapshot",
-        "createdAt"
-      ]) &&
-      request.resource.data.keys().hasAll([
-        "ownerContact",
-        "streetAddress",
-        "snapshot",
-        "createdAt"
-      ]) &&
-      request.resource.data.ownerContact is map &&
-      request.resource.data.streetAddress is string &&
-      request.resource.data.streetAddress.size() <= 200 &&
-      request.resource.data.snapshot is map &&
-      request.resource.data.createdAt is timestamp &&
-      (!("exactAPN" in request.resource.data) ||
-        request.resource.data.exactAPN == null ||
-        (request.resource.data.exactAPN is string && request.resource.data.exactAPN.size() <= 100));
+      return isAuthenticated() && request.auth.uid == builderId;
     }
 
     function hasUnlockGrant(requestId) {
       return exists(/databases/$(database)/documents/leadUnlocks/$(request.auth.uid + '_' + requestId));
     }
 
-    function isValidBuilderResponse(builderId) {
-      return request.resource.data.keys().hasOnly([
-        "builderId",
-        "status",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.keys().hasAll([
-        "builderId",
-        "status",
-        "createdAt",
-        "updatedAt"
-      ]) &&
-      request.resource.data.builderId == builderId &&
-      request.resource.data.createdAt is timestamp &&
-      request.resource.data.updatedAt is timestamp &&
-      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
-      request.resource.data.status in ["new", "interested", "not-a-fit"];
-    }
-
     function isValidRole() {
       return request.resource.data.role in ["user", "builder"];
     }
+
+    // ===============================================================
+    // Domain Validators: Users & Legal Consent
+    // ===============================================================
 
     function isWellFormedLegalConsent(consent) {
       return consent is map &&
@@ -249,20 +237,169 @@ service cloud.firestore {
         (request.resource.data.displayName is string && request.resource.data.displayName.size() <= 100)
       ) &&
       (
-        !exists(/databases/$(database)/documents/users/$(userId)) ||
+        resource == null ||
         request.resource.data.role == resource.data.role
       );
     }
 
-    // Required fields are enforced by the per-field checks below, not by a
-    // matching hasAll(): reading a key that is absent is an error, which denies
-    // the write. The paired hasOnly()/hasAll() this file used to carry doubled
-    // the evaluated-expression count, and a scenario carrying a full liveParcel
-    // then blew Firestore's hard 1000-expression-per-request ceiling. Keep
-    // hasOnly() (it rejects unknown fields) and do not reintroduce hasAll().
-    // Range comparisons reject non-numeric values too. Avoid duplicate numeric
-    // type expressions so full live-parcel saves plus plan IDs fit the 1000
-    // expression ceiling. Bounds, key allowlists and ownership remain enforced.
+    // ===============================================================
+    // Domain Validators: Builders
+    // ===============================================================
+
+    function isValidBuilderProfile(builderId) {
+      return request.resource.data.keys().hasOnly([
+        "ownerUid",
+        "companyName",
+        "contactEmail",
+        "phone",
+        "licenseNumber",
+        "serviceAreas",
+        "active",
+        "credits",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerUid",
+        "companyName",
+        "contactEmail",
+        "serviceAreas",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.ownerUid == builderId &&
+      request.resource.data.companyName is string &&
+      request.resource.data.companyName.size() > 0 &&
+      request.resource.data.companyName.size() <= 160 &&
+      request.resource.data.contactEmail is string &&
+      request.resource.data.contactEmail.size() > 3 &&
+      request.resource.data.contactEmail.size() <= 254 &&
+      request.resource.data.serviceAreas is list &&
+      request.resource.data.serviceAreas.size() > 0 &&
+      request.resource.data.serviceAreas.size() <= 25 &&
+      request.resource.data.active is bool &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
+      (!("phone" in request.resource.data) ||
+        request.resource.data.phone == null ||
+        (request.resource.data.phone is string && request.resource.data.phone.size() <= 50)) &&
+      (!("licenseNumber" in request.resource.data) ||
+        request.resource.data.licenseNumber == null ||
+        (request.resource.data.licenseNumber is string && request.resource.data.licenseNumber.size() <= 100)) &&
+      // Credits lockdown: clients cannot create positive balances or alter credits on update.
+      // If credits existed on the document, it cannot be deleted by omitting the field.
+      (!("credits" in request.resource.data) ?
+        (resource == null || !("credits" in resource.data)) :
+        (request.resource.data.credits is number &&
+          ((resource == null && request.resource.data.credits == 0) ||
+           (resource != null && ("credits" in resource.data) && request.resource.data.credits == resource.data.credits))));
+    }
+
+    function isValidBuilderResponse(builderId) {
+      return request.resource.data.keys().hasOnly([
+        "builderId",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.keys().hasAll([
+        "builderId",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.builderId == builderId &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      (resource == null || request.resource.data.createdAt == resource.data.createdAt) &&
+      request.resource.data.status in ["new", "interested", "not-a-fit"];
+    }
+
+    // ===============================================================
+    // Domain Validators: Connection Requests & Contact PII Paywall
+    // ===============================================================
+
+    // Redacted root connection request doc holds no contact info and no street address.
+    // PII lives exclusively in the private/contact subcollection.
+    function isValidConnectionRequest() {
+      return request.resource.data.keys().hasOnly([
+        "ownerUid",
+        "preview",
+        "matchedBuilderIds",
+        "status",
+        "ownerVerified",
+        "headStartUntil",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerUid",
+        "preview",
+        "matchedBuilderIds",
+        "status",
+        "ownerVerified",
+        "createdAt",
+        "updatedAt"
+      ]) &&
+      request.resource.data.ownerUid == request.auth.uid &&
+      request.resource.data.preview is map &&
+      !("ownerContact" in request.resource.data) &&
+      !("snapshot" in request.resource.data) &&
+      request.resource.data.matchedBuilderIds is list &&
+      request.resource.data.matchedBuilderIds.size() > 0 &&
+      request.resource.data.matchedBuilderIds.size() <= 25 &&
+      request.resource.data.status == "submitted" &&
+      request.resource.data.ownerVerified == true &&
+      request.resource.data.createdAt is timestamp &&
+      request.resource.data.updatedAt is timestamp &&
+      request.resource.data.headStartUntil == null;
+    }
+
+    // Gated PII contact payload. Created by owner at submit time;
+    // reads require ownership OR an active leadUnlocks grant for the builder.
+    function isValidContactSubdoc() {
+      return request.resource.data.keys().hasOnly([
+        "ownerContact",
+        "streetAddress",
+        "exactAPN",
+        "snapshot",
+        "createdAt"
+      ]) &&
+      request.resource.data.keys().hasAll([
+        "ownerContact",
+        "streetAddress",
+        "snapshot",
+        "createdAt"
+      ]) &&
+      request.resource.data.ownerContact is map &&
+      request.resource.data.streetAddress is string &&
+      request.resource.data.streetAddress.size() <= 200 &&
+      request.resource.data.snapshot is map &&
+      request.resource.data.createdAt is timestamp &&
+      (!("exactAPN" in request.resource.data) ||
+        request.resource.data.exactAPN == null ||
+        (request.resource.data.exactAPN is string && request.resource.data.exactAPN.size() <= 100));
+    }
+
+    // ===============================================================
+    // Domain Validators: Saved Scenarios & Operational Limits
+    // ===============================================================
+    //
+    // CRITICAL OPERATIONAL INVARIANT: Firestore enforces a hard ceiling of 1000
+    // evaluated expressions per request. A scenario carrying a fully populated
+    // liveParcel (including boundaries, building massing, and market data)
+    // consumes a large expression budget.
+    //
+    // To stay safely under 1000 expressions:
+    // 1. We keep hasOnly() to strictly reject unknown fields, but avoid duplicate hasAll().
+    //    CEL read errors on missing keys deny writes naturally.
+    // 2. Market data, fire hazard, and building massing validations are intentionally
+    //    bounded by type and key allowlists without deep redundant sub-key expressions.
+    // 3. Saved scenarios are create-only and delete-only (`allow update: if false;`),
+    //    completely eliminating the Update Bypass vector.
+
     function isValidAduConfig(config) {
       return config is map &&
         config.keys().hasOnly([
@@ -344,18 +481,8 @@ service cloud.firestore {
         pose.rotationDeg <= 360;
     }
 
-    // Deliberately shallow, and it must stay that way. Firestore evaluates at
-    // most 1000 expressions per request, and a fully populated liveParcel
-    // spends most of that budget before reaching this function — validating
-    // every market field's range here put the create over the ceiling, so every
-    // real save failed with PERMISSION_DENIED (see the maximal-payload case in
-    // firestore.rules.test.ts, which is the guard against that returning).
-    //
-    // What is kept is what rules are actually for here: the allowlist, so an
-    // unknown field cannot be smuggled in, and the core types. Range and format
-    // checking of market rows is data-integrity work that isValidLiveParcelData
-    // in lib/saved-scenarios.ts already does, and this is a private per-owner
-    // subcollection — nobody but the owner can read or write it.
+    // Deliberately calibrated: validates key allowlist and core scalar types
+    // without exceeding the 1000-expression ceiling on maximal scenarios.
     function isValidMarketData(market) {
       return market is map &&
         market.keys().hasOnly([
@@ -373,9 +500,6 @@ service cloud.firestore {
           "confidence",
           "components"
         ]) &&
-        // rentByBedroom/opexBreakdown/geography are bounded by the allowlist
-        // above but left unkeyed: their rows come straight from the HUD data
-        // files, which may gain columns without a rules deploy.
         market.rentByBedroom is map &&
         market.costMultiplier is number &&
         market.source is string &&
@@ -383,8 +507,6 @@ service cloud.firestore {
         (!("components" in market) || market.components is map);
     }
 
-    // Shallow on purpose, like isValidMarketData: every expression here counts
-    // against the same 1000-per-request ceiling as the rest of the liveParcel.
     function isValidFireHazard(fire) {
       return fire is map &&
         fire.keys().hasOnly(["zone", "responsibility", "source", "checkedAt"]) &&
@@ -448,14 +570,10 @@ service cloud.firestore {
         (!("dataQuality" in parcel) || parcel.dataQuality is map) &&
         (!("fireHazard" in parcel) || isValidFireHazard(parcel.fireHazard)) &&
         (!("bearingDeg" in parcel) || parcel.bearingDeg is number) &&
-        // Type only, like dataQuality: a maximal scenario sits a few expressions
-        // under the 1000 ceiling, and even a key allowlist here crossed it.
-        // normalizeLiveParcel keeps only known fields and re-checks every
-        // polygon and range when the scenario is read back.
         (!("existingBuilding" in parcel) || parcel.existingBuilding is map);
     }
 
-    // Reference IDs only. Approval details always come from the curated catalog.
+    // Curated catalog plan reference ID validation.
     function isValidPreapprovedPlan(reference) {
       return reference is map &&
         reference.keys().hasOnly(["planId", "jurisdictionId"]) &&
@@ -466,10 +584,6 @@ service cloud.firestore {
     }
 
     function isValidNewScenario() {
-      // `data` is bound once on purpose: re-spelling `request.resource.data` on
-      // every line re-walks that path each time, and a scenario carrying a full
-      // liveParcel already runs close to Firestore's hard ceiling of 1000
-      // evaluated expressions per request.
       let data = request.resource.data;
       return data.keys().hasOnly([
         "name",
@@ -498,13 +612,6 @@ service cloud.firestore {
       (!("projectBrief" in data) || data.projectBrief is map) &&
       (!("styleMatchConcept" in data) || data.styleMatchConcept is map) &&
       (!("preapprovedPlan" in data) || isValidPreapprovedPlan(data.preapprovedPlan)) &&
-      // version/heightConvention/pose travel together, mirroring
-      // isValidSavedScenario in lib/saved-scenarios.ts. Accepting `version: 2`
-      // on its own would store a document migrateDesign refuses to hydrate, so
-      // the write would succeed and the scenario would then be invisible.
-      // This branch only asserts that the three fields travel together; the two
-      // clauses below do the value checks, so `pose` is validated once and not
-      // twice.
       (!("version" in data) || (
         data.version == 2 &&
         data.keys().hasAll(["heightConvention", "pose"])
@@ -515,11 +622,26 @@ service cloud.firestore {
       data.updatedAt == request.time;
     }
 
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Private lead + durable email queue (Admin SDK only).
+    match /studioScenarioLeads/{leadId} {
+      allow read, write: if false;
+    }
+
+    // Server-side OpenAI and endpoint rate limits (Admin SDK only).
+    match /aiRateLimits/{limitId} {
+      allow read, write: if false;
+    }
+
+    // User profile documents and saved studies.
     match /users/{userId} {
       allow read: if isOwner(userId);
       allow create, update: if isOwner(userId) && isValidUserProfile(userId);
       allow delete: if false;
-      
+
       match /savedScenarios/{scenarioId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId) && isValidNewScenario();
@@ -528,11 +650,8 @@ service cloud.firestore {
       }
     }
 
+    // Builder contractor profiles and accounting ledgers.
     match /builders/{builderId} {
-      // Full builder profiles include contact details, license number, and
-      // credits. The owner can read their own profile; homeowner matching uses
-      // the authenticated /api/builders/active directory endpoint, which
-      // returns a redacted server-built view instead of exposing this document.
       allow read: if isBuilder(builderId);
       allow create, update: if isBuilder(builderId) && isValidBuilderProfile(builderId);
       allow delete: if false;
@@ -543,6 +662,7 @@ service cloud.firestore {
       }
     }
 
+    // Homeowner ADU connection requests, private contact PII, and builder responses.
     match /connectionRequests/{requestId} {
       allow read: if isSignedIn() && (
         resource.data.ownerUid == request.auth.uid ||
@@ -551,9 +671,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidConnectionRequest();
       allow update, delete: if false;
 
-      // PII paywall (1A): the owner can read/create; a matched builder can read
-      // only after a leadUnlocks grant exists for them. No client can update or
-      // delete the contact payload.
+      // PII paywall: readable only by homeowner or builders with an active unlock grant.
       match /private/{privateDoc} {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
@@ -565,6 +683,7 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      // Builder response status tracking.
       match /builderResponses/{builderId} {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
@@ -582,27 +701,17 @@ service cloud.firestore {
       }
     }
 
-    // 2A: paid unlock grants. Doc id is the deterministic "{builderId}_{requestId}"
-    // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
-    // the webhook via the Admin SDK (which bypasses these rules); no client may
-    // self-grant.
+    // Paid lead-unlock grants: deterministic "{builderId}_{requestId}".
+    // Written only by Stripe webhook / server Admin SDK.
     match /leadUnlocks/{lockId} {
-      // A builder may read a grant only when it exists AND belongs to them. A
-      // missing grant is denied (not a clean 404), so no signed-in user can probe
-      // whether another builder has unlocked a lead. fetchBuilderInbox reads its
-      // own deterministic id and treats the denial as "not unlocked". The PII
-      // paywall uses exists() (hasUnlockGrant), which is unaffected.
       allow read: if isSignedIn()
         && resource != null
         && resource.data.builderId == request.auth.uid;
       allow create, update, delete: if false;
     }
 
-    // Paid certificate purchases. Doc id is the deterministic "{uid}_{certKey}"
-    // so a replayed Stripe webhook is idempotent by construction. Written ONLY by
-    // the webhook via the Admin SDK (which bypasses these rules); no client may
-    // self-grant. A user reads only their own grant; a missing grant is denied
-    // (not a clean 404), so no one can probe another user's purchases.
+    // Paid certificate purchases: deterministic "{uid}_{certKey}".
+    // Written only by Stripe webhook / server Admin SDK.
     match /certificatePurchases/{purchaseId} {
       allow read: if isSignedIn()
         && resource != null
@@ -610,9 +719,7 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // Real estate agent passes and their redemption records (Admin SDK only:
-    // scripts/agent-pass.mjs creates them, /api/certificates/redeem spends
-    // them). No client may read a code, its cap or who redeemed it.
+    // Real estate agent passes and redemptions (Admin SDK only).
     match /agentPasses/{code} {
       allow read, write: if false;
       match /redemptions/{uid} {
@@ -620,7 +727,7 @@ service cloud.firestore {
       }
     }
 
-    // Store purchase grants (Admin SDK only). Clients may read their own.
+    // Store purchase grants (Admin SDK only).
     match /purchaseGrants/{grantId} {
       allow read: if isSignedIn()
         && resource != null
@@ -634,20 +741,17 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // Feedback intake is server-only (Admin SDK).
+    // Feedback intake (Admin SDK only).
     match /feedback/{ticketId} {
       allow read, write: if false;
     }
 
-    // Resumable Stripe Checkout reservations (Admin SDK only). One document
-    // per entitlement, keyed by a hash of account + purchase, holding the
-    // Session id a buyer resumes. No client ever reads or writes them.
+    // Resumable Stripe Checkout reservations (Admin SDK only).
     match /activeCheckoutSessions/{reservationId} {
       allow read, write: if false;
     }
 
-    // Play RTDN dedupe ledger (Admin SDK only). Pub/Sub message ids are an
-    // internal idempotency record; no client ever reads or writes them.
+    // Play RTDN dedupe ledger (Admin SDK only).
     match /rtdnEvents/{messageId} {
       allow read, write: if false;
     }

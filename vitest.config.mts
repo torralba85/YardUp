@@ -34,7 +34,7 @@ export default defineConfig({
     // Recursive globs so nested package node_modules (e.g. functions/node_modules)
     // and the separate Firebase Functions package are never crawled by the web
     // app's unit suite. `functions/` is a distinct package with its own tooling.
-    exclude: ["**/node_modules/**", "**/.next/**", "**/dist/**", "e2e/**", "functions/**", "**/.claude/**"],
+    exclude: ["**/node_modules/**", "**/.next/**", "**/dist/**", "e2e/**", "functions/**", "**/.claude/**", "**/.worktrees/**"],
     // Vitest defaults to `cores - 1` forks. On a workstation already running
     // other tooling that saturates the pool, and jsdom worker startup begins to
     // time out. A file whose worker never starts is dropped from both the
