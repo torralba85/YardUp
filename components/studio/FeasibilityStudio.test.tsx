@@ -1104,6 +1104,47 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("button", { name: /Connect with builders/i })).toBeInTheDocument();
   });
 
+  it("opens the builder connect form inside the Builders step's scrolling pane on desktop", async () => {
+    // Rendered after the step section, the form sat outside every scrolling
+    // pane and the locked `main` clipped Submit below the planning guide bar.
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Builders/));
+    await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
+
+    const step = screen.getByRole("region", { name: "Builders" });
+    // A guest's Submit asks them to sign in rather than failing after they fill it in.
+    const submit = screen.getByRole("button", { name: "Sign in to send" });
+    expect(step).toContainElement(submit);
+    const pane = submit.closest(".overflow-y-auto");
+    expect(pane).not.toBeNull();
+    expect(step).toContainElement(pane as HTMLElement);
+    expect(screen.queryByText(/Step 5 · Builders/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Close builder connection form/i }));
+    expect(screen.queryByRole("button", { name: "Sign in to send" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Step 5 · Builders/)).toBeInTheDocument();
+  });
+
+  it("opens sign-in over the builder connect form for a guest who sends it", async () => {
+    const user = userEvent.setup();
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await user.click(stepButton(/Builders/));
+    await user.click(screen.getByRole("button", { name: /Connect with builders/i }));
+    await user.type(screen.getByRole("textbox", { name: "Name" }), "Jane Owner");
+    await user.type(screen.getByRole("textbox", { name: "Email" }), "jane@example.com");
+    await user.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await user.click(screen.getByRole("button", { name: "Sign in to send" }));
+
+    expect(
+      await screen.findByText(/Create a free account to send your snapshot to local builders/),
+    ).toBeInTheDocument();
+    // The form stays mounted under the dialog.
+    expect(document.getElementById("builder-lead-email")).toHaveValue("jane@example.com");
+  });
+
   it("opens the builder connect form as a focused Act destination on mobile", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),

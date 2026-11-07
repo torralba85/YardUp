@@ -99,6 +99,7 @@ import {
   type MobileJourneyStep,
 } from "@/lib/mobile-journey";
 import { useJourneyHistory } from "@/lib/use-journey-history";
+import { useBuilderMatches } from "@/lib/use-builder-matches";
 // ── Redesign: guided-spine studio ───────────────────────────────────────────
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
@@ -1086,6 +1087,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setTimeout(() => setShareNotice(null), 2500);
   }
 
+  const builderMatches = useBuilderMatches(Boolean(user), activeParcel, builderLeadOpen);
+
   async function handleBuilderLeadSubmit(input: BuilderLeadSubmitInput) {
     if (!user) {
       throw new Error("Sign in before connecting with builders.");
@@ -1410,8 +1413,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           config={config}
           assumptions={assumptions}
           result={result}
+          signedIn={Boolean(user)}
+          matches={builderMatches}
           onClose={() => setBuilderLeadOpen(false)}
           onSubmit={handleBuilderLeadSubmit}
+          onRequestSignIn={() => openSignup("builder_connect")}
         />
       ) : (
         <ActStep
@@ -1722,6 +1728,29 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               onGenerateProjectBrief={handleGenerateProjectBrief}
             />
           </div>
+        ) : builderLeadOpen ? (
+          // The connect form takes over the Builders step, as it does the Act
+          // screen on mobile. Rendered after this section, it sat outside every
+          // scrolling pane and the locked `main` clipped Submit off the screen.
+          <div className="flex-1 overflow-y-auto">
+            <BuilderLeadPanel
+              open
+              userDefaults={{
+                name: user?.displayName || "",
+                email: user?.email || "",
+              }}
+              parcelKey={parcelId}
+              parcel={activeParcel}
+              config={config}
+              assumptions={assumptions}
+              result={result}
+              signedIn={Boolean(user)}
+              matches={builderMatches}
+              onClose={() => setBuilderLeadOpen(false)}
+              onSubmit={handleBuilderLeadSubmit}
+              onRequestSignIn={() => openSignup("builder_connect")}
+            />
+          </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
             <BuildersPanel
@@ -1752,25 +1781,17 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onDownload={downloadReport}
           onExportCsv={exportCsv}
           onShare={handleShareLink}
-          onConnectBuilders={() => setBuilderLeadOpen(true)}
+          onConnectBuilders={() => {
+            // The form lives in the Builders step; left open, the report
+            // would cover it and the button would seem to do nothing.
+            setReportOpen(false);
+            setActiveStep("builders");
+            setBuilderLeadOpen(true);
+          }}
           shareNotice={shareNotice}
           autoFocus={reportAutoFocus}
         />
       )}
-      <BuilderLeadPanel
-        open={builderLeadOpen}
-        userDefaults={{
-          name: user?.displayName || "",
-          email: user?.email || "",
-        }}
-        parcelKey={parcelId}
-        parcel={activeParcel}
-        config={config}
-        assumptions={assumptions}
-        result={result}
-        onClose={() => setBuilderLeadOpen(false)}
-        onSubmit={handleBuilderLeadSubmit}
-      />
       {activeConcept && (
         <BeforeAfterBoard
           isOpen={isBoardOpen}

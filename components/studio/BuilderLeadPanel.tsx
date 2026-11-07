@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { CheckCircle2, X } from "lucide-react";
 import { AdvisorIntakeSummary } from "./AdvisorIntakeSummary";
 import { buildConnectionSnapshot, validateOwnerContact } from "@/lib/marketplace";
+import type { BuilderMatchState } from "@/lib/use-builder-matches";
 import type {
   ADUConfig,
   FeasibilityResult,
@@ -28,8 +29,13 @@ export interface BuilderLeadSubmitInput {
  * {@link ConnectionSnapshot} from the current parcel/config/result, and emits
  * a {@link BuilderLeadSubmitInput} on submit.
  *
+ * Where no builder serves the area it says so in place of the form; a guest's
+ * Submit opens sign-in instead of failing after they fill everything in; and a
+ * sent snapshot replaces the form so it cannot be sent twice.
+ *
  * @param props - Open state, prefilled defaults, the parcel/config/result to
- *   snapshot, and the `onClose`/`onSubmit` handlers.
+ *   snapshot, the sign-in and builder-match state, and the
+ *   `onClose`/`onSubmit`/`onRequestSignIn` handlers.
  */
 export default function BuilderLeadPanel({
   open,
@@ -39,8 +45,11 @@ export default function BuilderLeadPanel({
   config,
   assumptions,
   result,
+  signedIn,
+  matches,
   onClose,
   onSubmit,
+  onRequestSignIn,
 }: {
   open: boolean;
   userDefaults: { name: string; email: string };
@@ -49,8 +58,13 @@ export default function BuilderLeadPanel({
   config: ADUConfig;
   assumptions: FinancialAssumptions;
   result: FeasibilityResult;
+  /** Sending needs an account; a guest's Submit calls `onRequestSignIn`. */
+  signedIn: boolean;
+  /** How many builders serve this parcel, from `useBuilderMatches`. */
+  matches: BuilderMatchState;
   onClose: () => void;
   onSubmit: (input: BuilderLeadSubmitInput) => Promise<{ matchedCount: number }>;
+  onRequestSignIn: () => void;
 }) {
   const [name, setName] = useState(userDefaults.name);
   const [email, setEmail] = useState(userDefaults.email);
@@ -60,9 +74,24 @@ export default function BuilderLeadPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const successRef = useRef<HTMLDivElement>(null);
+
+  // Submit unmounts with the form; land focus on the confirmation instead.
+  useEffect(() => {
+    if (success) successRef.current?.focus();
+  }, [success]);
 
   if (!open) return null;
   const snapshot = buildConnectionSnapshot({ parcelKey, parcel, config, assumptions, result });
+  const noBuilders = matches.status === "ready" && matches.count === 0;
+  const matchNote =
+    matches.status === "guest"
+      ? "Sign in or create a free account to send it."
+      : matches.status === "loading"
+        ? "Checking which builders serve this area…"
+        : matches.status === "ready"
+          ? `Goes to ${matches.count} builder${matches.count === 1 ? "" : "s"} who serve${matches.count === 1 ? "s" : ""} this area.`
+          : null;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -72,6 +101,10 @@ export default function BuilderLeadPanel({
     const validation = validateOwnerContact({ name, email, phone, message, consent });
     if (!validation.ok) {
       setError(validation.error);
+      return;
+    }
+    if (!signedIn) {
+      onRequestSignIn();
       return;
     }
     startTransition(async () => {
@@ -115,79 +148,109 @@ export default function BuilderLeadPanel({
         </button>
       </div>
 
-      {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
-
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
-        {error && (
-          <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="md:col-span-2 text-sm font-semibold text-status-eligible">
-            {success}
-          </div>
-        )}
-        <div>
-          <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
-          <Input
-            id="builder-lead-name"
-            type="text"
-            autoComplete="name"
-            className="mt-1"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-        <div>
-          <FieldLabel htmlFor="builder-lead-email">Email</FieldLabel>
-          <Input
-            id="builder-lead-email"
-            type="email"
-            autoComplete="email"
-            className="mt-1"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-        <div>
-          <FieldLabel htmlFor="builder-lead-phone">Phone optional</FieldLabel>
-          <Input
-            id="builder-lead-phone"
-            type="tel"
-            autoComplete="tel"
-            className="mt-1"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <FieldLabel htmlFor="builder-lead-message">Message optional</FieldLabel>
-          <Textarea
-            id="builder-lead-message"
-            className="mt-1 min-h-20"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-          />
-        </div>
-        <label
-          htmlFor="builder-lead-consent"
-          className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
+      {success ? (
+        <div
+          ref={successRef}
+          tabIndex={-1}
+          role="status"
+          className="mt-4 border border-lot-line bg-lot-surface p-4 outline-none"
         >
-          <Checkbox
-            id="builder-lead-consent"
-            checked={consent}
-            onChange={(event) => setConsent(event.target.checked)}
-            className="mt-0.5"
-          />
-          <span>
-            I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
-          </span>
-        </label>
-        <Button type="submit" variant="primary" size="md" loading={isPending}>
-          {isPending ? "Submitting…" : "Submit snapshot"}
-        </Button>
-      </form>
+          <p className="flex items-center gap-2 text-sm font-semibold text-status-eligible">
+            <CheckCircle2 size={16} aria-hidden="true" className="shrink-0" />
+            {success}
+          </p>
+          <p className="mt-1 text-sm leading-6 text-lot-stone">
+            Interested builders may contact you about your project. There&apos;s nothing more to send.
+          </p>
+          <Button type="button" variant="primary" size="md" className="mt-4" onClick={onClose}>
+            Done
+          </Button>
+        </div>
+      ) : noBuilders ? (
+        <div className="mt-4 border border-lot-line bg-lot-surface p-4">
+          <p className="text-sm font-semibold text-lot-ink">No builders are registered for this area yet.</p>
+          <p className="mt-1 text-sm leading-6 text-lot-stone">
+            The network is growing. Save your concept and check back; we&apos;ll match you as builders join.
+          </p>
+          <Button type="button" variant="secondary" size="md" className="mt-4" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      ) : (
+        <>
+          {snapshot.advisorIntake && <div className="mt-4"><AdvisorIntakeSummary intake={snapshot.advisorIntake} /></div>}
+
+          <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2">
+            <div>
+              <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
+              <Input
+                id="builder-lead-name"
+                type="text"
+                autoComplete="name"
+                className="mt-1"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="builder-lead-email">Email</FieldLabel>
+              <Input
+                id="builder-lead-email"
+                type="email"
+                autoComplete="email"
+                className="mt-1"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel htmlFor="builder-lead-phone">Phone optional</FieldLabel>
+              <Input
+                id="builder-lead-phone"
+                type="tel"
+                autoComplete="tel"
+                className="mt-1"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <FieldLabel htmlFor="builder-lead-message">Message optional</FieldLabel>
+              <Textarea
+                id="builder-lead-message"
+                className="mt-1 min-h-20"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+              />
+            </div>
+            <label
+              htmlFor="builder-lead-consent"
+              className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
+            >
+              <Checkbox
+                id="builder-lead-consent"
+                checked={consent}
+                onChange={(event) => setConsent(event.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
+              </span>
+            </label>
+            {matchNote && <p className="text-sm text-lot-stone md:col-span-2">{matchNote}</p>}
+            {/* Beside Submit, not atop the form: the form is taller than most
+                screens, so a message up there appeared out of view. */}
+            {error && (
+              <div role="alert" className="md:col-span-2 text-sm text-status-blocked">
+                {error}
+              </div>
+            )}
+            <Button type="submit" variant="primary" size="md" loading={isPending}>
+              {isPending ? "Submitting…" : signedIn ? "Submit snapshot" : "Sign in to send"}
+            </Button>
+          </form>
+        </>
+      )}
     </section>
   );
 }

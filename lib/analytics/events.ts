@@ -83,6 +83,7 @@ export type AuthPromptSource =
   | "guest_limit"
   | "post_result"
   | "feature_gate"
+  | "builder_connect"
   | "direct_signup"
   | "unknown";
 export type AuthErrorBucket =
