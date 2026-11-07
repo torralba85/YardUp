@@ -143,6 +143,18 @@ export const preapprovedPrograms: readonly PreapprovedProgram[] = [
     "notes": "The City's own Prototype A studio is free and, updated to the 2025 building code, can be used on most single-family lots citywide. The City's other standard plans are now limited to lots red-tagged in the Eaton Fire and are not listed here. No modifications are allowed, and a Hold Harmless Agreement is required."
   },
   {
+    "id": "ca-los-altos",
+    "city": "Los Altos",
+    "state": "CA",
+    "authority": "city",
+    "status": "verified",
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "catalogUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "verifiedAt": "2026-11-06",
+    "reviewedAt": "2026-11-06",
+    "notes": "The City's own Permit-Ready plans are free, each in a Mediterranean, Traditional or Contemporary style. Their architectural drawings are online; the full sets, with structural, mechanical, electrical and plumbing sheets, can be viewed at City Hall. Some options can be chosen, but the plans can't be modified. Privately designed plans the City also pre-approves are bought from their designers and are not listed here."
+  },
+  {
     "id": "ca-sacramento",
     "city": "Sacramento",
     "state": "CA",
@@ -760,6 +772,71 @@ export const preapprovedPlans: readonly PreapprovedPlan[] = [
     "verifiedAt": "2026-11-06",
     "restrictions": "Detached studio drawn to the 2025 California codes. No modifications, however minor; a licensed professional can change it, but it then loses pre-review. The lot must be zoned residential and not on a slope, hillside or expansive soil. Keep 4 ft side and rear setbacks, and walls with openings 5 ft from side and rear lines. Sign the City's Hold Harmless Agreement and add a site plan.",
     "feeNote": "The City offers this plan free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-studio-one-bedroom-525",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos Studio or One-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 525,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/255",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 15,
+      "length": 35,
+      "shape": "rectangle",
+      "sheet": "Los Altos Permit-Ready Studio/1 Bedroom, Style A sheet A10 (1/9/2025): ±15′×35′ to the outside face of the walls, 14′-8″×34′-8″ to face of stud; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit with an optional wall that closes off the sleeping area. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-one-bedroom-854",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos One-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 854,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/264",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 22.08,
+      "length": 40.25,
+      "shape": "irregular",
+      "sheet": "Los Altos Permit-Ready 1 Bedroom, Style A sheet A10 (1/9/2025): outer ±22′-1″×40′-3″ to the outside face of the walls; the 11′-9″ bedroom wing steps back 3′; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
+    "status": "active"
+  },
+  {
+    "id": "los-altos-two-bedroom-1190",
+    "jurisdictionId": "ca-los-altos",
+    "name": "Los Altos Two-bedroom",
+    "provider": "City of Los Altos",
+    "sqft": 1190,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "sourceUrl": "https://www.losaltosca.gov/211/Accessory-Dwelling-Units-ADUs",
+    "documentUrl": "https://www.losaltosca.gov/DocumentCenter/View/273",
+    "documentLabel": "Architectural drawings (Style A)",
+    "footprint": {
+      "width": 36.75,
+      "length": 42,
+      "shape": "irregular",
+      "sheet": "Los Altos Permit-Ready 2 Bedroom, Style A sheet A10 (1/9/2025): L, outer ±36′-9″×42′ to the outside face of the walls with a ±25′×14′-1″ notch; the three styles share its framing"
+    },
+    "verifiedAt": "2026-11-06",
+    "restrictions": "Detached one-story unit. Its title sheet cites the 2025 California codes. Choose from the plan's options, but don't modify it; the full set is viewed at City Hall, and submittals follow the City Permit-Ready ADU Submittal Requirements.",
+    "feeNote": "The City offers these plans free. Permit, construction and site work costs remain.",
     "status": "active"
   },
   {

@@ -54,10 +54,11 @@ describe("plan footprints read from the official sheets", () => {
       const ratio = (footprint.width * footprint.length) / item.sqft!;
       // Outside-wall rectangles sit near the listed area: a little over it for wall
       // thickness and porches under the roof, a little under where a city rounds its
-      // listed size up (Carlsbad's run 1.4% under). Irregular outer bounds run well over it.
+      // listed size up (Carlsbad's run 1.4% under). Irregular outer bounds run over it:
+      // well over for an L, only ~4% for Los Altos' one-bedroom with its 3-ft step.
       if (footprint.shape === "rectangle") expect(ratio, item.id).toBeGreaterThanOrEqual(0.98);
       if (footprint.shape === "rectangle") expect(ratio, item.id).toBeLessThanOrEqual(1.1);
-      else expect(ratio, item.id).toBeGreaterThan(1.1);
+      else expect(ratio, item.id).toBeGreaterThan(1.03);
     }
   });
   it("gives a rectangular plan its exact footprint, oriented like the model, and keeps the rest of the design", () => {
@@ -76,6 +77,8 @@ describe("plan footprints read from the official sheets", () => {
     expect(configForPlan(plan("san-diego-county-plan-e"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
     expect(configForPlan(plan("los-angeles-county-plan-b"), defaultAduConfig)).toMatchObject({ width: 32, length: 37.5, footprint: 1200 });
     expect(configForPlan(plan("los-angeles-county-plan-c"), defaultAduConfig)).toMatchObject({ width: 25, length: 32, footprint: 800 });
+    expect(configForPlan(plan("los-altos-one-bedroom-854"), defaultAduConfig)).toMatchObject({ width: 22.08, length: 38.5 });
+    expect(configForPlan(plan("los-altos-two-bedroom-1190"), defaultAduConfig)).toMatchObject({ width: 32.5, length: 36.75 });
     expect(configForPlan(plan("la-mesa-plan-e"), { ...defaultAduConfig, width: 30, length: 20 })).toMatchObject({ width: 43, length: 28, footprint: 1204 });
     for (const item of preapprovedPlans.filter(entry => entry.footprint?.shape === "irregular")) {
       const usable = usableRectangleForPlan(item)!;
@@ -102,9 +105,9 @@ describe("authority choices for a lot", () => {
 });
 
 describe("pre-approved plan catalog", () => {
-  it("covers every content jurisdiction, all six additional studio markets and three more free programs", () => {
-    expect(preapprovedPrograms).toHaveLength(23);
-    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
+  it("covers every content jurisdiction, all six additional studio markets and four more free programs", () => {
+    expect(preapprovedPrograms).toHaveLength(24);
+    for (const id of ["ca-santa-clara-county", "ca-los-angeles-county", "ca-pasadena", "ca-los-altos"]) expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
     for (const city of ADU_CITIES) expect(preapprovedPrograms.some(p => p.id === `${city.state}-${city.slug}`)).toBe(true);
     for (const id of ["wa-seattle", "or-portland", "tx-austin", "ca-los-angeles", "ca-oakland", "co-denver"]) {
       expect(preapprovedPrograms.some(p => p.id === id)).toBe(true);
@@ -121,6 +124,8 @@ describe("pre-approved plan catalog", () => {
     expect(suggestPlanJurisdiction({ city: "Santa Clara", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Los Angeles", state: "CA" })?.id).toBe("ca-los-angeles");
     expect(suggestPlanJurisdiction({ city: "Pasadena, CA 91103" })?.id).toBe("ca-pasadena");
+    expect(suggestPlanJurisdiction({ city: "Los Altos", state: "CA" })?.id).toBe("ca-los-altos");
+    expect(suggestPlanJurisdiction({ city: "Los Altos Hills", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "1 San Diego Street", state: "CA" })).toBeUndefined();
     expect(suggestPlanJurisdiction({ city: "Seattle, WA", state: "CA" })).toBeUndefined();
   });
