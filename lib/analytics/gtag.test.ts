@@ -273,6 +273,59 @@ describe("gtag helpers", () => {
 
       expect(gtag).not.toHaveBeenCalled();
     });
+
+    it("holds early pageviews before the tag is ready and flushes them in order", () => {
+      writeConsent("granted");
+      pageview("/studio?q=123+Main+St");
+      trackEvent("studio_opened", { auth_state: "guest" });
+
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).toHaveBeenCalledTimes(2);
+      expect(gtag).toHaveBeenNthCalledWith(
+        1,
+        "event",
+        "page_view",
+        expect.objectContaining({
+          page_path: "/studio",
+          send_to: "G-ABC1234567",
+        }),
+      );
+      expect(gtag).toHaveBeenNthCalledWith(
+        2,
+        "event",
+        "studio_opened",
+        expect.objectContaining({
+          auth_state: "guest",
+          send_to: "G-ABC1234567",
+        }),
+      );
+    });
+
+    it("drops held pageviews if consent is withdrawn before the tag is ready", () => {
+      writeConsent("granted");
+      pageview("/studio");
+
+      writeConsent("denied");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
+
+    it("holds no pageview without consent", () => {
+      pageview("/studio");
+
+      writeConsent("granted");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+      window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+      expect(gtag).not.toHaveBeenCalled();
+    });
   });
 
   describe("disableAnalytics and enableAnalytics", () => {
