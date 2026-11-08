@@ -483,6 +483,33 @@ export function trackFeasibilityResultViewed(params: {
   trackEvent("feasibility_result_viewed", p);
 }
 
+/** How a used plan landed on the lot, in the Studio's own placement terms. */
+export type PlanPlacementOutcome = "kept" | "moved" | "none" | "unknown";
+
+/**
+ * preapproved_plan_selected: the homeowner chose "Use this plan" for an official
+ * pre-approved plan. Fired from the explicit action only, never when a saved
+ * study or shared link restores a reference. Catalog IDs are repository-managed
+ * slugs (bounded, no PII); the event carries no address or lot identity.
+ */
+export function trackPreapprovedPlanSelected(params: {
+  jurisdiction_id: string;
+  plan_id: string;
+  parcel_mode: ParcelMode;
+  placement_outcome: PlanPlacementOutcome;
+  auth_state: AuthState;
+}): void {
+  const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  if (!slug.test(params.jurisdiction_id) || !slug.test(params.plan_id)) return;
+  trackEvent("preapproved_plan_selected", {
+    jurisdiction_id: params.jurisdiction_id.slice(0, 100),
+    plan_id: params.plan_id.slice(0, 100),
+    parcel_mode: params.parcel_mode,
+    placement_outcome: params.placement_outcome,
+    auth_state: params.auth_state,
+  });
+}
+
 /** 5. adu_design_committed */
 export function trackAduDesignCommitted(params: {
   adu_sqft_bucket?: AduSqftBucket;

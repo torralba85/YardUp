@@ -19,6 +19,7 @@ import { buildStudioUrlForCertificate } from "@/lib/purchased-certificates";
 import { certificateKey } from "@/lib/certificate-key";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import * as adsConversion from "@/lib/analytics/adsConversion";
+import * as gtag from "@/lib/analytics/gtag";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { defaultPose } from "@/lib/scenario-design";
 
@@ -291,8 +292,19 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByText("Pre-approved plans", { exact: true }));
     const before = new URLSearchParams(window.location.search);
     fireEvent.click(screen.getByRole("checkbox", { name: /confirm San Diego, CA/ }));
+    const trackEventSpy = vi.spyOn(gtag, "trackEvent");
     fireEvent.click(within(screen.getByRole("article", { name: "County Standard Plan F" })).getByRole("button", { name: "Use this plan" }));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
+    // Funnel step "official-plan selection": once per explicit use, demo lots labelled as such, no address.
+    const planEvents = trackEventSpy.mock.calls.filter(([name]) => name === "preapproved_plan_selected");
+    expect(planEvents).toEqual([["preapproved_plan_selected", {
+      jurisdiction_id: "ca-san-diego",
+      plan_id: "san-diego-city-plan-f",
+      parcel_mode: "preset",
+      placement_outcome: expect.stringMatching(/^(kept|moved|none)$/),
+      auth_state: "signed_in",
+    }]]);
+    trackEventSpy.mockRestore();
     const after = new URLSearchParams(window.location.search);
     for (const key of ["h", "x", "z", "rotation", "roof", "finish"]) expect(after.get(key)).toBe(before.get(key));
     expect([after.get("w"), after.get("l"), after.get("plan")]).toEqual(["21", "28.58", "san-diego-city-plan-f"]);

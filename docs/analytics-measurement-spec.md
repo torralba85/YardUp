@@ -388,6 +388,24 @@ Parameters:
 Owner:
 components/FeasibilityStudio.tsx step transition.
 
+### 5a. preapproved_plan_selected
+
+Business meaning:
+The homeowner chose an official pre-approved plan and applied its footprint to the 3D study (funnel step "official-plan selection").
+
+Fire:
+Once per explicit "Use this plan" action in desktop Design or mobile Shape. Never when a saved study, shared link or emailed layout restores a plan reference, and never on remove or undo.
+
+Parameters:
+- jurisdiction_id: catalog program slug (e.g. ca-carlsbad); the emitter drops the event if it is not a slug
+- plan_id: catalog plan slug
+- parcel_mode: preset, live or estimated, so demo use is separable from real-property studies
+- placement_outcome: kept (the current spot fits), moved (moved to a spot that fits the modeled setbacks), none (no fit found), unknown
+- auth_state
+
+Owner:
+components/FeasibilityStudio.tsx, the PreapprovedPlansSection onSelect handler.
+
 ### 6. scenario_saved
 
 Business meaning:
