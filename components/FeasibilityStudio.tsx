@@ -115,6 +115,7 @@ import { hasAgentPassRedeemIntent } from "@/lib/agent-pass";
 import {
   trackFeasibilityResultViewed,
   trackAduDesignCommitted,
+  trackPreapprovedPlanSelected,
   trackScenarioSaved,
   trackReportOpened,
   trackBuilderConnectionSubmitted,
@@ -488,14 +489,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // separate saved field.
   const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
     const plan = findPreapprovedPlan(reference);
-    if (!plan) return;
+    if (!plan) return undefined;
     const applied = configForPlan(plan, config);
     const placed = placeForPlan(plan, applied, pose);
-    if (sameSize(applied, config) && placed.outcome === "kept") return;
+    if (sameSize(applied, config) && placed.outcome === "kept") return placed.outcome;
     setConfig(applied);
     if (!samePose(placed.pose, pose)) commitPose(placed.pose);
     setPlanSizing({ key: sceneKey, previous: config, previousPose: pose, applied, appliedPose: placed.pose });
     setPlanPlacement(placed.outcome === "kept" ? null : { key: sceneKey, outcome: placed.outcome, pose: placed.pose, config: applied });
+    return placed.outcome;
   };
   // The Studio models rectangles. A plan that isn't one keeps its depth and floor
   // area in the model, and its full outer rectangle is checked at the same pose,
@@ -522,7 +524,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       selected={preapprovedPlan}
       onSelect={(reference) => {
         setPlanState({ key: sceneKey, reference });
-        sizeModelToPlan(reference);
+        const outcome = sizeModelToPlan(reference);
+        trackPreapprovedPlanSelected({
+          jurisdiction_id: reference.jurisdictionId,
+          plan_id: reference.planId,
+          parcel_mode: parcelMode,
+          placement_outcome: outcome ?? "unknown",
+          auth_state: user ? "signed_in" : "guest",
+        });
       }}
       onRemove={() => setPlanState({ key: sceneKey, reference: null })}
       model={{

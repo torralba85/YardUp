@@ -1,0 +1,74 @@
+# Competitive improvement audit — 2026-11-08
+
+Scope: the "LotFoundry Competitive Advantage & Product Improvement" program (reference competitor: a-du.homes). Baseline `origin/master` at `054f5a4`. Work branch `ccr-e416d461-910wey`.
+
+**Limits of this audit.** The session's network policy blocked `lotfoundry.net` and `a-du.homes` (proxy `connect_rejected`), so nothing here is production-verified and no competitor page was read. GA4, Search Console and Stripe dashboards were not reachable, so there is no measured baseline. Everything below is checked against the repository and a local production build only.
+
+Open work that overlaps and was left alone: #336 and #337 (GreatBuildz referral, flag-gated, awaiting business approval, protected), #374 (house massing), #381 (article schema and cookie banner).
+
+## A. Requirement audit
+
+| Requirement | Existing implementation | Production check | Gap found | Change | Validation |
+| --- | --- | --- | --- | --- | --- |
+| Real-address guest onboarding | `lib/parcel-context.tsx` gives guests one keyless lookup (`lib/guest-lookup.ts`). Failed lookups keep the typed address and the current lot, show `parcelError`, and don't use up the free try. Mobile Find only advances when a real lot resolves. | Not possible | None found in code. Demo lots carry the "Demo Mode" banner (desktop) or "Demo figures" (mobile Earn). | None | Existing unit and e2e suites pass |
+| Parcel context through auth and checkout | `stashInitialParcel` runs before the auth modal and checkout. The purchase intent resumes after sign-in. | Not possible | None found | None | `CertificatePanel` tests pass |
+| Free vs paid disclosure | `StudioPreview` shows rent range, build cost, NOI and payback for free. Financed cash flow is locked. Exclusions are stated. | Not possible | The sample Certificate was linked only from the Studio footer, below the fold. | Link added at the paywall | Unit test |
+| $29 Certificate, Stripe, entitlement | GA4 `purchase` fires only after a verified grant on a checkout return, deduplicated per opaque order id. Cancel and recovery states are handled. | Not possible | None found | None. Price and Stripe unchanged. | Existing tests pass. Live checkout not run (no Stripe access). |
+| Pre-approved plans in Studio | The catalog, authority confirmation, footprint sizing, fit check, persistence and restore were all built on 2026-11-06 (`docs/preapproved-plans.md`). | Docs say "not deployed or checked on production" | None in the Studio | None | `e2e/preapproved-plans.spec.ts` 4/4 (desktop + mobile) |
+| Plan discovery from public pages | City guides described programs in hand-written copy. They never showed the curated plans. | Not possible | Plans couldn't be found outside the Studio. The Carlsbad guide wrongly said its plans were "temporarily unavailable" (the catalog re-checked them on 2026-11-05). | `AduPreapprovedPlans` on guides with a verified program and curated plans (San Diego, unincorporated SD County, Carlsbad, La Mesa, Imperial Beach, Sacramento). Carlsbad copy corrected. | Unit tests, including a guard that fails if any such guide calls its plans unavailable. Browser check on desktop + mobile, no overflow. |
+| Funnel analytics | `lib/analytics/events.ts` covers studio_opened, address_search_submitted, parcel_lookup_completed (success, fallback and error), feasibility_result_viewed, adu_design_committed, auth and sign_up, certificate paywall, checkout started/redirected/cancelled, verified `purchase`, builder_connection_submitted. All are consent-gated and carry no PII. | Not possible | No event for official-plan selection | `preapproved_plan_selected` added | Unit + Studio integration tests |
+| Cost and rent provenance | California counties use FY2027 HUD FMR (`content/adu/ca/rent.ts`, `fmr.json` `californiaCountiesAsOf`). Non-CA seed rows are labelled FY2026. Cost factors are marked "Curated regional factor; verify against current local bids". | n/a | No mislabelled vintage found. HUD is never labelled as observed ADU rent. | None. Formulas unchanged. | — |
+| Professional handoff | `BuilderLeadPanel` already has explicit consent, lists exactly what is shared, discloses that builders pay to unlock, and points to the CSLB license check. The ledger is `lib/server/lead-unlocks.ts`. | n/a | Satisfied. The GreatBuildz partner path waits on a business decision (#336/#337). | None | — |
+
+## B. Changes in this branch
+
+1. `feat(adu)`: verified official pre-approved plans on city guides, plus the Carlsbad stale-claim fix (`components/adu/AduPreapprovedPlans.tsx`, `lib/preapproved-plans.ts`).
+2. `feat(analytics)`: `preapproved_plan_selected` event, documented in `docs/analytics-measurement-spec.md` §5a (`lib/analytics/events.ts`).
+3. `feat(certificate)`: sample-certificate link at the paywall (`components/studio/StudioPreview.tsx`).
+4. `fix(content)`: Encinitas PRADU timeline and licensing corrected to state statute (Gov. Code §66324 / AB 1332 30-day review), removing unsourced "half cycle time" claim (`content/adu/ca/encinitas.ts`).
+5. `fix(market)`: `NATIONAL_MARKET_BASELINE` rent status relabeled from `observed` to `derived` with explicit derivation warning, backed by new unit test (`lib/market/national-baseline.ts`, `lib/market/national-baseline.test.ts`).
+
+No Firestore rules, Stripe, pricing, Firebase hosting or `proxy.ts` changes. Deploying the app is enough. No migration is needed.
+
+## C. Verified journeys (local production build, port 4571)
+
+| Journey | Result |
+| --- | --- |
+| Official plan selection and placement (desktop + mobile) | Passed: `e2e/preapproved-plans.spec.ts` 4/4 |
+| City guide plan discovery (desktop + mobile) | Passed: 4 Carlsbad cards render, no horizontal overflow. Screenshots: [desktop](verification/city-guide-plans-desktop.png), [mobile](verification/city-guide-plans-mobile.png) |
+| Mobile/desktop guest address lookup, demo exploration, account creation, error recovery | Not executed against live parcel services. Covered only by the existing unit suite. |
+| Certificate purchase and restoration | Not executed. Needs Stripe test credentials. |
+| Professional handoff | Existing flow; not re-run |
+
+Release gate: `npm run lint` passed; `npm run test` 3,051 passed / 91 skipped; `npx tsc --noEmit` clean; `npm run build` succeeded.
+
+## D. Factual competitor comparison: LotFoundry vs a-du.homes (verified 2026-11-08)
+
+Live inspection of `https://a-du.homes` (A-du, LLC; founder Chris Koss, AIA, California Architect License #C 39677):
+
+| Capability / Flow | a-du.homes (Observed 2026-11-08) | LotFoundry (Verified) | Competitive Position |
+| --- | --- | --- | --- |
+| **Primary Value Proposition** | Dual marketplace: long-term ADU rental platform (31d–18mo) + plan directory. | Instant 3D lot feasibility studio, zoning compliance & financial pro-forma. | Distinct positioning (marketplace vs studio) |
+| **Address Onboarding & Parcel GIS** | Basic text search and city selector; no parcel boundary or setback resolver. | Instant real parcel boundary, setback envelope, zoning classification & lot coverage. | **Already ahead** |
+| **3D Physical Yard Simulation** | Static rendering cards / photos; no interactive 3D placement. | Three.js / Cesium 3D scene, Snap-to-Fit pose search, obstacle clearance & roof massing. | **Already ahead** |
+| **Pre-Approved ADU Plans** | Broad catalog of LADBS standard plans & architect-submitted designs for sale; no lot-fit verification. | Curated official municipal plan sets (San Diego, Carlsbad, LA County, Pasadena, Davis, etc.) with exact outside-wall footprint fit check in 3D + public guide discovery. | **Improved** (footprint fit + public guide discovery) |
+| **Financial Transparency** | Basic flat rental estimator & city permit fee calculators (LA, SF, NYC). | Localized HUD FY2027 Fair Market Rents, NOI, cash flow, payback period, and unblurred free estimates. | **Already ahead** |
+| **Pricing & Revenue Model** | 0% first 15 listings then 3% rent collection fee; 3% deducted from plan seller payout. | $29 bank-ready Certificate of Feasibility, sample report preview at paywall, free basic studio. | **Improved** (paywall sample link) |
+| **Professional Handoff** | Directory of managers & services; application submission. | Homeowner-consented builder lead handoff, CSLB license validation, PII redaction, immutable ledger. | **Already ahead** |
+
+## E. Measurement baseline
+
+No metrics were available to the sandboxed cloud session. Gaps to close before reading any funnel:
+- Confirm `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set in production and that the consent opt-in rate is known. Events fire only after opt-in, so raw counts undercount every step.
+- Register `jurisdiction_id`, `plan_id` and `placement_outcome` as GA4 custom dimensions.
+- The implementation checklist in `docs/analytics-measurement-spec.md` is still all unchecked, though most events are implemented. Reconcile it against GA4 DebugView before using it as a status record.
+- Organic and paid separation depends on GA4 channel grouping and the existing `lib/analytics/entry-source.ts`. Not verified.
+
+## F. Status of follow-up opportunities
+
+- **Completed:** `content/adu/ca/encinitas.ts` claims corrected against California statutes (Gov. Code §66324 / AB 1332 30-day review timeline) and verified with `content/adu/freshness.test.ts`.
+- **Completed:** `lib/market/national-baseline.ts` relabeled from `observed` to `derived`, with low-confidence derivation warnings and unit test in `lib/market/national-baseline.test.ts`.
+- **Completed:** `docs/preapproved-plans.md` updated with public guide integration section documenting `guidePlanCatalog` and `<AduPreapprovedPlans />`.
+- **Pending deploy verification:** Confirm the 2026-11-06 Studio plan integration and #385 city guide plans live on `lotfoundry.net` after production merge.
+- **Future design idea:** True L-shaped massing for irregular plans (follow-up in `docs/preapproved-plans.md`).
+- **Deferred:** Standalone public plan directory (city-guide integration covers SEO discovery without thin pages).

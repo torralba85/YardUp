@@ -77,3 +77,7 @@ The 2026-11-05 Studio integration audit found the plan browser disconnected from
 Screenshots: [desktop](verification/preapproved-plans-desktop.png), [mobile](verification/preapproved-plans-mobile.png).
 
 Local verification (2026-11-05, placement, usable rectangles and Carlsbad): lint, TypeScript and the production build passed; Vitest 3,037 passed / 89 skipped; Playwright desktop and mobile Chromium 4/4 against the production build on port 4571. Firestore rules are unchanged since #373 (emulator 31/31 then). Not deployed or checked on production.
+
+## Public guide integration (2026-11-08)
+
+City guides now render curated government pre-approved plans for their jurisdiction via `guidePlanCatalog` (`lib/preapproved-plans.ts`) and the server-rendered `<AduPreapprovedPlans />` component (`components/adu/AduPreapprovedPlans.tsx`). The public guides share the same single source of truth catalog (`lib/preapproved-plans-data.ts`) as the Studio, preventing discrepancy between marketing guides and 3D modeling. It activates only for verified programs with curated plans (San Diego, unincorporated San Diego County, Carlsbad, La Mesa, Imperial Beach, Sacramento). Curated plan cards display published square footage, dimensioned outside-wall footprint, constraints, and official links, while explicitly disclaiming site-specific permit approval.

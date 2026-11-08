@@ -29,6 +29,7 @@ import {
   trackCertificatePurchase,
   trackFeasibilityResultViewed,
   trackParcelLookupCompleted,
+  trackPreapprovedPlanSelected,
   trackReportExported,
   trackReportOpened,
   trackScenarioSaved,
@@ -221,6 +222,34 @@ describe("analytics events module", () => {
         finish: "cedar",
         feasibility_status: "eligible",
       });
+    });
+
+    it("emits preapproved_plan_selected with catalog slugs only", () => {
+      trackPreapprovedPlanSelected({
+        jurisdiction_id: "ca-carlsbad",
+        plan_id: "carlsbad-studio-400",
+        parcel_mode: "live",
+        placement_outcome: "moved",
+        auth_state: "guest",
+      });
+      expect(trackEventSpy).toHaveBeenCalledWith("preapproved_plan_selected", {
+        jurisdiction_id: "ca-carlsbad",
+        plan_id: "carlsbad-studio-400",
+        parcel_mode: "live",
+        placement_outcome: "moved",
+        auth_state: "guest",
+      });
+    });
+
+    it("drops preapproved_plan_selected when an ID is not a catalog slug", () => {
+      trackPreapprovedPlanSelected({
+        jurisdiction_id: "123 Main St, San Diego",
+        plan_id: "carlsbad-studio-400",
+        parcel_mode: "live",
+        placement_outcome: "kept",
+        auth_state: "guest",
+      });
+      expect(trackEventSpy).not.toHaveBeenCalled();
     });
 
     it("emits scenario_saved", () => {

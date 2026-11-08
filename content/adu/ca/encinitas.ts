@@ -24,11 +24,11 @@ export const encinitas: JurisdictionContent = {
   city: "Encinitas",
   slug: "encinitas",
   county: "San Diego County",
-  asOf: "2026-10-30",
+  asOf: "2026-11-08",
   published: "2026-10-30",
   metaTitle: "Encinitas ADU Rules (2026): PRADU Plans, Coastal & Cost",
   metaDescription:
-    "Encinitas ADU rules: up to 1,200 sq ft detached, 4 ft setbacks, free PRADU plans, and Coastal Zone permit rules. See instant feasibility for your lot.",
+    "Encinitas ADU rules: up to 1,200 sq ft detached, 4 ft setbacks, PRADU plans, and Coastal Zone permit rules. See instant feasibility for your lot.",
   introAnswer: [
     "Yes. The City of Encinitas allows accessory dwelling units (ADUs) on any single-family residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). Attached and detached ADUs can each reach 1,200 square feet or the primary home's living area, whichever is less, provided lot coverage and required setbacks are satisfied.",
     "Encinitas is famous across California for its Permit-Ready ADU (PRADU) program. Property owners can choose from a curated catalog of pre-approved, code-compliant architectural plan sets designed by licensed architects. Selecting a PRADU plan bypasses custom architectural design expenses and qualifies your project for expedited departmental plan check.",
@@ -86,7 +86,7 @@ export const encinitas: JurisdictionContent = {
     {
       label: "Approval timeline",
       value: "Administrative approval within 60 calendar days",
-      note: "PRADU pre-approved plans typically complete initial plan-check reviews in half the standard cycle time",
+      note: "Pre-approved PRADU plans qualify for expedited 30-day review under California pre-approved ADU law (Gov. Code §66324 / AB 1332)",
     },
   ],
   cityDiffers: [
@@ -133,7 +133,7 @@ export const encinitas: JurisdictionContent = {
     {
       title: "Select your design pathway",
       detail:
-        "Choose between selecting a free pre-approved PRADU plan set from the City's architectural catalog or engaging a licensed architect or designer to draft custom blueprints suited to your yard.",
+        "Choose between selecting a pre-approved PRADU plan set from the City's architectural catalog or engaging a licensed architect or designer to draft custom blueprints suited to your yard.",
     },
     {
       title: "Prepare site plan and civil drawings",
@@ -169,7 +169,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "What is the Encinitas PRADU program?",
       answer:
-        "The Permit-Ready ADU (PRADU) program offers property owners free access to pre-approved architectural plan sets. Using PRADU plans slashes architectural design costs and accelerates building department review times.",
+        "The Permit-Ready ADU (PRADU) program offers property owners access to pre-approved architectural plan sets designed by participating regional firms. Using a pre-approved plan avoids custom structural drafting delays and qualifies the project for expedited 30-day review under California state law (Gov. Code §66324 / AB 1332).",
     },
     {
       question: "Do I need a Coastal Development Permit for an ADU in Encinitas?",

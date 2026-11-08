@@ -84,6 +84,17 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
         <Button fullWidth variant="primary" onClick={onUnlock} loading={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
       </div>
       {ctaNote && <p className="text-center text-xs leading-5 text-lot-stone">{ctaNote}</p>}
+      {/* The report format is visible before paying, beside the decision rather than only in the page footer. */}
+      <p className="text-center">
+        <a
+          href="/sample-certificate/san-diego"
+          target="_blank"
+          rel="noopener"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+        >
+          See a sample certificate<span className="sr-only"> (opens in a new tab)</span>
+        </a>
+      </p>
     </section>
   );
 }

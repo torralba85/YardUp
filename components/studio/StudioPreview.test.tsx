@@ -27,6 +27,8 @@ describe("free certificate preview", () => {
     expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);
     expect(screen.queryByText(/review needed/i)).not.toBeInTheDocument();
     expect(screen.getByText(/not permit approval or guaranteed income/i)).toBeInTheDocument();
+    // The sample report sits beside the purchase decision, not only in the page footer.
+    expect(screen.getByRole("link", { name: /^See a sample certificate/ })).toHaveAttribute("href", "/sample-certificate/san-diego");
     fireEvent.click(screen.getByRole("button", { name: "Unlock certificate — $29" }));
     expect(onUnlock).toHaveBeenCalledTimes(1);
   });

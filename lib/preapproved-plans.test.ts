@@ -8,9 +8,12 @@ import {
   configForPlanArea,
   findPreapprovedPlan,
   formatFeetInches,
+  guidePlanCatalog,
   modelMatchesPlan,
   modelMatchesPlanArea,
   normalizePlanReference,
+  planFacts,
+  planFootprintLabel,
   planProgramsForLot,
   planScopeForLot,
   suggestPlanJurisdiction,
@@ -165,5 +168,35 @@ describe("pre-approved plan catalog", () => {
     for (const value of [null, {}, { planId: "../bad", jurisdictionId: "ca-sacramento" }, { planId: "a".repeat(101), jurisdictionId: "ca-sacramento" }]) {
       expect(normalizePlanReference(value)).toBeUndefined();
     }
+  });
+});
+
+describe("guidePlanCatalog", () => {
+  it("returns a verified program's active plans for its own guide only", () => {
+    const carlsbad = guidePlanCatalog("ca", "carlsbad");
+    expect(carlsbad?.program.id).toBe("ca-carlsbad");
+    expect(carlsbad?.plans.map(plan => plan.id)).toEqual([
+      "carlsbad-studio-400",
+      "carlsbad-one-bedroom-680",
+      "carlsbad-two-bedroom-800",
+      "carlsbad-three-bedroom-999",
+    ]);
+    // A city guide never borrows the county's plans, or the reverse.
+    expect(guidePlanCatalog("CA", "san-diego")?.plans.every(plan => plan.jurisdictionId === "ca-san-diego")).toBe(true);
+    expect(guidePlanCatalog("ca", "san-diego-county")?.plans.every(plan => plan.jurisdictionId === "ca-san-diego-county")).toBe(true);
+  });
+
+  it("returns nothing for unverified, plan-less or unknown programs", () => {
+    expect(guidePlanCatalog("ca", "oceanside")).toBeUndefined();
+    expect(guidePlanCatalog("ca", "chula-vista")).toBeUndefined();
+    expect(guidePlanCatalog("ca", "nowhere")).toBeUndefined();
+  });
+});
+
+describe("planFacts and planFootprintLabel", () => {
+  it("states only the published facts and prints footprints short side first", () => {
+    const plan = preapprovedPlans.find(item => item.id === "imperial-beach-600")!;
+    expect(planFacts(plan)).toBe("600 sq ft · 1 bed");
+    expect(planFootprintLabel({ width: 28.58, length: 21 })).toBe("21′-0″ × 28′-7″");
   });
 });
