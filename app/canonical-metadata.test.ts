@@ -15,7 +15,11 @@ import { metadata as privacyMetadata } from "./privacy/page";
 import { metadata as termsMetadata } from "./terms/page";
 import { metadata as loginMetadata } from "./(firebase)/login/page";
 import { metadata as signupMetadata } from "./(firebase)/signup/layout";
+import { metadata as forgotPasswordMetadata } from "./(firebase)/forgot-password/layout";
 import { metadata as certificatesMetadata } from "./(firebase)/certificates/page";
+import { metadata as deleteAccountMetadata } from "./(firebase)/delete-account/page";
+import { metadata as settingsMetadata } from "./(firebase)/settings/page";
+import { metadata as builderMetadata } from "./(firebase)/builder/layout";
 import { metadata as aduCaMetadata } from "./adu/ca/page";
 import { metadata as aduCaCostMetadata } from "./adu/ca/cost/page";
 import { metadata as aduCostCalculatorMetadata } from "./adu-cost-calculator/page";
@@ -42,7 +46,11 @@ describe("canonical metadata", () => {
     { name: "/terms", metadata: termsMetadata, expectedCanonical: "/terms" },
     { name: "/login", metadata: loginMetadata, expectedCanonical: "/login" },
     { name: "/signup", metadata: signupMetadata, expectedCanonical: "/signup" },
+    { name: "/forgot-password", metadata: forgotPasswordMetadata, expectedCanonical: "/forgot-password" },
     { name: "/certificates", metadata: certificatesMetadata, expectedCanonical: "/certificates" },
+    { name: "/delete-account", metadata: deleteAccountMetadata, expectedCanonical: "/delete-account" },
+    { name: "/settings", metadata: settingsMetadata, expectedCanonical: "/settings" },
+    { name: "/builder", metadata: builderMetadata, expectedCanonical: "/builder" },
     { name: "/adu/ca", metadata: aduCaMetadata, expectedCanonical: "https://lotfoundry.net/adu/ca" },
     {
       name: "/adu/ca/cost",
@@ -186,3 +194,22 @@ describe("demo landings", () => {
     });
   }
 });
+
+describe("de-indexed utility routes", () => {
+  const deindexed = [
+    { name: "/login", metadata: loginMetadata },
+    { name: "/signup", metadata: signupMetadata },
+    { name: "/forgot-password", metadata: forgotPasswordMetadata },
+    { name: "/certificates", metadata: certificatesMetadata },
+    { name: "/delete-account", metadata: deleteAccountMetadata },
+    { name: "/settings", metadata: settingsMetadata },
+    { name: "/builder", metadata: builderMetadata },
+  ];
+
+  for (const { name, metadata } of deindexed) {
+    it(`keeps ${name} out of search with robots noindex`, () => {
+      expect(metadata.robots).toEqual({ index: false, follow: true });
+    });
+  }
+});
+
