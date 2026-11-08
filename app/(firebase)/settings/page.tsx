@@ -4,6 +4,8 @@ import { SettingsClient } from "@/components/account/SettingsClient";
 export const metadata: Metadata = {
   title: "Settings | LotFoundry",
   description: "Manage your LotFoundry profile, security, and data.",
+  alternates: { canonical: "/settings" },
+  robots: { index: false, follow: true },
 };
 
 /** Authenticated member settings route (`/settings`). */
