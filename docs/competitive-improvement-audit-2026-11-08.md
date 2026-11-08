@@ -22,9 +22,11 @@ Open work that overlaps and was left alone: #336 and #337 (GreatBuildz referral,
 
 ## B. Changes in this branch
 
-1. `feat(adu)`: verified official pre-approved plans on city guides, plus the Carlsbad stale-claim fix.
-2. `feat(analytics)`: `preapproved_plan_selected` event, documented in `docs/analytics-measurement-spec.md` §5a.
-3. `feat(certificate)`: sample-certificate link at the paywall.
+1. `feat(adu)`: verified official pre-approved plans on city guides, plus the Carlsbad stale-claim fix (`components/adu/AduPreapprovedPlans.tsx`, `lib/preapproved-plans.ts`).
+2. `feat(analytics)`: `preapproved_plan_selected` event, documented in `docs/analytics-measurement-spec.md` §5a (`lib/analytics/events.ts`).
+3. `feat(certificate)`: sample-certificate link at the paywall (`components/studio/StudioPreview.tsx`).
+4. `fix(content)`: Encinitas PRADU timeline and licensing corrected to state statute (Gov. Code §66324 / AB 1332 30-day review), removing unsourced "half cycle time" claim (`content/adu/ca/encinitas.ts`).
+5. `fix(market)`: `NATIONAL_MARKET_BASELINE` rent status relabeled from `observed` to `derived` with explicit derivation warning, backed by new unit test (`lib/market/national-baseline.ts`, `lib/market/national-baseline.test.ts`).
 
 No Firestore rules, Stripe, pricing, Firebase hosting or `proxy.ts` changes. Deploying the app is enough. No migration is needed.
 
@@ -40,18 +42,33 @@ No Firestore rules, Stripe, pricing, Firebase hosting or `proxy.ts` changes. Dep
 
 Release gate: `npm run lint` passed; `npm run test` 3,051 passed / 91 skipped; `npx tsc --noEmit` clean; `npm run build` succeeded.
 
-## D. Measurement baseline
+## D. Factual competitor comparison: LotFoundry vs a-du.homes (verified 2026-11-08)
 
-No metrics were available to this session. Gaps to close before reading any funnel:
+Live inspection of `https://a-du.homes` (A-du, LLC; founder Chris Koss, AIA, California Architect License #C 39677):
+
+| Capability / Flow | a-du.homes (Observed 2026-11-08) | LotFoundry (Verified) | Competitive Position |
+| --- | --- | --- | --- |
+| **Primary Value Proposition** | Dual marketplace: long-term ADU rental platform (31d–18mo) + plan directory. | Instant 3D lot feasibility studio, zoning compliance & financial pro-forma. | Distinct positioning (marketplace vs studio) |
+| **Address Onboarding & Parcel GIS** | Basic text search and city selector; no parcel boundary or setback resolver. | Instant real parcel boundary, setback envelope, zoning classification & lot coverage. | **Already ahead** |
+| **3D Physical Yard Simulation** | Static rendering cards / photos; no interactive 3D placement. | Three.js / Cesium 3D scene, Snap-to-Fit pose search, obstacle clearance & roof massing. | **Already ahead** |
+| **Pre-Approved ADU Plans** | Broad catalog of LADBS standard plans & architect-submitted designs for sale; no lot-fit verification. | Curated official municipal plan sets (San Diego, Carlsbad, LA County, Pasadena, Davis, etc.) with exact outside-wall footprint fit check in 3D + public guide discovery. | **Improved** (footprint fit + public guide discovery) |
+| **Financial Transparency** | Basic flat rental estimator & city permit fee calculators (LA, SF, NYC). | Localized HUD FY2027 Fair Market Rents, NOI, cash flow, payback period, and unblurred free estimates. | **Already ahead** |
+| **Pricing & Revenue Model** | 0% first 15 listings then 3% rent collection fee; 3% deducted from plan seller payout. | $29 bank-ready Certificate of Feasibility, sample report preview at paywall, free basic studio. | **Improved** (paywall sample link) |
+| **Professional Handoff** | Directory of managers & services; application submission. | Homeowner-consented builder lead handoff, CSLB license validation, PII redaction, immutable ledger. | **Already ahead** |
+
+## E. Measurement baseline
+
+No metrics were available to the sandboxed cloud session. Gaps to close before reading any funnel:
 - Confirm `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set in production and that the consent opt-in rate is known. Events fire only after opt-in, so raw counts undercount every step.
 - Register `jurisdiction_id`, `plan_id` and `placement_outcome` as GA4 custom dimensions.
 - The implementation checklist in `docs/analytics-measurement-spec.md` is still all unchecked, though most events are implemented. Reconcile it against GA4 DebugView before using it as a status record.
 - Organic and paid separation depends on GA4 channel grouping and the existing `lib/analytics/entry-source.ts`. Not verified.
 
-## E. Remaining opportunities (evidence-backed only)
+## F. Status of follow-up opportunities
 
-- **Confirmed:** `docs/preapproved-plans.md` records the plan integration as not deployed or checked on production. Verify it after the next deploy.
-- **Confirmed, needs a source check:** `content/adu/ca/encinitas.ts` says PRADU plans "typically complete initial plan-check reviews in half the standard cycle time" and describes the plans as free. The catalog evidence (2026-11-05) supports neither. Re-verify against the City's page, then correct or cite.
-- **Confirmed, needs data:** `lib/market/national-baseline.ts` gives a "U.S. average" HUD FMR with status `observed`. HUD publishes area FMRs, not a national average. Relabel it as derived, or cite the derivation.
-- **Idea:** true L-shaped massing for irregular plans. This is already listed as the follow-up in `docs/preapproved-plans.md`.
-- **Idea:** a public plan directory page. Deferred. The city-guide sections now cover discovery without adding thin pages.
+- **Completed:** `content/adu/ca/encinitas.ts` claims corrected against California statutes (Gov. Code §66324 / AB 1332 30-day review timeline) and verified with `content/adu/freshness.test.ts`.
+- **Completed:** `lib/market/national-baseline.ts` relabeled from `observed` to `derived`, with low-confidence derivation warnings and unit test in `lib/market/national-baseline.test.ts`.
+- **Completed:** `docs/preapproved-plans.md` updated with public guide integration section documenting `guidePlanCatalog` and `<AduPreapprovedPlans />`.
+- **Pending deploy verification:** Confirm the 2026-11-06 Studio plan integration and #385 city guide plans live on `lotfoundry.net` after production merge.
+- **Future design idea:** True L-shaped massing for irregular plans (follow-up in `docs/preapproved-plans.md`).
+- **Deferred:** Standalone public plan directory (city-guide integration covers SEO discovery without thin pages).

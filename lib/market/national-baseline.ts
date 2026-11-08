@@ -21,7 +21,7 @@ export const NATIONAL_MARKET_BASELINE: MarketData = {
   confidence: "low",
   components: {
     rent: {
-      status: "observed",
+      status: "derived",
       source: {
         provider: "HUD",
         dataset: "Fair Market Rents",
@@ -30,7 +30,7 @@ export const NATIONAL_MARKET_BASELINE: MarketData = {
       sourceAsOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
       retrievedAt: baselineRetrievedAt,
       confidence: "low",
-      warnings: ["No local market record was available; this is the U.S. benchmark."],
+      warnings: ["No local market record was available; this is a national benchmark derived across HUD FMR seed areas."],
     },
     constructionCost: {
       status: "derived",
