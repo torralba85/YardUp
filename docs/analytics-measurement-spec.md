@@ -1,7 +1,7 @@
 # LotFoundry Analytics Measurement Specification
 
-Status: reviewed implementation plan; P0 privacy and reporting prerequisites are not yet implemented
-Date: 2026-09-27
+Status: P0 privacy, analytics contract, homeowner funnel, monetization, and marketplace telemetry are implemented and test-verified; P1 GA4 Admin console registrations remain outstanding
+Date: 2026-11-08
 Target branch: master
 Product: LotFoundry
 Repository: torralba85/YardUp
@@ -727,15 +727,25 @@ Recommended event-scoped custom dimensions:
 - auth_state
 - auth_source
 - auth_mode
+- auth_prompt_source
+- auth_error_bucket
 - device_mode
 - parcel_mode
 - parcel_source
 - feasibility_status
 - state_code
+- jurisdiction_id
+- plan_id
+- placement_outcome
 - report_format
 - purchase_type
 - purchase_channel
 - builder_match_bucket
+- triage_status
+- access_status
+- project_value_bucket
+- match_reason_count_bucket
+- unlock_mode
 - result
 - latency_bucket
 - entry_source
@@ -881,45 +891,46 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
 
 ### P0 — Existing-layer privacy prerequisites
 
-- [ ] sanitize initial/navigation URL context and inherited Google tag/Ads context
-- [ ] enforce current consent in pageview, trackEvent, and Ads conversion helpers
-- [ ] explicitly disable collection and queued events on withdrawal
-- [ ] persist safe opaque analytics order IDs and migrate conversion dedupe safely
-- [ ] add regression coverage for those behaviors before new event rollout
+- [x] sanitize initial/navigation URL context and inherited Google tag/Ads context
+- [x] enforce current consent in pageview, trackEvent, and Ads conversion helpers
+- [x] explicitly disable collection and queued events on withdrawal
+- [x] persist safe opaque analytics order IDs and migrate conversion dedupe safely
+- [x] add regression coverage for those behaviors before new event rollout
 
 ### P0 — Analytics contract
 
-- [ ] Add lib/analytics/events.ts
-- [ ] Add event helper tests
-- [ ] Document existing legacy event names
-- [ ] Add safe bucket helpers and a single feasibility verdict mapper
-- [ ] Add consent-aware Studio route entry, bounded navigation attribution, and shared gate/provider lookup instrumentation
+- [x] Add lib/analytics/events.ts
+- [x] Add event helper tests
+- [x] Document existing legacy event names
+- [x] Add safe bucket helpers and a single feasibility verdict mapper
+- [x] Add consent-aware Studio route entry, bounded navigation attribution, and shared gate/provider lookup instrumentation
 
 ### P0 — Homeowner funnel
 
-- [ ] studio_opened
-- [ ] address_search_submitted
-- [ ] parcel_lookup_completed
-- [ ] feasibility_result_viewed
-- [ ] adu_design_committed
-- [ ] scenario_saved
-- [ ] report_opened
-- [ ] report_exported
+- [x] studio_opened
+- [x] address_search_submitted
+- [x] parcel_lookup_completed
+- [x] feasibility_result_viewed
+- [x] preapproved_plan_selected
+- [x] adu_design_committed
+- [x] scenario_saved
+- [x] report_opened
+- [x] report_exported
 
 ### P0 — Homeowner monetization
 
-- [ ] certificate_paywall_viewed
-- [ ] certificate_checkout_started
-- [ ] GA4 purchase event after confirmed certificate grant
-- [ ] preserve Google Ads dedupe while correcting privacy and order identifiers
+- [x] certificate_paywall_viewed
+- [x] certificate_checkout_started
+- [x] GA4 purchase event after confirmed certificate grant
+- [x] preserve Google Ads dedupe while correcting privacy and order identifiers
 
 ### P0 — Marketplace
 
-- [ ] builder_matches_viewed
-- [ ] builder_connection_submitted
-- [ ] builder_lead_preview_viewed
-- [ ] builder_unlock_checkout_started
-- [ ] builder_lead_unlocked, with consent-aware in-place/return reconciliation and opaque durable deduplication
+- [x] builder_matches_viewed
+- [x] builder_connection_submitted
+- [x] builder_lead_preview_viewed
+- [x] builder_unlock_checkout_started
+- [x] builder_lead_unlocked, with consent-aware in-place/return reconciliation and opaque durable deduplication
 
 ### P0 — Privacy and QA
 
@@ -927,10 +938,10 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
   and sessions carrying the bounded `lf:analytics-internal=1` sessionStorage marker
   (set the marker, then reload: event wrappers re-read it on every call, but an
   already-loaded tag is only switched off on the next mount)
-- [ ] tests prove no address/coordinate/contact fields are sent
-- [ ] update analytics documentation with the no-PII contract
-- [ ] verify consent withdrawal and regrant satisfy the corrected contract
-- [ ] verify GA4 parameter cardinality is bounded
+- [x] tests prove no address/coordinate/contact fields are sent
+- [x] update analytics documentation with the no-PII contract
+- [x] verify consent withdrawal and regrant satisfy the corrected contract
+- [x] verify GA4 parameter cardinality is bounded
 
 This client-side suppression removes automated canary and agent-browser traffic after deployment.
 It does not remove historical events, identify manual founder sessions, or replace a GA4 Admin
@@ -938,7 +949,8 @@ internal-traffic definition when a stable non-PII rule is available.
 
 ### P1 — Reporting setup
 
-- [ ] register GA4 custom dimensions
+- [ ] register GA4 custom dimensions in GA4 Admin console
+- [ ] switch GA4 Internal Traffic Filter from "Testing" to "Active" in GA4 Admin
 - [ ] build Product Funnel view
 - [ ] build Parcel Health view
 - [ ] build Monetization view
@@ -965,4 +977,4 @@ This work is complete when:
 
 ## Review basis
 
-Contract corrections were checked against master d637229: lib/analytics/gtag.ts, components/analytics/GoogleAnalytics.tsx, lib/analytics/adsConversion.ts, components/studio/CertificatePanel.tsx, lib/parcel-types.ts, lib/feasibility.ts, lib/marketplace-types.ts, lib/commerce/purchase-channel.ts, lib/lead-unlock-api.ts, lib/server/certificate-purchases.ts, lib/server/lead-unlocks.ts, app/api/stripe/webhook/route.ts, and components/FeasibilityStudio.tsx. Follow-up review against master 3e0c997 also checked app/(firebase)/studio/page.tsx, SignedInStudioGate, AddressSearch, BuilderDashboard, BuilderInbox, lib/feasibility-verdict.ts, and lib/marketplace-types.ts. All implementation checklist items remain outstanding until their code and tests land.
+Contract corrections were checked against master d637229: lib/analytics/gtag.ts, components/analytics/GoogleAnalytics.tsx, lib/analytics/adsConversion.ts, components/studio/CertificatePanel.tsx, lib/parcel-types.ts, lib/feasibility.ts, lib/marketplace-types.ts, lib/commerce/purchase-channel.ts, lib/lead-unlock-api.ts, lib/server/certificate-purchases.ts, lib/server/lead-unlocks.ts, app/api/stripe/webhook/route.ts, and components/FeasibilityStudio.tsx. Follow-up review against master 3e0c997 also checked app/(firebase)/studio/page.tsx, SignedInStudioGate, AddressSearch, BuilderDashboard, BuilderInbox, lib/feasibility-verdict.ts, and lib/marketplace-types.ts. As of 2026-11-08 (master 80925db), all P0 items have landed with full unit, integration, and e2e test coverage. Outstanding items are GA4 Admin configurations (custom dimensions, internal traffic filter state) and report view creation.

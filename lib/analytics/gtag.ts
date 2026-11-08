@@ -137,9 +137,8 @@ export function enableAnalytics(): void {
  * @param url - Path, e.g. `/studio`.
  */
 export function pageview(url: string): void {
-  if (typeof window === "undefined" || !window.gtag) return;
-  if (isAnalyticsSuppressed()) return;
-  if (!isAnalyticsConfigured() || readConsent() !== "granted") return;
+  if (typeof window === "undefined") return;
+  if (!canMeasure()) return;
   const id = getMeasurementId();
   if (!id) return;
 
@@ -147,13 +146,27 @@ export function pageview(url: string): void {
   const location = `${window.location.origin}${sanitized}`;
   const referrer = sanitizeReferrer(document.referrer);
 
-  window.gtag("event", "page_view", {
+  const payload = {
     page_path: sanitized,
     page_location: location,
     page_referrer: referrer,
     page_title: document.title,
     send_to: id,
-  });
+  };
+
+  if (window.gtag) {
+    window.gtag("event", "page_view", payload);
+    return;
+  }
+
+  // On a hard load a route or PageViewTracker can emit before the afterInteractive tag
+  // defines `window.gtag`. Consent is already granted, so hold the page view in memory
+  // and send it when the tag's init script announces itself.
+  if (pendingEvents.length < MAX_PENDING_EVENTS) pendingEvents.push({ name: "page_view", params: payload });
+  if (!flushListenerAttached) {
+    flushListenerAttached = true;
+    window.addEventListener(GTAG_READY_EVENT, flushPendingEvents, { once: true });
+  }
 }
 
 /**
