@@ -188,6 +188,38 @@ export function formatFeetInches(feet: number): string {
   return `${Math.floor(inches / 12)}′-${inches % 12}″`;
 }
 
+/** "600 sq ft · 1 bed · 1 bath": only the facts the official listing publishes. */
+export function planFacts(plan: PreapprovedPlan): string {
+  return [
+    plan.sqft !== undefined ? `${plan.sqft.toLocaleString()} sq ft` : null,
+    plan.bedrooms === 0 ? "Studio" : plan.bedrooms !== undefined ? `${plan.bedrooms} bed` : null,
+    plan.bathrooms !== undefined ? `${plan.bathrooms} bath${plan.bathrooms === 1 ? "" : "s"}` : null,
+  ].filter(Boolean).join(" · ");
+}
+
+/** "21′-0″ × 28′-7″" from a recorded footprint, short side first. */
+export function planFootprintLabel({ width, length }: { width: number; length: number }): string {
+  return `${formatFeetInches(Math.min(width, length))} × ${formatFeetInches(Math.max(width, length))}`;
+}
+
+/**
+ * The verified program and its active curated plans for a public jurisdiction
+ * guide (`/adu/{state}/{slug}`). Guides and programs share the
+ * `{state}-{slug}` id, so a city guide never borrows a county's plans or the
+ * reverse. Returns nothing unless the program is verified and has at least one
+ * active plan: an unverified or plan-less program is left to the guide's own
+ * copy rather than rendered as an empty catalog.
+ */
+export function guidePlanCatalog(
+  state: string,
+  slug: string,
+): { program: PreapprovedProgram; plans: PreapprovedPlan[] } | undefined {
+  const program = preapprovedPrograms.find(item => item.id === `${state.toLowerCase()}-${slug}`);
+  if (!program || program.status !== "verified") return undefined;
+  const plans = preapprovedPlans.filter(plan => plan.jurisdictionId === program.id && plan.status === "active");
+  return plans.length > 0 ? { program, plans } : undefined;
+}
+
 /** Non-authoritative identity hint: prevent a URL choice from moving to another lot.
  * No raw address enters the URL. This checksum is not an access-control token.
  */

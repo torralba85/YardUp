@@ -4,8 +4,9 @@ import { useEffect, useId, useRef, useState, type RefObject } from "react";
 import { preapprovedPlans, preapprovedPrograms } from "@/lib/preapproved-plans-data";
 import {
   findPreapprovedPlan,
-  formatFeetInches,
   modelMatchesPlan,
+  planFacts,
+  planFootprintLabel,
   planProgramsForLot,
   suggestPlanJurisdiction,
   type PreapprovedPlan,
@@ -52,19 +53,7 @@ interface Props {
 const linkClass = "inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink";
 const sqft = (value: number) => `${value.toLocaleString()} sq ft`;
 const feet = (value: number) => `${Number(value.toFixed(2))}`;
-/** "21′-0″ × 28′-7″" from a recorded footprint, short side first. */
-const footprintLabel = ({ width, length }: { width: number; length: number }) =>
-  `${formatFeetInches(Math.min(width, length))} × ${formatFeetInches(Math.max(width, length))}`;
 const authorityLabel = (program: PreapprovedProgram) => `${program.city}, ${program.state}`;
-
-/** "600 sq ft · 1 bed · 1 bath": only the facts the official listing publishes. */
-export function planFacts(plan: PreapprovedPlan): string {
-  return [
-    plan.sqft !== undefined ? sqft(plan.sqft) : null,
-    plan.bedrooms === 0 ? "Studio" : plan.bedrooms !== undefined ? `${plan.bedrooms} bed` : null,
-    plan.bathrooms !== undefined ? `${plan.bathrooms} bath${plan.bathrooms === 1 ? "" : "s"}` : null,
-  ].filter(Boolean).join(" · ");
-}
 
 function PlanLinks({ plan }: { plan: PreapprovedPlan }) {
   return (
@@ -99,22 +88,22 @@ export function PreapprovedPlanSummary({ selected, onRemove, model, layout = "pa
         <div className="space-y-2">
           <p className="text-sm leading-relaxed text-lot-ink">
             {rectangle && footprint
-              ? <>3D model uses this plan&apos;s footprint: <span className="tabular-nums">{footprintLabel(footprint)} ({sqft(Math.round(model.config.footprint))})</span>.</>
+              ? <>3D model uses this plan&apos;s footprint: <span className="tabular-nums">{planFootprintLabel(footprint)} ({sqft(Math.round(model.config.footprint))})</span>.</>
               : footprint
-                ? <>3D model uses a usable <span className="tabular-nums">{footprintLabel(model.config)}</span> rectangle with this plan&apos;s depth and floor area (<span className="tabular-nums">{sqft(Math.round(model.config.footprint))}</span>).</>
+                ? <>3D model uses a usable <span className="tabular-nums">{planFootprintLabel(model.config)}</span> rectangle with this plan&apos;s depth and floor area (<span className="tabular-nums">{sqft(Math.round(model.config.footprint))}</span>).</>
                 : <>3D model sized to this plan&apos;s floor area: <span className="tabular-nums">{modelSize}</span>.</>}
           </p>
           <StatusChip status={model.fit.tone} label={model.fit.title} />
           {model.placementNote && <p role="status" className={`text-sm leading-relaxed ${model.placementNote.tone === "review" ? "font-semibold text-status-review" : "text-lot-ink"}`}>{model.placementNote.text}</p>}
           {footprint && !rectangle && model.outlineFit && <div className="space-y-1">
-            <p className="text-sm leading-relaxed text-lot-ink">Full outer outline, <span className="tabular-nums">{footprintLabel(footprint)}</span>:</p>
+            <p className="text-sm leading-relaxed text-lot-ink">Full outer outline, <span className="tabular-nums">{planFootprintLabel(footprint)}</span>:</p>
             <StatusChip status={model.outlineFit.tone} label={model.outlineFit.title} />
           </div>}
         </div>
       ) : (
         <div className="space-y-2">
           <p className="text-sm leading-relaxed text-lot-ink">
-            Your 3D model is <span className="tabular-nums">{modelSize}</span>; this plan is <span className="tabular-nums">{rectangle && footprint ? footprintLabel(footprint) : areaTarget}</span>.
+            Your 3D model is <span className="tabular-nums">{modelSize}</span>; this plan is <span className="tabular-nums">{rectangle && footprint ? planFootprintLabel(footprint) : areaTarget}</span>.
           </p>
           <Button variant="secondary" size="sm" onClick={model.onSizeToPlan}>{rectangle ? "Use the plan's footprint" : `Size 3D model to ${areaTarget}`}</Button>
         </div>
@@ -222,7 +211,7 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
                 <p className="text-xs text-lot-stone">{plan.provider}</p>
               </div>
               <p className="text-sm font-semibold tabular-nums text-lot-ink">{planFacts(plan)}</p>
-              {plan.footprint && <p className="text-xs text-lot-stone">{plan.footprint.shape === "irregular" ? "Not rectangular; outer " : ""}{footprintLabel(plan.footprint)} outside walls</p>}
+              {plan.footprint && <p className="text-xs text-lot-stone">{plan.footprint.shape === "irregular" ? "Not rectangular; outer " : ""}{planFootprintLabel(plan.footprint)} outside walls</p>}
               <p className="text-sm leading-relaxed text-lot-stone">{plan.restrictions}</p>
               {plan.feeNote && <p className="text-sm leading-relaxed text-lot-stone">{plan.feeNote}</p>}
               <PlanLinks plan={plan} />

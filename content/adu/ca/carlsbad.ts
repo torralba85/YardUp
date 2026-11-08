@@ -67,7 +67,7 @@ export const carlsbad: JurisdictionContent = {
     paragraphs: [
       "The city estimates permit fees for most ADUs at about $2,000 to $4,000, depending on square footage, under its Master Fee Schedule. Plan check and inspection fees apply to every ADU, and plan check does not start until the review fees are paid.",
       "Impact fees follow state law: none for an ADU of 750 square feet or less of interior livable space or for any junior ADU, and proportional above that. A 1,000 square foot ADU beside a 2,000 square foot house pays 50% of the house-equivalent fee. School districts and other agencies can still charge their own fees. A new utility connection may carry connection and capacity charges, but conversions within the existing home, including expansions of up to 150 square feet, need no new connection.",
-      "The city provides free permit-ready plans designed to eliminate custom architectural fees and streamline plan check. When checked on October 10, 2026, the program page listed those plans as temporarily unavailable while they are updated to the 2025 California Building Codes.",
+      "The city provides free permit-ready plans designed to eliminate custom architectural fees and streamline plan check. An October 10, 2026 check found them temporarily unavailable for a code update; when rechecked on November 5, 2026, the program page offered all four again (a 400 sq ft studio, a 680 sq ft one-bedroom, an 800 sq ft two-bedroom and a 999 sq ft three-bedroom), with plan sheets dated October 26, 2026.",
     ],
     bullets: [
       "Permit fees: about $2,000–$4,000 for most ADUs, per the city's estimate from its Master Fee Schedule",
@@ -89,7 +89,7 @@ export const carlsbad: JurisdictionContent = {
     {
       title: "Choose custom or permit-ready plans",
       detail:
-        "A licensed professional can design a custom ADU, or you can use the city's free permit-ready plans for a single-story detached unit (four sizes, three styles), which get expedited plan check at lower fees. The city lists those plans as unavailable while they are updated to the 2025 building codes.",
+        "A licensed professional can design a custom ADU, or you can use the city's free permit-ready plans for a single-story detached unit (four sizes, three styles), which get expedited plan check at lower fees. They are submitted with the B-75 checklist, a hold-harmless agreement and a site plan for your lot.",
     },
     {
       title: "Assemble the building permit application",

@@ -18,6 +18,7 @@ import {
 import type { JurisdictionContent } from "@/lib/adu/types";
 import { AduStudioCta } from "./AduStudioCta";
 import { AduPlanningLinks } from "./AduPlanningLinks";
+import { AduPreapprovedPlans } from "./AduPreapprovedPlans";
 import { CostBands } from "./CostBands";
 import { RentAndPayback } from "./RentAndPayback";
 import { SetbackDiagram } from "./SetbackDiagram";
@@ -26,7 +27,8 @@ import { SetbackDiagram } from "./SetbackDiagram";
  * Full jurisdiction article: the ten-section program template.
  *
  * 1. H1 + direct answer · 2. at-a-glance table · 3. shared state-law floor ·
- * 4. where the city differs · 5. cost and fees · 6. numbered permit process ·
+ * 4. where the city differs · 5. cost and fees · 6. numbered permit process
+ * (followed by the verified official pre-approved plans, where curated) ·
  * 7. Studio CTA (mid + end) · 8. FAQ with FAQPage markup · 9. neighboring
  * jurisdictions · 10. sources with as-of date. Structured data covers
  * FAQPage, BreadcrumbList, and Article (dateModified wired to the content
@@ -310,6 +312,8 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           .
         </p>
       </section>
+
+      <AduPreapprovedPlans content={content} />
 
       {hasMarketFigures ? (
         <section aria-labelledby="adu-rent" className="mt-12">
