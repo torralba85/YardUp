@@ -392,6 +392,14 @@ html[data-lf-consent="unset"] [data-consent-banner][data-pending] {
   display: block;
 }
 
+/* When cookie consent is unset on mobile, reserve bottom clearance so the fixed
+   banner does not occlude the primary actions at the bottom of the Studio journey. */
+@media (max-width: 639px) {
+  html[data-lf-consent="unset"] [data-testid="mobile-journey"] main {
+    padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Committed-state stamp/settle (6A): a granted unlock lands at 1.02→1, it
    never flips or bounces. Reduced-motion users get an instant swap. */
 @media (prefers-reduced-motion: no-preference) {

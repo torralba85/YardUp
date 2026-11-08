@@ -294,9 +294,10 @@ export function opengraphImageUrl(pageUrl: string): string {
 
 /**
  * Article markup for an ADU guide. Google recommends `image` and
- * `datePublished` alongside `dateModified`. `dateModified` is the content's
- * as-of date, raised to the publish date when a review predates the release,
- * so the markup never dates an edit before publication.
+ * `datePublished` alongside `dateModified`, and Organization `publisher`
+ * alongside `author`. `dateModified` is the content's as-of date, raised to the
+ * publish date when a review predates the release, so the markup never dates an
+ * edit before publication.
  */
 export function aduArticleJsonLd(article: {
   headline: string;
@@ -313,6 +314,15 @@ export function aduArticleJsonLd(article: {
     dateModified:
       article.dateModified > article.datePublished ? article.dateModified : article.datePublished,
     author: { "@type": "Organization", name: "LotFoundry", url: `${BASE_URL}/` },
+    publisher: {
+      "@type": "Organization",
+      name: "LotFoundry",
+      url: `${BASE_URL}/`,
+      logo: {
+        "@type": "ImageObject",
+        url: `${BASE_URL}/icon-512-transparent.png`,
+      },
+    },
   };
 }
 
