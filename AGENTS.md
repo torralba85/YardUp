@@ -84,7 +84,7 @@ Key entry points:
 - `docs/design/` - **the source of truth for design.** Mandatory before visual or UI decisions; start at `docs/design/README.md`.
 - `README.md` - product scope, local setup, environment variables, verification, CI, deployment.
 - `docs/deployment.md` - Firebase deploy flow, CI secrets, rollback, deployment troubleshooting.
-- `docs/cloudflare-dns.md` - DNS/edge state for `lotfoundry.net`, the open `www` redirect, and verification commands.
+- `docs/cloudflare-dns.md` - DNS/edge state for `lotfoundry.net`, the resolved `www` redirect and remaining Cloudflare cleanup, and verification commands.
 - `docs/release-checklist.md` - manual and automated release checks.
 - `docs/debugging-guide.md` - bug reproduction and diagnosis methodology (log collection, environment isolation, `git bisect`, minimal reproducible examples, flaky tests).
 - `docs/repo-health-routine.md` - weekly/monthly repo maintenance schedule (dependency review, CI health, secrets scanning, doc freshness, release tagging).

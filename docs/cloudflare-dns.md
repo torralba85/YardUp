@@ -1,6 +1,6 @@
 # Cloudflare + DNS for lotfoundry.net
 
-**Last verified: 2026-08-31** (live `curl` and DNS-over-HTTPS checks from CI).
+**Last verified: 2026-11-09** (live browser checks; the apex details below were last confirmed with `curl` and DNS-over-HTTPS from CI on 2026-08-31).
 
 The zone is on Cloudflare (`dion.ns.cloudflare.com`, `zita.ns.cloudflare.com`)
 and the site is served by Firebase Hosting (`yardup-2026`). The intended shape
@@ -8,14 +8,16 @@ is **Cloudflare for DNS only** — every record that serves the app is grey-clou
 (DNS only) so Firebase terminates TLS and serves its own responses, with no
 Cloudflare rules or managed content in the path.
 
-The apex now matches that shape. `www` does not.
+The apex matches that shape. `www` no longer redirects off-domain (see
+[`www` redirect: resolved](#www-redirect-resolved)); two dormant Cloudflare
+settings may remain.
 
 ## Current state
 
 | Host | Resolves to | Proxy | Serves | Status |
 |---|---|---|---|---|
 | `lotfoundry.net` | `199.36.158.100` | DNS only | Firebase (`Server: Google Frontend`), HTTP 200 | Correct |
-| `www.lotfoundry.net` | `172.67.205.175`, `104.21.93.56` | Proxied | Cloudflare 301 to `yardup-2026.web.app` | **Broken** |
+| `www.lotfoundry.net` | Not re-checked (DNS-over-HTTPS unavailable from the 2026-11-09 check) | Not re-checked | Lands on `lotfoundry.net`, path preserved | Correct |
 
 Supporting records are intact and must be left alone: `MX` (Google Workspace),
 `TXT` for `hosting-site=yardup-2026`, both `google-site-verification` values,
@@ -69,115 +71,55 @@ from `Google Frontend`. Other paths on the host 301 to the apex (`proxy.ts`).
 Google OAuth redirect URI together; the Signup Canary runs it after every
 production deploy (`docs/deployment.md`).
 
-## Open issue: `www` is still proxied and still redirects off-domain
+## `www` redirect: resolved
 
-Three separate things are wrong, and fixing the DNS alone does not fix all of
-them.
+Until at least 2026-08-31, `www` was proxied through Cloudflare and a Cloudflare
+rule 301'd every path to `yardup-2026.web.app` (left over from the OpenAI Build
+Week setup). Cloudflare's zone-wide Managed Content `robots.txt` also shadowed
+the app's robots route on `www`, blocking nine AI crawlers.
 
-**1. The redirect rule still fires.** It preserves the path, so it is the same
-Cloudflare rule the handoff documented:
+Checked in a browser on 2026-11-09:
 
-```
-$ curl -sSI https://www.lotfoundry.net/studio
-HTTP/2 301
-location: https://yardup-2026.web.app/studio
-server: cloudflare
-```
+- `https://www.lotfoundry.net/studio` lands on `https://lotfoundry.net/studio`
+  (path and query preserved). It no longer reaches `yardup-2026.web.app`.
+- `https://www.lotfoundry.net/robots.txt` serves the app's own `app/robots.ts`
+  output, with no `Cloudflare Managed Content` marker.
+- `https://yardup-2026.web.app/...` lands on `lotfoundry.net` (`proxy.ts`).
+- `https://auth.lotfoundry.net/__/auth/handler` is answered by Firebase Auth.
 
-Anyone who types `www` lands on the non-canonical `web.app` host. That host
-serves the same app (HTTP 200), so this is duplicate content on a domain the
-sitemap does not list.
-
-**2. Cloudflare's Managed Content `robots.txt` is enabled zone-wide.** On `www`
-it shadows the app's own robots route — note that it wins even over the
-redirect rule, which is why `/robots.txt` returns 200 while every other path
-301s:
-
-```
-$ curl -sS https://www.lotfoundry.net/robots.txt
-User-agent: *
-Content-Signal: search=yes,ai-train=no,use=reference
-...
-User-agent: ClaudeBot
-Disallow: /
-# END Cloudflare Managed Content
-```
-
-It blocks nine AI crawlers (`Amazonbot`, `Applebot-Extended`, `Bytespider`,
-`CCBot`, `ClaudeBot`, `CloudflareBrowserRenderingCrawler`, `Google-Extended`,
-`GPTBot`, `meta-externalagent`). The apex escapes it only because the apex is
-grey-clouded. **This is a latent trap:** re-proxying the apex for any reason
-silently reinstates this block over `app/robots.ts`.
-
-**3. `www` is probably not a registered Firebase custom domain.** The handoff
-recorded exactly one custom domain (`lotfoundry.net`) on the Hosting API. This
-could not be re-verified from CI, because outbound requests go through a proxy
-that does its own DNS and ignores `curl --resolve`. **Check before changing
-DNS** — pointing `www` at Firebase for an unregistered host serves a "Site Not
-Found" page, which is worse than the current redirect:
+**Not verified from that check:** the `www` DNS records and proxy status, and
+whether the `www` -> apex hop comes from a Firebase Hosting custom-domain
+redirect (the intended setup) or from a retargeted Cloudflare rule. The check
+could not read response headers, DNS, or the Cloudflare zone. Confirm with:
 
 ```bash
-TOKEN=$(gcloud auth print-access-token)
-curl -sS -H "Authorization: Bearer $TOKEN" \
-  -H "X-Goog-User-Project: yardup-2026" \
-  "https://firebasehosting.googleapis.com/v1beta1/projects/yardup-2026/sites/yardup-2026/customDomains"
+curl -sSI https://www.lotfoundry.net/studio   # want: 301 to lotfoundry.net, Server: Google Frontend
+curl -sS -H "accept: application/dns-json" \
+  "https://dns.google/resolve?name=www.lotfoundry.net&type=A"   # want: Firebase IP, not 172.67.* / 104.21.*
 ```
 
-### Why this is worth fixing now
+### Remaining cleanup (Cloudflare dashboard)
 
-Beyond SEO, it splits analytics. `NEXT_PUBLIC_GA_MEASUREMENT_ID` measures one
-GA4 property; a visitor who arrives on `www` is bounced to `yardup-2026.web.app`
-and is recorded under that hostname instead of `lotfoundry.net`, so sessions
-land in the wrong place and the referral chain is broken by the cross-domain
-301. It also still blocks the Play release: Android does not follow a
-cross-origin redirect when verifying Digital Asset Links, so a TWA built
-against `www` launches with Custom Tab chrome (see `native/android/README.md`).
+These do nothing while the serving records are grey-cloud, but each one comes
+back if a record is ever re-proxied:
 
-## Fix
-
-### Option A — serve `www` from Firebase (recommended)
-
-Matches what was already done for the apex and removes every Cloudflare moving
-part. Do the steps in this order; reversing 1 and 2 causes a "Site Not Found"
-window.
-
-1. **Firebase Console -> Hosting -> Add custom domain -> `www.lotfoundry.net`.**
-   Choose the redirect option so `www` 301s to the apex; the apex stays
-   canonical. Note the A record value Firebase returns (usually
-   `199.36.158.100`) and complete any TXT verification it asks for.
-2. **Cloudflare -> DNS -> Records.** Delete the two proxied `www` A records
-   (`172.67.205.175`, `104.21.93.56`) and add the A record from step 1, set to
-   **DNS only (grey cloud)**.
-3. **Cloudflare -> Rules.** Delete the rule redirecting to
+1. **Cloudflare -> lotfoundry.net -> Rules.** Delete any rule redirecting to
    `yardup-2026.web.app`. Check **Redirect Rules**, **Page Rules**, and **Bulk
-   Redirects** — it may be in any of the three. Grey-clouding already
-   neutralizes it (rules run only on proxied traffic), but leaving it is a trap
-   if the proxy is ever re-enabled.
-4. **Cloudflare -> turn off Managed Content / the AI-crawler robots feature**
-   for the zone, so it cannot shadow `app/robots.ts` on any host. This is the
-   step that protects the apex from a future re-proxy.
-5. **Firebase Console -> Authentication -> Settings -> Authorized domains.**
-   Confirm `lotfoundry.net` is listed, and add `www.lotfoundry.net` if it will
-   ever render the app rather than redirect.
-6. Wait for the `www` certificate to reach `CERT_ACTIVE` (usually minutes;
-   Firebase allows 24h). Expect `https://www.lotfoundry.net` to fail TLS in the
-   gap between the DNS change and issuance — that is normal, and the apex keeps
-   serving throughout. Do not roll the DNS back mid-issuance; it restarts the
-   wait.
-
-### Option B — stopgap, keep `www` on Cloudflare
-
-If the Firebase step cannot happen now, retarget the existing redirect rule
-from `https://yardup-2026.web.app` to `https://lotfoundry.net`, preserving path
-and query. That is a one-field change and unbreaks `www` immediately.
-
-It does not fix issue 2: `www/robots.txt` keeps serving Cloudflare's managed
-block, and the rule remains a moving part outside Firebase. Treat it as a
-stopgap, not the destination.
+   Redirects**. If `www` is still proxied and its redirect now comes from a
+   Cloudflare rule pointed at the apex, leave that rule until `www` is moved to
+   Firebase.
+2. **Cloudflare -> turn off Managed Content / the AI-crawler robots feature**
+   for the zone, so it cannot shadow `app/robots.ts` on any host if a record is
+   re-proxied.
+3. **Firebase Console -> Hosting -> custom domains.** Confirm
+   `www.lotfoundry.net` is listed with a redirect to `lotfoundry.net`. If it is
+   not, add it (redirect option), then point `www` at the A record it gives, as
+   **DNS only**, and wait for the certificate before removing any Cloudflare
+   rule.
 
 ## Verification
 
-After either option:
+After any Cloudflare or Firebase Hosting change:
 
 ```bash
 # www must reach the canonical apex, not web.app
@@ -190,7 +132,7 @@ curl -sSI https://lotfoundry.net/
 curl -sS https://lotfoundry.net/robots.txt
 curl -sS https://www.lotfoundry.net/robots.txt
 
-# Must return 200 with both SHA-256 fingerprints
+# Must return 200 with the app's SHA-256 fingerprints
 curl -sS https://lotfoundry.net/.well-known/assetlinks.json
 ```
 
@@ -201,7 +143,7 @@ curl -sS -H "accept: application/dns-json" \
   "https://dns.google/resolve?name=www.lotfoundry.net&type=A"
 ```
 
-`www` must resolve to the Firebase IP under Option A. Under either option the
+`www` should resolve to the Firebase IP once it is served from Firebase. The
 apex must stay on `199.36.158.100` and never return a `172.67.*` or `104.21.*`
 Cloudflare proxy address.
 
