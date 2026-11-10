@@ -112,26 +112,28 @@ describe("Firebase Hosting static asset delivery", () => {
     }
   });
 
-  it("sets baseline security headers on static Hosting responses while preserving sample-certificate framing", () => {
-    const { headers } = firebaseConfig.hosting;
-    const rootIndex = headers.findIndex((rule) => rule.source === "**");
-    const sampleIndex = headers.findIndex(
-      (rule) => rule.source === "/sample-certificate/**",
-    );
-
-    expect(rootIndex).toBeGreaterThanOrEqual(0);
-    expect(sampleIndex).toBeGreaterThan(rootIndex);
+  it("sets baseline security headers on static Hosting responses", () => {
+    const rootRule = firebaseConfig.hosting.headers.find((rule) => rule.source === "**");
+    expect(rootRule).toBeDefined();
 
     const rootMap = Object.fromEntries(
-      headers[rootIndex].headers.map((h) => [h.key, h.value]),
+      rootRule!.headers.map((h) => [h.key, h.value]),
     );
     expect(rootMap["X-Content-Type-Options"]).toBe("nosniff");
-    expect(rootMap["X-Frame-Options"]).toBe("DENY");
     expect(rootMap["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+  });
 
-    const sampleMap = Object.fromEntries(
-      headers[sampleIndex].headers.map((h) => [h.key, h.value]),
-    );
-    expect(sampleMap["X-Frame-Options"]).toBe("SAMEORIGIN");
+  // This Hosting site also serves auth.lotfoundry.net, whose /__/auth/iframe
+  // Google sign-in loads in a frame. Framing rules stay in next.config.ts,
+  // which covers the app pages and never reaches Hosting's /__/ helpers.
+  it("sets no framing rule that could reach the Firebase Auth helper iframe", () => {
+    for (const rule of firebaseConfig.hosting.headers) {
+      for (const { key, value } of rule.headers) {
+        expect(key.toLowerCase(), rule.source).not.toBe("x-frame-options");
+        if (key.toLowerCase() === "content-security-policy") {
+          expect(value, rule.source).not.toContain("frame-ancestors");
+        }
+      }
+    }
   });
 });

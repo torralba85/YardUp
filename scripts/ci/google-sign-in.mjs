@@ -70,6 +70,19 @@ export async function checkFirebaseInit(authDomain, projectId, { fetchImpl = fet
   return `${url} answered 200 for ${projectId}`;
 }
 
+export async function checkAuthIframe(authDomain, { fetchImpl = fetch } = {}) {
+  const url = `https://${authDomain}/__/auth/iframe`;
+  const response = await get(url, fetchImpl);
+  if (response.status !== 200) throw new Error(`${url} answered ${response.status}, expected 200`);
+  // The app loads this page in a hidden frame for every Google sign-in, so a
+  // framing header here breaks sign-in while the handler still answers 200.
+  const frameOptions = response.headers.get("x-frame-options");
+  if (frameOptions) throw new Error(`${url} sends X-Frame-Options: ${frameOptions}, so the app cannot frame it`);
+  const frameAncestors = response.headers.get("content-security-policy")?.match(/frame-ancestors[^;]*/)?.[0];
+  if (frameAncestors) throw new Error(`${url} sends ${frameAncestors}, so the app may not be able to frame it`);
+  return `${url} answered 200 and can be framed`;
+}
+
 // Google's authError is a base64 protobuf whose first field is the OAuth error
 // code, e.g. "redirect_uri_mismatch".
 export function decodeAuthError(value) {
@@ -133,6 +146,7 @@ export async function verifyGoogleSignIn(config, { resolveHost, fetchImpl, retry
     () => checkAuthHandler(config.authDomain, { fetchImpl }),
     () => checkFirebaseInit(config.authDomain, config.projectId, { fetchImpl }),
     () => checkOAuthRedirect(config.authDomain, config.clientId, { fetchImpl }),
+    () => checkAuthIframe(config.authDomain, { fetchImpl }),
   ];
   const results = [];
   for (const check of checks) {
