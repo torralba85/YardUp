@@ -29,13 +29,21 @@ export function laterDate(a: string, b: string): string {
  */
 export const PLANNING_LINKS_UPDATED = "2026-11-06";
 
-/** Per-guide navigation changes, by slug. */
+/**
+ * #385 added the official pre-approved plans section to every guide whose
+ * jurisdiction has a verified plan catalog; it shipped 2026-11-08.
+ */
+export const PLANS_SECTION_ADDED = "2026-11-08";
+
+/** Per-guide changes made without a new rules review, by slug. */
 export const CITY_NAV_UPDATED: Record<string, string> = {
-  // #371 linked the County guide to Carlsbad's rules; it shipped 2026-11-05.
-  "san-diego-county": "2026-11-05",
-  "san-diego": PLANNING_LINKS_UPDATED,
+  "san-diego-county": PLANS_SECTION_ADDED,
+  "san-diego": PLANS_SECTION_ADDED,
+  carlsbad: PLANS_SECTION_ADDED,
+  "imperial-beach": PLANS_SECTION_ADDED,
+  "la-mesa": PLANS_SECTION_ADDED,
+  sacramento: PLANS_SECTION_ADDED,
   "san-jose": PLANNING_LINKS_UPDATED,
-  sacramento: PLANNING_LINKS_UPDATED,
 };
 
 /** XML-escape a sitemap value. */

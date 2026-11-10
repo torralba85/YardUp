@@ -4,7 +4,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
-import { DIRECTORY_URLS, SOCIAL_URLS } from "@/lib/social-links";
+import { ORGANIZATION_JSON_LD, SITE_NAME } from "@/lib/site-identity";
 import { SITE_OG_IMAGE } from "@/lib/og-images";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
@@ -29,7 +29,8 @@ const appRootUrl = `${appUrl.replace(/\/+$/, "")}/`;
 
 /**
  * Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no
- * fabricated ratings.
+ * fabricated ratings. The homepage adds WebSite and a top-level Organization
+ * (`HOME_JSON_LD`); the shared `@id` makes both one entity.
  *
  * `operatingSystem` and `installUrl` name the shipped Android build as well as
  * the web app. Describing a published app as web-only hides it from the app
@@ -68,29 +69,7 @@ const jsonLd = {
       priceCurrency: "USD",
     },
   ],
-  publisher: {
-    "@type": "Organization",
-    name: "LotFoundry",
-    alternateName: ["Lot Foundry"],
-    // The name the Terms and Privacy Policy contract under: one word, no hyphen
-    // (as on the IRS EIN notice), with the LLC designator California requires.
-    legalName: "VeriShare LLC",
-    // Stated on /about; keep the two in step.
-    founder: { "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" },
-    url: appRootUrl,
-    logo: `${appUrl}/icon-512-transparent.png`,
-    // `sameAs` is how Google resolves scattered profiles into one entity, so
-    // it only ever lists URLs that actually resolve. A 404 here is a negative
-    // signal, not a neutral one — add each social profile when it is claimed,
-    // never ahead of it.
-    sameAs: [GOOGLE_PLAY_URL, ...SOCIAL_URLS, ...DIRECTORY_URLS],
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer support",
-      email: "support@lotfoundry.net",
-      url: `${appUrl}/feedback`,
-    },
-  },
+  publisher: ORGANIZATION_JSON_LD,
 };
 
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
@@ -122,6 +101,7 @@ export const metadata: Metadata = {
       "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
     images: [SITE_OG_IMAGE],
     type: "website",
+    siteName: SITE_NAME,
   },
 };
 

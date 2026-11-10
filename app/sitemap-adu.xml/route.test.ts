@@ -12,7 +12,14 @@ import {
   rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
-import { CITY_NAV_UPDATED, PLANNING_LINKS_UPDATED, buildAduSitemapXml, laterDate } from "./build-xml";
+import { guidePlanCatalog } from "@/lib/preapproved-plans";
+import {
+  CITY_NAV_UPDATED,
+  PLANNING_LINKS_UPDATED,
+  PLANS_SECTION_ADDED,
+  buildAduSitemapXml,
+  laterDate,
+} from "./build-xml";
 
 /** Map each `<loc>` to its `<lastmod>`. */
 function lastmodByLoc(xml: string): Map<string, string> {
@@ -34,7 +41,7 @@ describe("sitemap-adu.xml", () => {
       expect(lastmod.get(cityUrl(city))).toBe(laterDate(city.asOf, CITY_NAV_UPDATED[city.slug] ?? city.asOf));
       expect(lastmod.get(cityUrl(city))! >= city.asOf).toBe(true);
     }
-    expect(lastmod.get("https://lotfoundry.net/adu/ca/san-diego-county")).toBe("2026-11-05");
+    expect(lastmod.get("https://lotfoundry.net/adu/ca/san-diego-county")).toBe("2026-11-08");
     for (const cost of ADU_COST_PAGES) {
       expect(lastmod.get(costPageUrl(cost))).toBe(laterDate(cost.asOf, PLANNING_LINKS_UPDATED));
     }
@@ -45,5 +52,14 @@ describe("sitemap-adu.xml", () => {
     expect(xml).toContain(`<loc>${jaduUrl()}</loc>`);
     expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 7);
     expect(xml).not.toContain("& ");
+  });
+
+  it("dates every guide that shows official plans no earlier than the day that section shipped", () => {
+    const lastmod = lastmodByLoc(buildAduSitemapXml());
+    const withPlans = ADU_CITIES.filter((city) => guidePlanCatalog(city.state, city.slug));
+    expect(withPlans.length).toBeGreaterThan(0);
+    for (const city of withPlans) {
+      expect(lastmod.get(cityUrl(city))! >= PLANS_SECTION_ADDED, `${city.slug} sitemap date`).toBe(true);
+    }
   });
 });

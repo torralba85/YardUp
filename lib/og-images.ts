@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/lib/site-identity";
 
 /**
  * Share images. A page that sets its own `openGraph` replaces the root
@@ -22,8 +23,9 @@ export const LANDING_OG_IMAGE = {
 
 /**
  * An `openGraph` block for a page with its own title and URL. Carries the site
- * share image and `type` that replacing the layout's block would otherwise drop.
+ * share image, `type` and site name that replacing the layout's block would
+ * otherwise drop.
  */
 export function pageOpenGraph(og: { title: string; description: string; url: string }): NonNullable<Metadata["openGraph"]> {
-  return { ...og, images: [SITE_OG_IMAGE], type: "website" };
+  return { ...og, images: [SITE_OG_IMAGE], type: "website", siteName: SITE_NAME };
 }
