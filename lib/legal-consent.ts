@@ -1,6 +1,6 @@
 export const CURRENT_LEGAL_CONSENT = {
-  termsVersion: "2026-11-06",
-  privacyVersion: "2026-11-06",
+  termsVersion: "2026-11-10",
+  privacyVersion: "2026-11-10",
   adultConfirmed: true,
 } as const;
 

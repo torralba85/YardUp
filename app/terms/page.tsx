@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="Terms & Conditions"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 10, 2026 · Version 2026-11-10"
     >
       <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
@@ -247,6 +247,21 @@ export default function TermsPage() {
           referral fee. A referral fee is paid by the partner and does not change what you pay. The
           partner handles your information under its own terms and privacy policy and may contact
           you directly.
+        </p>
+        <p>
+          Our current referral partner is GreatBuildz Inc. If you choose it, the introduction email
+          goes to GreatBuildz with a copy to you, and your use of GreatBuildz&rsquo;s service is
+          governed by its own{" "}
+          <a
+            href="https://www.greatbuildz.com/terms-of-service/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            terms of service
+          </a>
+          . GreatBuildz, not you, may pay LotFoundry a referral fee based on a qualifying signed design
+          or construction contract. Privacy Policy Section 5 lists what we send.
         </p>
         <p>
           Any statement that a partner&rsquo;s or builder&rsquo;s contractors are screened, vetted,

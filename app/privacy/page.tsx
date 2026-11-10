@@ -34,7 +34,7 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 10, 2026 · Version 2026-11-10"
     >
       <LegalSection title="Who We Are &amp; Scope">
         <p>
@@ -241,6 +241,28 @@ export default function PrivacyPage() {
           policy. We keep a record of your consent and a referral number so the partner can report
           the referral&rsquo;s status back to us for fee reconciliation.
         </p>
+        <p>
+          <strong>GreatBuildz.</strong> Our current referral partner is GreatBuildz Inc., a
+          contractor-matching service in ten California counties. If you choose GreatBuildz and
+          check its consent box, we email your name, email, optional phone and message, property
+          address, lot and zoning facts, backyard home design summary, and $25,000 build-cost range to
+          GreatBuildz&rsquo;s team, with a copy to you. We never send your exact cost or rent figures,
+          photos, Certificate, saved scenarios, account identifiers, or payment details. GreatBuildz
+          handles what it receives under its{" "}
+          <a
+            href="https://www.greatbuildz.com/privacy-policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            privacy policy
+          </a>
+          , and its advisors and the contractors or architects it matches you with may contact you by
+          phone, email, or text. GreatBuildz reports each referral&rsquo;s status to us by its
+          referral number (introduced, engaged, contracted, or closed), and may pay us a referral fee
+          on a signed contract. We keep that record, with your consent receipt, in a server-only
+          ledger that no other user can read.
+        </p>
       </LegalSection>
 
       <LegalSection title="6. Data Retention &amp; Account Deletion">
@@ -268,7 +290,9 @@ export default function PrivacyPage() {
           account does not delete information a builder already unlocked or a referral partner
           already received. Contact that builder or partner directly to ask them to delete it, or
           email <SupportEmail /> and we will forward your request to any referral partner that
-          received your project.
+          received your project. When you delete your account, we remove the contact details and
+          project facts from our referral record and keep the referral number, partner, county,
+          project size, status, and consent receipt needed to reconcile referral fees.
         </p>
       </LegalSection>
 
