@@ -119,6 +119,31 @@ describe("site JSON-LD", () => {
     expect(publisher.founder).toEqual({ "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" });
     expect(publisher.contactPoint.email).toBe("support@lotfoundry.net");
   });
+
+  const homeJsonLd = () => {
+    const script = Children.toArray(LandingPage().props.children).find(
+      (child) => isValidElement<{ type?: string }>(child) && child.type === "script" && child.props.type === "application/ld+json",
+    );
+    if (!isValidElement<{ dangerouslySetInnerHTML: { __html: string } }>(script)) throw new Error("no homepage JSON-LD script");
+    return JSON.parse(script.props.dangerouslySetInnerHTML.__html);
+  };
+
+  it("gives the homepage the WebSite and top-level Organization Google reads the site name and logo from", () => {
+    const graph: Array<Record<string, unknown>> = homeJsonLd()["@graph"];
+    const website = graph.find((node) => node["@type"] === "WebSite");
+    const organization = graph.find((node) => node["@type"] === "Organization");
+    expect(website).toMatchObject({ url: "https://lotfoundry.net/", name: "LotFoundry", alternateName: ["Lot Foundry"] });
+    expect(organization).toMatchObject({ name: "LotFoundry", logo: "https://lotfoundry.net/icon-512-transparent.png" });
+    // One entity: the WebSite, the homepage Organization and the layout's publisher share an @id.
+    expect(website?.publisher).toEqual({ "@id": organization?.["@id"] });
+    expect(jsonLd().publisher["@id"]).toBe(organization?.["@id"]);
+  });
+
+  it("names the site in og:site_name on the homepage and the layout default", () => {
+    expect(homeMetadata.openGraph?.siteName).toBe("LotFoundry");
+    expect(rootMetadata.openGraph?.siteName).toBe("LotFoundry");
+    expect(aboutMetadata.openGraph?.siteName).toBe("LotFoundry");
+  });
 });
 
 

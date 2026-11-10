@@ -11,8 +11,15 @@ describe("robots", () => {
       rules: {
         userAgent: "*",
         allow: "/",
-        disallow: ["/builder", "/settings", "/api/"],
+        disallow: ["/api/"],
       },
     });
+  });
+
+  it("leaves noindex member pages crawlable so crawlers can read their noindex", () => {
+    const { disallow } = robots().rules as { disallow: string[] };
+    for (const path of ["/builder", "/settings"]) {
+      expect(disallow.some((rule) => path.startsWith(rule))).toBe(false);
+    }
   });
 });

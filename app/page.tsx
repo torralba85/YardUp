@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import { landingScenarios } from "@/lib/landing-demo";
 import { LANDING_OG_IMAGE } from "@/lib/og-images";
+import { HOME_JSON_LD, SITE_NAME } from "@/lib/site-identity";
 import { COLOR } from "@/lib/design-tokens";
 
 
@@ -32,8 +33,9 @@ export const metadata: Metadata = {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
     images: [LANDING_OG_IMAGE],
-    // This block replaces the layout's, so it restates the type too.
+    // This block replaces the layout's, so it restates the type and site name too.
     type: "website",
+    siteName: SITE_NAME,
   },
   twitter: {
     card: "summary_large_image",
@@ -51,6 +53,10 @@ export default function LandingPage() {
       {/* React hoists this into <head>. */}
       <link rel="canonical" href={canonicalUrl} />
       <meta property="og:url" content={canonicalUrl} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
+      />
       <LotMoreLanding scenarios={scenarios} />
     </>
   );
