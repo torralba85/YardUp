@@ -444,6 +444,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName });
       await ensureProfile(cred.user, { displayName, email, role, legalConsent });
+      await Promise.resolve(sendEmailVerification(cred.user)).catch(() => undefined);
       setUser(cred.user);
       setLoading(false);
       return cred;
@@ -555,6 +556,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current) return;
     await current.reload();
     const refreshed = auth.currentUser;
+    if (refreshed?.emailVerified && typeof refreshed.getIdToken === "function") {
+      await Promise.resolve(refreshed.getIdToken(true)).catch(() => undefined);
+    }
     setUser(refreshed);
     if (refreshed) {
       await ensureProfile(refreshed, { email: refreshed.email });

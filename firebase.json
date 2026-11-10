@@ -7,7 +7,10 @@
       "**/.git/**",
       "**/node_modules/**",
       "server.js",
-      ".next/**"
+      ".next/**",
+      "README.md",
+      "kickstarter/**",
+      "kickstarter-assets/**"
     ],
     "rewrites": [
       {
@@ -33,7 +36,33 @@
     ],
     "headers": [
       {
-        "source": "**/*.@(js|css|woff2|png|svg|jpg|webp)",
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      },
+      {
+        "source": "/sample-certificate/**",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css|woff2|png|svg|jpg|webp|avif|mp4|ico)",
         "headers": [
           {
             "key": "Cache-Control",

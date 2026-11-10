@@ -83,4 +83,55 @@ describe("Firebase Hosting static asset delivery", () => {
     );
     expect(cacheControl?.value).toBe("public, max-age=31536000, immutable");
   });
+
+  it("includes avif, mp4, and ico in the 24-hour static asset cache rule", () => {
+    const { headers } = firebaseConfig.hosting;
+    const generalAssetRule = headers.find((rule) =>
+      rule.source.includes("@(js|css"),
+    );
+
+    expect(generalAssetRule).toBeDefined();
+    for (const ext of ["avif", "mp4", "ico"]) {
+      expect(generalAssetRule!.source).toContain(ext);
+    }
+    const cacheControl = generalAssetRule!.headers.find(
+      (header) => header.key === "Cache-Control",
+    );
+    expect(cacheControl?.value).toBe("public, max-age=86400");
+  });
+
+  it("excludes Remotion-only kickstarter assets and public/README.md from Hosting", () => {
+    const { ignore } = firebaseConfig.hosting;
+
+    expect(ignore).toContain("README.md");
+    expect(ignore).toContain("kickstarter/**");
+    expect(ignore).toContain("kickstarter-assets/**");
+
+    for (const entry of ["README.md", "kickstarter", "kickstarter-assets"]) {
+      expect(prepareScript).toContain(`"${entry}"`);
+    }
+  });
+
+  it("sets baseline security headers on static Hosting responses while preserving sample-certificate framing", () => {
+    const { headers } = firebaseConfig.hosting;
+    const rootIndex = headers.findIndex((rule) => rule.source === "**");
+    const sampleIndex = headers.findIndex(
+      (rule) => rule.source === "/sample-certificate/**",
+    );
+
+    expect(rootIndex).toBeGreaterThanOrEqual(0);
+    expect(sampleIndex).toBeGreaterThan(rootIndex);
+
+    const rootMap = Object.fromEntries(
+      headers[rootIndex].headers.map((h) => [h.key, h.value]),
+    );
+    expect(rootMap["X-Content-Type-Options"]).toBe("nosniff");
+    expect(rootMap["X-Frame-Options"]).toBe("DENY");
+    expect(rootMap["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+
+    const sampleMap = Object.fromEntries(
+      headers[sampleIndex].headers.map((h) => [h.key, h.value]),
+    );
+    expect(sampleMap["X-Frame-Options"]).toBe("SAMEORIGIN");
+  });
 });

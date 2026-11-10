@@ -141,9 +141,15 @@ export async function createConnectionRequest(input: {
   ownerContact: OwnerContact;
   snapshot: ConnectionSnapshot;
   matchedBuilderIds: string[];
+  ownerVerified?: boolean;
 }): Promise<string> {
   const previewSerial = generatePreviewSerial();
   const preview = buildLeadPreview({ snapshot: input.snapshot, previewSerial });
+  const ownerVerified =
+    input.ownerVerified ?? Boolean(auth?.currentUser?.emailVerified);
+  if (ownerVerified && typeof auth?.currentUser?.getIdToken === "function") {
+    await Promise.resolve(auth.currentUser.getIdToken(true)).catch(() => undefined);
+  }
 
   // The root must commit first: the `private/contact` and `builderResponses`
   // create rules `get()` this doc to verify ownership, and rules see only
@@ -154,7 +160,7 @@ export async function createConnectionRequest(input: {
     preview,
     matchedBuilderIds: input.matchedBuilderIds,
     status: "submitted",
-    ownerVerified: true,
+    ownerVerified,
     headStartUntil: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

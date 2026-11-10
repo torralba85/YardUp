@@ -98,7 +98,7 @@ export default function UnlockSlip({
         <p className="mt-1 flex flex-wrap gap-3.5 lf-kicker-dense text-lot-stone">
           <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
           <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
-          {item.request.ownerVerified && <span>Owner-verified</span>}
+          {item.request.ownerVerified && <span>Verified email</span>}
         </p>
         <p className="mt-2 lf-money-lg text-lot-ink">
           {formatCurrency(preview.rentBand)}

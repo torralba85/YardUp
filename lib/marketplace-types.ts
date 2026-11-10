@@ -176,7 +176,7 @@ export interface ConnectionRequest {
   matchedBuilderIds: string[];
   /** Lifecycle status (only `submitted` in v1). */
   status: "submitted";
-  /** Owner authenticated at submit time (always true in v1). */
+  /** Whether the submitting homeowner's Auth email was verified at submit time. */
   ownerVerified: boolean;
   /** 19C head-start window end (ISO). Null until the first unlock (T8). */
   headStartUntil: string | null;

@@ -18,7 +18,7 @@ const recorder = vi.hoisted(() => ({
   nextId: 0,
 }));
 
-vi.mock("./firebase", () => ({ db: {} }));
+vi.mock("./firebase", () => ({ db: {}, auth: { currentUser: null } }));
 
 vi.mock("firebase/firestore", () => ({
   Timestamp: class {},
@@ -184,6 +184,22 @@ describe("createConnectionRequest paywall split", () => {
     const preview = root!.data.preview as { previewSerial: string };
     expect(preview.previewSerial).toMatch(/^LF-[A-Z0-9]+$/);
     expect(preview.previewSerial).not.toContain(snapshot.parcelAddress);
+  });
+
+  it("records ownerVerified from the verified email state instead of hardcoding true", async () => {
+    const { root: unverifiedRoot } = await submit();
+    expect(unverifiedRoot!.data.ownerVerified).toBe(false);
+
+    recorder.writes = [];
+    await createConnectionRequest({
+      ownerUid: "owner-1",
+      ownerContact: contact,
+      snapshot,
+      matchedBuilderIds: ["builder-1"],
+      ownerVerified: true,
+    });
+    const verifiedRoot = recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/));
+    expect(verifiedRoot!.data.ownerVerified).toBe(true);
   });
 });
 

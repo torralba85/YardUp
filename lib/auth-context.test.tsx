@@ -13,6 +13,7 @@ const authMocks = vi.hoisted(() => ({
   createUserWithEmailAndPassword: vi.fn(),
   deleteUser: vi.fn(),
   onAuthStateChanged: vi.fn(),
+  sendEmailVerification: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   signInWithPopup: vi.fn(),
@@ -78,7 +79,7 @@ vi.mock("firebase/auth", () => ({
   getRedirectResult: authMocks.getRedirectResult,
   signOut: authMocks.signOut,
   updateProfile: authMocks.updateProfile,
-  sendEmailVerification: vi.fn(),
+  sendEmailVerification: authMocks.sendEmailVerification,
   EmailAuthProvider: { credential: vi.fn() },
   reauthenticateWithCredential: vi.fn(),
   updatePassword: vi.fn(),
@@ -869,6 +870,69 @@ describe("AuthProvider profile creation", () => {
         { merge: true },
       );
       expect(screen.getByTestId("consent-status")).toHaveTextContent("true");
+    });
+  });
+
+  it("sends a best-effort verification email on email/password signUp without blocking registration", async () => {
+    const newUser = { uid: "user-new", email: "builder@example.com", displayName: "Builder Person" };
+    authMocks.createUserWithEmailAndPassword.mockResolvedValue({ user: newUser });
+    authMocks.updateProfile.mockResolvedValue(undefined);
+    authMocks.sendEmailVerification.mockRejectedValueOnce(new Error("too-many-requests"));
+    firestoreMocks.getDoc.mockResolvedValue({ exists: () => false, data: () => ({}) });
+    firestoreMocks.setDoc.mockResolvedValue(undefined);
+
+    render(
+      <AuthProvider>
+        <EmailBuilderButton />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Create builder" }));
+
+    await waitFor(() => {
+      expect(authMocks.sendEmailVerification).toHaveBeenCalledWith(newUser);
+      expect(firestoreMocks.setDoc).toHaveBeenCalled();
+    });
+    expect(authMocks.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it("force-refreshes the ID token in refreshProfile when emailVerified becomes true", async () => {
+    const reload = vi.fn().mockResolvedValue(undefined);
+    const getIdToken = vi.fn().mockResolvedValue("fresh-jwt");
+    const user = {
+      uid: "user-1",
+      email: "user@example.com",
+      displayName: "Alma Reyes",
+      emailVerified: true,
+      reload,
+      getIdToken,
+    };
+    firebaseMocks.auth.currentUser = user;
+    firestoreMocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({ role: "user", email: "user@example.com" }),
+    });
+
+    function Probe() {
+      const { refreshProfile } = useAuth();
+      return (
+        <button type="button" onClick={() => void refreshProfile()}>
+          Refresh
+        </button>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
+
+    await waitFor(() => {
+      expect(reload).toHaveBeenCalledOnce();
+      expect(getIdToken).toHaveBeenCalledWith(true);
     });
   });
 });

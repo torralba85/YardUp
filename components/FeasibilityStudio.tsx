@@ -1135,6 +1135,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       ownerContact: input.contact,
       snapshot: input.snapshot,
       matchedBuilderIds: matchedBuilders.map((builder) => builder.id),
+      ownerVerified: Boolean(user.emailVerified),
     });
     setBuilderLeadDraft(null);
 
