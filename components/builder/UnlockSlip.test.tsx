@@ -51,9 +51,24 @@ describe("UnlockSlip", () => {
     expect(screen.getByRole("dialog", { name: /unlock this lead/i })).toBeInTheDocument();
     expect(screen.getByText(/Ramos Build Co\./)).toBeInTheDocument();
     expect(screen.getByText(/Unlock slip · LF-0482XY/)).toBeInTheDocument();
+    expect(screen.getByText("Verified email")).toBeInTheDocument();
+    expect(screen.queryByText(/Owner-verified/i)).not.toBeInTheDocument();
     expect(screen.getAllByText("$49.00").length).toBeGreaterThanOrEqual(2); // line item + DUE NOW
     expect(screen.getByText(/bad-lead credit/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Pay with Stripe/i })).toBeInTheDocument();
+  });
+
+  it("omits the verified email badge when ownerVerified is false", () => {
+    const unverifiedItem: BuilderInboxItem = {
+      ...item,
+      request: { ...item.request, ownerVerified: false },
+    };
+    render(
+      <UnlockSlip item={unverifiedItem} companyName="Ramos Build Co." pending={false} error={null} onConfirm={() => {}} onClose={() => {}} />,
+    );
+
+    expect(screen.queryByText("Verified email")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Owner-verified/i)).not.toBeInTheDocument();
   });
 
   it("labels App Store checkout on the app-store channel", () => {

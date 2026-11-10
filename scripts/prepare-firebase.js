@@ -97,14 +97,24 @@ fs.mkdirSync(distUnderscoreNext, { recursive: true });
 copyDir(STATIC, path.resolve(distUnderscoreNext, "static"));
 
 // 3. Copy public files into dist/ (root-level assets).
+//    Exclude font sources (already bundled), internal directory docs, and
+//    Remotion-only Kickstarter render assets (~158 MB) so they are not uploaded
+//    to the Hosting CDN.
+const EXCLUDED_PUBLIC_ENTRIES = new Set([
+  "fonts",
+  "README.md",
+  "kickstarter",
+  "kickstarter-assets",
+]);
 console.log("[firebase] Copying public/ files...");
 fs.cpSync(PUBLIC, DIST, {
   recursive: true,
   dereference: true,
   filter: (src) => {
-    // Skip font source files because they are already bundled.
     const rel = path.relative(PUBLIC, src);
-    if (rel.startsWith("fonts")) return false;
+    if (!rel) return true;
+    const topSegment = rel.split(path.sep)[0];
+    if (EXCLUDED_PUBLIC_ENTRIES.has(topSegment)) return false;
     return true;
   },
 });

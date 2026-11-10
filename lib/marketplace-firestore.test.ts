@@ -18,7 +18,7 @@ const recorder = vi.hoisted(() => ({
   nextId: 0,
 }));
 
-vi.mock("./firebase", () => ({ db: {} }));
+vi.mock("./firebase", () => ({ db: {}, auth: { currentUser: null } }));
 
 vi.mock("firebase/firestore", () => ({
   Timestamp: class {},
@@ -59,6 +59,7 @@ vi.mock("firebase/firestore", () => ({
 }));
 
 import { getDocs } from "firebase/firestore";
+import { auth } from "./firebase";
 import { createConnectionRequest, fetchBuilderLedger } from "./marketplace-firestore";
 
 const contact: OwnerContact = {
@@ -184,6 +185,61 @@ describe("createConnectionRequest paywall split", () => {
     const preview = root!.data.preview as { previewSerial: string };
     expect(preview.previewSerial).toMatch(/^LF-[A-Z0-9]+$/);
     expect(preview.previewSerial).not.toContain(snapshot.parcelAddress);
+  });
+
+  it("records ownerVerified from the verified email state instead of hardcoding true", async () => {
+    const { root: unverifiedRoot } = await submit();
+    expect(unverifiedRoot!.data.ownerVerified).toBe(false);
+
+    recorder.writes = [];
+    await createConnectionRequest({
+      ownerUid: "owner-1",
+      ownerContact: contact,
+      snapshot,
+      matchedBuilderIds: ["builder-1"],
+      ownerVerified: true,
+    });
+    const verifiedRoot = recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/));
+    expect(verifiedRoot!.data.ownerVerified).toBe(true);
+  });
+
+  describe("with a signed-in user", () => {
+    const signedInAuth = auth as unknown as { currentUser: unknown };
+
+    afterEach(() => {
+      signedInAuth.currentUser = null;
+    });
+
+    function signIn(emailVerified: boolean, tokenEmailVerified: boolean) {
+      const getIdTokenResult = vi.fn(async () => ({ claims: { email_verified: tokenEmailVerified } }));
+      signedInAuth.currentUser = { emailVerified, getIdTokenResult };
+      return getIdTokenResult;
+    }
+
+    async function submitAs(ownerVerified: boolean) {
+      await createConnectionRequest({
+        ownerUid: "owner-1",
+        ownerContact: contact,
+        snapshot,
+        matchedBuilderIds: ["builder-1"],
+        ownerVerified,
+      });
+      return recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/))!.data.ownerVerified;
+    }
+
+    // The rule compares ownerVerified with the token Firestore sends, so a
+    // stale user object must not decide it either way.
+    it("follows the token claim when the user object still says unverified", async () => {
+      const getIdTokenResult = signIn(false, true);
+      expect(await submitAs(false)).toBe(true);
+      expect(getIdTokenResult).toHaveBeenCalledWith(false);
+    });
+
+    it("force-refreshes a stale token when the user object says verified, and follows the claim", async () => {
+      const getIdTokenResult = signIn(true, false);
+      expect(await submitAs(true)).toBe(false);
+      expect(getIdTokenResult).toHaveBeenCalledWith(true);
+    });
   });
 });
 

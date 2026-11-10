@@ -83,4 +83,57 @@ describe("Firebase Hosting static asset delivery", () => {
     );
     expect(cacheControl?.value).toBe("public, max-age=31536000, immutable");
   });
+
+  it("includes avif, mp4, and ico in the 24-hour static asset cache rule", () => {
+    const { headers } = firebaseConfig.hosting;
+    const generalAssetRule = headers.find((rule) =>
+      rule.source.includes("@(js|css"),
+    );
+
+    expect(generalAssetRule).toBeDefined();
+    for (const ext of ["avif", "mp4", "ico"]) {
+      expect(generalAssetRule!.source).toContain(ext);
+    }
+    const cacheControl = generalAssetRule!.headers.find(
+      (header) => header.key === "Cache-Control",
+    );
+    expect(cacheControl?.value).toBe("public, max-age=86400");
+  });
+
+  it("excludes Remotion-only kickstarter assets and public/README.md from Hosting", () => {
+    const { ignore } = firebaseConfig.hosting;
+
+    expect(ignore).toContain("README.md");
+    expect(ignore).toContain("kickstarter/**");
+    expect(ignore).toContain("kickstarter-assets/**");
+
+    for (const entry of ["README.md", "kickstarter", "kickstarter-assets"]) {
+      expect(prepareScript).toContain(`"${entry}"`);
+    }
+  });
+
+  it("sets baseline security headers on static Hosting responses", () => {
+    const rootRule = firebaseConfig.hosting.headers.find((rule) => rule.source === "**");
+    expect(rootRule).toBeDefined();
+
+    const rootMap = Object.fromEntries(
+      rootRule!.headers.map((h) => [h.key, h.value]),
+    );
+    expect(rootMap["X-Content-Type-Options"]).toBe("nosniff");
+    expect(rootMap["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+  });
+
+  // This Hosting site also serves auth.lotfoundry.net, whose /__/auth/iframe
+  // Google sign-in loads in a frame. Framing rules stay in next.config.ts,
+  // which covers the app pages and never reaches Hosting's /__/ helpers.
+  it("sets no framing rule that could reach the Firebase Auth helper iframe", () => {
+    for (const rule of firebaseConfig.hosting.headers) {
+      for (const { key, value } of rule.headers) {
+        expect(key.toLowerCase(), rule.source).not.toBe("x-frame-options");
+        if (key.toLowerCase() === "content-security-policy") {
+          expect(value, rule.source).not.toContain("frame-ancestors");
+        }
+      }
+    }
+  });
 });

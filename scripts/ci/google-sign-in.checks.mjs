@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
-  checkAuthHandler, checkDns, checkFirebaseInit, checkOAuthRedirect, decodeAuthError,
+  checkAuthHandler, checkAuthIframe, checkDns, checkFirebaseInit, checkOAuthRedirect, decodeAuthError,
   oauthProbeUrl, productionAuthDomain, productionProjectId, productionWebClientId,
   signInConfig, verifyGoogleSignIn, withRetries,
 } from "./google-sign-in.mjs";
@@ -22,8 +22,8 @@ function fakeFetch(routes) {
     calls.push({ url, init });
     const route = routes(url, calls.length);
     if (route instanceof Error) throw route;
-    const { status = 200, body = null, location } = route;
-    return new Response(body, { status, headers: location ? { location } : {} });
+    const { status = 200, body = null, location, headers = {} } = route;
+    return new Response(body, { status, headers: location ? { ...headers, location } : headers });
   };
   return { calls, fetchImpl };
 }
@@ -77,6 +77,23 @@ test("hosted auth files must answer 200 themselves, not redirect", async () => {
   await assert.rejects(checkFirebaseInit("auth.example.test", productionProjectId, redirected), /answered 301/);
   const missing = fakeFetch(() => ({ status: 404 }));
   await assert.rejects(checkAuthHandler("auth.example.test", missing), /answered 404/);
+});
+
+test("the auth helper iframe must answer 200 without a framing rule", async () => {
+  const { calls, fetchImpl } = fakeFetch(healthy);
+  assert.match(await checkAuthIframe("auth.example.test", { fetchImpl }), /iframe answered 200 and can be framed/);
+  assert.equal(calls[0].url, "https://auth.example.test/__/auth/iframe");
+
+  await assert.rejects(
+    checkAuthIframe("auth.example.test", fakeFetch(() => ({ headers: { "x-frame-options": "DENY" } }))),
+    /sends X-Frame-Options: DENY/,
+  );
+  await assert.rejects(
+    checkAuthIframe("auth.example.test",
+      fakeFetch(() => ({ headers: { "content-security-policy": "default-src 'self'; frame-ancestors 'none'" } }))),
+    /sends frame-ancestors 'none'/,
+  );
+  await assert.rejects(checkAuthIframe("auth.example.test", fakeFetch(() => ({ status: 404 }))), /answered 404/);
 });
 
 test("init.json must be this project's Firebase config", async () => {
@@ -164,7 +181,7 @@ test("every check runs and reports, even after one fails", async () => {
   const passing = await verifyGoogleSignIn(config, {
     resolveHost: async () => [{ address: "199.36.158.100" }], fetchImpl: fakeFetch(healthy).fetchImpl, retry,
   });
-  assert.deepEqual(passing.map(({ ok }) => ok), [true, true, true, true]);
+  assert.deepEqual(passing.map(({ ok }) => ok), [true, true, true, true, true]);
 
   // The 2026-10-15 outage: no DNS record, so the hosted files are unreachable,
   // and the redirect URI was never registered with Google.
@@ -175,7 +192,7 @@ test("every check runs and reports, even after one fails", async () => {
       : new TypeError("fetch failed", { cause: nxdomain })).fetchImpl,
     retry,
   });
-  assert.deepEqual(outage.map(({ ok }) => ok), [false, false, false, false]);
+  assert.deepEqual(outage.map(({ ok }) => ok), [false, false, false, false, false]);
   assert.match(outage[0].message, /NXDOMAIN/);
   assert.match(outage[1].message, /handler failed: ENOTFOUND/);
   assert.match(outage[3].message, /redirect_uri_mismatch \(failed 2 of 2 attempts\)/);

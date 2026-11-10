@@ -837,3 +837,75 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
   });
 });
 
+describe.skipIf(!hasFirestoreEmulator)("connectionRequests/{requestId} ownerVerified rules", () => {
+  function sampleConnectionRequest(overrides: Record<string, unknown> = {}) {
+    return {
+      ownerUid: OWNER_ID,
+      preview: {
+        neighborhood: "North Park, CA",
+        zip: "92104",
+        state: "CA",
+        lotSqft: 5000,
+        aduSqft: 600,
+        buildBandLow: 200000,
+        buildBandHigh: 250000,
+        rentBand: 2250,
+        paybackYears: 14.5,
+        zoningStatus: "Compliant",
+        matchReasons: ["Covers San Diego County"],
+        previewSerial: "LF-1234AB",
+      },
+      matchedBuilderIds: ["builder-1"],
+      status: "submitted",
+      ownerVerified: true,
+      headStartUntil: null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      ...overrides,
+    };
+  }
+
+  it("allows ownerVerified: true only when request.auth.token.email_verified is true", async () => {
+    const verifiedDb = rulesEnv()
+      .authenticatedContext(OWNER_ID, { email_verified: true })
+      .firestore();
+
+    await assertSucceeds(
+      setDoc(
+        doc(verifiedDb, "connectionRequests", "req-verified-ok"),
+        sampleConnectionRequest({ ownerVerified: true }),
+      ),
+    );
+
+    await assertFails(
+      setDoc(
+        doc(verifiedDb, "connectionRequests", "req-verified-mismatch"),
+        sampleConnectionRequest({ ownerVerified: false }),
+      ),
+    );
+  });
+
+  it("requires ownerVerified: false when email_verified is false or absent, preventing spoofing", async () => {
+    for (const token of [{ email_verified: false }, {}]) {
+      const unverifiedDb = rulesEnv()
+        .authenticatedContext(OWNER_ID, token)
+        .firestore();
+
+      await assertFails(
+        setDoc(
+          doc(unverifiedDb, "connectionRequests", `req-spoof-${String(token.email_verified)}`),
+          sampleConnectionRequest({ ownerVerified: true }),
+        ),
+      );
+
+      await assertSucceeds(
+        setDoc(
+          doc(unverifiedDb, "connectionRequests", `req-honest-${String(token.email_verified)}`),
+          sampleConnectionRequest({ ownerVerified: false }),
+        ),
+      );
+    }
+  });
+});
+
+

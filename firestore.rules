@@ -57,7 +57,7 @@ rules_version = '2';
 //   - preview: map (required) - Redacted feasibility snapshot without street address or contact info
 //   - matchedBuilderIds: list (required, 1-25 items) - Matched eligible builder UIDs
 //   - status: string (required, "submitted") - Request lifecycle status
-//   - ownerVerified: bool (required, true) - Verification flag
+//   - ownerVerified: bool (required, matches verified email token claim) - Homeowner email verification flag
 //   - headStartUntil: string (optional, null on create) - Early exclusive window for first unlocker
 //   - createdAt: timestamp (required) - Submission timestamp
 //   - updatedAt: timestamp (required) - Last update timestamp
@@ -351,7 +351,8 @@ service cloud.firestore {
       request.resource.data.matchedBuilderIds.size() > 0 &&
       request.resource.data.matchedBuilderIds.size() <= 25 &&
       request.resource.data.status == "submitted" &&
-      request.resource.data.ownerVerified == true &&
+      request.resource.data.ownerVerified is bool &&
+      request.resource.data.ownerVerified == ("email_verified" in request.auth.token && request.auth.token.email_verified == true) &&
       request.resource.data.createdAt is timestamp &&
       request.resource.data.updatedAt is timestamp &&
       request.resource.data.headStartUntil == null;
