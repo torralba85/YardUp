@@ -145,10 +145,17 @@ export async function createConnectionRequest(input: {
 }): Promise<string> {
   const previewSerial = generatePreviewSerial();
   const preview = buildLeadPreview({ snapshot: input.snapshot, previewSerial });
-  const ownerVerified =
+  let ownerVerified =
     input.ownerVerified ?? Boolean(auth?.currentUser?.emailVerified);
-  if (ownerVerified && typeof auth?.currentUser?.getIdToken === "function") {
-    await Promise.resolve(auth.currentUser.getIdToken(true)).catch(() => undefined);
+  // The create rule requires ownerVerified to equal the email_verified claim
+  // of the token this write sends, so read it from that token. The user object
+  // lags a verification finished in another tab (an auto-refreshed token
+  // already says true), and the token lags one the user object has seen, so
+  // refresh it then.
+  const current = auth?.currentUser;
+  if (current && typeof current.getIdTokenResult === "function") {
+    const token = await Promise.resolve(current.getIdTokenResult(ownerVerified)).catch(() => null);
+    if (token) ownerVerified = token.claims.email_verified === true;
   }
 
   // The root must commit first: the `private/contact` and `builderResponses`

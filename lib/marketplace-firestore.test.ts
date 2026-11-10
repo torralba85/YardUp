@@ -59,6 +59,7 @@ vi.mock("firebase/firestore", () => ({
 }));
 
 import { getDocs } from "firebase/firestore";
+import { auth } from "./firebase";
 import { createConnectionRequest, fetchBuilderLedger } from "./marketplace-firestore";
 
 const contact: OwnerContact = {
@@ -200,6 +201,45 @@ describe("createConnectionRequest paywall split", () => {
     });
     const verifiedRoot = recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/));
     expect(verifiedRoot!.data.ownerVerified).toBe(true);
+  });
+
+  describe("with a signed-in user", () => {
+    const signedInAuth = auth as unknown as { currentUser: unknown };
+
+    afterEach(() => {
+      signedInAuth.currentUser = null;
+    });
+
+    function signIn(emailVerified: boolean, tokenEmailVerified: boolean) {
+      const getIdTokenResult = vi.fn(async () => ({ claims: { email_verified: tokenEmailVerified } }));
+      signedInAuth.currentUser = { emailVerified, getIdTokenResult };
+      return getIdTokenResult;
+    }
+
+    async function submitAs(ownerVerified: boolean) {
+      await createConnectionRequest({
+        ownerUid: "owner-1",
+        ownerContact: contact,
+        snapshot,
+        matchedBuilderIds: ["builder-1"],
+        ownerVerified,
+      });
+      return recorder.writes.find((w) => w.path.match(/^connectionRequests\/[^/]+$/))!.data.ownerVerified;
+    }
+
+    // The rule compares ownerVerified with the token Firestore sends, so a
+    // stale user object must not decide it either way.
+    it("follows the token claim when the user object still says unverified", async () => {
+      const getIdTokenResult = signIn(false, true);
+      expect(await submitAs(false)).toBe(true);
+      expect(getIdTokenResult).toHaveBeenCalledWith(false);
+    });
+
+    it("force-refreshes a stale token when the user object says verified, and follows the claim", async () => {
+      const getIdTokenResult = signIn(true, false);
+      expect(await submitAs(true)).toBe(false);
+      expect(getIdTokenResult).toHaveBeenCalledWith(true);
+    });
   });
 });
 
