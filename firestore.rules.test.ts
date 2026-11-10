@@ -94,6 +94,20 @@ describe.skipIf(!hasFirestoreEmulator)("agent passes", () => {
   });
 });
 
+describe.skipIf(!hasFirestoreEmulator)("partner referral ledger", () => {
+  it("denies guest and signed-in reads and writes, including the referral owner", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "partnerReferrals", "referral-1"), { ownerUid: OWNER_ID, referralId: "LFR-TEST0001", status: "sent" });
+    });
+    for (const context of [rulesEnv().unauthenticatedContext(), rulesEnv().authenticatedContext(OWNER_ID)]) {
+      const ref = doc(context.firestore(), "partnerReferrals", "referral-1");
+      await assertFails(getDoc(ref));
+      await assertFails(setDoc(ref, { ownerUid: OWNER_ID, status: "contracted" }));
+      await assertFails(deleteDoc(ref));
+    }
+  });
+});
+
 function currentConsent(acceptedAt: unknown = serverTimestamp()) {
   return {
     termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,

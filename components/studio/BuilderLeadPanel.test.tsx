@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState, type ComponentProps } from "react";
 import {
   defaultAduConfig,
@@ -71,6 +71,10 @@ function renderPanel(props: Partial<PanelProps> & { initialDraft?: BuilderLeadDr
 }
 
 describe("BuilderLeadPanel", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("requires consent before submit", async () => {
     const submit = vi.fn();
     renderPanel({ onSubmit: submit });
@@ -234,5 +238,103 @@ describe("BuilderLeadPanel", () => {
     render(<BaselinePanel onDraftChange={onDraftChange} />);
     await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
     expect(onDraftChange).not.toHaveBeenCalled();
+  });
+
+  it("submits to the LotFoundry network when no partner covers the lot", async () => {
+    const submit = vi.fn().mockResolvedValue({ matchedCount: 2 });
+    vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+    renderPanel({ onSubmit: submit });
+
+    expect(screen.queryByRole("radiogroup", { name: /Builder network/i })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+    expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "lotfoundry" }));
+  });
+
+  describe("GreatBuildz option", () => {
+    const laParcel = {
+      ...parcelPresets[0],
+      address: "123 Elm St, Pasadena, CA 91101",
+      city: "Pasadena",
+      state: "CA",
+      county: "Los Angeles",
+    };
+
+    function renderLa(props: Partial<PanelProps> = {}) {
+      return renderPanel({ parcelKey: "elm-street", parcel: laParcel, ...props });
+    }
+
+    it("is hidden while the launch flag is off", () => {
+      renderLa();
+      expect(screen.queryByRole("radio", { name: "GreatBuildz" })).not.toBeInTheDocument();
+    });
+
+    it("offers both networks, defaults to LotFoundry, and resets consent on switch", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa();
+
+      expect(screen.getByRole("radio", { name: "LotFoundry builders" })).toHaveAttribute("aria-checked", "true");
+      await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+
+      const consent = screen.getByRole("checkbox", { name: /to GreatBuildz Inc\., with a copy to me/i });
+      expect(consent).not.toBeChecked();
+      expect(screen.getByText(/referral fee, which doesn't change what I pay/i)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "privacy policy" })).toHaveAttribute("href", "https://www.greatbuildz.com/privacy-policy/");
+      expect(screen.getByRole("link", { name: "terms" })).toHaveAttribute("href", "https://www.greatbuildz.com/terms-of-service/");
+      expect(screen.getByRole("region", { name: "Project details shared with GreatBuildz" })).toBeInTheDocument();
+      // The LotFoundry builder count does not apply to a GreatBuildz send.
+      expect(screen.queryByText(/Goes to 2 builders/)).not.toBeInTheDocument();
+    });
+
+    it("offers GreatBuildz alone where no LotFoundry builder serves the lot", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12" });
+      renderLa({ matches: { status: "ready", count: 0 }, onSubmit: submit });
+
+      expect(screen.queryByText("No builders are registered for this area yet.")).not.toBeInTheDocument();
+      expect(screen.queryByRole("radio", { name: "LotFoundry builders" })).not.toBeInTheDocument();
+      expect(screen.getByText(/Share this address and feasibility snapshot with GreatBuildz, which serves this area/)).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("keeps the no-builders message for projects under the GreatBuildz minimum", () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa({ matches: { status: "ready", count: 0 }, result: { ...result, costLow: 50000, costHigh: 70000 } });
+      expect(screen.getByText("No builders are registered for this area yet.")).toBeInTheDocument();
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("submits a GreatBuildz referral and shows the referral number", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12" });
+      renderLa({ onSubmit: submit });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent("Sent to GreatBuildz. Your referral number is LFR-ABCDEF12.");
+      expect(status).toHaveTextContent(/copied on the introduction email/);
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("asks a guest to sign in before a GreatBuildz send", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn();
+      const requestSignIn = vi.fn();
+      renderLa({ signedIn: false, matches: { status: "guest" }, onSubmit: submit, onRequestSignIn: requestSignIn });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(screen.getByText("Sign in or create a free account to send it.")).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
+      expect(requestSignIn).toHaveBeenCalledTimes(1);
+      expect(submit).not.toHaveBeenCalled();
+    });
   });
 });

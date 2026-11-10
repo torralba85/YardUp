@@ -64,6 +64,7 @@ import BuildersPanel from "./studio/BuildersPanel";
 import BuilderLeadPanel, {
   type BuilderLeadDraft,
   type BuilderLeadSubmitInput,
+  type BuilderLeadSubmitResult,
 } from "./studio/BuilderLeadPanel";
 import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
@@ -119,6 +120,7 @@ import {
   trackScenarioSaved,
   trackReportOpened,
   trackBuilderConnectionSubmitted,
+  trackPartnerReferralSubmitted,
   mapFeasibilityVerdict,
   mapParcelSource,
   getLotSizeBucket,
@@ -127,6 +129,8 @@ import {
   extractStateCode,
   type AuthPromptSource,
 } from "@/lib/analytics/events";
+import { PARTNER_NETWORKS, buildPartnerReferralHandoff } from "@/lib/partner-referrals";
+import { submitPartnerReferral } from "@/lib/partner-referral-api";
 
 import { getSplatSceneForParcel } from "@/lib/splat-registry";
 import SplatCalibrationPanel from "./studio/SplatCalibrationPanel";
@@ -1118,9 +1122,28 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setBuilderLeadOpen(false);
   }
 
-  async function handleBuilderLeadSubmit(input: BuilderLeadSubmitInput) {
+  async function handleBuilderLeadSubmit(
+    input: BuilderLeadSubmitInput,
+  ): Promise<BuilderLeadSubmitResult> {
     if (!user) {
       throw new Error("Sign in before connecting with builders.");
+    }
+
+    if (input.network !== "lotfoundry") {
+      const partner = PARTNER_NETWORKS[input.network];
+      const referral = await submitPartnerReferral({
+        partnerId: partner.id,
+        handoff: buildPartnerReferralHandoff(input.contact, input.snapshot),
+      });
+      setBuilderLeadDraft(null);
+      const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+      trackPartnerReferralSubmitted({
+        partner_id: partner.id,
+        feasibility_status: mapFeasibilityVerdict(summary.verdict),
+        adu_sqft_bucket: getAduSqftBucket(config.footprint),
+        state_code: extractStateCode({ state: input.snapshot.parcelState, city: input.snapshot.parcelCity }),
+      });
+      return { partnerName: partner.name, referralId: referral.referralId };
     }
 
     const builders = await fetchActiveBuilders();

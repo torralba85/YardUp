@@ -100,6 +100,7 @@ rules_version = '2';
 //
 // Admin-Only Collections (Read and write strictly disabled for all clients):
 //   - studioScenarioLeads/{leadId}
+//   - partnerReferrals/{referralDocId}
 //   - agentPasses/{code} and agentPasses/{code}/redemptions/{uid}
 //   - feedback/{ticketId}
 //   - activeCheckoutSessions/{reservationId}
@@ -629,6 +630,13 @@ service cloud.firestore {
 
     // Private lead + durable email queue (Admin SDK only).
     match /studioScenarioLeads/{leadId} {
+      allow read, write: if false;
+    }
+
+    // Partner referral ledger (GreatBuildz). Holds the homeowner contact sent to
+    // the partner plus consent and delivery receipts. Admin SDK only, via
+    // /api/partners/referral; no client may read or write it.
+    match /partnerReferrals/{referralDocId} {
       allow read, write: if false;
     }
 
