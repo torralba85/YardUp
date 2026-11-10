@@ -92,6 +92,21 @@ describe("BuildersPanel", () => {
     expect(screen.getByRole("button", { name: /connect with builders/i })).toBeDisabled();
   });
 
+  it("keeps connect open and points to the partner when it serves a lot no builder does", async () => {
+    const onConnect = vi.fn();
+    mocks.user = { uid: "u1" };
+    mocks.fetchActiveBuilders.mockResolvedValue([]);
+
+    render(<BuildersPanel parcelCity="Pasadena, CA" partnerName="GreatBuildz" onConnect={onConnect} />);
+
+    expect(await screen.findByText(/no LotFoundry builders are registered for Pasadena, CA yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/send your project to GreatBuildz, an independent contractor-matching service/i)).toBeInTheDocument();
+    // One caption: the partner sentence follows the disclaimer with a space.
+    expect(screen.getByText(/work quality\. Your contact details are only shared with the builders or partner you choose; GreatBuildz may pay LotFoundry a referral fee/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /connect with builders/i }));
+    expect(onConnect).toHaveBeenCalled();
+  });
+
   it("states that builders pay for the referral, not the homeowner", async () => {
     mocks.user = { uid: "u1" };
     mocks.fetchActiveBuilders.mockResolvedValue([builder()]);

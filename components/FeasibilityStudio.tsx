@@ -129,7 +129,7 @@ import {
   extractStateCode,
   type AuthPromptSource,
 } from "@/lib/analytics/events";
-import { PARTNER_NETWORKS, buildPartnerReferralHandoff } from "@/lib/partner-referrals";
+import { PARTNER_NETWORKS, availablePartnerNetwork, buildPartnerReferralHandoff } from "@/lib/partner-referrals";
 import { submitPartnerReferral } from "@/lib/partner-referral-api";
 
 import { getSplatSceneForParcel } from "@/lib/splat-registry";
@@ -1105,6 +1105,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   const builderMatches = useBuilderMatches(Boolean(user), activeParcel, builderLeadOpen);
+  // The same check the connect form makes, so the Builders step never closes
+  // a door the form would open.
+  const builderPartner = availablePartnerNetwork({
+    parcel: activeParcel,
+    parcelState: "state" in activeParcel && typeof activeParcel.state === "string" ? activeParcel.state : "",
+    result,
+  });
   // Kept here, not in the form, so closing it or leaving the step loses nothing.
   const [builderLeadDraft, setBuilderLeadDraft] = useState<BuilderLeadDraft | null>(null);
   const leadDraft = builderLeadDraft ?? { name: user?.displayName || "", email: user?.email || "", phone: "", message: "" };
@@ -1826,6 +1833,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               feasibilityStatus={feasibilityStatus}
               onConnect={() => setBuilderLeadOpen(true)}
               connectRef={connectTriggerRef}
+              partnerName={builderPartner?.name}
             />
           </div>
         )}
