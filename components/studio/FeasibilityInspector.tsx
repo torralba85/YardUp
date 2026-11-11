@@ -566,7 +566,7 @@ export default function FeasibilityInspector({
                         className={`flex h-20 flex-col items-center justify-center gap-1 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked
                             ? "border-lot-ink bg-lot-ink text-lot-chalk shadow-none"
-                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone/50 hover:bg-lot-surface"
                         }`}
                       >
                         <RoofProfile roof={key as ADUConfig["roof"]} />
@@ -590,7 +590,7 @@ export default function FeasibilityInspector({
                         className={`rounded-control border p-2 text-left text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
                           isChecked
                             ? "border-lot-ink bg-lot-ink/5 text-lot-ink ring-1 ring-lot-ink"
-                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone-on-dark hover:bg-lot-surface"
+                            : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone/50 hover:bg-lot-surface"
                         }`}
                       >
                         <span

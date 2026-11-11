@@ -9,7 +9,8 @@ import { Input, Select } from "@/components/ui/Field";
 
 const ParcelScene = dynamic(() => import("@/components/ParcelScene"), { ssr: false });
 const roofs: RoofStyle[] = ["shed", "gable", "flat"];
-const control = "min-h-11 rounded-none border border-lot-orange px-4 py-2 text-lot-orange-ink disabled:opacity-50";
+const primaryControl = "min-h-11 rounded-control bg-lot-orange px-4 py-2 font-semibold text-lot-ink hover:bg-lot-orange-hover disabled:opacity-50";
+const control = "min-h-11 rounded-control border border-lot-stone bg-lot-chalk px-4 py-2 text-lot-ink hover:bg-lot-surface disabled:opacity-50";
 
 export default function StudioProfile() {
   const [run, setRun] = useState<{ collector: StudioMeasurementCollector; id: number; started: number; thermal: string; device: string } | null>(null);
@@ -76,7 +77,7 @@ export default function StudioProfile() {
       <div className="flex flex-wrap items-end gap-3">
         <label>Device description<Input className="block" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
         <label>Thermal state<Input className="block" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
-        <button className={control} onClick={start} disabled={running}>Start run</button>
+        <button className={primaryControl} onClick={start} disabled={running}>Start run</button>
         <button className={control} onClick={() => snapshot()} disabled={!run}>Snapshot</button>
         <button className={control} onClick={exportReport} disabled={!run}>Stop and export JSON</button>
         <label>Sampling<Select value={active ? "active" : "idle"} onChange={event => setActive(event.target.value === "active")} disabled={!running}><option value="active">Active</option><option value="idle">Idle</option></Select></label>

@@ -140,7 +140,7 @@ export default function BeforeAfterBoard({
 
         {/* Middle Spine */}
         <div className="flex items-center justify-center py-2 md:py-0 select-none">
-          <span className="text-3xl md:text-4xl text-lot-orange-ink font-light" aria-hidden="true">
+          <span className="text-3xl md:text-4xl text-lot-stone font-light" aria-hidden="true">
             →
           </span>
         </div>
@@ -159,7 +159,7 @@ export default function BeforeAfterBoard({
             />
             {/* Rotated Concept Stamp */}
             <div
-              className="absolute right-4 bottom-4 border-2 border-status-blocked text-status-blocked bg-lot-chalk px-3 py-1.5 lf-kicker-dense font-bold opacity-90 select-none shadow-none"
+              className="absolute right-4 bottom-4 border border-lot-ink bg-lot-chalk px-3 py-1.5 lf-kicker-dense font-bold text-lot-ink select-none shadow-none"
               style={{ transform: "rotate(5deg)" }}
             >
               Concept · not a permit
@@ -171,7 +171,7 @@ export default function BeforeAfterBoard({
       {/* Metadata Bar */}
       <div className="bg-lot-surface border border-lot-line p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1.5">
-          <div className="font-sans text-xs font-bold uppercase tracking-[0.08em] text-lot-orange-ink">
+          <div className="font-sans text-xs font-bold uppercase tracking-[0.08em] text-lot-ink">
             {`STYLE MATCH ${styleName} · ${matchPercentage}%`.toUpperCase()}
           </div>
           <div className="flex flex-wrap gap-1.5 mt-1">
@@ -187,7 +187,7 @@ export default function BeforeAfterBoard({
         </div>
         {lotSizeInfo && (
           <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lot-stone">
-            <span className="text-[10px] uppercase tracking-[0.08em] text-lot-stone/70">
+            <span className="text-[10px] uppercase tracking-[0.08em] text-lot-stone">
               Lot info
             </span>
             <span className="font-semibold text-lot-ink uppercase mt-0.5 tracking-[0.08em]">
