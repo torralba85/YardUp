@@ -3,6 +3,7 @@ import { CaliforniaAduRentGuide } from "@/components/adu/CaliforniaAduRentGuide"
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { CA_RENT_VERIFIED, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { rentUrl } from "@/lib/adu/content";
+import { SITE_NAME } from "@/lib/site-identity";
 
 const TITLE = `ADU Rent in California by County (${HUD_FMR_YEAR} HUD Rents)`;
 const DESCRIPTION =
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: rentUrl(),
+    siteName: SITE_NAME,
     type: "article",
   },
 };

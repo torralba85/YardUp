@@ -1,6 +1,9 @@
 import { renderAduOgImage } from "@/components/adu/AduOgImage";
 import { aduCostStaticParams, getCity } from "@/lib/adu/content";
 
+// Static for every city; see the rules card's note on generateImageMetadata.
+export const alt = "LotFoundry ADU cost card for this city: 2026 build cost, rent and payback";
+
 export const size = { width: 1200, height: 630 };
 
 export const contentType = "image/png";

@@ -17,6 +17,7 @@ import {
 } from "@/lib/adu/content";
 import type { JurisdictionContent } from "@/lib/adu/types";
 import { AduStudioCta } from "./AduStudioCta";
+import { AduConceptFigure } from "./AduConceptFigure";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduPreapprovedPlans } from "./AduPreapprovedPlans";
 import { CostBands } from "./CostBands";
@@ -26,7 +27,8 @@ import { SetbackDiagram } from "./SetbackDiagram";
 /**
  * Full jurisdiction article: the ten-section program template.
  *
- * 1. H1 + direct answer · 2. at-a-glance table · 3. shared state-law floor ·
+ * 1. H1 + direct answer · 2. at-a-glance table (then the setback diagram,
+ * where drawn, and the illustrative concept figure) · 3. shared state-law floor ·
  * 4. where the city differs · 5. cost and fees · 6. numbered permit process
  * (followed by the verified official pre-approved plans, where curated) ·
  * 7. Studio CTA (mid + end) · 8. FAQ with FAQPage markup · 9. neighboring
@@ -195,6 +197,8 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
 
       <SetbackDiagram content={content} />
 
+      <AduConceptFigure city={content.city} />
+
       <section aria-labelledby="adu-state-law" className="mt-12">
         <h2 id="adu-state-law" className="lf-card-heading text-lot-ink">
           What state law guarantees you
@@ -274,12 +278,12 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         ) : null}
         <p className="lf-body mt-4 text-lot-stone">
           For a statewide budget framework, permit-fee context, and a quote
-          checklist, read the{" "}
+          checklist, see{" "}
           <Link
             href={stateCostPath()}
             className="font-semibold text-lot-ink underline underline-offset-2"
           >
-            California ADU cost guide
+            what an ADU costs across California
           </Link>
           .
         </p>

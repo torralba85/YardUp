@@ -6,6 +6,8 @@ const noindexHeaders = [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarch
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // No `X-Powered-By: Next.js` on responses; it tells a scanner the stack for free.
+  poweredByHeader: false,
   output: "standalone",
   allowedDevOrigins: ["127.0.0.1"],
   transpilePackages: ["motion"],
@@ -16,6 +18,13 @@ const nextConfig: NextConfig = {
   // makes Next's automatic root inference ambiguous (multiple-lockfile warning).
   turbopack: {
     root: __dirname,
+  },
+  async redirects() {
+    return [
+      // There is no national index yet; /adu otherwise hard-404s for anyone
+      // who trims a guide URL. Exact match only, so /adu/* is untouched.
+      { source: "/adu", destination: "/adu/ca", permanent: true },
+    ];
   },
   async headers() {
     return [
@@ -58,6 +67,13 @@ const nextConfig: NextConfig = {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
           },
+          // Every lotfoundry.net host (apex, www, auth) serves HTTPS only, so
+          // includeSubDomains is safe. No `preload`: entering the browser
+          // preload list is a separate, slow-to-undo submission.
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
           // payment=(self) is required, not optional: Google Play Billing in
           // the Android TWA goes through PaymentRequest in
           // lib/commerce/purchase-client.ts. Denying it breaks every in-app
@@ -76,6 +92,19 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value:
               "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), usb=(), payment=(self)",
+          },
+        ],
+      },
+      // A baseline policy, not a script allowlist: it closes <base> and plugin
+      // injection and mirrors X-Frame-Options for browsers that prefer CSP.
+      // The sample certificate is skipped because its route sends a stricter
+      // policy of its own that allows same-origin framing for the homepage dialog.
+      {
+        source: "/((?!sample-certificate(?:/|$)).*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'",
           },
         ],
       },

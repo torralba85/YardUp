@@ -34,10 +34,12 @@ viewer rebuilds on slider drags must stay cheap — see Task 1 of the plan. The
 ion route rides Cesium ion's Community plan, which is personal/non-commercial
 only, so it must not be the production path (per the plan's guardrails).
 
-## Content-Security-Policy requirements (no CSP exists yet)
+## Content-Security-Policy requirements (no fetch-restricting CSP exists yet)
 
-The app has no CSP today, which is the only reason `lib/cesium-loader.ts` can
-inject a CDN script. Whoever adds one must allow the following, or the globe
+The app's only CSP is a baseline (`base-uri`, `object-src`, `frame-ancestors`;
+see `next.config.ts`) with no `default-src` or fetch directives, which is why
+`lib/cesium-loader.ts` can still inject a CDN script. Whoever adds `default-src`,
+`script-src` or any other fetch directive must allow the following, or the globe
 breaks in a way that looks like a Cesium bug. Hosts marked [1.144] were read
 directly from the official CesiumJS 1.144 sources named below.
 

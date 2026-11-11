@@ -3,6 +3,7 @@ import { CaliforniaJaduGuide } from "@/components/adu/CaliforniaJaduGuide";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { JADU_AS_OF } from "@/content/adu/ca/jadu";
 import { jaduUrl } from "@/lib/adu/content";
+import { SITE_NAME } from "@/lib/site-identity";
 
 const TITLE = "Junior ADU (JADU) Rules in California (2026) | LotFoundry";
 const DESCRIPTION =
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: jaduUrl(),
+    siteName: SITE_NAME,
     type: "article",
   },
 };

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { LotMoreLanding } from "./LotMoreLanding";
 import { landingDemos, landingScenarios, type LandingCity } from "@/lib/landing-demo";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
-import { LANDING_OG_IMAGE } from "@/lib/og-images";
+import { SITE_OG_IMAGE } from "@/lib/og-images";
+import { SITE_NAME } from "@/lib/site-identity";
 
 /**
  * Demo landings reuse the homepage copy with a different sample lot, so they
@@ -19,7 +20,7 @@ export function cityLandingMetadata(city: LandingCity): Metadata {
     description,
     alternates: { canonical: url },
     robots: { index: false, follow: true },
-    openGraph: { title, description, url, images: [LANDING_OG_IMAGE], type: "website" },
+    openGraph: { title, description, url, images: [SITE_OG_IMAGE], type: "website", siteName: SITE_NAME },
   };
 }
 

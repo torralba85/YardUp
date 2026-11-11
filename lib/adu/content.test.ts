@@ -219,8 +219,10 @@ describe("adu article markup helpers", () => {
       image: base.image,
       datePublished: "2026-09-18",
       dateModified: "2026-11-03",
+      author: { "@type": "Organization", "@id": "https://lotfoundry.net/#organization" },
       publisher: {
         "@type": "Organization",
+        "@id": "https://lotfoundry.net/#organization",
         name: "LotFoundry",
         url: "https://lotfoundry.net/",
         logo: {

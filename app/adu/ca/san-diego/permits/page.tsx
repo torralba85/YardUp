@@ -3,6 +3,7 @@ import { SanDiegoAduPermitStudy } from "@/components/adu/SanDiegoAduPermitStudy"
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 import { permitStudyUrl } from "@/lib/adu/content";
+import { SITE_NAME } from "@/lib/site-identity";
 
 const { coverage, generatedAt } = SAN_DIEGO_PERMIT_STUDY;
 const FROM_YEAR = coverage.from.slice(0, 4);
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: permitStudyUrl(),
+    siteName: SITE_NAME,
     type: "article",
   },
 };

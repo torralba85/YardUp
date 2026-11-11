@@ -320,12 +320,12 @@ function Screen({ testId, onBack, children }: { testId: string; onBack?: () => v
 
 function Heading({ headingRef, children }: { headingRef: RefObject<HTMLHeadingElement | null>; children: ReactNode }) {
   return (
-    <h1
+    <h2
       ref={headingRef}
       tabIndex={-1}
       className="mt-2 max-w-[14ch] font-display text-[clamp(34px,9vw,46px)] leading-[1.06] font-medium tracking-[-0.055em] focus:outline-none"
     >
       {children}
-    </h1>
+    </h2>
   );
 }

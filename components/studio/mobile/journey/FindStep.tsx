@@ -73,9 +73,9 @@ export default function FindStep({
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       <p className="lf-kicker text-lot-orange-ink">Step 1 · Find</p>
-      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
+      <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
         Start with your address.
-      </h1>
+      </h2>
       <p className="lf-body-sm mt-2 text-lot-stone">
         We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
       </p>

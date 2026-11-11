@@ -127,7 +127,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         <section className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-14">
           <div>
             <p className="lf-kicker text-lot-orange-ink">Your workspace</p>
-            <h1 className="lf-section-heading mt-3">Start with your property.</h1>
+            <h2 className="lf-section-heading mt-3">Start with your property.</h2>
             <p className="lf-body mt-4 max-w-[42ch] text-lot-stone">
               See your lot in a new light. Find your property to explore its space, local rules, and estimated costs.
             </p>

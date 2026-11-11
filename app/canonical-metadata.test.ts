@@ -28,7 +28,8 @@ import { metadata as aduCaJaduMetadata } from "./adu/ca/jadu/page";
 import { metadata as sanDiegoPermitsMetadata } from "./adu/ca/san-diego/permits/page";
 import { metadata as methodologyMetadata } from "./adu/how-we-estimate/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
-import { buildCityMetadata } from "@/lib/adu/content";
+import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
+import { buildCityMetadata, buildCostMetadata } from "@/lib/adu/content";
 import { cityLandingMetadata } from "@/components/landing/lot-more/CityLandingPage";
 import { landingDemos, type LandingCity } from "@/lib/landing-demo";
 
@@ -144,6 +145,25 @@ describe("site JSON-LD", () => {
     expect(rootMetadata.openGraph?.siteName).toBe("LotFoundry");
     expect(aboutMetadata.openGraph?.siteName).toBe("LotFoundry");
   });
+
+  // Each of these sets its own openGraph block, which replaces the layout's
+  // instead of merging, so each has to name the site again.
+  for (const { name, metadata } of [
+    { name: "/studio", metadata: studioMetadata },
+    { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
+    { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
+    { name: "/adu/ca/rent", metadata: aduCaRentMetadata },
+    { name: "/adu/ca/jadu", metadata: aduCaJaduMetadata },
+    { name: "/adu/ca/san-diego/permits", metadata: sanDiegoPermitsMetadata },
+    { name: "/adu/how-we-estimate", metadata: methodologyMetadata },
+    { name: "/adu/ca/chula-vista", metadata: buildCityMetadata(chulaVista) },
+    { name: "/adu/ca/san-diego/cost", metadata: buildCostMetadata(sanDiegoCost) },
+  ]) {
+    it(`names the site in og:site_name on ${name}`, () => {
+      expect(metadata.openGraph?.siteName).toBe("LotFoundry");
+    });
+  }
 });
 
 
@@ -165,7 +185,12 @@ describe("SEO audit metadata constraints", () => {
     });
   }
 
+  it("leads the /studio title with ADU, matching its H1", () => {
+    expect(studioMetadata.title).toMatch(/^ADU Feasibility Studio\b/);
+  });
+
   for (const { name, metadata } of [
+    { name: "/studio", metadata: studioMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },

@@ -16,6 +16,7 @@ import {
   formatCurrency,
 } from "@/lib/feasibility";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { SITE_NAME } from "@/lib/site-identity";
 
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: calculatorUrl(),
+    siteName: SITE_NAME,
     images: [
       {
         url: "/lotfoundry-og.png",
@@ -172,9 +174,9 @@ export default function AduCostCalculatorPage() {
         <p className="lf-body mt-3 text-lot-stone">
           Build cost by size, cedar finish and shed roof. Build cost uses the
           same national cost base in every county, so one table covers all three.
-          For permit-fee context, scope exclusions, and bid guidance, read the{" "}
+          For permit-fee context, scope exclusions, and bid guidance, see{" "}
           <Link href="/adu/ca/cost" className="underline underline-offset-2 hover:text-lot-ink">
-            California ADU cost guide
+            California ADU costs and fees
           </Link>
           .
         </p>

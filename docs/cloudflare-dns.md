@@ -155,6 +155,9 @@ Cloudflare proxy address.
 - **`_dmarc` is `p=none`** — monitoring only, with aggregate reports going to
   Cloudflare. Fine as a starting point; tightening to `quarantine` is a separate
   email-hygiene task, not a hosting one.
-- The apex `Strict-Transport-Security` header has no `includeSubDomains`. Do not
-  add it until `www` serves valid TLS from Firebase, or `www` becomes
-  unreachable rather than merely misrouted.
+- The app's `Strict-Transport-Security` header (`next.config.ts`) carries
+  `includeSubDomains` since 2026-11-11, once `www`, `auth` and the apex all
+  served valid TLS from Firebase (checked with `curl`, `ssl_verify_result=0`).
+  Any new `lotfoundry.net` subdomain must serve HTTPS from day one, or browsers
+  that have seen the apex will refuse it. `preload` is deliberately absent:
+  joining the browser preload list is a separate submission that is slow to undo.

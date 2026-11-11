@@ -9,6 +9,7 @@
  */
 import type { Metadata } from "next";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
+import { ORGANIZATION_JSON_LD, SITE_NAME } from "@/lib/site-identity";
 import { sanDiego } from "@/content/adu/ca/san-diego";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { oceanside } from "@/content/adu/ca/oceanside";
@@ -262,6 +263,7 @@ export function buildCityMetadata(content: JurisdictionContent): Metadata {
         content.metaDescription ??
         `${content.city} ADU rules for 2026: sizes, setbacks, fees, and the permit process — then check what they mean for your lot.`,
       url: cityUrl(content),
+      siteName: SITE_NAME,
       type: "article",
     },
   };
@@ -282,6 +284,7 @@ export function buildCostMetadata(cost: JurisdictionCostContent): Metadata {
       title,
       description: cost.metaDescription,
       url: costPageUrl(cost),
+      siteName: SITE_NAME,
       type: "article",
     },
   };
@@ -313,9 +316,12 @@ export function aduArticleJsonLd(article: {
     datePublished: article.datePublished,
     dateModified:
       article.dateModified > article.datePublished ? article.dateModified : article.datePublished,
-    author: { "@type": "Organization", name: "LotFoundry", url: `${BASE_URL}/` },
+    // The `@id` ties both to the homepage's Organization node; the inline
+    // fields stay because guide pages do not carry that node themselves.
+    author: { "@type": "Organization", "@id": ORGANIZATION_JSON_LD["@id"], name: "LotFoundry", url: `${BASE_URL}/` },
     publisher: {
       "@type": "Organization",
+      "@id": ORGANIZATION_JSON_LD["@id"],
       name: "LotFoundry",
       url: `${BASE_URL}/`,
       logo: {

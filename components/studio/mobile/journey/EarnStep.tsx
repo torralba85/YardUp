@@ -48,9 +48,9 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
       <p className="lf-kicker text-lot-orange-ink">Step 2 · Earn</p>
-      <h1 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
+      <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
         Your backyard could earn
-      </h1>
+      </h2>
       <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 
       <div className="mt-7">

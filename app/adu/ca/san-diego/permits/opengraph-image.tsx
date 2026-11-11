@@ -1,5 +1,6 @@
 import { renderAduOgImage } from "@/components/adu/AduOgImage";
 
+export const alt = "LotFoundry San Diego ADU permits card: permits by neighborhood, 2023-2026";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

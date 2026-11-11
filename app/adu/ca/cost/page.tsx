@@ -5,6 +5,7 @@ import {
 } from "@/components/adu/CaliforniaAduCostGuide";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { stateCostUrl } from "@/lib/adu/content";
+import { SITE_NAME } from "@/lib/site-identity";
 
 const TITLE = "ADU Cost in California (2026): What to Budget";
 const DESCRIPTION =
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     url: stateCostUrl(),
+    siteName: SITE_NAME,
     type: "article",
   },
 };
