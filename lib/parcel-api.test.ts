@@ -81,9 +81,10 @@ describe("fetchParcel", () => {
       }),
     );
 
-    await expect(fetchParcel(47.65, -122.31)).rejects.toBeInstanceOf(
-      ParcelFetchError,
-    );
+    await expect(fetchParcel(47.65, -122.31)).rejects.toMatchObject({
+      name: "ParcelFetchError",
+      userMessage: "Parcel data is unavailable for this address. Please try again.",
+    });
   });
 
   it("throws ParcelFetchError on network error", async () => {

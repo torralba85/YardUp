@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // An address no geocoder resolves: with live keys the search returns zero
 // results; without keys the API reports missing configuration. Either way the
 // studio surfaces its role="alert" banner — proof the handed-off search ran —
-// while the demo parcel keeps the money moment on screen.
+// and withholds demo figures until the visitor chooses to explore the demo lot.
 const UNRESOLVABLE_ADDRESS = "0 Nowhere Lane, Zzyzx Flats, ZZ 00000";
 
 /** Session-storage key the hero writes and the studio consumes once on mount. */
@@ -37,8 +37,12 @@ test.describe("landing → studio handoff", () => {
     await handOffAddress(page);
 
     await expect(page).toHaveURL(/\/studio/);
+    // Wait for the dawn arrival plate (Firebase auth resolution) before
+    // timing the handed-off geocode request, matching the mobile test below.
+    await expect(
+      page.getByRole("complementary", { name: "Studio navigation" }),
+    ).toBeVisible({ timeout: 15000 });
     const preview = page.getByRole("region", { name: "Free property preview" });
-    await expect(preview).toBeVisible({ timeout: 15000 });
     // The handed-off search ran and failed for this unresolvable address
     // (15s absorbs the geocode round trip; the banner surfaces with or without
     // keys). Filter to the alert that carries text: Next.js's route announcer
@@ -47,13 +51,18 @@ test.describe("landing → studio handoff", () => {
     await expect(
       page.getByRole("alert").filter({ hasText: /\S/ }).first(),
     ).toBeVisible({ timeout: 15000 });
-    // The demo rent range stays available after the failed lookup.
+    // Failed lookups withhold demo figures until the visitor explicitly opts in.
+    await expect(preview).toHaveCount(0);
+    // Privacy: the typed address never reaches the URL.
+    expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
+
+    // Explicit demo recovery restores the free property preview and rent range.
+    await page.getByRole("button", { name: "Explore demo lot" }).click();
+    await expect(preview).toBeVisible();
     await expect(preview).toContainText("Estimated monthly rent");
     // Since the 2026-11-01 funnel change only financed cash flow stays locked;
     // build cost, net income and payback are free.
     await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(1);
-    // Privacy: the typed address never reaches the URL.
-    expect(page.url()).not.toMatch(/nowhere|zzyzx|[?&]q=/i);
   });
 
   test("mobile: the journey absorbs the handed-off address", async ({

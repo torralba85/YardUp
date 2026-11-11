@@ -140,6 +140,9 @@ export default function FindStep({
             } else {
               if (!keptPreset && selectedPresetId !== "coyote-brush") {
                 onPresetSelect("coyote-brush");
+              } else if (parcelLoading || parcelError) {
+                // Explicit demo recovery must also cancel the address lookup.
+                onPresetSelect(keptPreset?.id ?? "coyote-brush");
               }
               onReveal();
             }
