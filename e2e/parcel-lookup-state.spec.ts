@@ -5,7 +5,7 @@ const address = `${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`;
 // A real query takes over a previously selected sample on both layouts.
 const lookupUrl = `/studio?parcel=oak-street&q=${encodeURIComponent(address)}`;
 
-test("failed parcel lookup hides sample figures and retry restores property results", async ({ page, isMobile }, testInfo) => {
+test("failed parcel lookup hides sample figures and retry restores property results", async ({ page, isMobile }) => {
   let failParcel = true;
   await page.route("**/api/geocode*", (route) => route.fulfill({ json: {
     lat: SAMPLE_LIVE_PARCEL.lat,
@@ -23,7 +23,6 @@ test("failed parcel lookup hides sample figures and retry restores property resu
   await expect(page.getByRole("region", { name: "What your backyard could earn" })).toHaveCount(0);
   await expect(page.getByText("1234 Oak Street", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Demo mode will be used/)).toHaveCount(0);
-  await page.screenshot({ path: testInfo.outputPath("lookup-failed.png"), fullPage: true });
 
   failParcel = false;
   if (isMobile) {
@@ -36,7 +35,6 @@ test("failed parcel lookup hides sample figures and retry restores property resu
   await expect(page.getByRole("region", { name: isMobile ? "What your backyard could earn" : "Free property preview" })).toBeVisible();
   await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("demo-mode-banner")).toHaveCount(0);
-  await page.screenshot({ path: testInfo.outputPath("lookup-success.png"), fullPage: true });
 });
 
 test("failed geocode shows recovery actions and only an explicit choice enables demo results", async ({ page, isMobile }) => {
