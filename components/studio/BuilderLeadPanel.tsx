@@ -8,6 +8,7 @@ import {
   availablePartnerNetwork,
   partnerConsentText,
   type BuilderNetworkChoice,
+  type PartnerReferralStatus,
 } from "@/lib/partner-referrals";
 import type { BuilderMatchState } from "@/lib/use-builder-matches";
 import type {
@@ -36,7 +37,7 @@ export interface BuilderLeadSubmitInput {
 /** What the submit handler reports back, per network. */
 export type BuilderLeadSubmitResult =
   | { matchedCount: number }
-  | { partnerName: string; referralId: string };
+  | { partnerName: string; referralId: string; status: PartnerReferralStatus };
 
 /**
  * What the homeowner has typed. The Studio holds it, so closing the form or
@@ -192,7 +193,10 @@ export default function BuilderLeadPanel({
           network: activeNetwork,
         });
         if ("referralId" in submitted) {
-          setSuccess({
+          setSuccess(submitted.status === "queued" ? {
+            message: `Referral received. Your referral number is ${submitted.referralId}.`,
+            next: `Your introduction to ${submitted.partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
+          } : {
             message: `Sent to ${submitted.partnerName}. Your referral number is ${submitted.referralId}.`,
             next: `You're copied on the introduction email. A ${submitted.partnerName} project advisor will contact you to set up a free consultation.`,
           });

@@ -1150,7 +1150,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         adu_sqft_bucket: getAduSqftBucket(config.footprint),
         state_code: extractStateCode({ state: input.snapshot.parcelState, city: input.snapshot.parcelCity }),
       });
-      return { partnerName: partner.name, referralId: referral.referralId };
+      return { partnerName: partner.name, referralId: referral.referralId, status: referral.status };
     }
 
     const builders = await fetchActiveBuilders();

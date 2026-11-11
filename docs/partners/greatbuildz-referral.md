@@ -15,13 +15,15 @@ and re-date the version to that day if it has moved.
   replies all on first contact, so LotFoundry sees each lead land.
 - **Coverage:** all ten counties below, no exclusions inside them. Architecture-only requests are welcome.
   Sacramento is out.
-- **Minimum:** a $100K project. The option is offered only when the top of the Studio's $25k build band reaches it.
+- **Screening:** GreatBuildz suggested $100K as an optional ADU budget filter. LotFoundry offers the option
+  when the top of the Studio's $25k build band reaches it; this estimate is not a confirmed homeowner budget.
 - **Fee:** 1% of the signed contract price on construction contracts, and on design contracts that move forward.
   Excludes permit and government fees and taxes; change orders adjust it.
 - **Attribution:** 12 months from the intro. A homeowner GreatBuildz talked to about the same project in the 90
   days before the intro doesn't count; earliest source wins; GreatBuildz flags duplicates.
 - **Payment:** in installments as GreatBuildz is paid, within 30 days after month end. Paid by GreatBuildz Inc.
-  to VeriShare LLC from the shared sheet; no invoice; W-9 before the first payment.
+  to VeriShare LLC from the shared sheet; no invoice; W-9 before the first payment. For cancellations or
+  nonpayment, fees apply only to what GreatBuildz receives. Jon will confirm contract price in writing on request.
 - **Tracking:** a GreatBuildz-hosted Google Sheet, one row per LFR number, shared with support@lotfoundry.net.
   Monthly reconciliation.
 - **Pilot:** two months from the coordinated test, no volume cap, then a joint review.
@@ -62,7 +64,13 @@ LotFoundry copy never calls the network "screened" or "vetted".
    error, the row stays `queued` and ops sends the same email by hand (same recipients, same subject).
 
 A second submit for the same homeowner, partner and address returns the existing referral (`duplicate: true`)
-and sends nothing. A new project at the same address goes to Jon by email.
+and sends nothing, including when the existing row is `queued` or `closed_lost`. A new project at the same
+address goes to Jon by email. Queued referrals show a pending introduction, not a sent-email confirmation.
+
+Before enabling referrals, designate a support@ operator to check queued rows each business day and after
+reported delivery failures. Inspect the Resend delivery record before a manual send (a timeout can leave
+acceptance uncertain), use the existing LFR number, and record the handoff outcome. Resubmitting the form is
+not a retry mechanism.
 
 **Sent to GreatBuildz:** name, email, optional phone and message, exact address, city, county, state, ZIP, lot
 size, existing building footprint (when confirmed), reported zoning, fire hazard zone, backyard home size,
@@ -113,18 +121,24 @@ their copy and the sheet row; GreatBuildz forwards requests it receives the same
 line), on a residential Los Angeles County lot where the Studio shows "Los Angeles" and an estimate of $100K or
 more. Put "Test referral, please don't schedule a consultation" in the message.
 
-1. **Dry run (internal):** set `GREATBUILDZ_REFERRAL_EMAIL=support+gbteam@lotfoundry.net` and
-   `GREATBUILDZ_REFERRAL_CC=support+gbjon@lotfoundry.net`, turn the flag on and deploy. Submit as the test
-   identity. Check that the Studio shows the LFR number, the `partnerReferrals` row reaches `sent`, and support@
-   receives the email with the right subject. In Gmail's "Show original", check From support@, To the team alias,
-   Cc the Jon alias and the homeowner, and no Reply-To header. Set that row to `closed_lost` with the note
-   "internal dry run".
-   The option is visible to real visitors from this deploy on; a real referral in this window lands in support@
-   and is forwarded by hand.
-2. **Coordinated test with GreatBuildz:** agree a time with Jon. Point the two variables at the GreatBuildz team
-   inbox and Jon, redeploy, and submit the same way. Done when the team's reply-all reaches support@, the row
-   appears on the shared sheet, and the ledger shows `introduced`. Mark the row as a test on both sides.
-3. **Start the pilot clock:** two months from the coordinated test. Put the review on the calendar.
+1. **Dry run (internal):** use an access-restricted nonproduction deployment with a separate test Firebase
+   project/ledger. Keep the production flag unset. Set `GREATBUILDZ_REFERRAL_EMAIL=support+gbteam@lotfoundry.net`
+   and `GREATBUILDZ_REFERRAL_CC=support+gbjon@lotfoundry.net`, and build the test deployment with the flag on.
+   Submit as the test identity. Check the consent receipt, LFR number, and ledger status `sent`. In Gmail's
+   "Show original", check From support@, To the team alias, Cc the Jon alias and homeowner, and no Reply-To.
+   Simulate a provider failure in the test environment: the row must stay `queued` and the Studio must say
+   the introduction is pending, without claiming the homeowner was copied. A repeat submit must reuse the
+   LFR number without sending again. Mark the successful test row `closed_lost` with note "internal dry run".
+2. **Coordinated test with GreatBuildz:** agree a time and test contact with Jon. In the restricted test
+   deployment, set `GREATBUILDZ_REFERRAL_EMAIL=team@mail.greatbuildz.com` and
+   `GREATBUILDZ_REFERRAL_CC=jon@greatbuildz.com`, then redeploy. Use a different test account or property from
+   the internal dry run, or a separate test ledger; changing a row to `closed_lost` does not remove duplicate
+   suppression. Verify homeowner receipt, the team's reply-all reaching support@, advisor routing, the LFR
+   row on the shared sheet, and a sample status/fee reconciliation. Record `introduced` and mark it as a test
+   on both sides.
+3. **Start the pilot clock:** record the agreed start and review dates with Jon (two months from the coordinated
+   test under this runbook). Enable the production build only after approvals and both tests pass, with the
+   confirmed team/Jon destinations. Verify the live deployment and retain the flag-off redeploy as rollback.
 
 ## Go-live checklist
 
@@ -133,10 +147,12 @@ more. Put "Test referral, please don't schedule a consultation" in the message.
 - [ ] GreatBuildz confirms that consent captured in the Studio works for its texting platform, and that it is OK
       being named in the Studio and on `/privacy` and `/terms`.
 - [ ] W-9 for VeriShare LLC to GreatBuildz before the first payment.
-- [ ] Apply `docs/partners/greatbuildz-ci-env.patch` to `.github/workflows/ci.yml`
-      (`git apply docs/partners/greatbuildz-ci-env.patch`, then delete the patch). It passes the repository
-      variables `GREATBUILDZ_REFERRAL_EMAIL`, `GREATBUILDZ_REFERRAL_CC` and `NEXT_PUBLIC_GREATBUILDZ_REFERRAL`
-      into the deploy build. It ships as a patch because the agent token cannot edit workflows.
+- [x] Wire `GREATBUILDZ_REFERRAL_EMAIL` and `GREATBUILDZ_REFERRAL_CC` into the Functions environment and
+      `NEXT_PUBLIC_GREATBUILDZ_REFERRAL` into the deploy build in `.github/workflows/ci.yml`.
+- [ ] Configure repository variables: `GREATBUILDZ_REFERRAL_EMAIL=team@mail.greatbuildz.com` and
+      `GREATBUILDZ_REFERRAL_CC=jon@greatbuildz.com`. Leave `NEXT_PUBLIC_GREATBUILDZ_REFERRAL` unset until launch.
+      Verify the existing runtime `RESEND_API_KEY` binding and sender delivery in the controlled test.
+- [ ] Confirm shared-sheet access and name the operator for queued handoffs and coordinated deletion requests.
 - [ ] Merge on launch day; legal version 2026-11-10 (re-dated if later) asks signed-in users to accept again.
       Rules and app deploy together.
 - [ ] Dry run, then the coordinated test, as above.

@@ -289,7 +289,7 @@ describe("BuilderLeadPanel", () => {
 
     it("offers GreatBuildz alone where no LotFoundry builder serves the lot", async () => {
       vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
-      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12" });
+      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12", status: "sent" });
       renderLa({ matches: { status: "ready", count: 0 }, onSubmit: submit });
 
       expect(screen.queryByText("No builders are registered for this area yet.")).not.toBeInTheDocument();
@@ -310,7 +310,7 @@ describe("BuilderLeadPanel", () => {
 
     it("submits a GreatBuildz referral and shows the referral number", async () => {
       vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
-      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12" });
+      const submit = vi.fn().mockResolvedValue({ partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12", status: "sent" });
       renderLa({ onSubmit: submit });
 
       await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
@@ -321,6 +321,25 @@ describe("BuilderLeadPanel", () => {
       expect(status).toHaveTextContent("Sent to GreatBuildz. Your referral number is LFR-ABCDEF12.");
       expect(status).toHaveTextContent(/copied on the introduction email/);
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("shows a queued referral as pending without claiming an email was sent", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue({
+        partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12", status: "queued",
+      });
+      renderLa({ onSubmit: submit });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent("Referral received. Your referral number is LFR-ABCDEF12.");
+      expect(status).toHaveTextContent("Your introduction to GreatBuildz is pending.");
+      expect(status).toHaveTextContent("You don't need to submit again.");
+      expect(status).not.toHaveTextContent("Sent to GreatBuildz");
+      expect(status).not.toHaveTextContent("You're copied on the introduction email.");
     });
 
     it("asks a guest to sign in before a GreatBuildz send", async () => {
