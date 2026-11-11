@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StudioOfferSummary } from "@/components/studio/StudioOfferSummary";
+import { SITE_NAME } from "@/lib/site-identity";
 
-const title = "LotFoundry Studio — feasibility and design";
+// Matches the page's H1, "ADU Feasibility Studio", so the title leads with ADU.
+const title = "ADU Feasibility Studio: Your Lot in 3D | LotFoundry";
 const description =
   "Place an ADU on your lot in 3D, snap it inside the modeled setbacks, and see estimated rent, build cost and payback. Try a sample lot without an account.";
 
@@ -24,6 +26,7 @@ export const metadata: Metadata = {
     description,
     url: "/studio",
     type: "website",
+    siteName: SITE_NAME,
     images: [
       {
         url: "/lotfoundry-og.png",

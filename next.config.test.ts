@@ -32,6 +32,26 @@ describe("security headers", () => {
     );
   });
 
+  it("covers every lotfoundry.net subdomain with HSTS, without opting into the preload list", async () => {
+    const hsts = (await rootHeaders())["Strict-Transport-Security"];
+    expect(hsts).toBe("max-age=31536000; includeSubDomains");
+    expect(hsts).not.toContain("preload");
+  });
+
+  it("sends the baseline CSP everywhere but the sample certificate, which sends its own", async () => {
+    const groups = await nextConfig.headers!();
+    const csp = groups.filter((group) => group.headers.some((header) => header.key === "Content-Security-Policy"));
+    expect(csp).toHaveLength(1);
+    expect(csp[0].source).toBe("/((?!sample-certificate(?:/|$)).*)");
+    expect(csp[0].headers).toEqual([
+      { key: "Content-Security-Policy", value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'" },
+    ]);
+  });
+
+  it("does not advertise the framework in X-Powered-By", () => {
+    expect(nextConfig.poweredByHeader).toBe(false);
+  });
+
   it("keeps payment enabled for same-origin Google Play Billing", async () => {
     const headers = await rootHeaders();
     const permissions = headers["Permissions-Policy"];
@@ -64,5 +84,14 @@ describe("security headers", () => {
     ]) {
       expect(permissions).toContain(`${capability}=()`);
     }
+  });
+});
+
+describe("redirects", () => {
+  it("sends the bare /adu path to the California hub instead of a 404", async () => {
+    const redirects = (await nextConfig.redirects?.()) ?? [];
+    expect(redirects).toContainEqual({ source: "/adu", destination: "/adu/ca", permanent: true });
+    // Exact match only: no wildcard that would swallow /adu/ca/... guides.
+    expect(redirects.every((rule) => !rule.source.startsWith("/adu/"))).toBe(true);
   });
 });

@@ -78,9 +78,9 @@ export default function ShapeStep({
       </div>
 
       <div className="flex flex-1 flex-col px-5 pt-5">
-        <h1 className="font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-medium leading-[1.1] tracking-tight text-balance text-lot-ink">
+        <h2 className="font-display text-[clamp(1.4rem,6vw,1.5625rem)] font-medium leading-[1.1] tracking-tight text-balance text-lot-ink">
           Pick a direction.
-        </h1>
+        </h2>
         <p className="mt-2 max-w-prose text-sm leading-6 text-lot-stone">Try a footprint and check its placement on the lot. Room counts are illustrative.</p>
 
         <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="ADU size">

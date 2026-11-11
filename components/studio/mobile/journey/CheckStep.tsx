@@ -82,12 +82,12 @@ export default function CheckStep({
 
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />
-        <h1
+        <h2
           className="font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-none tracking-[-0.01em] text-balance"
           style={{ color: tone.color }}
         >
           {summary.verdict}
-        </h1>
+        </h2>
       </div>
       <p className="lf-body-sm mt-2 text-lot-stone">{VERDICT_COPY[summary.verdict]}</p>
       <ParcelDataNotice parcel={parcel} />

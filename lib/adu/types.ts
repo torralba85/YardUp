@@ -167,7 +167,8 @@ export interface JurisdictionContent {
   /**
    * Neighboring jurisdiction slugs (bidirectional, geographic, 0–6). At least
    * one whenever another guide shares the county; a metro's first guide has
-   * none until a nearby city ships.
+   * none until a nearby city ships. An unincorporated county borders most of
+   * its cities, so its guide may list more than six.
    */
   neighbors: string[];
   /** Municipal code and program sources cited on the page. */

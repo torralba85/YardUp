@@ -84,6 +84,15 @@ describe("AduArticle after the San Diego cost split", () => {
     );
   });
 
+  it("shows one described, lazy concept image that is labelled as illustrative", () => {
+    render(<AduArticle content={chulaVista} />);
+    const image = screen.getByRole("img", { name: /Illustration of a detached backyard home/ });
+    expect(image).toHaveAttribute("loading", "lazy");
+    expect(image).toHaveAttribute("width", "1536");
+    expect(image).toHaveAttribute("height", "1024");
+    expect(screen.getByText(/Illustrative concept, not a Chula Vista plan/)).toBeInTheDocument();
+  });
+
   it("points a covered county guide at the countywide cost page", () => {
     render(<AduArticle content={chulaVista} />);
     expect(screen.getByText(/Countywide build cost, rent and payback estimates/)).toBeInTheDocument();
@@ -91,7 +100,7 @@ describe("AduArticle after the San Diego cost split", () => {
       "href",
       "/adu/ca/san-diego/cost",
     );
-    expect(screen.getByRole("link", { name: "California ADU cost guide" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "what an ADU costs across California" })).toHaveAttribute(
       "href",
       "/adu/ca/cost",
     );

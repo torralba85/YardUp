@@ -5,20 +5,17 @@ import { SITE_NAME } from "@/lib/site-identity";
  * Share images. A page that sets its own `openGraph` replaces the root
  * layout's instead of merging with it, so it has to list an image again or its
  * links share as a bare text card.
+ *
+ * One card for the homepage, the demo landings and the support pages: a
+ * 1200x630 PNG (the 1.91:1 frame link previews crop to) that already carries
+ * the landing's parcel illustration. The raw 1536x1024 WebP it replaced was
+ * cropped by previews and is unsupported by some link scrapers.
  */
 export const SITE_OG_IMAGE = {
   url: "/lotfoundry-og.png",
   width: 1200,
   height: 630,
   alt: "LotFoundry — ADU planning for homeowners",
-};
-
-/** The landing's illustrative parcel, shared by the homepage and the demo landings. */
-export const LANDING_OG_IMAGE = {
-  url: "/landing/a-lot-more/parcel-after.webp",
-  width: 1536,
-  height: 1024,
-  alt: "An illustrative miniature property with an orange backyard home",
 };
 
 /**

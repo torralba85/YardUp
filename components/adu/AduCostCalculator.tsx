@@ -396,7 +396,7 @@ export function AduCostCalculator({
               <button
                 type="button"
                 onClick={() => setShowQuoteInputs(!showQuoteInputs)}
-                className="text-xs font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
+                className="inline-flex min-h-11 items-center text-xs font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
               >
                 {showQuoteInputs
                   ? "Hide quote replacement fields"

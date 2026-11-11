@@ -34,7 +34,7 @@ export function SiteFooter() {
       <div
         className={`lf-caption mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-3 gap-y-2 px-6 py-8 ${muted}`}
       >
-        <Link href="/" className={hover}>
+        <Link href="/" className={`inline-flex min-h-11 items-center ${hover}`}>
           LotFoundry
         </Link>
         {FOOTER_LINKS.map((link) => (

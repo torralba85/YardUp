@@ -197,7 +197,7 @@ export function CaliforniaAduRentGuide() {
                 <tr key={row.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>
                     {row.guidePath ? (
-                      <Link href={row.guidePath} className={linkClass}>
+                      <Link href={row.guidePath} className={`inline-flex min-h-11 items-center ${linkClass}`}>
                         {row.county}
                       </Link>
                     ) : (

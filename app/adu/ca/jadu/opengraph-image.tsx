@@ -1,5 +1,6 @@
 import { renderAduOgImage } from "@/components/adu/AduOgImage";
 
+export const alt = "LotFoundry California junior ADU card: JADU rules, up to 500 sq ft inside your home";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

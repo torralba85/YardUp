@@ -195,9 +195,13 @@ only; the ion Community plan is non-commercial). With neither configured the vie
 renders map imagery, which is an expected state. Full credential, billing, CSP, and
 Google-attribution notes live in [cesium-photoreal-deployment.md](./cesium-photoreal-deployment.md).
 
-## Content-Security-Policy (planned)
+## Content-Security-Policy (baseline only; full policy planned)
 
-The app has no CSP today. Before adding one, read
+Since 2026-11-11 `next.config.ts` sends a baseline policy on every route except
+the sample certificate (which sends its own): `base-uri 'self'; object-src 'none';
+frame-ancestors 'none'`. It has no `default-src` or fetch directives, so it does
+not restrict scripts, styles, images, connections or workers. Before adding any
+of those, read
 [cesium-photoreal-deployment.md](./cesium-photoreal-deployment.md): the CesiumJS globe
 needs `script-src`/`style-src` for `https://cesium.com`, `connect-src` for the Google
 tile hosts plus `*.cesium.com` and the ion asset CDN, `worker-src blob:`, and

@@ -1,5 +1,6 @@
 import { renderAduOgImage } from "@/components/adu/AduOgImage";
 
+export const alt = "LotFoundry California ADU rent card: HUD FY2027 rents for 12 counties";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

@@ -8,6 +8,7 @@ import {
   STATE_BASELINE_SOURCES,
   STATE_FLOOR_FACTS,
 } from "@/content/adu/state-baseline";
+import { SITE_NAME } from "@/lib/site-identity";
 
 export const metadata: Metadata = {
   title: "California ADU Laws and Rules by City (2026) | LotFoundry",
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
     description:
       "State law sets the floor; each city layers its own rules on top. Local ADU guides for San Diego County cities, the unincorporated county, Sacramento and San José.",
     url: hubUrl(),
+    siteName: SITE_NAME,
     images: [
       {
         url: "/lotfoundry-og.png",

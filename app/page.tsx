@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { LotMoreLanding } from "@/components/landing/lot-more/LotMoreLanding";
 import { landingScenarios } from "@/lib/landing-demo";
-import { LANDING_OG_IMAGE } from "@/lib/og-images";
+import { SITE_OG_IMAGE } from "@/lib/og-images";
 import { HOME_JSON_LD, SITE_NAME } from "@/lib/site-identity";
 import { COLOR } from "@/lib/design-tokens";
 
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
-    images: [LANDING_OG_IMAGE],
+    images: [SITE_OG_IMAGE],
     // This block replaces the layout's, so it restates the type and site name too.
     type: "website",
     siteName: SITE_NAME,
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
     description,
-    images: [LANDING_OG_IMAGE.url],
+    images: [SITE_OG_IMAGE.url],
   },
 };
 

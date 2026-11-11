@@ -202,7 +202,7 @@ export const encinitas: JurisdictionContent = {
         "Development impact fees are fully waived for any ADU of 750 square feet or less. Units larger than 750 square feet pay impact fees proportional to the square footage of the primary home.",
     },
   ],
-  neighbors: ["carlsbad", "san-marcos"],
+  neighbors: ["carlsbad", "san-marcos", "san-diego-county"],
   sources: [
     {
       label: "Encinitas Municipal Code Chapter 30.48: Accessory Dwelling Units (§30.48.040.T)",

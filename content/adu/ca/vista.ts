@@ -203,7 +203,7 @@ export const vista: JurisdictionContent = {
         "Fire sprinklers can only be required in the ADU if they are required in the primary single-family dwelling. Where fire access or water supply falls short, the Vista Fire Department may accept sprinklers as one optional way to comply, but they cannot be mandated on that basis.",
     },
   ],
-  neighbors: ["oceanside", "carlsbad", "san-marcos"],
+  neighbors: ["oceanside", "carlsbad", "san-marcos", "san-diego-county"],
   sources: [
     {
       label: "Vista Municipal Code Chapter 18.31: Accessory Dwelling Units",

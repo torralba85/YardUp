@@ -177,9 +177,9 @@ export function CaliforniaJaduGuide() {
         <Link href="/adu/ca" className={linkClass}>
           California ADU rules hub
         </Link>
-        . For a detached backyard home&apos;s budget, read the{" "}
+        . For a detached backyard home&apos;s budget, see{" "}
         <Link href={stateCostPath()} className={linkClass}>
-          California ADU cost guide
+          what a detached ADU costs in California
         </Link>
         .
       </p>
