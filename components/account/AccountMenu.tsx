@@ -194,7 +194,7 @@ export function AccountMenu({
       <div
         className={cn(
           "border-t pt-2",
-          isDark ? "border-lot-stone/20" : "border-lot-line",
+          isDark ? "border-lot-line-dark" : "border-lot-line",
         )}
       >
         <div
@@ -220,7 +220,7 @@ export function AccountMenu({
         className={cn(
           "w-64 max-w-[calc(100vw-2rem)] space-y-1 rounded-none border p-3 shadow-none",
           isDark
-            ? "border-lot-stone/25 bg-lot-ink text-lot-chalk"
+            ? "border-lot-line-dark bg-lot-ink text-lot-chalk"
             : "border-lot-line bg-lot-chalk text-lot-ink",
         )}
       >
@@ -249,7 +249,7 @@ export function AccountMenu({
             className={cn(
               "flex flex-col overflow-y-auto overscroll-contain rounded-none border p-3 shadow-card motion-safe:animate-[lf-fade-in_140ms_ease-out]",
               isDark
-                ? "border-lot-stone/30 bg-lot-ink text-lot-chalk"
+                ? "border-lot-line-dark bg-lot-ink text-lot-chalk"
                 : "border-lot-line bg-lot-chalk text-lot-ink",
             )}
           >

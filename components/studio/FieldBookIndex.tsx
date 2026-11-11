@@ -68,7 +68,7 @@ export default function FieldBookIndex({
         )}
       </div>
 
-      <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lot-stone/25 pt-2">
+      <nav aria-label="Studio sections" className="space-y-0.5 border-t border-lot-line-dark pt-2">
         {PLATES.map((plate, index) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
@@ -83,7 +83,7 @@ export default function FieldBookIndex({
               onKeyDown={(event) => handleKeyDown(event, index)}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex w-full min-h-11 items-center gap-3 rounded-control py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
-                isActive ? "bg-lot-ink/45 ring-1 ring-lot-stone/20" : "hover:bg-lot-chalk/5"
+                isActive ? "bg-lot-ink/45 ring-1 ring-lot-line-dark" : "hover:bg-lot-chalk/5"
               }`}
             >
               {/* Sliding monument marker — the "you are here" gesture. */}
