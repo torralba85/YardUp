@@ -405,7 +405,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     : undefined;
 
   const isLookupPending = parcelLoading || Boolean(pendingAddressQuery);
-  const isRealAddressActive = isRealAddressFlow && parcelMode !== "live";
+  // The provider preserves the previous parcel on failure. It is not a result
+  // for the requested address, so keep all result surfaces behind this guard.
+  const isRealAddressActive = isRealAddressFlow &&
+    (parcelMode !== "live" || isLookupPending || Boolean(parcelError));
   const displayAddress = isRealAddressActive
     ? (targetAddress ?? pendingAddressQuery ?? "Looking up property…")
     : activeParcel.address;
@@ -1358,7 +1361,16 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       : `${activeParcel.address}, ${activeParcel.city}`;
 
     let stepContent: ReactNode;
-    if (journeyStep === "find") {
+    if (isRealAddressActive && journeyStep !== "find") {
+      stepContent = (
+        <SceneViewport
+          sceneNode={sceneNode}
+          viewMode={effectiveViewMode}
+          onViewModeChange={changeViewMode}
+          flowLayout
+        />
+      );
+    } else if (journeyStep === "find") {
       stepContent = (
         <FindStep
           onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
@@ -1492,7 +1504,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onBack={previousStep ? () => window.history.back() : undefined}
           onStepSelect={setJourneyStep}
         >
-          {parcelMode === "preset" && journeyStep !== "find" && (
+          {!isRealAddressActive && parcelMode === "preset" && journeyStep !== "find" && (
             <div
               data-testid="demo-mode-banner"
               className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-5 py-2.5 text-xs text-lot-ink"
@@ -1511,7 +1523,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           )}
           {stepContent}
         </MobileJourney>
-        <FineTuneDrawer open={fineTuneOpen} onClose={() => setFineTuneOpen(false)}>
+        <FineTuneDrawer open={fineTuneOpen && !isRealAddressActive} onClose={() => setFineTuneOpen(false)}>
           <FeasibilityInspector
             initialStep={2}
             designOnly={!certificateUnlocked}
@@ -1533,7 +1545,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             saveNotice={saveNotice}
           />
         </FineTuneDrawer>
-        {reportOpen && certificateUnlocked && (
+        {reportOpen && certificateUnlocked && !isRealAddressActive && (
           <ReportPreview
             parcel={activeParcel}
             parcelName={mobileParcelName}
@@ -1609,7 +1621,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         // clipped the overflow, so neither pane could scroll to its last controls.
         className="flex min-h-0 flex-1 flex-col outline-none"
       >
-        {parcelMode === "preset" && activeStep !== "lot" && (
+        {!isRealAddressActive && parcelMode === "preset" && activeStep !== "lot" && (
           <div
             data-testid="demo-mode-banner"
             className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-6 py-2.5 text-xs text-lot-ink"
@@ -1626,7 +1638,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             </button>
           </div>
         )}
-        {showsVerdictBand && certificateUnlocked && (
+        {showsVerdictBand && certificateUnlocked && !isRealAddressActive && (
           <FeasibilityVerdictBand
             parcel={activeParcel}
             result={result}
@@ -1636,9 +1648,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           />
         )}
 
-        {activeStep === "lot" ? (
+        {isRealAddressActive && activeStep !== "lot" ? (
+          <SceneSection
+            sceneNode={sceneNode}
+            viewMode={effectiveViewMode}
+            onViewModeChange={changeViewMode}
+          />
+        ) : activeStep === "lot" ? (
           <LotStep
-            parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
+            parcelNotice={!isRealAddressActive && <ParcelDataNotice parcel={activeParcel} />}
             parcelId={parcelId}
             onPresetChange={(id) => {
               setParcelId(id);
@@ -1790,7 +1808,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         )}
       </section>
 
-      {reportOpen && certificateUnlocked && (
+      {reportOpen && certificateUnlocked && !isRealAddressActive && (
         <ReportPreview
           parcel={activeParcel}
           parcelName={parcelName}

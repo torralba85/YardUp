@@ -66,7 +66,7 @@ export async function fetchParcel(
   if (!res.ok) {
     throw new ParcelFetchError(
       `Parcel service returned ${res.status}`,
-      "Parcel data is unavailable for this address. Demo mode will be used instead.",
+      "Parcel data is unavailable for this address. Please try again.",
     );
   }
 

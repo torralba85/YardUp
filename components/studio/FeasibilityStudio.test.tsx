@@ -725,6 +725,71 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   describe("real-address flow and neighborhood view fallback prevention", () => {
+    it("clears a failed mobile lookup when revealing an already-selected example", async () => {
+      stubMobileMatchMedia();
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 404 }));
+      window.history.replaceState(null, "", "/studio?parcel=oak-street");
+      stashAddressQuery("250 Hamilton Avenue, Palo Alto, CA");
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+      await screen.findByText(/We couldn't find that address/);
+      await user.click(screen.getByRole("button", { name: "See the Seattle example" }));
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
+      expect(screen.getByRole("region", { name: "What your backyard could earn" })).toBeInTheDocument();
+    });
+
+    it("withholds a previous live result when a different address fails", async () => {
+      const user = userEvent.setup();
+      stashInitialParcel(SAMPLE_LIVE_PARCEL);
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+      expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 404 }));
+
+      const search = screen.getByRole("search");
+      await user.type(within(search).getByLabelText("Search property address"), "250 Hamilton Avenue, Palo Alto, CA");
+      await user.click(within(search).getByRole("button", { name: /Search/ }));
+
+      await screen.findByTestId("property-lookup-error");
+      expect(screen.getByText("250 Hamilton Avenue")).toBeInTheDocument();
+      expect(screen.queryByText(SAMPLE_LIVE_PARCEL.address)).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
+    });
+
+    it.each(["desktop", "mobile"])("hides demo results after a parcel failure and restores live results on retry (%s)", async (layout) => {
+      if (layout === "mobile") stubMobileMatchMedia();
+      const user = userEvent.setup();
+      let failParcel = true;
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        if (String(input).includes("/api/geocode")) {
+          return new Response(JSON.stringify({
+            lat: SAMPLE_LIVE_PARCEL.lat,
+            lng: SAMPLE_LIVE_PARCEL.lng,
+            formattedAddress: `${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`,
+          }), { status: 200 });
+        }
+        return failParcel
+          ? new Response("{}", { status: 502 })
+          : new Response(JSON.stringify(SAMPLE_LIVE_PARCEL), { status: 200 });
+      });
+      stashAddressQuery(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
+      render(<FeasibilityStudio demoChosen />, { wrapper: TestWrapper });
+
+      await waitFor(() => expect(screen.getAllByText(/Parcel data is unavailable/).length).toBeGreaterThan(0));
+      expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "What your backyard could earn" })).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Demo mode will be used/)).not.toBeInTheDocument();
+
+      failParcel = false;
+      await user.click(screen.getByRole("button", { name: "Retry lookup" }));
+      await waitFor(() => expect(screen.queryByTestId("property-lookup-error")).not.toBeInTheDocument());
+      expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
+      expect(screen.getByRole("region", { name: layout === "mobile" ? "What your backyard could earn" : "Free property preview" })).toBeInTheDocument();
+      expect(screen.getAllByText(new RegExp(SAMPLE_LIVE_PARCEL.address)).length).toBeGreaterThan(0);
+    });
+
     it("renders loading state in 3D scene and prevents mounting demo in Neighborhood view while address is pending", async () => {
       const user = userEvent.setup();
       const pendingFetch = vi.spyOn(globalThis, "fetch").mockReturnValue(new Promise(() => {}) as unknown as Promise<Response>);
@@ -740,6 +805,8 @@ describe("FeasibilityStudio (guided spine)", () => {
       // In 3D model view, property loading is rendered instead of parcel scene with demo
       expect(screen.getByTestId("property-loading")).toBeInTheDocument();
       expect(screen.queryByTestId("parcel-scene")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
 
       // Click Neighborhood view
       const viewport = screen.getByTestId("scene-viewport");
@@ -791,6 +858,8 @@ describe("FeasibilityStudio (guided spine)", () => {
       await user.click(screen.getByRole("button", { name: "Explore demo lot" }));
       expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
       expect(screen.getByText("1234 Oak Street")).toBeInTheDocument();
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
+      expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
 
       // Now Neighborhood view works for the demo lot
       await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
