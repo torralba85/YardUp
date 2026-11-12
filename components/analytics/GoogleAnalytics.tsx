@@ -10,6 +10,7 @@ import {
   isAnalyticsConfigured,
   pageview,
   GTAG_READY_EVENT,
+  measurementContext,
 } from "@/lib/analytics/gtag";
 import { GOOGLE_ADS_ID } from "@/lib/analytics/adsConversion";
 import { isAnalyticsSuppressed } from "@/lib/analytics/consent";
@@ -61,6 +62,10 @@ export function GoogleAnalytics() {
   if (suppressed) return null;
   if (consent !== "granted") return null;
 
+  // Escape '<' as well as JSON quoting before embedding URL-derived path data
+  // into an inline script. Campaign values come from a fixed public allowlist.
+  const context = JSON.stringify(measurementContext()).replace(/</g, "\\u003c");
+
   return (
     <>
       <Script
@@ -81,7 +86,8 @@ export function GoogleAnalytics() {
           gtag('js', new Date());
           gtag('config', '${measurementId}', {
             send_page_view: false,
-            anonymize_ip: true
+            anonymize_ip: true,
+            ...${context}
           });
           gtag('config', '${GOOGLE_ADS_ID}', { send_page_view: false });
           window.dispatchEvent(new Event('${GTAG_READY_EVENT}'));
