@@ -44,18 +44,26 @@ async function analyticsConfigured(page: import("@playwright/test").Page) {
   }
 }
 
-test.describe("analytics consent", () => {
-  // Production suppresses all measurement in WebDriver sessions so canaries and
-  // agent checks stay out of GA4. These specs test the visitor path, so they
-  // present as an ordinary browser.
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      Object.defineProperty(Navigator.prototype, "webdriver", {
-        configurable: true,
-        get: () => false,
-      });
+let analyticsEnabled: boolean | null = null;
+
+// Production suppresses all measurement in WebDriver sessions so canaries and
+// agent checks stay out of GA4. Probe once per worker so unconfigured CI builds
+// skip tests 2..N immediately instead of waiting 5 seconds per test.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, "webdriver", {
+      configurable: true,
+      get: () => false,
     });
   });
+  if (analyticsEnabled === null) {
+    await page.goto("/");
+    analyticsEnabled = await analyticsConfigured(page);
+  }
+  test.skip(!analyticsEnabled, "no measurement ID in this build");
+});
+
+test.describe("analytics consent", () => {
 
   test("sends nothing to Google before the visitor decides", async ({ page }) => {
     const googleRequests: string[] = [];
@@ -67,7 +75,6 @@ test.describe("analytics consent", () => {
     });
 
     await page.goto("/");
-    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await expect(page.getByRole("region", { name: banner })).toBeVisible();
     // The whole point of opt-in: an undecided visitor is not measured.
@@ -81,7 +88,6 @@ test.describe("analytics consent", () => {
     });
 
     await page.goto("/");
-    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await page.getByRole("button", { name: /decline/i }).click();
     await expect(page.getByRole("region", { name: banner })).toHaveCount(0);
@@ -94,7 +100,6 @@ test.describe("analytics consent", () => {
 
   test("accepting loads gtag.js for the configured property", async ({ page }) => {
     await page.goto("/");
-    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     const gtagRequest = page.waitForRequest((request) =>
       request.url().includes("googletagmanager.com/gtag/js"),
@@ -121,7 +126,6 @@ test.describe("analytics consent", () => {
 
   test("the privacy page can turn analytics back off", async ({ page }) => {
     await page.goto("/");
-    test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
     await page.getByRole("button", { name: /^accept$/i }).click();
     await page.goto("/privacy");
@@ -152,20 +156,10 @@ test.describe("phone banner layout", () => {
   // which Playwright rejects inside a describe group.
   test.use({ viewport: devices["iPhone 13"].viewport, isMobile: true, hasTouch: true });
 
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      Object.defineProperty(Navigator.prototype, "webdriver", {
-        configurable: true,
-        get: () => false,
-      });
-    });
-  });
-
   for (const viewport of [{ width: 390, height: 844 }, { width: 390, height: 664 }, { width: 320, height: 568 }]) {
     test(`the ${viewport.width}x${viewport.height} banner leaves the hero address field visible`, async ({ page }) => {
       await page.setViewportSize(viewport);
       await page.goto("/");
-      test.skip(!(await analyticsConfigured(page)), "no measurement ID in this build");
 
       const consentBanner = page.getByRole("region", { name: banner });
       await expect(consentBanner).toBeVisible();
