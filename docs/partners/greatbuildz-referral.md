@@ -1,7 +1,9 @@
 # GreatBuildz referral partnership
 
 **Status:** Built behind a flag. Not live. Launch waits on the signed pilot agreement and the coordinated test.
-**Terms:** GreatBuildz's email of 2026-11-09 (summarized below). The written agreement governs once signed.
+**Terms:** GreatBuildz's email of 2026-11-09 (summarized below). The written pilot agreement governs once signed;
+the draft sent to Jon on 2026-11-12 sets the consent design (Exhibit A), the relay times and the consent-record
+retention described here.
 **Code:** `lib/partner-referrals.ts`, `lib/server/partner-referrals.ts`,
 `app/api/partners/referral/route.ts`, `components/studio/BuilderLeadPanel.tsx`
 **Legal:** `/privacy` Sections 5 and 6 and `/terms` Section 7 name GreatBuildz from version 2026-11-10.
@@ -42,10 +44,19 @@ GreatBuildz when all of these hold:
 Where LotFoundry builders also serve the lot, a **Builder network** choice appears with **LotFoundry builders**
 as the default. Where none do, GreatBuildz is the only option and replaces the "No builders are registered"
 message. Each network has its own explanation and consent sentence. Switching networks clears the consent box,
-so consent always names whoever receives the details. The GreatBuildz consent (`partnerConsentText`) lists what
-is sent, covers calls, emails and texts from the advisor and matched contractors or architects, links the
-GreatBuildz privacy policy and terms, discloses the referral fee, and says LotFoundry doesn't screen contractors.
-LotFoundry copy never calls the network "screened" or "vetted".
+so consent always names whoever receives the details. GreatBuildz gets two boxes (pilot agreement Exhibit A):
+
+- **Required** (`partnerConsentText`): lists what is sent, lets a GreatBuildz advisor contact the homeowner by
+  phone or email, says GreatBuildz shares the project only with contractors or architects the homeowner agrees
+  to be matched with and reports status and contract price back, links the GreatBuildz privacy policy and terms,
+  discloses the referral fee, and says LotFoundry doesn't screen anyone.
+- **Optional** (`partnerSmsConsentText`): calls and texts from GreatBuildz Inc., including automated, at the
+  number given. Shown only once a phone number is typed, never required, and cleared on a network switch like
+  the required box. It names GreatBuildz only: contractors and architects get no consent from our form, so
+  GreatBuildz collects any it needs after the intake call.
+
+The intro email's "Texts and automated calls" line tells GreatBuildz which case applies. LotFoundry copy never
+calls the network "screened" or "vetted".
 
 ## Handoff
 
@@ -81,7 +92,8 @@ says the project now goes to GreatBuildz.
 
 **Sent to GreatBuildz:** name, email, optional phone and message, exact address, city, county, state, ZIP, lot
 size, existing building footprint (when confirmed), reported zoning, fire hazard zone, backyard home size,
-dimensions, roof, finish, modeled bedrooms, build-cost band ($25k bands), zoning screen, and the LFR number.
+dimensions, roof, finish, modeled bedrooms, build-cost band ($25k bands), zoning screen, whether the homeowner
+opted in to texts, and the LFR number.
 **Never sent:** exact cost and rent figures, the certificate, photos, saved scenarios, account ids, payment data,
 analytics.
 
@@ -97,7 +109,7 @@ The doc id is a hash of uid, partner and address, so it cannot be guessed and do
 | `ownerUid` | Homeowner account. Removed on account deletion. |
 | `status` | See lifecycle below. |
 | `handoff` | Exactly what was sent. Removed on account deletion. |
-| `consent` | `{ version, text, acceptedAt }` |
+| `consent` | `{ version, text, smsConsent, smsText, phone, acceptedAt, retainUntil }`. Kept after account deletion until `retainUntil` (four years, agreement § 9.4). |
 | `delivery` | `{ channel: "email", outcome, resendId?, error?, attemptedAt }` |
 | `attribution` | `{ source, state, county, aduSqft }`. Kept for fee reconciliation. |
 | `history` | `[{ status, at, note? }]`, append-only. |
@@ -117,10 +129,19 @@ GreatBuildz received that month; fee due (1%); fee paid date; notes.
 statuses, check fee due against amounts received, and record payments (due within 30 days after month end).
 Analytics event `partner_referral_submitted` is directional only; the ledger is the source of truth.
 
+**Sheet security and retention** (agreement § 7.2): named @greatbuildz.com and @lotfoundry.net accounts with 2FA
+only, link sharing off, no downloads to unmanaged devices. GreatBuildz clears a row's last name within 90 days
+after the 12-month window ends (no contract) or after the final fee installment (contract).
+
 **Account deletion and export:** `/api/account/delete` strips `ownerUid` and `handoff` but keeps the referral
-number, partner, county, size, status and consent receipt. `/api/account/export` includes the homeowner's
-referrals. Deletion requests that reach support@ are forwarded to GreatBuildz with the LFR number so they clear
-their copy and the sheet row; GreatBuildz forwards requests it receives the same way.
+number, partner, county, size, status and the `consent` record. `/api/account/export` includes the homeowner's
+referrals. **Consent records:** nothing purges them automatically yet; once a row's `consent.retainUntil` has
+passed, ops removes `consent.phone` (or the whole consent block) by hand.
+
+**Stop-contact and deletion relay** (agreement § 8.2): a request either company receives goes to the other by
+email, quoting the LFR number, within **2 business days** to stop calls, texts or emails and **5 business days**
+for anything else. GreatBuildz's addresses are jon@greatbuildz.com and team@mail.greatbuildz.com; ours is
+support@lotfoundry.net. GreatBuildz clears the homeowner from the sheet.
 
 ## Test setup
 
@@ -150,9 +171,12 @@ more. Put "Test referral, please don't schedule a consultation" in the message.
 ## Go-live checklist
 
 - [ ] Pilot agreement signed by GreatBuildz Inc. and VeriShare LLC, after counsel review.
-- [ ] Counsel reviews `partnerConsentText`, `/privacy` Sections 5 and 6 and `/terms` Section 7.
-- [ ] GreatBuildz confirms that consent captured in the Studio works for its texting platform, and that it is OK
-      being named in the Studio and on `/privacy` and `/terms`.
+- [ ] Counsel reviews `partnerConsentText`, `partnerSmsConsentText`, `/privacy` Sections 1, 5 and 6 and
+      `/terms` Section 7, and the four-year consent-record retention.
+- [ ] GreatBuildz confirms that the two-box consent works for its texting platform (agreement § 9.3), and that
+      it is OK being named in the Studio and on `/privacy` and `/terms`.
+- [ ] Play Console: submit the Data safety update in `docs/play-declarations.md` (design summary now shared) and
+      Publish it on launch day. No new Android build is needed.
 - [ ] W-9 for VeriShare LLC to GreatBuildz before the first payment.
 - [x] Wire `GREATBUILDZ_REFERRAL_EMAIL` and `GREATBUILDZ_REFERRAL_CC` into the Functions environment and
       `NEXT_PUBLIC_GREATBUILDZ_REFERRAL` into the deploy build in `.github/workflows/ci.yml`.
@@ -160,7 +184,8 @@ more. Put "Test referral, please don't schedule a consultation" in the message.
       `GREATBUILDZ_REFERRAL_CC=jon@greatbuildz.com`. Leave `NEXT_PUBLIC_GREATBUILDZ_REFERRAL` unset until launch.
       Verify the existing runtime `RESEND_API_KEY` binding and sender delivery in the controlled test.
 - [ ] Confirm shared-sheet access and name the operator for queued handoffs and coordinated deletion requests.
-- [ ] Merge on launch day; legal version 2026-11-10 (re-dated if later) asks signed-in users to accept again.
+- [ ] Merge on launch day; re-date the legal version (2026-11-10) and `PARTNER_REFERRAL_CONSENT_VERSION`
+      (2026-11-12) to that day. The legal bump asks signed-in users to accept again.
       Rules and app deploy together.
 - [ ] Dry run, then the coordinated test, as above.
 

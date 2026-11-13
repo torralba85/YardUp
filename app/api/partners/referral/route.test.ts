@@ -13,6 +13,7 @@ const body = {
   consentVersion: PARTNER_REFERRAL_CONSENT_VERSION,
   handoff: {
     homeowner: { name: "Jane Owner", email: "jane@example.com", phone: null, message: null },
+    smsConsent: false,
     property: {
       address: "123 Elm St, Pasadena, CA 91101", city: "Pasadena", county: "Los Angeles", state: "CA", zip: "91101", lotSqft: 6000,
       existingFootprintSqft: null, zoning: "R1", fireHazard: "none",

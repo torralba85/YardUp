@@ -7,6 +7,7 @@ import { buildConnectionSnapshot, validateOwnerContact } from "@/lib/marketplace
 import {
   availablePartnerNetwork,
   partnerConsentText,
+  partnerSmsConsentText,
   type BuilderNetworkChoice,
   type PartnerReferralStatus,
 } from "@/lib/partner-referrals";
@@ -32,6 +33,8 @@ export interface BuilderLeadSubmitInput {
    * partner network offered for this lot (see `lib/partner-referrals.ts`).
    */
   network: BuilderNetworkChoice;
+  /** The homeowner checked the optional partner text box (partner sends only). */
+  smsConsent: boolean;
 }
 
 /** What the submit handler reports back, per network. */
@@ -139,6 +142,8 @@ export default function BuilderLeadPanel({
   // The network the box was ticked for. Consent counts only while that network
   // is still the one selected, so it never follows the details to someone else.
   const [consentFor, setConsentFor] = useState<BuilderNetworkChoice | null>(null);
+  // The optional text box follows the same rule, and is never a condition of sending.
+  const [smsConsentFor, setSmsConsentFor] = useState<BuilderNetworkChoice | null>(null);
   const [network, setNetwork] = useState<BuilderNetworkChoice>("lotfoundry");
   // `field` is null for a failed send, which is reported beside Submit.
   const [error, setError] = useState<{ field: ContactField | null; message: string } | null>(null);
@@ -177,6 +182,9 @@ export default function BuilderLeadPanel({
   // The recipient changed after the box was ticked, e.g. a guest signed in and
   // the builder check found no LotFoundry builders here.
   const consentMoved = consentFor !== null && !consent;
+  // Offered only for a partner send with a number to text.
+  const smsOffered = toPartner && draft.phone.trim() !== "";
+  const smsConsent = smsOffered && smsConsentFor === activeNetwork;
   const matchNote =
     matches.status === "guest"
       ? "Sign in or create a free account to send it."
@@ -192,6 +200,7 @@ export default function BuilderLeadPanel({
     setNetwork(next);
     // Consent is specific to who receives the details, so it never carries over.
     setConsentFor(null);
+    setSmsConsentFor(null);
     setError(null);
   }
 
@@ -232,6 +241,7 @@ export default function BuilderLeadPanel({
           contact: validation.contact,
           snapshot,
           network: activeNetwork,
+          smsConsent,
         });
         if ("referralId" in submitted) {
           setSuccess(partnerOutcomeMessage(submitted));
@@ -420,6 +430,20 @@ export default function BuilderLeadPanel({
               </span>
             </label>
             {fieldError("consent")}
+            {smsOffered && (
+              <label
+                htmlFor="builder-lead-sms-consent"
+                className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
+              >
+                <Checkbox
+                  id="builder-lead-sms-consent"
+                  checked={smsConsent}
+                  onChange={(event) => setSmsConsentFor(event.target.checked ? activeNetwork : null)}
+                  className="mt-0.5"
+                />
+                <span>{partnerSmsConsentText(partner)}</span>
+              </label>
+            )}
             {toPartner && (
               <p className="text-sm leading-6 text-lot-stone md:col-span-2">
                 Read the {partner.name}{" "}

@@ -78,13 +78,27 @@ export const PARTNER_NETWORKS: Record<PartnerNetworkId, PartnerNetwork> = {
 
 /**
  * Bump whenever the partner consent wording changes. Each referral stores the
- * version and the exact text the homeowner agreed to.
+ * version and the exact text the homeowner agreed to. Re-date to launch day.
  */
-export const PARTNER_REFERRAL_CONSENT_VERSION = "2026-11-10";
+export const PARTNER_REFERRAL_CONSENT_VERSION = "2026-11-12";
 
-/** The consent sentence shown beside the checkbox and stored on the referral. */
+/**
+ * The required consent, shown beside the first checkbox and stored on the
+ * referral (pilot agreement Exhibit A, box 1). It covers the advisor's email
+ * and phone contact only. Texts have their own optional box, and it never
+ * covers contractors or architects, whom the homeowner can't name yet.
+ */
 export function partnerConsentText(partner: PartnerNetwork): string {
-  return `I'm 18 or older and I direct LotFoundry to email my name, email, optional phone and message, property address, lot and zoning facts, backyard home design summary and $25k build-cost band (not my exact costs, rent, photos or Certificate) to ${partner.legalName}, with a copy to me. A ${partner.name} project advisor, and the contractors or architects ${partner.name} matches me with, may contact me about this project by phone, email or text, including automated texts, at the number I provided. Message and data rates may apply; reply STOP to opt out of texts. Consent isn't required to buy anything. ${partner.name} handles my information under its own privacy policy and terms and reports referral status back to LotFoundry. ${partner.name} may pay LotFoundry a referral fee, which doesn't change what I pay. Any contractor screening is done by ${partner.name} alone; LotFoundry doesn't screen, background-check or guarantee any contractor.`;
+  return `I'm 18 or older, and I ask LotFoundry to email my name, email, phone and message (if I gave them), property address, lot and zoning facts, backyard home design summary and $25k build-cost range to ${partner.legalName}, with a copy to me. It won't include my exact costs, rent figures, photos or Certificate. A ${partner.name} project advisor may contact me about this project by phone or email to set up ${partner.name}'s free consultation. ${partner.name} handles my information under its own privacy policy and terms, may share my project with the contractors or architects I agree to be matched with, and reports the referral's status and any signed contract's price back to LotFoundry. ${partner.name} may pay LotFoundry a referral fee, which doesn't change what I pay. Any contractor or architect screening is done by ${partner.name} alone; LotFoundry doesn't screen, background-check, license-check or endorse anyone.`;
+}
+
+/**
+ * The optional text-message consent (Exhibit A, box 2). It names only the
+ * partner, is never a condition of the referral, and is offered only when the
+ * homeowner gave a phone number.
+ */
+export function partnerSmsConsentText(partner: PartnerNetwork): string {
+  return `Optional: ${partner.legalName} may also call and text me about this project at the phone number I provided, including with automated technology. This isn't required to get an introduction or to buy anything. Message and data rates may apply. Reply STOP to opt out.`;
 }
 
 /**
@@ -145,6 +159,12 @@ export function availablePartnerNetwork(
  */
 export interface PartnerReferralHandoff {
   homeowner: OwnerContact;
+  /**
+   * The homeowner checked the optional text box for the partner. Always false
+   * without a phone number. The intro email states it, so the partner knows
+   * whether it may text or must collect its own consent first.
+   */
+  smsConsent: boolean;
   property: {
     address: string;
     city: string;
@@ -178,11 +198,13 @@ export interface PartnerReferralHandoff {
 export function buildPartnerReferralHandoff(
   contact: OwnerContact,
   snapshot: ConnectionSnapshot,
+  smsConsent: boolean,
 ): PartnerReferralHandoff {
   const preview = buildLeadPreview({ snapshot, previewSerial: "partner-referral" });
   const live = snapshot.parcel as Partial<LiveParcelData>;
   return {
     homeowner: contact,
+    smsConsent: smsConsent && Boolean(contact.phone),
     property: {
       address: snapshot.parcelAddress,
       city: snapshot.parcelCity,
@@ -261,6 +283,9 @@ export function validatePartnerReferralRequest(body: unknown): PartnerReferralVa
   }
   const contact = validateOwnerContact({ name, email, phone, message, consent: true });
   if (!contact.ok) return contact;
+  if (typeof handoff?.smsConsent !== "boolean") return { ok: false, error: "Invalid request." };
+  // Text consent needs a number to text.
+  const smsConsent = handoff.smsConsent && contact.contact.phone !== null;
 
   const address = boundedString(property.address, 300);
   const city = boundedString(property.city, 120);
@@ -313,6 +338,7 @@ export function validatePartnerReferralRequest(body: unknown): PartnerReferralVa
       consentVersion: PARTNER_REFERRAL_CONSENT_VERSION,
       handoff: {
         homeowner: contact.contact,
+        smsConsent,
         property: {
           address, city, county, state: state.toUpperCase(), zip, lotSqft,
           existingFootprintSqft, zoning, fireHazard,

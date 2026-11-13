@@ -9,6 +9,7 @@ import { getAdminDb } from "@/lib/server/firebase-admin";
 import {
   PARTNER_NETWORKS,
   partnerConsentText,
+  partnerSmsConsentText,
   type PartnerNetwork,
   type PartnerReferralHandoff,
   type PartnerReferralRequest,
@@ -20,6 +21,13 @@ export const PARTNER_REFERRALS = "partnerReferrals";
 
 /** A slow provider must not hold the request open; the referral stays queued. */
 export const PARTNER_EMAIL_TIMEOUT_MS = 8_000;
+
+/**
+ * How long a referral's consent record (text, version, time, boxes, phone)
+ * outlives account deletion: the pilot agreement's § 9.4 period, which covers
+ * the four-year window for calling and texting claims.
+ */
+export const PARTNER_CONSENT_RETENTION_YEARS = 4;
 
 /** "LFR-XXXXXXXX": the reference both sides quote when reconciling referrals. */
 export function generateReferralId(): string {
@@ -70,6 +78,12 @@ export function renderPartnerReferralEmail(
     ["Homeowner", homeowner.name],
     ["Email", homeowner.email],
     ["Phone", homeowner.phone || "Not given"],
+    [
+      "Texts and automated calls",
+      handoff.smsConsent
+        ? `Yes, the homeowner opted in to calls and texts from ${partner.legalName}`
+        : `No. Email or a manually dialed call until ${partner.name} has its own consent`,
+    ],
     ["Property", property.address],
     ["County", `${property.county}, ${property.state}`],
     ["Lot size", `${property.lotSqft.toLocaleString("en-US")} sq ft`],
@@ -191,16 +205,24 @@ export async function createPartnerReferral(
   }
 
   const referralId = generateReferralId();
+  const retainUntil = new Date();
+  retainUntil.setUTCFullYear(retainUntil.getUTCFullYear() + PARTNER_CONSENT_RETENTION_YEARS);
   await ref.create({
     referralId,
     partnerId: partner.id,
     ownerUid: uid,
     status: "queued" satisfies PartnerReferralStatus,
     handoff: request.handoff,
+    // The consent record outlives account deletion until `retainUntil`, so
+    // either party can show what the homeowner agreed to for which number.
     consent: {
       version: request.consentVersion,
       text: partnerConsentText(partner),
+      smsConsent: request.handoff.smsConsent,
+      smsText: request.handoff.smsConsent ? partnerSmsConsentText(partner) : null,
+      phone: request.handoff.homeowner.phone,
       acceptedAt: FieldValue.serverTimestamp(),
+      retainUntil: retainUntil.toISOString(),
     },
     // Non-PII fields kept after account deletion for referral-fee reconciliation.
     attribution: {

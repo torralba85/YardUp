@@ -260,7 +260,7 @@ describe("BuilderLeadPanel", () => {
       county: "Los Angeles",
     };
 
-    function renderLa(props: Partial<PanelProps> = {}) {
+    function renderLa(props: Partial<PanelProps> & { initialDraft?: BuilderLeadDraft } = {}) {
       return renderPanel({ parcelKey: "elm-street", parcel: laParcel, ...props });
     }
 
@@ -323,6 +323,45 @@ describe("BuilderLeadPanel", () => {
       expect(status).toHaveTextContent("Sent to GreatBuildz. Your referral number is LFR-ABCDEF12.");
       expect(status).toHaveTextContent(/copied on the introduction email/);
       expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("offers the optional text box only for GreatBuildz, once a phone number is given", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa();
+      const textBox = () => screen.queryByRole("checkbox", { name: /may also call and text me/i });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(textBox()).not.toBeInTheDocument();
+      await userEvent.type(screen.getByRole("textbox", { name: "Phone (optional)" }), "626-555-0100");
+      expect(textBox()).not.toBeChecked();
+      expect(textBox()).toHaveAccessibleName(/^Optional: GreatBuildz Inc\. may also call and text me/);
+
+      await userEvent.click(screen.getByRole("radio", { name: "LotFoundry builders" }));
+      expect(textBox()).not.toBeInTheDocument();
+    });
+
+    it.each([false, true])("sends smsConsent: %s, since the text box is never required", async (ticked) => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue(sent);
+      renderLa({ onSubmit: submit, initialDraft: { ...janeDraft, phone: "626-555-0100" } });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      if (ticked) await userEvent.click(screen.getByRole("checkbox", { name: /may also call and text me/i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz", smsConsent: ticked }));
+    });
+
+    it("clears the text box when the homeowner switches networks", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa({ initialDraft: { ...janeDraft, phone: "626-555-0100" } });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /may also call and text me/i }));
+      await userEvent.click(screen.getByRole("radio", { name: "LotFoundry builders" }));
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(screen.getByRole("checkbox", { name: /may also call and text me/i })).not.toBeChecked();
     });
 
     it("shows a queued referral as pending without claiming an email was sent", async () => {

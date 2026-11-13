@@ -13,6 +13,7 @@ import {
   buildPartnerReferralHandoff,
   partnerConsentText,
   partnerServesLocation,
+  partnerSmsConsentText,
   validatePartnerReferralRequest,
 } from "./partner-referrals";
 
@@ -83,8 +84,9 @@ describe("availablePartnerNetwork", () => {
 describe("partner referral handoff", () => {
   it("sends contact, address, and banded project figures, never exact costs or rent", () => {
     const snapshot = laSnapshot();
-    const handoff = buildPartnerReferralHandoff(contact, snapshot);
+    const handoff = buildPartnerReferralHandoff(contact, snapshot, false);
     expect(handoff.homeowner).toEqual(contact);
+    expect(handoff.smsConsent).toBe(false);
     expect(handoff.property).toMatchObject({ address: "123 Elm St, Pasadena, CA 91101", county: "Los Angeles", state: "CA", zip: "91101" });
     expect(handoff.property).toHaveProperty("fireHazard");
     expect(handoff.project.bedroomClass).toMatch(/^(studio|1br|2br)$/);
@@ -94,25 +96,50 @@ describe("partner referral handoff", () => {
     expect(Object.keys(handoff.project)).not.toContain("monthlyRent");
   });
 
-  it("names the partner, the shared fields, texts, the referral fee and who screens contractors", () => {
+  it("keeps text consent only when there is a number to text", () => {
+    const snapshot = laSnapshot();
+    expect(buildPartnerReferralHandoff(contact, snapshot, true).smsConsent).toBe(false);
+    expect(buildPartnerReferralHandoff({ ...contact, phone: "626-555-0100" }, snapshot, true).smsConsent).toBe(true);
+  });
+
+  it("names the partner, the shared fields, advisor contact, the fee and who screens (Exhibit A, box 1)", () => {
     const text = partnerConsentText(GREATBUILDZ);
-    expect(text).toMatch(/^I'm 18 or older and I direct LotFoundry to email my name, email, optional phone and message, property address/);
+    expect(text.startsWith("I'm 18 or older, and I ask LotFoundry to email my name, email, phone and message (if I gave them), property address")).toBe(true);
     expect(text).toContain("to GreatBuildz Inc., with a copy to me");
-    expect(text).toMatch(/contractors or architects GreatBuildz matches me with, may contact me .* by phone, email or text/);
-    expect(text).toContain("reply STOP to opt out");
+    expect(text).toContain("A GreatBuildz project advisor may contact me about this project by phone or email");
+    expect(text).toContain("contractors or architects I agree to be matched with");
+    expect(text).toContain("any signed contract's price back to LotFoundry");
     expect(text).toContain("GreatBuildz handles my information under its own privacy policy and terms");
     expect(text).toContain("referral fee, which doesn't change what I pay");
-    expect(text).toContain("LotFoundry doesn't screen, background-check or guarantee any contractor");
+    expect(text).toContain("LotFoundry doesn't screen, background-check, license-check or endorse anyone");
+    // Texts have their own optional box, and contractors get no consent here.
+    expect(text).not.toMatch(/\btexts?\b|automated|STOP/);
     expect(text).not.toMatch(/screened|vetted/);
+  });
+
+  it("asks for texts separately, naming only the partner (Exhibit A, box 2)", () => {
+    const text = partnerSmsConsentText(GREATBUILDZ);
+    expect(text.startsWith("Optional: GreatBuildz Inc. may also call and text me about this project at the phone number I provided, including with automated technology.")).toBe(true);
+    expect(text).toContain("This isn't required to get an introduction or to buy anything.");
+    expect(text).toContain("Reply STOP to opt out.");
+    expect(text).not.toMatch(/contractor|architect/);
   });
 });
 
 describe("validatePartnerReferralRequest", () => {
+  it("drops text consent when no phone number came with it", () => {
+    const body = { partnerId: "greatbuildz", consentVersion: PARTNER_REFERRAL_CONSENT_VERSION, handoff: { ...buildPartnerReferralHandoff({ ...contact }, laSnapshot(), false), smsConsent: true } };
+    const result = validatePartnerReferralRequest(body);
+    expect(result).toMatchObject({ ok: true, value: { handoff: { smsConsent: false } } });
+    body.handoff.homeowner.phone = "626-555-0100";
+    expect(validatePartnerReferralRequest(body)).toMatchObject({ ok: true, value: { handoff: { smsConsent: true } } });
+  });
+
   const valid = () => ({
     partnerId: "greatbuildz",
     consentVersion: PARTNER_REFERRAL_CONSENT_VERSION,
     // A fresh contact each time: the cases below edit it.
-    handoff: buildPartnerReferralHandoff({ ...contact }, laSnapshot()),
+    handoff: buildPartnerReferralHandoff({ ...contact }, laSnapshot(), false),
   });
 
   it("accepts a current, covered request and drops unknown keys", () => {
@@ -138,6 +165,9 @@ describe("validatePartnerReferralRequest", () => {
     const small = valid();
     small.handoff.project.buildBandHigh = 75000;
     expect(validatePartnerReferralRequest(small)).toMatchObject({ ok: false, error: "GreatBuildz takes projects from $100,000." });
+    const noSmsFlag = valid();
+    delete (noSmsFlag.handoff as unknown as Record<string, unknown>).smsConsent;
+    expect(validatePartnerReferralRequest(noSmsFlag)).toMatchObject({ ok: false });
     const noFireClass = valid();
     (noFireClass.handoff.property as unknown as Record<string, unknown>).fireHazard = "";
     expect(validatePartnerReferralRequest(noFireClass)).toMatchObject({ ok: false });

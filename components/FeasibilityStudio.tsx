@@ -1140,7 +1140,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       const partner = PARTNER_NETWORKS[input.network];
       const referral = await submitPartnerReferral({
         partnerId: partner.id,
-        handoff: buildPartnerReferralHandoff(input.contact, input.snapshot),
+        handoff: buildPartnerReferralHandoff(input.contact, input.snapshot, input.smsConsent),
       });
       setBuilderLeadDraft(null);
       // A resubmit returns the existing referral; it isn't a new one.

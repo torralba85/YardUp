@@ -74,8 +74,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Partner referrals keep a non-PII business record (referral id, partner,
-    // county, status) for referral-fee reconciliation. The contact handoff and
-    // the owner link are removed; what the partner already received is the
+    // county, status) for referral-fee reconciliation, plus the consent record
+    // (text, version, time, boxes and the phone number it covered) until its
+    // `retainUntil`, to answer calling and texting claims. The contact handoff
+    // and the owner link are removed; what the partner already received is the
     // partner's to delete under its own policy.
     const ownedReferrals = await db
       .collection("partnerReferrals")

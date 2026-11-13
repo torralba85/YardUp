@@ -46,6 +46,7 @@ import {
 
 const handoff: PartnerReferralHandoff = {
   homeowner: { name: "Jane <Owner>", email: "jane@example.com", phone: null, message: "Backyard is sloped" },
+  smsConsent: false,
   property: {
     address: "123 Elm St, Pasadena, CA 91101", city: "Pasadena", county: "Los Angeles", state: "CA", zip: "91101", lotSqft: 6000,
     existingFootprintSqft: 1800, zoning: "R1", fireHazard: "high",
@@ -97,6 +98,16 @@ describe("renderPartnerReferralEmail", () => {
     expect(message.text).toMatch(/not quotes, surveys or permit approvals/);
     expect(message.html).toContain("Jane &lt;Owner&gt;");
     expect(message.html).not.toContain("Jane <Owner>");
+  });
+
+  it("tells the partner whether the homeowner opted in to texts", () => {
+    expect(renderPartnerReferralEmail(GREATBUILDZ, "LFR-1", handoff).text).toContain(
+      "Texts and automated calls: No. Email or a manually dialed call until GreatBuildz has its own consent",
+    );
+    const optedIn = { ...handoff, homeowner: { ...handoff.homeowner, phone: "626-555-0100" }, smsConsent: true };
+    expect(renderPartnerReferralEmail(GREATBUILDZ, "LFR-1", optedIn).text).toContain(
+      "Texts and automated calls: Yes, the homeowner opted in to calls and texts from GreatBuildz Inc.",
+    );
   });
 });
 
@@ -162,6 +173,22 @@ describe("createPartnerReferral", () => {
       delivery: { channel: "email", outcome: "sent", resendId: "email-1" },
     });
     expect((record.consent as { text: string }).text).toMatch(/GreatBuildz/);
+    expect(record.consent).toMatchObject({ smsConsent: false, smsText: null, phone: null });
+  });
+
+  it("keeps a four-year consent record naming the boxes and the number they covered", async () => {
+    const optedIn = { ...handoff, homeowner: { ...handoff.homeowner, phone: "626-555-0100" }, smsConsent: true };
+    await createPartnerReferral("owner-1", { ...request, handoff: optedIn });
+    const [record] = Array.from(store.docs.values());
+    const consent = record.consent as Record<string, unknown>;
+    expect(consent).toMatchObject({
+      smsConsent: true,
+      smsText: expect.stringContaining("GreatBuildz Inc. may also call and text me"),
+      phone: "626-555-0100",
+    });
+    const years = (Date.parse(consent.retainUntil as string) - Date.now()) / (365.25 * 24 * 3600 * 1000);
+    expect(years).toBeGreaterThan(3.99);
+    expect(years).toBeLessThan(4.01);
   });
 
   it("returns the existing referral instead of sending the same property twice", async () => {
