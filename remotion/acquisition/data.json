@@ -1,0 +1,31 @@
+{
+  "asOf": "2026-11-11",
+  "county": "San Diego",
+  "basis": "HUD FY2027 1BR benchmark; national construction base; cedar, shed, openings",
+  "six": {
+    "size": 600,
+    "bedroom": "1br",
+    "monthlyRent": 2335,
+    "costLow": 231000,
+    "costHigh": 289000,
+    "annualNoi": 18914,
+    "paybackYears": 13.3
+  },
+  "eight": {
+    "size": 800,
+    "bedroom": "1br",
+    "monthlyRent": 2335,
+    "costLow": 305000,
+    "costHigh": 381000,
+    "annualNoi": 18914,
+    "paybackYears": 17.5
+  },
+  "loan": {
+    "principal": 120000,
+    "rate": 6.5,
+    "years": 30,
+    "payment": 758.4816281915583,
+    "monthlyNoi": 1576.1666666666667,
+    "cash": 817.6850384751084
+  }
+}

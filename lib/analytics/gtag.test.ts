@@ -16,6 +16,7 @@ import { GOOGLE_ADS_ID } from "./adsConversion";
 
 describe("gtag helpers", () => {
   afterEach(() => {
+    window.history.replaceState(null, "", "/");
     vi.unstubAllEnvs();
     delete window.gtag;
     // Drain any event a test left held for an uninitialized tag.
@@ -100,6 +101,24 @@ describe("gtag helpers", () => {
           send_to: "G-ABC1234567",
         }),
       );
+    });
+
+    it("keeps approved campaign attribution while discarding property queries", () => {
+      writeConsent("granted");
+      window.history.replaceState(null, "", "/adu-cost-calculator?utm_source=facebook&utm_medium=organic_social&utm_campaign=adu_size_comparison_20261111&q=123+Main+St&token=secret#details");
+      const gtag = vi.fn();
+      window.gtag = gtag;
+
+      pageview("/adu-cost-calculator");
+
+      expect(gtag).toHaveBeenCalledWith("event", "page_view", expect.objectContaining({
+        campaign_source: "facebook",
+        campaign_medium: "organic_social",
+        campaign_name: "adu_size_comparison_20261111",
+        page_location: expect.stringMatching(/\/adu-cost-calculator$/),
+      }));
+      expect(JSON.stringify(gtag.mock.calls)).not.toMatch(/Main|secret|utm_|#details/);
+      window.history.replaceState(null, "", "/");
     });
 
     it("does not send when no measurement ID is configured", () => {

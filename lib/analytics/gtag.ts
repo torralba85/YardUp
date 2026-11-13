@@ -8,6 +8,7 @@
 
 import { isAnalyticsSuppressed, readConsent } from "./consent";
 import { GOOGLE_ADS_ID } from "./adsConversion";
+import { approvedCampaign } from "./campaign";
 
 /** Arguments accepted by the global `gtag` command queue. */
 type GtagArgs =
@@ -83,6 +84,19 @@ export function sanitizeReferrer(referrer: string): string {
   }
 }
 
+/** Safe defaults for GA4, including enhanced events and queued early events. */
+export function measurementContext(path?: string): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const referrer = sanitizeReferrer(document.referrer);
+  return {
+    page_location: `${window.location.origin}${sanitizePath(path ?? window.location.href)}`,
+    ...(referrer ? { page_referrer: referrer } : {}),
+    // No pre-consent storage or collection. Only fixed public campaign labels
+    // are interpreted after opt-in; all URL query strings remain stripped.
+    ...(canMeasure() ? approvedCampaign(window.location.search) : {}),
+  };
+}
+
 /**
  * Explicitly disable GA4 tracking on `window`, purge analytics cookies,
  * and mark opt-out state.
@@ -143,12 +157,11 @@ export function pageview(url: string): void {
   if (!id) return;
 
   const sanitized = sanitizePath(url);
-  const location = `${window.location.origin}${sanitized}`;
   const referrer = sanitizeReferrer(document.referrer);
 
   const payload = {
     page_path: sanitized,
-    page_location: location,
+    ...measurementContext(url),
     page_referrer: referrer,
     page_title: document.title,
     send_to: id,
@@ -195,12 +208,15 @@ export function trackEvent(
   delete safeParams.page_path;
   delete safeParams.page_referrer;
   delete safeParams.send_to;
+  for (const key of Object.keys(safeParams)) {
+    if (key.startsWith("campaign_") || key.startsWith("utm_")) delete safeParams[key];
+  }
 
   const referrer = sanitizeReferrer(document.referrer);
   const payload = {
     ...safeParams,
     page_path: sanitized,
-    page_location: `${window.location.origin}${sanitized}`,
+    ...measurementContext(),
     ...(referrer ? { page_referrer: referrer } : {}),
     send_to: id,
   };

@@ -21,8 +21,9 @@ export const carlsbad: JurisdictionContent = {
   county: "San Diego County",
   asOf: "2026-10-25",
   published: "2026-09-18",
+  metaTitle: "Carlsbad ADU Regulations (2026): Rules & Permits",
   metaDescription:
-    "Carlsbad ADU rules for 2026: up to 1,200 sq ft detached, 4 ft setbacks, 18 ft near Coaster stations, and the permit steps. See what fits your lot, free.",
+    "Carlsbad ADU regulations for 2026: size, setbacks, Coastal Zone permits and transit exceptions. Check the rules, then explore a concept for your lot.",
   introAnswer: [
     "Yes — Carlsbad allows one ADU plus one junior ADU on a single-family lot, and a detached unit can reach 1,200 square feet where lot coverage allows. The city approves ADUs administratively, with no public hearing: it confirms an application is complete within 15 business days and decides within 60 days of a complete application.",
     "Carlsbad ties its height relief to two named Coaster stops. Within a half-mile walk of Carlsbad Village or Poinsettia Station, a detached ADU can be 18 feet tall instead of 16, plus up to 2 more feet to match the main house's roof pitch. The parking waiver reaches further: it applies near any public transit stop, bus stops included.",
@@ -45,6 +46,14 @@ export const carlsbad: JurisdictionContent = {
     { label: "Approval type & timeline", value: "Administrative, no public hearing: completeness within 15 business days, decision within 60 days of a complete application", note: "Coastal Zone ADUs other than attached units and JADUs also need a Minor Coastal Development Permit" },
   ],
   cityDiffers: [
+    {
+      heading: "Carlsbad ADU regulations: three checks for your lot",
+      paragraphs: [
+        "Coastal or inland? Check the Coastal Zone map first. A coastal lot can have an additional permit path and a different governing rulebook; do not apply an inland summary without checking the certified Local Coastal Program.",
+        "Near a station or a bus stop? Check the walking-distance maps. The height exception uses Carlsbad Village and Poinsettia stations, while the parking exemption also reaches other public transit stops. The two checks are different.",
+        "Conversion or new construction? Identify which structure you plan to use before comparing setbacks and parking. For a garage conversion, check the Parking Replacement Areas map. For a new detached unit, include site conditions, solar and any required geotechnical work in the questions you take to the city and your designer.",
+      ],
+    },
     {
       heading: "The rulebook: IB-111 and Municipal Code §21.10.030",
       paragraphs: [

@@ -39,7 +39,7 @@ export const PLANS_SECTION_ADDED = "2026-11-08";
 export const CITY_NAV_UPDATED: Record<string, string> = {
   "san-diego-county": PLANS_SECTION_ADDED,
   "san-diego": PLANS_SECTION_ADDED,
-  carlsbad: PLANS_SECTION_ADDED,
+  carlsbad: "2026-11-11",
   "imperial-beach": PLANS_SECTION_ADDED,
   "la-mesa": PLANS_SECTION_ADDED,
   sacramento: PLANS_SECTION_ADDED,

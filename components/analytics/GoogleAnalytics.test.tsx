@@ -52,6 +52,7 @@ describe("GoogleAnalytics", () => {
   });
 
   afterEach(() => {
+    window.history.replaceState(null, "", "/");
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
     Reflect.deleteProperty(navigator, "webdriver");
@@ -114,6 +115,19 @@ describe("GoogleAnalytics", () => {
     const init = await screen.findByTestId("lf-gtag-init");
     expect(init.textContent).toContain("send_page_view: false");
     expect(init.textContent).toContain("G-ABC1234567");
+  });
+
+  it("configures approved attribution with clean default URLs before early events flush", async () => {
+    grantConsent();
+    window.history.replaceState(null, "", "/adu-cost-calculator?utm_source=x&utm_medium=organic_social&utm_campaign=adu_size_comparison_20261111&address=private#secret");
+    render(<GoogleAnalytics />);
+
+    const init = await screen.findByTestId("lf-gtag-init");
+    const body = init.textContent ?? "";
+    expect(body).toContain('"campaign_source":"x"');
+    expect(body).toContain('"campaign_name":"adu_size_comparison_20261111"');
+    expect(body).toContain('"page_location":"http://localhost:3000/adu-cost-calculator"');
+    expect(body).not.toMatch(/private|#secret|utm_source/);
   });
 
   it("grants advertising measurement only after the new disclosure is accepted", async () => {
