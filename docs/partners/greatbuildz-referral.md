@@ -61,16 +61,23 @@ LotFoundry copy never calls the network "screened" or "vetted".
    - **Subject:** "Introducing you to GreatBuildz Contractor Matching Service (LFR-XXXXXXXX)".
    - Idempotency key `partner-referral/<referralId>`; `X-Entity-Ref-ID` header.
 4. Records the delivery outcome. Without `RESEND_API_KEY` or `GREATBUILDZ_REFERRAL_EMAIL`, or on a provider
-   error, the row stays `queued` and ops sends the same email by hand (same recipients, same subject).
+   error, the row stays `queued` and ops sends the same email by hand (same recipients, same subject). Each
+   queued referral logs `[partner-referral] LFR-XXXXXXXX queued for manual handoff` at error severity; search
+   Cloud Logging for it. The Studio tells the homeowner the request was received, not that it was sent.
 
 A second submit for the same homeowner, partner and address returns the existing referral (`duplicate: true`)
 and sends nothing, including when the existing row is `queued` or `closed_lost`. A new project at the same
-address goes to Jon by email. Queued referrals show a pending introduction, not a sent-email confirmation.
+address goes to Jon by email. The Studio words each outcome: a sent referral says the homeowner is copied; a
+queued one shows a pending introduction; a duplicate says it was already sent or already received.
 
 Before enabling referrals, designate a support@ operator to check queued rows each business day and after
 reported delivery failures. Inspect the Resend delivery record before a manual send (a timeout can leave
 acceptance uncertain), use the existing LFR number, and record the handoff outcome. Resubmitting the form is
 not a retry mechanism.
+
+In the Studio, consent counts only for the network it was given for. If the choice collapses after the box
+was ticked (a guest signs in, or the builder check finds no LotFoundry builders), the box clears and the form
+says the project now goes to GreatBuildz.
 
 **Sent to GreatBuildz:** name, email, optional phone and message, exact address, city, county, state, ZIP, lot
 size, existing building footprint (when confirmed), reported zoning, fire hazard zone, backyard home size,

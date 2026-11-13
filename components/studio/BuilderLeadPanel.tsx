@@ -37,7 +37,42 @@ export interface BuilderLeadSubmitInput {
 /** What the submit handler reports back, per network. */
 export type BuilderLeadSubmitResult =
   | { matchedCount: number }
-  | { partnerName: string; referralId: string; status: PartnerReferralStatus };
+  | PartnerReferralOutcome;
+
+/** A partner send as the API recorded it. */
+interface PartnerReferralOutcome {
+  partnerName: string;
+  referralId: string;
+  /** `queued` means the introduction email hasn't gone yet; ops sends it by hand. */
+  status: PartnerReferralStatus;
+  /** This project was already referred, so nothing new was sent. */
+  duplicate: boolean;
+}
+
+/** What the homeowner is told after a partner send, by what actually happened. */
+function partnerOutcomeMessage({ partnerName, referralId, status, duplicate }: PartnerReferralOutcome) {
+  const emailed = status !== "queued";
+  if (duplicate) {
+    return emailed
+      ? {
+          message: `Already sent to ${partnerName}. Your referral number is ${referralId}.`,
+          next: "We didn't send it again. To change your details, reply to the introduction email.",
+        }
+      : {
+          message: `Already received. Your referral number is ${referralId}.`,
+          next: `Your introduction to ${partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
+        };
+  }
+  return emailed
+    ? {
+        message: `Sent to ${partnerName}. Your referral number is ${referralId}.`,
+        next: `You're copied on the introduction email. A ${partnerName} project advisor will contact you to set up a free consultation.`,
+      }
+    : {
+        message: `Referral received. Your referral number is ${referralId}.`,
+        next: `Your introduction to ${partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
+      };
+}
 
 /**
  * What the homeowner has typed. The Studio holds it, so closing the form or
@@ -101,7 +136,9 @@ export default function BuilderLeadPanel({
   onSubmit: (input: BuilderLeadSubmitInput) => Promise<BuilderLeadSubmitResult>;
   onRequestSignIn: () => void;
 }) {
-  const [consent, setConsent] = useState(false);
+  // The network the box was ticked for. Consent counts only while that network
+  // is still the one selected, so it never follows the details to someone else.
+  const [consentFor, setConsentFor] = useState<BuilderNetworkChoice | null>(null);
   const [network, setNetwork] = useState<BuilderNetworkChoice>("lotfoundry");
   // `field` is null for a failed send, which is reported beside Submit.
   const [error, setError] = useState<{ field: ContactField | null; message: string } | null>(null);
@@ -136,6 +173,10 @@ export default function BuilderLeadPanel({
   // Coverage and matches can change with the address; never submit to a hidden option.
   const activeNetwork = networks.includes(network) ? network : networks[0];
   const toPartner = partner !== null && activeNetwork === partner.id;
+  const consent = consentFor === activeNetwork;
+  // The recipient changed after the box was ticked, e.g. a guest signed in and
+  // the builder check found no LotFoundry builders here.
+  const consentMoved = consentFor !== null && !consent;
   const matchNote =
     matches.status === "guest"
       ? "Sign in or create a free account to send it."
@@ -150,7 +191,7 @@ export default function BuilderLeadPanel({
   function chooseNetwork(next: BuilderNetworkChoice) {
     setNetwork(next);
     // Consent is specific to who receives the details, so it never carries over.
-    setConsent(false);
+    setConsentFor(null);
     setError(null);
   }
 
@@ -193,13 +234,7 @@ export default function BuilderLeadPanel({
           network: activeNetwork,
         });
         if ("referralId" in submitted) {
-          setSuccess(submitted.status === "queued" ? {
-            message: `Referral received. Your referral number is ${submitted.referralId}.`,
-            next: `Your introduction to ${submitted.partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
-          } : {
-            message: `Sent to ${submitted.partnerName}. Your referral number is ${submitted.referralId}.`,
-            next: `You're copied on the introduction email. A ${submitted.partnerName} project advisor will contact you to set up a free consultation.`,
-          });
+          setSuccess(partnerOutcomeMessage(submitted));
         } else {
           setSuccess({
             message:
@@ -360,6 +395,13 @@ export default function BuilderLeadPanel({
                 onChange={(event) => onDraftChange({ ...draft, message: event.target.value })}
               />
             </div>
+            {consentMoved && (
+              <p role="status" className="text-sm font-semibold leading-6 text-lot-ink md:col-span-2">
+                {toPartner
+                  ? `No LotFoundry builders serve this area yet, so this goes to ${partner.name}. Please review the consent below.`
+                  : "This now goes to LotFoundry builders. Please review the consent below."}
+              </p>
+            )}
             <label
               htmlFor="builder-lead-consent"
               className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
@@ -367,7 +409,7 @@ export default function BuilderLeadPanel({
               <Checkbox
                 id="builder-lead-consent"
                 checked={consent}
-                onChange={(event) => setConsent(event.target.checked)}
+                onChange={(event) => setConsentFor(event.target.checked ? activeNetwork : null)}
                 className="mt-0.5"
                 {...fieldProps("consent")}
               />

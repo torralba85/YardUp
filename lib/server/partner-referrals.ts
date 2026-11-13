@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, type DocumentReference } from "firebase-admin/firestore";
 import { Resend } from "resend";
 import { COLOR } from "@/lib/design-tokens";
 import { finishLabels, roofLabels, type ExteriorFinish, type RoofStyle } from "@/lib/feasibility";
@@ -181,6 +181,8 @@ export async function createPartnerReferral(
   const existing = await ref.get();
   if (existing.exists) {
     const data = existing.data() ?? {};
+    // A resubmit is never a retry: a send that timed out may still have reached
+    // the partner, so ops resends queued rows by hand after checking Resend.
     return {
       referralId: String(data.referralId ?? ""),
       status: (data.status as PartnerReferralStatus) ?? "queued",
@@ -212,8 +214,27 @@ export async function createPartnerReferral(
     updatedAt: FieldValue.serverTimestamp(),
   });
 
-  const delivery = await dispatchPartnerReferral(partner, referralId, request.handoff);
+  const status = await deliverReferral(ref, partner, referralId, request.handoff);
+  return { referralId, status, duplicate: false };
+}
+
+/** Email a new ledger row's introduction and record the outcome. */
+async function deliverReferral(
+  ref: DocumentReference,
+  partner: PartnerNetwork,
+  referralId: string,
+  handoff: PartnerReferralHandoff,
+): Promise<PartnerReferralStatus> {
+  const delivery = await dispatchPartnerReferral(partner, referralId, handoff);
   const status: PartnerReferralStatus = delivery.delivery === "sent" ? "sent" : "queued";
+  if (status === "queued") {
+    // Nothing else surfaces a queued row; ops finds it by this line and sends
+    // the introduction by hand (docs/partners/greatbuildz-referral.md).
+    console.error(
+      `[partner-referral] ${referralId} queued for manual handoff:`,
+      delivery.error ?? "no email sent; check RESEND_API_KEY and GREATBUILDZ_REFERRAL_EMAIL",
+    );
+  }
   await ref.update({
     status,
     delivery: {
@@ -228,6 +249,5 @@ export async function createPartnerReferral(
       : {}),
     updatedAt: FieldValue.serverTimestamp(),
   });
-
-  return { referralId, status, duplicate: false };
+  return status;
 }

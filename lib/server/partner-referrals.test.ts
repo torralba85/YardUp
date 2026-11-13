@@ -57,12 +57,18 @@ const handoff: PartnerReferralHandoff = {
 };
 const request = { partnerId: "greatbuildz" as const, consentVersion: PARTNER_REFERRAL_CONSENT_VERSION, handoff };
 
+let consoleError: ReturnType<typeof vi.spyOn>;
+
 beforeEach(() => {
   store.docs.clear();
   store.updates = [];
   resendMocks.send.mockReset();
+  consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 });
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  consoleError.mockRestore();
+});
 
 describe("partner referral ids", () => {
   it("issues LFR- referral numbers and a stable per-owner-and-property doc id", () => {
@@ -163,5 +169,38 @@ describe("createPartnerReferral", () => {
     const second = await createPartnerReferral("owner-1", request);
     expect(second).toEqual({ referralId: first.referralId, status: "queued", duplicate: true });
     expect(resendMocks.send).not.toHaveBeenCalled();
+  });
+
+  it("logs every queued referral so ops can send it by hand", async () => {
+    const result = await createPartnerReferral("owner-1", request);
+    expect(result.status).toBe("queued");
+    expect(consoleError).toHaveBeenCalledWith(
+      `[partner-referral] ${result.referralId} queued for manual handoff:`,
+      expect.stringContaining("no email sent"),
+    );
+  });
+
+  it("never retries a queued referral on resubmit, since a timed-out send may have arrived", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("GREATBUILDZ_REFERRAL_EMAIL", "intake@partner.example");
+    resendMocks.send.mockRejectedValueOnce(new Error("timeout"));
+
+    const first = await createPartnerReferral("owner-1", request);
+    expect(first).toMatchObject({ status: "queued", duplicate: false });
+    const second = await createPartnerReferral("owner-1", request);
+
+    expect(second).toEqual({ referralId: first.referralId, status: "queued", duplicate: true });
+    expect(resendMocks.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("never resends a referral the partner already has", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("GREATBUILDZ_REFERRAL_EMAIL", "intake@partner.example");
+    resendMocks.send.mockResolvedValue({ data: { id: "email-1" }, error: null });
+
+    const first = await createPartnerReferral("owner-1", request);
+    const second = await createPartnerReferral("owner-1", request);
+    expect(second).toEqual({ referralId: first.referralId, status: "sent", duplicate: true });
+    expect(resendMocks.send).toHaveBeenCalledTimes(1);
   });
 });

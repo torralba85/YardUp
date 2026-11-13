@@ -600,7 +600,8 @@ Business meaning:
 A homeowner sent their project to a partner network (GreatBuildz) instead of the LotFoundry marketplace.
 
 Fire:
-Only after `POST /api/partners/referral` records the referral (sent or queued). Never on a failed submit.
+Only after `POST /api/partners/referral` records the referral (sent or queued). Never on a failed submit, and
+not on a resubmit that returns an existing referral (`duplicate: true`).
 
 Parameters:
 - partner_id (`greatbuildz`)

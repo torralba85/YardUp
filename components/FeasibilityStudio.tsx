@@ -1143,14 +1143,22 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         handoff: buildPartnerReferralHandoff(input.contact, input.snapshot),
       });
       setBuilderLeadDraft(null);
-      const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
-      trackPartnerReferralSubmitted({
-        partner_id: partner.id,
-        feasibility_status: mapFeasibilityVerdict(summary.verdict),
-        adu_sqft_bucket: getAduSqftBucket(config.footprint),
-        state_code: extractStateCode({ state: input.snapshot.parcelState, city: input.snapshot.parcelCity }),
-      });
-      return { partnerName: partner.name, referralId: referral.referralId, status: referral.status };
+      // A resubmit returns the existing referral; it isn't a new one.
+      if (!referral.duplicate) {
+        const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
+        trackPartnerReferralSubmitted({
+          partner_id: partner.id,
+          feasibility_status: mapFeasibilityVerdict(summary.verdict),
+          adu_sqft_bucket: getAduSqftBucket(config.footprint),
+          state_code: extractStateCode({ state: input.snapshot.parcelState, city: input.snapshot.parcelCity }),
+        });
+      }
+      return {
+        partnerName: partner.name,
+        referralId: referral.referralId,
+        status: referral.status,
+        duplicate: referral.duplicate,
+      };
     }
 
     const builders = await fetchActiveBuilders();
