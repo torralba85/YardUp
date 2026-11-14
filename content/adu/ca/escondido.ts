@@ -34,7 +34,7 @@ export const escondido: JurisdictionContent = {
     { label: "Max size — JADU", value: "500 sq ft, subject to zoning standards", note: "Must comply with setback, height, FAR, and coverage rules except where state law overrides" },
     { label: "Max height — detached", value: "16 ft; 18 ft within ½ mile of transit", note: "Per the city ADU handout; Article 70 amendments on height were recommended May 2026" },
     { label: "Rear and side setbacks", value: "4 ft side and rear", note: "Front setbacks per existing zoning" },
-    { label: "Front setback", value: "Based on existing zoning" },
+    { label: "Front setback", value: "Based on existing zoning", note: "Cannot be applied to preclude an 800 sq ft detached ADU with 4 ft side/rear setbacks (Gov. Code §66321(b)(3))" },
     { label: "Parking required", value: "Max 1 space per ADU", note: "Waived within ½-mile walk of transit, in historic districts, for conversions, and for attached units" },
     { label: "Owner-occupancy", value: "Never required for standard ADUs", note: "JADU occupancy only where sanitation is shared with the main home" },
     { label: "Lot-size minimum", value: "None — prohibited by state law" },
@@ -119,7 +119,7 @@ export const escondido: JurisdictionContent = {
     {
       question: "What are the setback rules for a casita in Escondido?",
       answer:
-        "Four-foot side and rear setbacks, with front setbacks per existing zoning. Conversions of existing structures carry no new setback requirement.",
+        "Four-foot side and rear setbacks, with front setbacks per existing zoning — though state law (Gov. Code §66321(b)(3)) bars using front setbacks to block an 800-square-foot detached ADU. Conversions of existing structures carry no new setback requirement.",
     },
     {
       question: "How big can a back house be in Escondido?",

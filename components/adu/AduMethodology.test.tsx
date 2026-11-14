@@ -4,6 +4,7 @@ import { AduMethodology } from "./AduMethodology";
 import { countyMarketAggregate } from "@/lib/adu/market-aggregate";
 import { defaultFinancialAssumptions, formatCurrency } from "@/lib/feasibility";
 import { resolveStaticMarket } from "@/lib/server/market/static-market";
+import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
 describe("AduMethodology", () => {
   it("shows the same 600 sq ft San Diego County figures the cost guides compute", () => {
@@ -49,9 +50,18 @@ describe("AduMethodology", () => {
 
   it("declares Article and BreadcrumbList structured data", () => {
     const { container } = render(<AduMethodology />);
-    const types = Array.from(
+    const scripts = Array.from(
       container.querySelectorAll('script[type="application/ld+json"]'),
-    ).map((script) => JSON.parse(script.textContent ?? "{}")["@type"]);
-    expect(types).toEqual(["Article", "BreadcrumbList"]);
+    ).map((script) => JSON.parse(script.textContent ?? "{}"));
+    expect(scripts.map((entry) => entry["@type"])).toEqual(["Article", "BreadcrumbList"]);
+    const article = scripts[0];
+    expect(article.publisher).toMatchObject({
+      "@type": "Organization",
+      "@id": ORGANIZATION_JSON_LD["@id"],
+      logo: {
+        "@type": "ImageObject",
+        url: ORGANIZATION_JSON_LD.logo,
+      },
+    });
   });
 });

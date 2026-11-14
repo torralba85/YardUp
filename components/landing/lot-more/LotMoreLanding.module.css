@@ -1234,6 +1234,7 @@
 }
 .footerLegal a {
   min-width: 44px;
+  justify-content: center;
 }
 .footerBottom a {
   display: flex;

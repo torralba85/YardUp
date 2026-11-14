@@ -5,6 +5,7 @@ import {
   calculatorUrl,
   cityUrl,
   costPageUrl,
+  eligibilityUrl,
   hubUrl,
   jaduUrl,
   methodologyUrl,
@@ -12,13 +13,19 @@ import {
   rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
+import {
+  calculatorLastModified,
+  cityLastModified,
+  costPageLastModified,
+  eligibilityLastModified,
+  hubLastModified,
+  stateCostLastModified,
+} from "@/lib/adu/dates";
+import { CALIFORNIA_COST_GUIDE_AS_OF } from "@/components/adu/CaliforniaAduCostGuide";
 import { guidePlanCatalog } from "@/lib/preapproved-plans";
 import {
-  CITY_NAV_UPDATED,
-  PLANNING_LINKS_UPDATED,
   PLANS_SECTION_ADDED,
   buildAduSitemapXml,
-  laterDate,
 } from "./build-xml";
 
 /** Map each `<loc>` to its `<lastmod>`. */
@@ -29,28 +36,28 @@ function lastmodByLoc(xml: string): Map<string, string> {
 }
 
 describe("sitemap-adu.xml", () => {
-  it("lists the hub, statewide cost guide, calculator, every jurisdiction page, and every cost page with as-of lastmod", () => {
+  it("lists the hub, eligibility guide, statewide cost guide, calculator, every jurisdiction page, and every cost page with as-of lastmod", () => {
     const xml = buildAduSitemapXml();
     const lastmod = lastmodByLoc(xml);
-    expect(lastmod.get(hubUrl())).toBe(PLANNING_LINKS_UPDATED);
-    expect(lastmod.get(stateCostUrl())).toBe(PLANNING_LINKS_UPDATED);
-    expect(lastmod.get(calculatorUrl())).toBe(PLANNING_LINKS_UPDATED);
+    expect(lastmod.get(hubUrl())).toBe(hubLastModified());
+    expect(lastmod.get(eligibilityUrl())).toBe(eligibilityLastModified());
+    expect(lastmod.get(stateCostUrl())).toBe(stateCostLastModified(CALIFORNIA_COST_GUIDE_AS_OF));
+    expect(lastmod.get(calculatorUrl())).toBe(calculatorLastModified());
     expect(xml).toContain(`<loc>${methodologyUrl()}</loc>`);
     for (const city of ADU_CITIES) {
-      // The as-of date, unless the guide's links changed later.
-      expect(lastmod.get(cityUrl(city))).toBe(laterDate(city.asOf, CITY_NAV_UPDATED[city.slug] ?? city.asOf));
+      expect(lastmod.get(cityUrl(city))).toBe(cityLastModified(city.slug, city.asOf));
       expect(lastmod.get(cityUrl(city))! >= city.asOf).toBe(true);
     }
-    expect(lastmod.get("https://lotfoundry.net/adu/ca/san-diego-county")).toBe("2026-11-08");
+    expect(lastmod.get("https://lotfoundry.net/adu/ca/san-diego-county")).toBe(cityLastModified("san-diego-county", "2026-10-24"));
     for (const cost of ADU_COST_PAGES) {
-      expect(lastmod.get(costPageUrl(cost))).toBe(laterDate(cost.asOf, PLANNING_LINKS_UPDATED));
+      expect(lastmod.get(costPageUrl(cost))).toBe(costPageLastModified(cost.asOf));
     }
     expect(xml).toContain("<loc>https://lotfoundry.net/adu/ca/san-diego/cost</loc>");
     // Well-formed entries only: one <url> block per page, XML-escaped.
     expect(xml).toContain(`<loc>${rentUrl()}</loc>`);
     expect(xml).toContain(`<loc>${permitStudyUrl()}</loc>`);
     expect(xml).toContain(`<loc>${jaduUrl()}</loc>`);
-    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 7);
+    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 8);
     expect(xml).not.toContain("& ");
   });
 

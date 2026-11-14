@@ -4,5 +4,5 @@ import { sampleCertificateResponse } from "@/lib/sample-certificate";
 export const dynamic = "force-static";
 
 export function GET() {
-  return sampleCertificateResponse("seattle");
+  return sampleCertificateResponse("san-diego");
 }

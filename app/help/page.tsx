@@ -49,9 +49,9 @@ export default function HelpPage() {
       </LegalSection>
       <LegalSection title="Payments">
         <p>
-          On the web, certificates and builder lead credits use Stripe Checkout. In the iOS and
-          Android apps, certificates use App Store and Google Play billing with server-side
-          verification. Demo environments may unlock without payment.
+          On the web, certificates and builder lead credits use Stripe Checkout. In the Android app,
+          certificates use Google Play billing with server-side verification. Demo environments may
+          unlock without payment.
         </p>
       </LegalSection>
       <WebBuilderOnly><LegalSection title="Builder leads">

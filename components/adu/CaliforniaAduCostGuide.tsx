@@ -2,8 +2,10 @@ import Link from "next/link";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
+import { CostBreakdownDiagram } from "./CostBreakdownDiagram";
 import { HUD_FMR_FY2027_URL, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { aduArticleJsonLd, hubUrl, opengraphImageUrl, stateCostUrl } from "@/lib/adu/content";
+import { stateCostLastModified } from "@/lib/adu/dates";
 import { countyMarketAggregate } from "@/lib/adu/market-aggregate";
 import {
   defaultFinancialAssumptions,
@@ -107,7 +109,7 @@ export function CaliforniaAduCostGuide() {
       {
         "@type": "ListItem",
         position: 1,
-        name: "LotFoundry",
+        name: "Home",
         item: "https://lotfoundry.net/",
       },
       {
@@ -128,7 +130,7 @@ export function CaliforniaAduCostGuide() {
     headline: "ADU Cost in California (2026): What to Budget",
     image: opengraphImageUrl(stateCostUrl()),
     datePublished: CALIFORNIA_COST_GUIDE_PUBLISHED,
-    dateModified: CALIFORNIA_COST_GUIDE_AS_OF,
+    dateModified: stateCostLastModified(CALIFORNIA_COST_GUIDE_AS_OF),
   });
 
   return (
@@ -163,7 +165,12 @@ export function CaliforniaAduCostGuide() {
       </div>
 
       <div className="mt-8">
-        <AduPlanningLinks current="/adu/ca/cost" />
+        <AduStudioCta
+          city="California"
+          slug="california-adu-cost"
+          placement="top"
+          heading="Model a backyard home footprint and budget for your lot in 3D"
+        />
       </div>
 
       <section aria-labelledby="california-adu-cost-by-size" className="mt-12">
@@ -171,7 +178,7 @@ export function CaliforniaAduCostGuide() {
           id="california-adu-cost-by-size"
           className="lf-card-heading text-lot-ink"
         >
-          California ADU cost by size
+          What does a California ADU cost by size?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           These detached-unit estimates use a cedar exterior, shed roof, and
@@ -225,8 +232,9 @@ export function CaliforniaAduCostGuide() {
 
       <section aria-labelledby="adu-cost-includes" className="mt-12">
         <h2 id="adu-cost-includes" className="lf-card-heading text-lot-ink">
-          What is included in the estimate
+          What is included in a California ADU estimate?
         </h2>
+        <CostBreakdownDiagram />
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
             A hard-cost base of ${hardCostLow}-${hardCostHigh} per sq ft,
@@ -320,7 +328,7 @@ export function CaliforniaAduCostGuide() {
 
       <section aria-labelledby="adu-quote-checklist" className="mt-12">
         <h2 id="adu-quote-checklist" className="lf-card-heading text-lot-ink">
-          What to ask for in an ADU quote
+          What should you ask for in an ADU quote?
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>Use the same plans, specifications, and scope for every bidder.</li>
@@ -351,8 +359,8 @@ export function CaliforniaAduCostGuide() {
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -361,10 +369,35 @@ export function CaliforniaAduCostGuide() {
         </div>
       </section>
 
+      <div className="mt-10">
+        <AduPlanningLinks current="/adu/ca/cost" />
+      </div>
+
+      <section aria-labelledby="adu-builders" className="mt-12 border-t border-lot-line pt-8">
+        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+          For builders and designers
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Share standardized homeowner feasibility briefs and bid-leveling worksheets
+          across California service areas via{" "}
+          <Link href="/builder" className={linkClass}>
+            the LotFoundry builder portal
+          </Link>
+          .
+        </p>
+      </section>
+
       <section aria-labelledby="adu-cost-sources" className="mt-12">
         <h2 id="adu-cost-sources" className="lf-card-heading text-lot-ink">
           Sources and estimate basis
         </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          See the{" "}
+          <Link href="/adu/how-we-estimate" className={linkClass}>
+            LotFoundry estimation methodology
+          </Link>{" "}
+          for the underlying cost, soft-cost, operating-expense, and HUD FMR formulas.
+        </p>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
             <a href={HCD_HANDBOOK_URL} rel="noopener" className={linkClass}>

@@ -34,7 +34,7 @@ export function SiteFooter() {
       <div
         className={`lf-caption mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-3 gap-y-2 px-6 py-8 ${muted}`}
       >
-        <Link href="/" className={`inline-flex min-h-11 items-center ${hover}`}>
+        <Link href="/" className={`inline-flex min-h-11 min-w-11 items-center justify-center px-1 ${hover}`}>
           LotFoundry
         </Link>
         {FOOTER_LINKS.map((link) => (
@@ -45,7 +45,7 @@ export function SiteFooter() {
             <Link
               href={link.href}
               prefetch={"firebase" in link ? false : undefined}
-              className={`inline-flex min-h-11 items-center ${hover}`}
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center px-1 ${hover}`}
             >
               {link.label}
             </Link>

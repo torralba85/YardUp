@@ -148,6 +148,16 @@ export function jaduUrl(): string {
   return `${BASE_URL}${jaduPath()}`;
 }
 
+/** Site-relative path for the California ADU eligibility guide. */
+export function eligibilityPath(): string {
+  return "/adu/ca/can-i-build-an-adu";
+}
+
+/** Absolute canonical URL for the California ADU eligibility guide. */
+export function eligibilityUrl(): string {
+  return `${BASE_URL}${eligibilityPath()}`;
+}
+
 /** Site-relative path for the San Diego ADU permit study. */
 export function permitStudyPath(): string {
   return "/adu/ca/san-diego/permits";

@@ -9,7 +9,7 @@
  *
  * Vista permits ADUs across single-family, agricultural, and estate zones
  * (R-1, R-1-B, E-1, A-1, O-R). Notably, beyond state-mandated fee exemptions
- * for units of 750 sq ft or less, Vista runs a progressive local Fee Waiver
+ * for units of 750 sq ft or less, Vista runs a local Fee Waiver
  * Program for units over 750 sq ft when owners commit to affordable rents
  * or house a family member or caregiver who cares for the primary unit's
  * owner or occupant. A 5-foot building separation is enforced between
@@ -31,9 +31,9 @@ export const vista: JurisdictionContent = {
   metaDescription:
     "Vista ADU rules: 1,200 sq ft detached units, 4 ft setbacks, 5 ft building separation, and the local fee waiver program. Check your lot, free.",
   introAnswer: [
-    "Yes. The City of Vista allows single-family property owners to build accessory dwelling units on the same residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). A detached backyard home can be built up to 1,200 square feet, while an attached unit can measure up to 50% of the primary residence.",
-    "Beyond state law standards, Vista features a progressive ADU Impact Fee Waiver Program under Chapter 18.31. While state law automatically exempts units of 750 square feet or less from municipal impact fees, Vista waives development fees on larger units (over 750 sq ft) for property owners who agree to a 10-year regulatory covenant renting to lower-income households or housing a family member or caregiver who provides regular care to an owner or occupant of the primary home.",
-    "Vista requires 5 feet of separation, measured eave to eave, between a new detached ADU and the primary home or other structures such as patio covers and sheds. Parcels located within a half-mile walking distance of public transit—including the Vista Transit Center and North County Transit District (NCTD) Sprinter light rail stops—are completely exempt from off-street parking requirements.",
+    "Yes. Vista lets single-family lots combine a converted ADU, a detached ADU, and a JADU (Gov. Code §66323(a)). A detached backyard home reaches 1,200 sq ft, while an attached ADU scales up to 50% of the main house.",
+    "Under Chapter 18.31, Vista waives municipal development impact fees even above California's 750 sq ft threshold when the homeowner records a 10-year covenant. That covenant reserves the unit for lower-income tenants or a caregiver/family member providing regular care to an occupant of the main home.",
+    "Vista requires 5 feet of clearance, eave to eave, between a new detached ADU and other structures like the house, sheds, or patio covers. Lots within a half-mile walk of the Vista Transit Center or NCTD Sprinter stops owe zero off-street parking.",
   ],
   metaSizeNote: "up to 1,200 sq ft detached; attached up to 50% of home",
   metaSetbackNote: "4 ft side and rear; 5 ft building separation required",
@@ -82,7 +82,7 @@ export const vista: JurisdictionContent = {
     {
       label: "Owner-occupancy",
       value: "Not required for standard ADUs",
-      note: "Mandatory only for junior ADUs (JADUs) where kitchen or sanitation facilities are shared with the primary house",
+      note: "Mandatory only for junior ADUs (JADUs) where sanitation facilities are shared with the primary house (Gov. Code §66333(b))",
     },
     {
       label: "Rentals and sale",

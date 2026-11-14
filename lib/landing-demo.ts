@@ -16,7 +16,7 @@ export const landingDemos = {
 } as const satisfies Record<string, LandingDemo>;
 export type LandingCity = keyof typeof landingDemos;
 
-export function landingScenarios(city: LandingCity = "seattle") {
+export function landingScenarios(city: LandingCity = "san-diego") {
   return (["conservative", "market", "optimistic"] as const).map((id) => {
     const result = calculateFeasibility(getParcelById(landingDemos[city].parcelId), defaultAduConfig, { ...defaultFinancialAssumptions, rentScenario: id });
     return { id, costLow: result.costLow, costHigh: result.costHigh, rent: result.monthlyRent, noi: result.annualNoi, payback: result.paybackYears, expenseRatio: result.operatingExpenseRatio, costBreakdown: result.costBreakdown };

@@ -30,9 +30,9 @@ export const elCajon: JurisdictionContent = {
   metaDescription:
     "El Cajon ADU rules: 1,200 sq ft detached units, unique 3-5 ft setback-height tiers, trolley transit waivers, and permit steps. Calculate feasibility free.",
   introAnswer: [
-    "Yes. The City of El Cajon permits accessory dwelling units on any legal lot developed with a single-family home: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). A detached backyard home can be constructed up to 1,200 square feet, providing ample room for multi-bedroom family or rental living quarters.",
-    "El Cajon's zoning code features a unique setback-to-height tier system under Municipal Code §17.140.180. While standard California state law establishes a flat 4-foot side and rear setback for a 16-foot unit, El Cajon allows a 3-foot setback for single-story structures capped at 12 feet, a 4-foot setback for units up to 16 feet, and allows heights up to 20 feet when setbacks are expanded to 5 feet. Two exceptions skip the 5-foot tier: within half a mile of a major transit stop or high-quality transit corridor a detached ADU may reach 18 feet (plus 2 feet to match the primary home's roof pitch), and on a lot whose primary dwelling has two or more stories it may reach 18 feet (§17.140.180(E)(2)(b)).",
-    "The city is well-served by the San Diego Trolley's Orange and Green Lines at the El Cajon Transit Center and Arnele Avenue Station. Parcels within a half-mile walking radius of these transit hubs or high-frequency bus routes are exempt from all off-street parking mandates, and garage conversions never require replacement parking.",
+    "Yes. El Cajon lets single-family lots combine a converted ADU, a detached ADU, and a JADU (Gov. Code §66323(a)). Detached backyard homes reach up to 1,200 sq ft for family or long-term rental housing.",
+    "El Cajon uses a tiered setback-to-height scale under Municipal Code §17.140.180. A single-story unit up to 12 feet needs a 3-foot side and rear setback, units up to 16 feet need 4 feet, and units up to 20 feet need 5 feet. Near transit or beside a two-story home, a detached ADU can still reach 18 feet at a 4-foot setback (§17.140.180(E)(2)(b)).",
+    "Parcels within a half-mile walk of the San Diego Trolley's Orange and Green Lines—including El Cajon Transit Center and Arnele Avenue Station—or high-frequency bus routes need zero ADU parking. Garage conversions never require replacement spaces.",
   ],
   metaSizeNote: "up to 1,200 sq ft attached or detached",
   metaSetbackNote: "tiered: 3 ft (12 ft high), 4 ft (16 ft high), 5 ft (20 ft high)",
@@ -101,8 +101,8 @@ export const elCajon: JurisdictionContent = {
     {
       heading: "Trolley transit corridors, utility connections, and multi-family rules",
       paragraphs: [
-        "El Cajon serves as a major regional transit center in East San Diego County, hosting two lines of the San Diego Metropolitan Transit System (MTS) Trolley. Under California Government Code §66314 and local code, any parcel within a half-mile walking distance of a public transit station or bus stop is fully exempt from off-street parking mandates. Properties near Main Street, Broadway, and Fletcher Parkway frequently qualify for this waiver.",
-        "For multi-family residential parcels, El Cajon adheres to state allowances that make infill additions highly lucrative. Owners of duplexes, triplexes, or apartment buildings can convert non-livable common spaces—such as storage basements, laundry facilities, or carports—into ADUs for up to 25% of the total existing unit count. Detached ADUs depend on whether the multifamily development already exists: a proposed multifamily development may include up to two detached ADUs, while an existing multifamily development may add up to eight detached ADUs, never more than the number of existing primary units (§17.140.180(B)(2)). Detached units follow 4-foot setbacks and 16-foot height caps.",
+        "El Cajon serves as a major regional transit center in East San Diego County, hosting two lines of the San Diego Metropolitan Transit System (MTS) Trolley. Under California Government Code §66322(a)(1) and local code, no off-street parking may be required for an ADU within a half-mile walking distance of a public transit station or bus stop (this waiver applies to ADUs; JADUs follow separate state rules). Properties near Main Street, Broadway, and Fletcher Parkway frequently qualify for this waiver.",
+        "Multifamily residential lots in El Cajon can add multiple infill ADUs under state-law formulas. Owners of duplexes, triplexes, or apartments may convert non-livable spaces—such as storage rooms, laundry areas, or carports—into ADUs up to 25% of existing units. Proposed multifamily sites may include up to two detached ADUs, while existing multifamily sites may add up to eight detached ADUs without exceeding existing primary units (§17.140.180(B)(2)), subject to 4-foot setbacks and 16-foot height limits.",
         "Utility connections depend on the scope of construction. While JADUs and garage conversions within the main house require no new capacity charges, new detached ADUs typically require coordinated connections with Padre Dam Municipal Water District or Helix Water District, as well as the City of El Cajon wastewater system. Fire sprinklers are required only if sprinklers are already installed in the primary dwelling, and solar panels are mandated for new detached units under California Title 24.",
       ],
     },
@@ -123,7 +123,7 @@ export const elCajon: JurisdictionContent = {
     ],
   },
   processIntro:
-    "El Cajon processes ADU applications through a streamlined ministerial review. The Community Development Department issues decisions within 60 calendar days of submittal without public notice or hearings.",
+    "El Cajon processes ADU applications through a streamlined ministerial review. Under Gov. Code §66317(a)(3), the Community Development Department issues decisions within 60 calendar days of receiving a complete application without public notice or hearings.",
   processSteps: [
     {
       title: "Confirm zoning and setback tiers",

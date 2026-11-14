@@ -35,8 +35,11 @@ export default function AboutPage() {
       </LegalSection>
       <LegalSection title="Who it is for">
         <p>
-          Homeowners deciding whether their backyard can earn, and builders who want consented
-          feasibility snapshots matched to their service areas.
+          Homeowners deciding whether their backyard can earn, and{" "}
+          <Link href="/builder" className="font-medium text-lot-orange-ink underline">
+            ADU builders and designers
+          </Link>{" "}
+          who want consented feasibility snapshots matched to their service areas.
         </p>
       </LegalSection>
       <LegalSection title="How the studio works">
@@ -52,6 +55,28 @@ export default function AboutPage() {
           with the scenario. You can review lot coverage and setback signals, compare the projected
           rent and build-cost range, and save or share an early snapshot when you have a direction
           worth discussing with a designer, contractor, lender, or city planner.
+        </p>
+      </LegalSection>
+      <LegalSection title="How we research and verify our guides">
+        <p>
+          Every state and city ADU guide follows a primary-source hierarchy: California Legislative
+          Information statutory text (Gov. Code §§66314–66342 and Civil Code §4751), the California
+          HCD ADU Handbook, and each jurisdiction&apos;s municipal code and Development Services
+          information bulletins.
+        </p>
+        <p>
+          Every guide publishes an explicit as-of review date synchronized with XML sitemaps and
+          structured Article schema. We enforce a 90-day re-verification gate in automated tests,
+          re-check local ordinances when cities adopt amendments, and accept source-backed corrections
+          through{" "}
+          <Link href="/feedback" className="font-medium text-lot-orange-ink underline">
+            feedback
+          </Link>
+          . Full cost, rent, and payback formulas are documented on{" "}
+          <Link href="/adu/how-we-estimate" className="font-medium text-lot-orange-ink underline">
+            how we estimate ADU feasibility
+          </Link>
+          .
         </p>
       </LegalSection>
       <LegalSection title="Honest estimates">

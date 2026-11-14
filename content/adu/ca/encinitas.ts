@@ -30,9 +30,9 @@ export const encinitas: JurisdictionContent = {
   metaDescription:
     "Encinitas ADU rules: up to 1,200 sq ft detached, 4 ft setbacks, PRADU plans, and Coastal Zone permit rules. See instant feasibility for your lot.",
   introAnswer: [
-    "Yes. The City of Encinitas allows accessory dwelling units (ADUs) on any single-family residential lot: a converted ADU inside existing space, a new detached ADU and a junior ADU (JADU) can all be built together when each meets its own requirements (Gov. Code §66323(a)). Attached and detached ADUs can each reach 1,200 square feet or the primary home's living area, whichever is less, provided lot coverage and required setbacks are satisfied.",
-    "Encinitas is famous across California for its Permit-Ready ADU (PRADU) program. Property owners can choose from a curated catalog of pre-approved, code-compliant architectural plan sets designed by licensed architects. Selecting a PRADU plan bypasses custom architectural design expenses and qualifies your project for expedited departmental plan check.",
-    "Much of Encinitas lies inside the California Coastal Zone. The boundary mostly follows the land west of Interstate 5 but reaches east of the freeway in places, so check your parcel on the City's Coastal Zone map rather than relying on the freeway. Most new detached ADUs inside the boundary require a Coastal Development Permit (CDP). To encourage backyard home construction, Encinitas waives the local City application processing fees for ADU coastal permits, and decisions are handled administratively without a public hearing.",
+    "Yes. Encinitas lets single-family lots combine a converted ADU, a new detached ADU, and a JADU when each unit meets code limits (Gov. Code §66323(a)). Attached and detached ADUs reach 1,200 sq ft or the main home's living area, whichever is less.",
+    "Encinitas runs a Permit-Ready ADU (PRADU) program with pre-approved architectural plan sets by licensed architects. Picking a PRADU plan skips custom architectural design fees and earns faster City plan check.",
+    "Much of Encinitas sits inside the California Coastal Zone, which extends east of Interstate 5 in several neighborhoods. Check your parcel on the City's Coastal Zone map before assuming you are outside it. Encinitas processes ADU coastal permits administratively without a public hearing and waives local City CDP application fees.",
   ],
   metaSizeNote: "up to 1,200 sq ft attached or detached, capped at the home's living area",
   metaSetbackNote: "4 ft side and rear for new construction; 0 ft for conversions",
@@ -86,7 +86,7 @@ export const encinitas: JurisdictionContent = {
     {
       label: "Approval timeline",
       value: "Administrative approval within 60 calendar days",
-      note: "Pre-approved PRADU plans qualify for expedited 30-day review under California pre-approved ADU law (Gov. Code §66324 / AB 1332)",
+      note: "Pre-approved PRADU plans qualify for expedited 30-day review under California pre-approved ADU law (Gov. Code §65852.27 / AB 1332)",
     },
   ],
   cityDiffers: [
@@ -94,7 +94,7 @@ export const encinitas: JurisdictionContent = {
       heading: "The Encinitas PRADU program: pre-approved plans and expedited review",
       paragraphs: [
         "Encinitas stands out in Southern California for its Permit-Ready ADU (PRADU) initiative, created to remove the costly hurdle of custom drafting. The City partners with regional architectural firms to maintain a diverse catalog of pre-reviewed building plans, ranging from compact studio floor plans up to multi-bedroom layouts of 1,200 square feet. Each pre-approved set already complies with the California Building Code, structural wind/seismic standards, and Title 24 energy requirements.",
-        "Choosing a PRADU plan set dramatically accelerates your timeline. Because the structural engineering and internal layouts have already undergone comprehensive vetting by City plan examiners, staff reviews focus primarily on your property-specific site plan, utility connections, and grading. Modifying exterior materials or window fenestrations is permitted within specified guidelines, but relocating load-bearing walls or altering external dimensions routes the project into custom plan review.",
+        "Choosing a PRADU plan set shortens City plan check. Because structural engineering and floor plans are already pre-approved, staff focus on your site plan, utility tie-ins, and grading. You can adjust exterior finishes or window sizing within set limits, but moving load-bearing walls or exterior dimensions routes the project into custom plan review.",
         "Under Encinitas Municipal Code §30.48.040(T), all ADU applications receive non-discretionary, administrative review. There are no public hearings, design review board delays, or neighbor sign-off hurdles. Building officials verify compliance against standard objective metrics within the statutory 60-day window. In addition, detached units must feature exterior colors, roof materials, and siding that harmonize with the main residence, and a roof deck is allowed on an ADU under §30.48.040(T)(16)(c) using the reduced ADU setbacks, provided the deck and its railings stay within the 16-foot height limit. Under California Title 24, newly constructed detached ADUs must add new solar photovoltaic modules unless a code exception (such as heavy shading) applies. Panels already on the main house do not count, but the new modules may expand the main house's system rather than form a separate system on the ADU.",
       ],
     },
@@ -102,7 +102,7 @@ export const encinitas: JurisdictionContent = {
       heading: "Coastal Zone permits, transit corridors, and bluff stability",
       paragraphs: [
         "Properties inside the Coastal Zone boundary, which covers most land west of Interstate 5 and some parcels east of it, are governed by the City's certified Local Coastal Program (LCP). State ADU statutes establish that environmental protections under the California Coastal Act take precedence in cases of direct statutory conflict. Consequently, most detached ADU projects inside the Coastal Zone require a Coastal Development Permit (CDP) in addition to standard building permits.",
-        "Encinitas has taken significant steps to reduce coastal development friction: the City administratively processes ADU coastal permits without requiring a public Planning Commission hearing, and local application fees for standard ADU CDPs are fully waived. However, lots located along coastal bluffs or steep inland canyons must satisfy geotechnical setback requirements and demonstrate 75-year bluff edge stability without the reliance on shoreline protective devices.",
+        "Encinitas processes ADU coastal permits administratively without a public Planning Commission hearing and waives local City CDP application fees. However, lots along coastal bluffs or steep inland canyons must meet geotechnical setback rules and document 75-year bluff-edge stability without shoreline protective devices.",
         "Parking standards reflect Encinitas's transit infrastructure. If your property is situated within a half-mile walking radius of the Encinitas Coaster station on South Coast Highway 101 or along active North County Transit District (NCTD) bus lines, no dedicated parking space is required. When converting an attached or detached garage into an ADU, state and local ordinances prohibit the City from demanding replacement off-street spaces for the primary house.",
       ],
     },
@@ -169,7 +169,7 @@ export const encinitas: JurisdictionContent = {
     {
       question: "What is the Encinitas PRADU program?",
       answer:
-        "The Permit-Ready ADU (PRADU) program offers property owners access to pre-approved architectural plan sets designed by participating regional firms. Using a pre-approved plan avoids custom structural drafting delays and qualifies the project for expedited 30-day review under California state law (Gov. Code §66324 / AB 1332).",
+        "The Permit-Ready ADU (PRADU) program offers property owners access to pre-approved architectural plan sets designed by participating regional firms. Using a pre-approved plan avoids custom structural drafting delays and qualifies the project for expedited 30-day review under California state law (Gov. Code §65852.27 / AB 1332).",
     },
     {
       question: "Do I need a Coastal Development Permit for an ADU in Encinitas?",

@@ -21,9 +21,9 @@ export const sanDiegoCost: JurisdictionCostContent = {
   slug: "san-diego",
   asOf: "2026-10-06",
   published: "2026-10-06",
-  metaTitle: "ADU Cost in San Diego (2026): Build, Rent & Payback",
+  metaTitle: "ADU Cost in San Diego (2026): $231K–$289K for 600 Sq Ft",
   metaDescription:
-    "What a San Diego ADU costs to build, rents for and takes to pay back, by size from 400 to 1,200 sq ft, plus City permit fees and a free calculator.",
+    "ADU cost in San Diego for 2026: $231K–$289K for 600 sq ft, $2,335/mo HUD rent, 13.3-yr payback, City IB 501 permit rules, and Chula Vista fee guide.",
   h1: "ADU Cost in San Diego (2026)",
   introAnswer: [
     "These are planning estimates for a new detached backyard home, whether it is for family, for rental income or for what comes next. Rent uses San Diego County's HUD Fair Market Rent, so the rent and payback figures hold across the county. Build cost uses LotFoundry's national construction base rather than a San Diego contractor survey, so compare it with site-specific quotes before you set a budget.",
@@ -34,7 +34,8 @@ export const sanDiegoCost: JurisdictionCostContent = {
     paragraphs: [
       "Inside City of San Diego limits, use Development Services Information Bulletin 501 to price plan review and inspection for your project. The schedule distinguishes detached ADUs up to 500 square feet from larger detached units, and attached units have separate size categories. There is no single permit price per square foot for every ADU.",
       "California's March 2026 ADU Handbook says ADUs with 750 square feet of interior livable space or less are exempt from local impact fees; larger units are charged proportionately to the primary dwelling. School fees and utility connection charges have separate rules, so request an itemized assessment.",
-      "The model's soft-cost allowance already covers design, engineering and permits. Reconcile your actual fees against it rather than adding them twice.",
+      "The model's 18% soft-cost allowance ($38,340 on a 600 sq ft detached ADU) covers design, engineering, and permits together. Reconcile your actual architectural quote and City IB 501 plan-check, submittal, and inspection invoices against that $38,340 budget rather than adding them on top.",
+      "Outside City of San Diego limits, fee rules differ by jurisdiction. For instance, Chula Vista offers council-authorized flat review fees for its preapproved standard plans instead of IB 501, so check the city fee guide for your parcel.",
     ],
     bullets: [
       "Plan review and inspection: use the applicable project category in Bulletin 501",

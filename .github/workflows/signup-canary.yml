@@ -90,3 +90,6 @@ jobs:
       - name: Check production Google sign-in (authDomain + OAuth redirect)
         if: ${{ !cancelled() && steps.gate.outputs.run_canary == 'true' }}
         run: npm run smoke:google-sign-in
+      - name: Check production security headers and edge HTML freshness
+        if: ${{ !cancelled() && steps.gate.outputs.run_canary == 'true' }}
+        run: npm run smoke:headers

@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CaliforniaAduRentGuide } from "./CaliforniaAduRentGuide";
+import { rentLastModified } from "@/lib/adu/dates";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -64,7 +65,7 @@ describe("CaliforniaAduRentGuide", () => {
     expect(screen.getByText(/Free to reuse under/).textContent).toMatch(
       /Free to reuse under\s+CC BY 4\.0\s+with a link to this page\./,
     );
-    expect(jsonLd(container, "Article").dateModified).toBe("2026-10-28");
+    expect(jsonLd(container, "Article").dateModified).toBe(rentLastModified());
     expect(jsonLd(container, "FAQPage").mainEntity.length).toBeGreaterThan(3);
     expect(jsonLd(container, "BreadcrumbList").itemListElement[2].item).toBe(
       "https://lotfoundry.net/adu/ca/rent",

@@ -29,7 +29,7 @@ export const sanDiegoCounty: JurisdictionContent = {
   published: "2026-10-24",
   metaTitle: "Unincorporated San Diego County ADU Rules (2026)",
   metaDescription:
-    "Unincorporated San Diego County ADU rules: 1,200 sq ft detached, up to 25 ft tall, 4 ft setbacks plus fire setbacks, septic and fee rules. Check your lot.",
+    "Unincorporated San Diego County ADU rules: 1,200 sq ft, 25 ft tall, fire & septic checks. Addresses inside City of San Diego follow City code.",
   h1: "ADU Rules in Unincorporated San Diego County (2026)",
   introAnswer: [
     "Yes — on a residentially zoned lot outside city limits with an existing or proposed house, the County allows at least one ADU and one junior ADU. A detached ADU can be up to 1,200 square feet whatever the size of the house, and up to 25 feet tall, well above the 16 feet state law guarantees for most detached units.",

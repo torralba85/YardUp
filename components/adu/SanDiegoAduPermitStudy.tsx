@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
 import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
@@ -14,8 +15,11 @@ import {
   opengraphImageUrl,
   permitStudyCsvPath,
   permitStudyCsvUrl,
+  permitStudyPath,
   permitStudyUrl,
 } from "@/lib/adu/content";
+import { permitStudyLastModified } from "@/lib/adu/dates";
+import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -98,7 +102,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "LotFoundry", item: "https://lotfoundry.net/" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
       { "@type": "ListItem", position: 2, name: "California ADU rules", item: hubUrl() },
       { "@type": "ListItem", position: 3, name: "San Diego ADU rules", item: `${hubUrl()}/san-diego` },
       { "@type": "ListItem", position: 4, name: "San Diego ADU permits", item: permitStudyUrl() },
@@ -108,7 +112,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
     headline: "San Diego ADU Permits by Neighborhood",
     image: opengraphImageUrl(permitStudyUrl()),
     datePublished: SAN_DIEGO_PERMIT_STUDY_PUBLISHED,
-    dateModified: study.generatedAt,
+    dateModified: permitStudyLastModified(study.generatedAt),
   });
   const datasetJsonLd = {
     "@context": "https://schema.org",
@@ -119,7 +123,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
     dateModified: study.generatedAt,
     temporalCoverage: `${coverage.from}/${coverage.to}`,
     spatialCoverage: { "@type": "Place", name: "City of San Diego, California" },
-    creator: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
+    creator: { "@type": "Organization", "@id": ORGANIZATION_JSON_LD["@id"], name: "LotFoundry", url: "https://lotfoundry.net/" },
     isBasedOn: [PERMIT_DATASET_URL, PLAN_AREAS_DATASET_URL],
     license: DATA_LICENSE.url,
     distribution: {
@@ -311,8 +315,8 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -370,9 +374,17 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
           ·{" "}
           <Link href="/adu/ca/san-diego/cost" className={linkClass}>
             San Diego ADU cost, rent and payback
+          </Link>{" "}
+          ·{" "}
+          <Link href="/adu/how-we-estimate" className={linkClass}>
+            How we estimate ADU feasibility
           </Link>
         </p>
       </section>
+
+      <div className="mt-10">
+        <AduPlanningLinks current={permitStudyPath()} />
+      </div>
 
       <div className="mt-12">
         <AduStudioCta

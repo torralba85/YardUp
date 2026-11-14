@@ -143,6 +143,14 @@ fs.copyFileSync(ROBOTS_BODY, path.resolve(DIST, "robots.txt"));
 console.log("[firebase] Preparing functions/.next/standalone...");
 copyDir(STANDALONE, path.resolve(FUNC_NEXT, "standalone"));
 
+// Next.js standalone mode calls next({ dir: APP_DIR }) where APP_DIR has no
+// next.config.*, causing poweredByHeader to default back to true in production.
+fs.writeFileSync(
+  path.resolve(FUNC_NEXT, "standalone", "next.config.js"),
+  "module.exports = { poweredByHeader: false };\n",
+  "utf8",
+);
+
 // 5. Copy static assets into standalone/.next/static so the Cloud Function
 //    can serve /_next/static/* for any requests it handles directly.
 //    Firebase Hosting also serves them for cached/CDN hits.

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { ADU_CITIES, aduCounties, cityUrl, hubUrl, jaduPath } from "@/lib/adu/content";
+import { ADU_CITIES, aduCounties, cityUrl, eligibilityPath, hubUrl, jaduPath } from "@/lib/adu/content";
 import {
   STATE_BASELINE_SOURCES,
   STATE_FLOOR_FACTS,
@@ -92,7 +92,7 @@ const breadcrumbJsonLd = {
     {
       "@type": "ListItem",
       position: 1,
-      name: "LotFoundry",
+      name: "Home",
       item: "https://lotfoundry.net/",
     },
     {
@@ -161,7 +161,22 @@ export default function AduCaliforniaHubPage() {
         </p>
       </div>
 
-      <AduPlanningLinks current="/adu/ca" />
+      <p className="lf-body mt-6 text-lot-stone">
+        Not sure if your parcel qualifies yet? Start with the{" "}
+        <Link href={eligibilityPath()} className="font-medium text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink">
+          5-point California ADU property eligibility checklist
+        </Link>{" "}
+        before picking a floor plan.
+      </p>
+
+      <div className="mt-6">
+        <AduStudioCta
+          city="California"
+          slug="california"
+          placement="top"
+          heading="Check setbacks and buildable yard area on your lot in 3D"
+        />
+      </div>
 
       <section aria-labelledby="adu-start">
         <h2 id="adu-start" className="lf-card-heading text-lot-ink">
@@ -232,6 +247,24 @@ export default function AduCaliforniaHubPage() {
           </section>
         );
       })}
+
+      <div className="mt-10">
+        <AduPlanningLinks current="/adu/ca" />
+      </div>
+
+      <section aria-labelledby="adu-builders" className="mt-10 border-t border-lot-line pt-8">
+        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+          For builders and designers
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Contractors and ADU designers across California can receive homeowner
+          feasibility snapshots through{" "}
+          <Link href="/builder" className="font-medium text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink">
+            the LotFoundry builder portal
+          </Link>
+          .
+        </p>
+      </section>
 
       <div className="mt-12">
         <AduStudioCta city="California" slug="california" placement="end" />

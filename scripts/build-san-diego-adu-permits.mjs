@@ -17,8 +17,8 @@
  *     fewer than MIN_GROUP approvals.
  *
  * Sources:
- *   https://data.sandiego.gov/datasets/development-permits-set2/
- *   https://data.sandiego.gov/datasets/cmty-plan/ (community planning areas)
+ *   https://data.sandiego.gov/datasets/development-permits/
+ *   https://data.sandiego.gov/datasets/gis-community-planning-districts/ (community planning areas)
  */
 
 import fs from "node:fs";

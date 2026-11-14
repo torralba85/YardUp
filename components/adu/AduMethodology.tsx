@@ -7,6 +7,7 @@ import {
   hubUrl,
   methodologyUrl,
 } from "@/lib/adu/content";
+import { methodologyLastModified } from "@/lib/adu/dates";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { SITE_OG_IMAGE } from "@/lib/og-images";
 import {
@@ -152,9 +153,8 @@ export function AduMethodology() {
       // No route-level share image here; the page shares the site card.
       image: `${CANONICAL_ORIGIN}${SITE_OG_IMAGE.url}`,
       datePublished: METHODOLOGY_PUBLISHED,
-      dateModified: METHODOLOGY_AS_OF,
+      dateModified: methodologyLastModified(METHODOLOGY_AS_OF),
     }),
-    publisher: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
     mainEntityOfPage: methodologyUrl(),
   };
   const breadcrumbJsonLd = {

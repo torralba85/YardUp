@@ -34,7 +34,7 @@ export const oceanside: JurisdictionContent = {
     { label: "Max size — JADU", value: "500 sq ft, within existing or proposed space" },
     { label: "Max height — detached", value: "16 ft; 18 ft within ½-mile walk of major transit", note: "+2 ft to match primary dwelling roof pitch" },
     { label: "Rear and side setbacks", value: "4 ft side and rear (Gov. Code § 66314(d)(7))", note: "City ordinance text references district setbacks above 1,000 sq ft; state law caps ADU side and rear setbacks at 4 ft outside Coastal Zone conflicts" },
-    { label: "Front setback", value: "Follows the primary residence's requirement" },
+    { label: "Front setback", value: "Follows the primary residence's requirement", note: "Cannot be applied to prevent an 800 sq ft detached ADU with 4 ft side/rear setbacks (Gov. Code §66321(b)(3))" },
     { label: "Parking required", value: "Max 1 space per ADU", note: "Waived within ½-mile walk of transit, in historic districts, for conversions, and for attached units" },
     { label: "Owner-occupancy", value: "Never required for standard ADUs", note: "JADU occupancy only where sanitation is shared with the main home" },
     { label: "Lot-size minimum", value: "None — prohibited by state law" },
@@ -119,7 +119,7 @@ export const oceanside: JurisdictionContent = {
     {
       question: "What are the setback rules for a casita in Oceanside?",
       answer:
-        "State law caps ADU side and rear setbacks at 4 feet (Gov. Code § 66314(d)(7)); while older Oceanside ordinance text references underlying district setbacks above 1,000 square feet, the 4-foot state cap controls outside certified Coastal Zone conflicts. Front setbacks follow the primary residence, and garage conversions keep existing setbacks.",
+        "State law caps ADU side and rear setbacks at 4 feet (Gov. Code § 66314(d)(7)); while older Oceanside ordinance text references underlying district setbacks above 1,000 square feet, the 4-foot state cap controls outside certified Coastal Zone conflicts. Front setbacks follow the primary residence unless they would prevent an 800-square-foot detached ADU (Gov. Code §66321(b)(3)), and garage conversions keep existing setbacks.",
     },
     {
       question: "How big can a back house be in Oceanside?",

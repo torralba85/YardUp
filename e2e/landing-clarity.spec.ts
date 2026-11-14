@@ -7,7 +7,7 @@ test("landing explains the tool before address entry, then shows the model, with
   await page.emulateMedia({ reducedMotion: "reduce" });
   const hero = page.locator("#start");
   const explanation = hero.getByText(
-    /See what could fit, compare estimated build costs/,
+    /see what could fit, compare estimated build costs/i,
   );
   const address = hero.getByLabel("Property address", { exact: true });
   // Since the cinematic hero (2026-11-01) the parcel illustration lives in the
@@ -170,11 +170,11 @@ test("actual Studio preview loads and the example opens without an account promp
   await expect(
     page.getByText("Explore in the studio", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Try the Oak Street demo" }).click();
+  await page.getByRole("link", { name: "Try the Coyote Brush Court demo" }).click();
   await expect(page).toHaveURL(
     (url) =>
       url.pathname === "/studio" &&
-      url.searchParams.get("parcel") === "oak-street",
+      url.searchParams.get("parcel") === "coyote-brush",
   );
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

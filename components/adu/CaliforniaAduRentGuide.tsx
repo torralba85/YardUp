@@ -23,8 +23,10 @@ import {
   rentCsvUrl,
   rentUrl,
 } from "@/lib/adu/content";
+import { rentLastModified } from "@/lib/adu/dates";
 import { RENT_SCENARIO_SPREADS } from "@/lib/adu/market-aggregate";
 import { formatCurrency } from "@/lib/feasibility";
+import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -105,7 +107,7 @@ export function CaliforniaAduRentGuide() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "LotFoundry", item: "https://lotfoundry.net/" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
       { "@type": "ListItem", position: 2, name: "California ADU rules", item: hubUrl() },
       { "@type": "ListItem", position: 3, name: "California ADU rent", item: rentUrl() },
     ],
@@ -114,7 +116,7 @@ export function CaliforniaAduRentGuide() {
     headline: `ADU Rent in California by County (${HUD_FMR_YEAR} HUD Fair Market Rents)`,
     image: opengraphImageUrl(rentUrl()),
     datePublished: CA_RENT_PUBLISHED,
-    dateModified: CA_RENT_VERIFIED,
+    dateModified: rentLastModified(),
   });
   const datasetJsonLd = {
     "@context": "https://schema.org",
@@ -122,10 +124,10 @@ export function CaliforniaAduRentGuide() {
     name: `California ADU rent benchmarks by county (HUD ${HUD_FMR_YEAR} Fair Market Rents)`,
     description: `HUD ${HUD_FMR_YEAR} and FY2026 Fair Market Rents for studio, one-bedroom and two-bedroom units in 12 California counties, with the year-over-year change and LotFoundry's planning range for a one-bedroom ADU.`,
     url: rentUrl(),
-    dateModified: CA_RENT_VERIFIED,
+    dateModified: rentLastModified(),
     temporalCoverage: `${HUD_FMR_EFFECTIVE}/2027-09-30`,
     spatialCoverage: { "@type": "Place", name: "California, United States" },
-    creator: { "@type": "Organization", name: "LotFoundry", url: "https://lotfoundry.net/" },
+    creator: { "@type": "Organization", "@id": ORGANIZATION_JSON_LD["@id"], name: "LotFoundry", url: "https://lotfoundry.net/" },
     isBasedOn: HUD_FMR_FY2027_URL,
     variableMeasured: [
       "Studio Fair Market Rent",
@@ -166,7 +168,12 @@ export function CaliforniaAduRentGuide() {
       </div>
 
       <div className="mt-8">
-        <AduPlanningLinks current="/adu/ca/rent" />
+        <AduStudioCta
+          city="California"
+          slug="california-adu-rent"
+          placement="top"
+          heading="Estimate monthly rent and payback for your property in 3D"
+        />
       </div>
 
       <section aria-labelledby="adu-rent-by-county" className="mt-12">
@@ -320,8 +327,8 @@ export function CaliforniaAduRentGuide() {
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -329,6 +336,10 @@ export function CaliforniaAduRentGuide() {
           ))}
         </div>
       </section>
+
+      <div className="mt-10">
+        <AduPlanningLinks current="/adu/ca/rent" />
+      </div>
 
       <section aria-labelledby="adu-rent-sources" className="mt-12">
         <h2 id="adu-rent-sources" className="lf-card-heading text-lot-ink">

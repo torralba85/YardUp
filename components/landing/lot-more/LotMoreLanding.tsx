@@ -111,7 +111,7 @@ function XLogo() {
 
 export function LotMoreLanding({
   scenarios,
-  city = "seattle",
+  city = "san-diego",
   demo = landingDemos[city],
 }: {
   scenarios: LandingScenario[];
@@ -536,12 +536,12 @@ export function LotMoreLanding({
                   first frame (only its transform animates), so it stays a
                   fast LCP element. */}
               <picture className={styles.pictureContents}>
-                <source type="image/avif" srcSet={HERO_PHOTO.avifSrcSet} sizes="100vw" />
+                <source type="image/avif" srcSet={HERO_PHOTO.avifSrcSet} sizes="(max-width: 640px) 384px, 100vw" />
                 <img
                   className={styles.heroPhoto}
                   src={HERO_PHOTO.src}
                   srcSet={HERO_PHOTO.srcSet}
-                  sizes="100vw"
+                  sizes="(max-width: 640px) 384px, 100vw"
                   width={1536}
                   height={1024}
                   fetchPriority="high"
@@ -569,8 +569,9 @@ export function LotMoreLanding({
               </p>
               <h1 className={styles.heroLead}>Explore an ADU on your lot in 3D.</h1>
               <p className={styles.heroDescription}>
-                See what could fit, compare estimated build costs, and explore
-                rental potential.
+                {city === "san-diego"
+                  ? "Check any California address to see what could fit, compare estimated build costs, and explore rental potential."
+                  : "See what could fit, compare estimated build costs, and explore rental potential."}
               </p>
               {addressForm("hero")}
             </div>
@@ -1510,7 +1511,9 @@ export function LotMoreLanding({
               <div className={styles.footerGroup}>
                 <h3>Planning guides</h3>
                 <ul>
-                  <li><Link href="/adu/ca">ADU rules by city</Link></li>
+                  <li><Link href="/adu/ca/can-i-build-an-adu">Can I build an ADU?</Link></li>
+                  <li><Link href="/adu/ca">California ADU rules</Link></li>
+                  <li><Link href="/adu/ca/cost">California ADU costs</Link></li>
                   <li><Link href="/adu/ca/san-diego/cost">San Diego ADU costs</Link></li>
                 </ul>
               </div>

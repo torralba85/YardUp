@@ -1,10 +1,11 @@
 /**
  * Chula Vista ADU jurisdiction content.
  *
- * Primary sources: Chula Vista Municipal Code §19.58.022 (accessory
- * dwelling units) and the Development Services ADU program materials,
- * including the council-authorized preapproved standard plans. Figures
- * verified against those publications; unsourced totals are omitted.
+ * Primary sources: City of Chula Vista Ordinance No. 3592 (adopted April 15,
+ * 2025, repealing former CVMC §§ 19.58.022 and 19.58.023 so the city defers
+ * directly to California Government Code §§ 66314–66323), Development Services
+ * ADU program materials, and council-authorized preapproved standard plans.
+ * Figures verified against those publications; unsourced totals are omitted.
  *
  * @module adu/ca/chula-vista
  */
@@ -16,38 +17,38 @@ export const chulaVista: JurisdictionContent = {
   city: "Chula Vista",
   slug: "chula-vista",
   county: "San Diego County",
-  asOf: "2026-10-25",
+  asOf: "2026-11-13",
   published: "2026-09-18",
   metaTitle: "Chula Vista ADU Rules (2026): Size, Setbacks & Permits",
   metaDescription:
-    "Chula Vista ADU rules: 850–1,000 sq ft allowances, 4 ft side and rear setbacks, and preapproved plans that cut review to a flat fee. Check your lot, free.",
+    "Chula Vista ADU rules follow state law (Ord. 3592): up to 1,200 sq ft detached, 4 ft setbacks, preapproved plans & flat review fee. Check your lot.",
   introAnswer: [
-    "Yes — Chula Vista allows at least one detached ADU plus one junior ADU on virtually every single-family lot, and state law requires the city to allow at least 850 square feet for a studio or one-bedroom and 1,000 square feet for two or more bedrooms, approved ministerially with no hearing.",
+    "Yes — Chula Vista allows at least one detached ADU plus one junior ADU on virtually every single-family lot. In April 2025, Ordinance No. 3592 repealed Chula Vista's standalone ADU/JADU municipal code sections (former CVMC §§ 19.58.022–19.58.023) so the city defers directly to California state ADU law (Gov. Code §§ 66314–66323), allowing detached units up to 1,200 square feet with 4-foot side and rear setbacks under ministerial review.",
     "Chula Vista's standout feature is its homeowner toolkit: the city used a regional housing-acceleration grant to develop preapproved ADU standard plans, and council authorized a flat building-permit review fee for those standard plans — making Chula Vista one of the cheapest and most predictable permitting paths in the county.",
-    "Two local rules to know up front: new ADUs cannot be rented for terms under 30 days, and eastern hillside lots can trigger geotechnical review that adds meaningful cost before design even starts.",
+    "Two practical rules to know up front: under state law (Gov. Code §§ 66315, 66333(g)), ADUs and JADUs created under state ADU rules cannot be rented for terms under 30 days, and eastern hillside lots can trigger geotechnical review that adds meaningful cost before design even starts.",
   ],
-  metaSizeNote: "850–1,000+ sq ft by bedroom count, with preapproved plans",
+  metaSizeNote: "up to 1,200 sq ft under state law, with preapproved plans",
   metaSetbackNote: "4 ft side and rear for detached ADUs",
   metaParkingNote: "max 1 space, waived near transit and for conversions",
   glance: [
-    { label: "Max size — detached", value: "850 sq ft (studio/1BR), 1,000 sq ft (2+ BR) minimum must be allowed", note: "City standard plans offered in common sizes up to local maximums" },
-    { label: "Max size — attached", value: "850 sq ft (1BR) or 1,000 sq ft (2+ BR) typical; two stories max", note: "Capped at the primary dwelling's height limit or 25 ft, whichever is lower" },
+    { label: "Max size — detached", value: "Up to 1,200 sq ft under state standards (Ord. 3592)", note: "At least 850 sq ft (studio/1BR) and 1,000 sq ft (2+ BR) must be allowed; an 800 sq ft interior-space unit is exempt from coverage, FAR, and front-setback blocks" },
+    { label: "Max size — attached", value: "50% of primary home or 850 sq ft (0–1 BR) / 1,000 sq ft (2+ BR), up to 1,200 sq ft", note: "Capped at the primary dwelling's height limit or 25 ft under state law, whichever is lower" },
     { label: "Max size — JADU", value: "500 sq ft, within existing or proposed space" },
-    { label: "Max height — detached", value: "16 ft; 18 ft within ½-mile walk of major transit", note: "+2 ft to match primary dwelling roof pitch" },
+    { label: "Max height — detached", value: "16 ft; 18 ft within ½-mile walk of major transit or beside a 2-story home", note: "+2 ft to match primary dwelling roof pitch" },
     { label: "Rear and side setbacks", value: "4 ft minimum side and rear for detached ADUs" },
-    { label: "Front setback", value: "Per underlying zone requirement" },
+    { label: "Front setback", value: "Per underlying zone requirement", note: "Cannot be enforced if it prevents an 800 sq ft detached ADU meeting 4 ft side/rear setbacks (Gov. Code § 66321(b)(3))" },
     { label: "Parking required", value: "Max 1 space per ADU", note: "Waived within ½-mile walk of transit, in historic districts, for conversions, and for attached units" },
-    { label: "Owner-occupancy", value: "Never required for standard ADUs", note: "New ADUs may not be rented for terms under 30 days (CVMC 19.58.022)" },
+    { label: "Owner-occupancy", value: "Never required for standard ADUs", note: "New ADUs under state law may not be rented for terms under 30 days; JADUs require owner-occupancy only if sanitation is shared" },
     { label: "Lot-size minimum", value: "None — prohibited by state law" },
     { label: "Approval type & timeline", value: "Ministerial, 60-day decision on a complete application", note: "Standard-plan submittals carry a flat-fee building review" },
   ],
   cityDiffers: [
     {
-      heading: "The rulebook: CVMC 19.58.022 and the standard-plan program",
+      heading: "The rulebook: Ordinance 3592 deferral to state law and standard plans",
       paragraphs: [
-        "Chula Vista's ADU rules are codified at Municipal Code §19.58.022, and the section reads like a city that wants these built: ministerial review, state-protected 850–1,000 square foot size allowances, four-foot side and rear setbacks for detached units, and an explicit exemption from the dedication requirements of CVMC 12.24.030. If you are comparing cities in the South Bay, this is a relatively permissive code section to work under.",
+        "In April 2025 the Chula Vista City Council adopted Ordinance No. 3592, repealing former Municipal Code sections 19.58.022 and 19.58.023 so the city regulates ADUs and JADUs directly under California Government Code sections 66314–66323 rather than maintaining a separate local ADU text. That eliminates local-versus-state drift: detached units up to 1,200 square feet, four-foot side and rear setbacks, no minimum lot size, 16- to 18-foot detached heights, and 60-day ministerial review apply directly from state statute.",
         "The program worth understanding is the preapproved standard-plan set. In 2023 the council directed staff to use a San Diego Association of Governments housing-acceleration grant to build homeowner tools for ADU construction, and the resulting standard plans are the centerpiece: pick a city-reviewed design and the building-permit review collapses toward a flat-fee verification instead of a full custom plan check. Council separately authorized amending the Master Fee Schedule to establish that flat review fee for standard-plan ADUs. The exact dollar figure moves with the fee schedule, so confirm it with Development Services — but the structure itself, flat and predictable, is the point.",
-        "One code-level restriction is unusually explicit here: ADUs permitted under the current ordinance cannot be rented for less than 30 days. Chula Vista does not allow new ADUs to operate as short-term rentals, full stop. Underwrite the unit as a long-term rental or family housing, because the nightly-rental math is off the table by ordinance.",
+        "One income limit stays firm under the state-law framework: ADUs permitted under Gov. Code § 66315 and JADUs under § 66333(g) must be leased for terms longer than 30 days. Chula Vista does not allow new ADUs permitted under these rules to operate as short-term vacation rentals, so underwrite the unit as a long-term rental or family housing.",
       ],
     },
     {
@@ -120,12 +121,12 @@ export const chulaVista: JurisdictionContent = {
     {
       question: "Can I Airbnb a granny flat in Chula Vista?",
       answer:
-        "No. ADUs permitted under the current ordinance (CVMC 19.58.022) cannot be rented for terms under 30 days. Plan for a long-term tenant or family use.",
+        "No. ADUs and JADUs permitted under California state ADU rules (Gov. Code §§ 66315, 66333(g)) cannot be rented for terms under 30 days. Plan for a long-term tenant or family use.",
     },
     {
       question: "What are the setback rules for a casita in Chula Vista?",
       answer:
-        "Detached ADUs observe a minimum 4-foot side and rear setback; front setbacks follow the underlying zone. Garage conversions keep their existing setbacks even where those are nonconforming.",
+        "Detached ADUs observe a minimum 4-foot side and rear setback; front setbacks follow the underlying zone but cannot block an 800-square-foot detached ADU (Gov. Code § 66321(b)(3)). Garage conversions keep their existing setbacks even where those are nonconforming.",
     },
     {
       question: "How big can a back house be in Chula Vista?",
@@ -146,12 +147,16 @@ export const chulaVista: JurisdictionContent = {
   neighbors: ["san-diego", "imperial-beach", "san-diego-county"],
   sources: [
     {
-      label: "CVMC 19.58.022 — Accessory dwelling units",
-      url: "https://chulavista.municipal.codes/CVMC/19.58.022(C)(13)",
+      label: "City of Chula Vista — Ordinance No. 3592 (repealing CVMC 19.58.022–.023, deferring to state law)",
+      url: "https://www.chulavistaca.gov/departments/development-services",
     },
     {
-      label: "Chula Vista Development Services",
-      url: "https://www.chulavistaca.gov/departments/development-services",
+      label: "Cal. Gov. Code §§ 66314–66323 (State ADU Standards)",
+      url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=GOV&sectionNum=66314",
+    },
+    {
+      label: "California HCD ADU Handbook (March 2026)",
+      url: "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf",
     },
   ],
 };

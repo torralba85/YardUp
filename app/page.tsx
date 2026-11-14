@@ -15,10 +15,10 @@ export const viewport: Viewport = {
 // Says what a searcher does here (enter an address) and that the first one is
 // free; the search snippet and the shared-link card both read this line.
 const description =
-  "Enter your address to see what could fit on your lot in 3D, with estimated ADU build cost, rent and payback. First address free, no account needed.";
+  "Check any California address to see what backyard home could fit on your lot in 3D, with estimated build cost, rent and payback. First address free.";
 const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
-  title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
+  title: "California ADU Feasibility Check: Cost & Rent | LotFoundry",
   description,
   // Next prints a root canonical as the bare origin ("https://lotfoundry.net")
   // however it is written here, so the page renders the slash form itself
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   // No `url` here: Next strips the root slash from og:url as it does from the
   // canonical, so the page renders that tag itself too (below).
   openGraph: {
-    title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
+    title: "California ADU Feasibility Check: Cost & Rent | LotFoundry",
     description,
     images: [SITE_OG_IMAGE],
     // This block replaces the layout's, so it restates the type and site name too.
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ADU Feasibility Check: Rent, Cost & Payback | LotFoundry",
+    title: "California ADU Feasibility Check: Cost & Rent | LotFoundry",
     description,
     images: [SITE_OG_IMAGE.url],
   },
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   // Use one explicit demo configuration from the studio engine. Artwork is illustrative.
-  const scenarios = landingScenarios();
+  const scenarios = landingScenarios("san-diego");
   return (
     <>
       {/* React hoists this into <head>. */}
@@ -57,7 +57,7 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
       />
-      <LotMoreLanding scenarios={scenarios} />
+      <LotMoreLanding scenarios={scenarios} city="san-diego" />
     </>
   );
 }

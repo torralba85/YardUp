@@ -27,6 +27,7 @@ import { metadata as aduCaRentMetadata } from "./adu/ca/rent/page";
 import { metadata as aduCaJaduMetadata } from "./adu/ca/jadu/page";
 import { metadata as sanDiegoPermitsMetadata } from "./adu/ca/san-diego/permits/page";
 import { metadata as methodologyMetadata } from "./adu/how-we-estimate/page";
+import { metadata as aduEligibilityMetadata } from "./adu/ca/can-i-build-an-adu/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import { buildCityMetadata, buildCostMetadata } from "@/lib/adu/content";
@@ -151,6 +152,7 @@ describe("site JSON-LD", () => {
   for (const { name, metadata } of [
     { name: "/studio", metadata: studioMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu/ca/can-i-build-an-adu", metadata: aduEligibilityMetadata },
     { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
     { name: "/adu/ca/rent", metadata: aduCaRentMetadata },
@@ -192,6 +194,7 @@ describe("SEO audit metadata constraints", () => {
   for (const { name, metadata } of [
     { name: "/studio", metadata: studioMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
+    { name: "/adu/ca/can-i-build-an-adu", metadata: aduEligibilityMetadata },
     { name: "/adu/ca/cost", metadata: aduCaCostMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
   ]) {

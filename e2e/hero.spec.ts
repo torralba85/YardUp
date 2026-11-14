@@ -145,21 +145,21 @@ test.describe("A lot more landing", () => {
     await page.goto("/");
     const numbers = page.locator("#numbers");
     // The landing opens on the market case, matching the hero and the Studio sample link.
-    await expect(numbers.getByText("$2,350", { exact: false })).toBeVisible();
-    await expect(numbers.getByText("13.2", { exact: false })).toBeVisible();
-    await expect(numbers.getByText(/OAK STREET DEMO, SEATTLE/)).toBeVisible();
+    await expect(numbers.getByText("$2,615/mo", { exact: true })).toBeVisible();
+    await expect(numbers.getByText("11.9", { exact: false })).toBeVisible();
+    await expect(numbers.getByText(/COYOTE BRUSH COURT DEMO, SAN DIEGO/)).toBeVisible();
     await numbers.locator("summary").click();
     await expect(
       numbers.getByText(
-        /curated Oak Street demo in Seattle, calculated by the studio engine/,
+        /curated Coyote Brush Court demo in San Diego, calculated by the studio engine/,
       ),
     ).toBeVisible();
     await expect(
-      numbers.getByText(/annual net operating income is \$19,035/),
+      numbers.getByText(/annual net operating income is \$21,182/),
     ).toBeVisible();
     await numbers.getByRole("radio", { name: "conservative", exact: true }).click();
-    await expect(numbers.getByText("$2,050", { exact: false })).toBeVisible();
-    await expect(numbers.getByText("15.1", { exact: false })).toBeVisible();
+    await expect(numbers.getByText("$2,335/mo", { exact: true })).toBeVisible();
+    await expect(numbers.getByText("13.3", { exact: false })).toBeVisible();
   });
 
   test("supports intent selection, report inspection, and honest purchase copy", async ({
@@ -177,7 +177,7 @@ test.describe("A lot more landing", () => {
       name: "Sample feasibility report",
     });
     // The sample report follows the selected rent case, which starts on market.
-    await expect(report.getByText("$2,350", { exact: true })).toBeVisible();
+    await expect(report.getByText("$2,615", { exact: true })).toBeVisible();
     await page.getByRole("radio", { name: "Next steps", exact: true }).click();
     await expect(report.getByText(/Confirm property boundaries/)).toBeVisible();
     await expect(
