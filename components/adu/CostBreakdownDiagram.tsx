@@ -65,7 +65,7 @@ export function CostBreakdownDiagram() {
         aria-labelledby={`${titleId} ${descId}`}
       >
         <title id={titleId}>
-          Modeled 600 sq ft ADU cost breakdown ({formatCompact(total)} midpoint)
+          {`Modeled 600 sq ft ADU cost breakdown (${formatCompact(total)} midpoint)`}
         </title>
         <desc id={descId}>
           Stacked budget bar showing base construction ({formatCompact(baseConstruction)}),

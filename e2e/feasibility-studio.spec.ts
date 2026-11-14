@@ -4,7 +4,7 @@ test.describe("Public LotFoundry flows", () => {
   test("loads the landing page with the lot survey hero", async ({ page }, testInfo) => {
     await page.goto("/");
 
-    await expect(page).toHaveTitle("ADU Feasibility Check: Rent, Cost & Payback | LotFoundry");
+    await expect(page).toHaveTitle("California ADU Feasibility Check: Cost & Rent | LotFoundry");
     await expect(
       page.getByRole("heading", { level: 1, name: "Explore an ADU on your lot in 3D." }),
     ).toBeVisible();
