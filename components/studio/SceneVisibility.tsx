@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { Line } from "@react-three/drei";
 import { useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
@@ -19,6 +19,7 @@ import {
   registerSitePlanCapture,
   setUtilityAnchor,
   setUtilityEstimate,
+  setUtilityParcelKey,
   useStudioEnhancements,
 } from "@/lib/studio-enhancements-store";
 import { exportOrthographicView } from "@/utils/canvas/exportOrthographicView";
@@ -47,13 +48,9 @@ export function SceneVisibility({
   const { gl, scene, setFrameloop, invalidate, get } = useThree();
   const { utilityAnchor } = useStudioEnhancements();
   const parcelKey = parcel ? `${parcel.address}|${parcel.city}` : null;
-  const prevParcelKeyRef = useRef<string | null>(parcelKey);
 
   useEffect(() => {
-    if (prevParcelKeyRef.current !== null && prevParcelKeyRef.current !== parcelKey) {
-      setUtilityAnchor(null);
-    }
-    prevParcelKeyRef.current = parcelKey;
+    setUtilityParcelKey(parcelKey);
   }, [parcelKey]);
 
   useEffect(() => {

@@ -20,6 +20,8 @@ export interface StudioEnhancementsState {
   sitePlanCapture: (() => Promise<string>) | null;
 }
 
+// Retain lot identity alongside utility state, including while the scene is unmounted.
+let utilityParcelKey: string | null = null;
 const listeners = new Set<() => void>();
 let state: StudioEnhancementsState = {
   utilityAnchor: null,
@@ -34,6 +36,12 @@ function publish(patch: Partial<StudioEnhancementsState>) {
 
 export function getStudioEnhancementsSnapshot(): StudioEnhancementsState {
   return state;
+}
+
+export function setUtilityParcelKey(parcelKey: string | null) {
+  if (utilityParcelKey === parcelKey) return;
+  utilityParcelKey = parcelKey;
+  publish({ utilityAnchor: null, utilityEstimate: null });
 }
 
 export function setUtilityAnchor(anchor: UtilityPoint | null) {

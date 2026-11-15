@@ -632,6 +632,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         ? merged.parcelId
         : sceneKey;
     const targetPose = explicitPose ?? defaultPose(targetParcel, merged.config);
+    // Checkout can return to the same preset; only discard its plan when recovery switches lots.
+    const recoveryChangesLot = certMatchingPreset
+      && planScopeForLot(certMatchingPreset, "preset") !== planScopeForLot(hydrationParcel, parcelMode);
     dispatchScenario({
       type: "hydrate",
       sceneKey: targetSceneKey,
@@ -639,7 +642,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       config: merged.config,
       pose: targetPose,
       assumptions: merged.assumptions,
-      preapprovedPlan: certMatchingPreset ? null : (normalizePlanReference(restoredPlan) ?? null),
+      preapprovedPlan: recoveryChangesLot ? null : (normalizePlanReference(restoredPlan) ?? null),
     });
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
