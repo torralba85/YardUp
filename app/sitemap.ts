@@ -25,6 +25,7 @@ const baseUrl = CANONICAL_ORIGIN;
  */
 const lastModified: Record<string, string> = {
   "/": "2026-11-13",
+  "/can-i-build-a-backyard-home": "2026-11-14",
   "/studio": "2026-11-06",
   "/about": "2026-11-13",
   "/help": "2026-11-13",

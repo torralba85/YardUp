@@ -140,6 +140,7 @@ ${cities}
 
 ## Tools
 
+- [Can I build a backyard home? (CA & San Diego ADU quiz)](${baseUrl}/can-i-build-a-backyard-home): 5-question yes/no eligibility check plus San Diego ADU rules (SDMC §141.0302) and California ADU build cost ranges, feeding straight into the 3D studio.
 - [Feasibility studio](${baseUrl}/studio): place an ADU against modeled setbacks in 3D and see cost, rent, and payback.
 - [California ADU cost calculator](${calculatorUrl()}): estimated build cost, monthly rent, and payback by unit size for Los Angeles, San Diego, and Santa Clara counties.
 - Demo lots (illustrative sample parcels), open with no address and no account:

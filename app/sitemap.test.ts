@@ -8,6 +8,7 @@ describe("sitemap", () => {
 
     expect(entries.map((entry) => entry.url)).toEqual([
       "https://lotfoundry.net/",
+      "https://lotfoundry.net/can-i-build-a-backyard-home",
       "https://lotfoundry.net/studio",
       "https://lotfoundry.net/about",
       "https://lotfoundry.net/help",
