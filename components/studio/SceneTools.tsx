@@ -4,17 +4,31 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown, FileDown, Lock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { UtilityEstimateCard } from "@/components/ui/UtilityEstimateCard";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import type { Pose2D } from "@/lib/scene-model";
 import { useStudioEnhancements } from "@/lib/studio-enhancements-store";
 import { generateAndDownloadCurrentFeasibilityReport } from "@/utils/export/generateFeasibilityReport";
 
 /** Secondary scene actions share one disclosure; warnings stay outside it. */
-export function SceneTools({ children, utilityMode, onUtilityModeChange, sitePlanUnlocked, onUnlockSitePlan }: {
+export function SceneTools({
+  children,
+  utilityMode,
+  onUtilityModeChange,
+  sitePlanUnlocked,
+  onUnlockSitePlan,
+  parcel,
+  config,
+  pose,
+}: {
   children: ReactNode;
   utilityMode: boolean;
   onUtilityModeChange: (active: boolean) => void;
   /** The site plan PDF is a Certificate deliverable; other sessions get the unlock route. */
   sitePlanUnlocked: boolean;
   onUnlockSitePlan?: () => void;
+  parcel?: Parcel;
+  config?: ADUConfig;
+  pose?: Pose2D;
 }) {
   const { utilityEstimate } = useStudioEnhancements();
   const [exportState, setExportState] = useState<"idle" | "busy" | "error">("idle");
@@ -22,7 +36,7 @@ export function SceneTools({ children, utilityMode, onUtilityModeChange, sitePla
   async function exportSitePlan() {
     setExportState("busy");
     try {
-      await generateAndDownloadCurrentFeasibilityReport();
+      await generateAndDownloadCurrentFeasibilityReport({ parcel, config, pose });
       setExportState("idle");
     } catch {
       setExportState("error");

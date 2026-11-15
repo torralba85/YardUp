@@ -1,9 +1,6 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import type { ADUConfig, Parcel } from "@/lib/feasibility";
-import type { PlacementResult } from "@/lib/placement-validation";
-import type { Pose2D } from "@/lib/scene-model";
 
 export interface UtilityPoint {
   x: number;
@@ -18,10 +15,6 @@ export interface UtilityEstimate {
 }
 
 export interface StudioEnhancementsState {
-  parcel: Parcel | null;
-  config: ADUConfig | null;
-  pose: Pose2D | null;
-  placement: PlacementResult | null;
   utilityAnchor: UtilityPoint | null;
   utilityEstimate: UtilityEstimate | null;
   sitePlanCapture: (() => Promise<string>) | null;
@@ -29,10 +22,6 @@ export interface StudioEnhancementsState {
 
 const listeners = new Set<() => void>();
 let state: StudioEnhancementsState = {
-  parcel: null,
-  config: null,
-  pose: null,
-  placement: null,
   utilityAnchor: null,
   utilityEstimate: null,
   sitePlanCapture: null,
@@ -45,20 +34,6 @@ function publish(patch: Partial<StudioEnhancementsState>) {
 
 export function getStudioEnhancementsSnapshot(): StudioEnhancementsState {
   return state;
-}
-
-export function updateStudioParcel(parcel: Parcel, placement: PlacementResult) {
-  const parcelChanged =
-    state.parcel?.address !== parcel.address || state.parcel?.city !== parcel.city;
-  publish({
-    parcel,
-    placement,
-    ...(parcelChanged ? { utilityAnchor: null, utilityEstimate: null } : {}),
-  });
-}
-
-export function updateStudioDesign(config: ADUConfig, pose: Pose2D) {
-  publish({ config, pose });
 }
 
 export function setUtilityAnchor(anchor: UtilityPoint | null) {

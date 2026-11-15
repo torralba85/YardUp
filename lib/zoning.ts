@@ -95,3 +95,68 @@ export function calculateZoning(parcel: Parcel, config: ADUConfig): ZoningResult
     warnings,
   };
 }
+
+export interface ZoningCapacityStatus {
+  title: string;
+  action: string;
+  tone: "ok" | "warn";
+}
+
+/**
+ * Human-readable modeled coverage capacity for the Studio and certificate.
+ * Pass the result's `capacityBasis` so room that comes from California's
+ * 800 sq ft protection isn't called coverage.
+ */
+export function getZoningCapacityStatus(
+  remainingCapacity: number,
+  parcel?: Parcel,
+  capacityBasis: CapacityBasis = "coverage",
+): ZoningCapacityStatus {
+  const confidence = parcel ? parcelConfidence(parcel) : undefined;
+  if (confidence?.footprintKnown === false) {
+    return {
+      title: "Coverage capacity unknown",
+      action: "Confirm the existing building footprint before calculating remaining capacity.",
+      tone: "warn",
+    };
+  }
+
+  const squareFeet = Math.round(Math.abs(remainingCapacity)).toLocaleString();
+  if (capacityBasis === "california-800") {
+    const protection = `California doesn't let lot coverage block an ADU up to 800 sf (Gov. Code § 66321(b)(3)), and this lot's ${confidence?.regulationsEstimated ? "assumed " : ""}coverage limit leaves less than that.`;
+    return remainingCapacity < 0
+      ? {
+          title: `${squareFeet} sf over California's 800 sf ADU protection`,
+          action: `${protection} Reduce the footprint by at least ${squareFeet} sf, or confirm the local coverage limit.`,
+          tone: "warn",
+        }
+      : {
+          title: `${Math.round(remainingCapacity).toLocaleString()} sf of room under California's 800 sf ADU protection`,
+          action: `${protection} Confirm with your city.`,
+          tone: confidence?.regulationsEstimated ? "warn" : "ok",
+        };
+  }
+  if (remainingCapacity < 0) {
+    return {
+      title: `${squareFeet} sf over ${confidence?.regulationsEstimated ? "assumed" : "modeled"} coverage allowance`,
+      action: confidence?.regulationsEstimated
+        ? `The concept exceeds the assumed allowance by ${squareFeet} sf. Reduce the footprint and confirm local planning rules.`
+        : `Reduce the ADU footprint by at least ${squareFeet} sf, then confirm local requirements.`,
+      tone: "warn",
+    };
+  }
+
+  if (confidence?.regulationsEstimated) {
+    return {
+      title: `${Math.round(remainingCapacity).toLocaleString()} sf estimated coverage capacity`,
+      action: "Maximum coverage and setbacks are assumed. Confirm local planning rules.",
+      tone: "warn",
+    };
+  }
+
+  return {
+    title: `${squareFeet} sf of modeled coverage remains`,
+    action: "Confirm utilities, access, and local requirements before proceeding.",
+    tone: "ok",
+  };
+}

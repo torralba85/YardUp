@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { defaultScenarioState, parseScenarioParams, serializeScenarioParams } from "./scenario-url";
-import { getAduPlacementBounds } from "./site-fit";
+import { getAduPlacementBounds } from "./scene-placement";
 import type { Parcel } from "./parcel-types";
 
 // Gemini T08 baseline, reviewed against the actual Parcel interface.

@@ -65,8 +65,8 @@ The pure-geometry check that an ADU at its actual pose fits the buildable envelo
 _Avoid_: compliance check
 
 **Scene Placement**:
-The studio service on placement validation: default-pose search and placement queries for the 3D view.
-_Avoid_: site fit
+Placement queries on a Parcel: default-pose search, setback-envelope snapping, and evidence-aware placement status shared across the 3D scene and Studio panels.
+_Avoid_: site fit, setback collision
 
 **Verdict**:
 The interpreted headline — Likely Feasible, Needs Review, or Unlikely — with readiness and constraints.

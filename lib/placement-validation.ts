@@ -122,11 +122,11 @@ function signedArea(ring: LocalPoint[]): number {
 /**
  * The buildable envelope for a lot: its boundary inset by the recorded
  * setbacks, independent of any specific ADU footprint. Distinct from
- * `lib/site-fit.ts`'s `getAduPlacementBounds`, which shrinks further by a
+ * `lib/scene-placement.ts`'s `getAduPlacementBounds`, which shrinks further by a
  * given footprint's half-width/half-depth to bound valid *center* positions
  * for dragging one footprint size — this is the raw land, so the same
  * envelope can be tested against a footprint at any rotation (see
- * `getBuildableEnvelope` in `lib/site-fit.ts` for the `Parcel`-typed
+ * `getBuildableEnvelope` in `lib/scene-placement.ts` for the `Parcel`-typed
  * adapter).
  *
  * Mirrors `getAduPlacementBounds`'s existing collapse-to-midpoint behavior

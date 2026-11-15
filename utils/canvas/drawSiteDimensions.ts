@@ -1,7 +1,7 @@
 import { COLOR } from "@/lib/design-tokens";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { buildExistingHouseSceneModel, rectangleCorners, type Pose2D } from "@/lib/scene-model";
-import { getScenePlacement } from "@/lib/site-fit";
+import { getScenePlacement } from "@/lib/scene-placement";
 import { SITE_PLAN_EXPORT_PX, SITE_PLAN_MARGIN_FT } from "./exportOrthographicView";
 
 export interface SitePlanAnnotationInput {

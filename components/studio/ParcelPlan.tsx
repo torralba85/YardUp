@@ -2,10 +2,9 @@ import { useId } from "react";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { finishColors } from "@/lib/feasibility";
 import { buildSceneModel, type Pose2D } from "@/lib/scene-model";
-import { getScenePlacement } from "@/lib/site-fit";
+import { describePlacement, getScenePlacement } from "@/lib/scene-placement";
 import { buildSetbackEnvelope } from "@/lib/placement-validation";
 import { aduSetbacks } from "@/lib/adu-setbacks";
-import { describePlacementWithEvidence } from "@/lib/placement-evidence";
 import { COLOR } from "@/lib/design-tokens";
 
 
@@ -35,9 +34,9 @@ export function ParcelPlan({
   const placement = getScenePlacement(parcel, config, pose);
   const points = (corners: { x: number; z: number }[] | null) =>
     corners?.map((p) => `${p.x},${p.z}`).join(" ");
+  const placementFeedback = describePlacement(placement, parcel);
   const color =
-    placement.status === "fits" ? COLOR["status-eligible"] : placement.status === "blocked" ? COLOR["status-blocked"] : COLOR["status-review"];
-  const placementFeedback = describePlacementWithEvidence(placement, parcel);
+    placementFeedback.tone === "clear" ? COLOR["status-eligible"] : placementFeedback.tone === "blocked" ? COLOR["status-blocked"] : COLOR["status-review"];
   return (
     <svg
       role="img"

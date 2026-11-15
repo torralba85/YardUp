@@ -9,11 +9,10 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import { formatPreviewHour, getIllustrativeSunPosition, LIGHTING_PRESETS, type LightingPresetId } from "@/lib/scene-lighting";
-import { getDefaultAduPose, getScenePlacement } from "@/lib/site-fit";
+import { describePlacement, getDefaultAduPose, getScenePlacement } from "@/lib/scene-placement";
 import { SnapToFitControl } from "@/components/studio/SnapToFitControl";
 import { aduSetbacks } from "@/lib/adu-setbacks";
 import type { CapacityBasis } from "@/lib/zoning";
-import { describePlacement } from "@/lib/placement-validation";
 import {
   buildAduSceneModel,
   buildExistingHouseSceneModel,
@@ -1095,7 +1094,7 @@ export default function ParcelScene({
     [parcel, config, activePose],
   );
   const envelopeSetbacks = useMemo(() => aduSetbacks(parcel, config), [parcel, config]);
-  const placementTone = describePlacement(placement).tone;
+  const placementTone = describePlacement(placement, parcel).tone;
 
   // --- Camera framing ------------------------------------------------------
   // The controller reads `bounds` from a ref and only refits when a framing
@@ -1412,7 +1411,13 @@ export default function ParcelScene({
             )}
             {/* Stops drawing entirely while the scene is scrolled out of view
                 or the tab is hidden (D5). */}
-            <SceneVisibility utilityMode={utilityMode} />
+            <SceneVisibility
+              utilityMode={utilityMode}
+              parcel={parcel}
+              config={config}
+              pose={activePose}
+              placement={placement}
+            />
             <SceneCameras mode={viewMode} />
             <OrbitControls
               enableDamping
@@ -1633,9 +1638,16 @@ export default function ParcelScene({
 
       <SnapToFitControl parcel={parcel} config={config} pose={activePose} onCommit={commitPose} />
 
-      <SceneTools utilityMode={utilityMode} onUtilityModeChange={setUtilityMode}
-        sitePlanUnlocked={analysisUnlocked} onUnlockSitePlan={onUnlockCertificate}>
-        <PlacementEditor config={config} pose={activePose} onChange={commitPose} />
+      <SceneTools
+        utilityMode={utilityMode}
+        onUtilityModeChange={setUtilityMode}
+        parcel={parcel}
+        config={config}
+        pose={activePose}
+        sitePlanUnlocked={analysisUnlocked}
+        onUnlockSitePlan={onUnlockCertificate}
+      >
+        <PlacementEditor parcel={parcel} config={config} pose={activePose} onChange={commitPose} />
 
       <details className="shrink-0 border-t border-lot-line bg-lot-chalk px-3">
         <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">

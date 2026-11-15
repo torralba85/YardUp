@@ -3,7 +3,7 @@ import { defaultAduConfig } from "./feasibility";
 import type { LiveParcelData } from "./parcel-types";
 import { buildExistingHouseSceneModel, buildParcelOutline, buildSceneOrigin } from "./scene-model";
 import { rectPolygon } from "./scene-model-fixtures";
-import { getScenePlacement, getSnapToFitPose } from "./site-fit";
+import { getScenePlacement, getSnapToFitPose } from "./scene-placement";
 import { normalizeLiveParcel } from "./saved-scenarios";
 import { SAMPLE_LIVE_PARCEL } from "../test/fixtures/live-parcel";
 
