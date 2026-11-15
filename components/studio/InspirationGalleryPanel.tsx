@@ -71,7 +71,8 @@ export default function InspirationGalleryPanel({
         {[...generatedConcepts, ...inspirationItems].map((item) => (
           <article key={item.id} aria-label={item.title} className="flex min-w-0 flex-col">
             <figure>
-              <div className="relative aspect-[3/2] overflow-hidden bg-lot-chalk">
+              {/* Hairline frame, as BeforeAfterBoard gives its photos: consistent depth for imagery. */}
+              <div className="relative aspect-[3/2] overflow-hidden border border-lot-line bg-lot-chalk">
                 {item.mobileImagePath ? (
                   // Static width-descriptor variants let the browser pick per card
                   // width and pixel density, with no runtime image service. A
