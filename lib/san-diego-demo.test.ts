@@ -10,8 +10,7 @@ import {
 import { estimateAdu } from "./adu/market-aggregate";
 import { parcelConfidence } from "./parcel-confidence";
 import { buildReportCsv, buildReportHtml, buildReportText } from "./report";
-import { calculateScenarioFeasibility } from "./scenario-restoration";
-import { defaultPose } from "./scenario-design";
+import { calculateScenarioFeasibility, defaultPose } from "./scenario";
 
 describe("San Diego demo review regressions", () => {
   it("keeps the FAR-derived coverage proxy qualified in the engine and every export", () => {

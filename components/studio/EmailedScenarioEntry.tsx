@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
-import { parseEmailScenario } from "@/lib/scenario-email";
+import { parseEmailScenario } from "@/lib/scenario";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { stashInitialParcel } from "@/lib/parcel-handoff";
 import { Button } from "@/components/ui/Button";

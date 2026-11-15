@@ -2,11 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, getParcelById } from "@/lib/feasibility";
 import StudioPreview from "./StudioPreview";
-import { calculateScenarioFeasibility } from "@/lib/scenario-restoration";
+import { calculateScenarioFeasibility, defaultPose } from "@/lib/scenario";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 import { SceneStatus } from "./SceneStatus";
-import { getScenePlacement } from "@/lib/site-fit";
-import { defaultPose } from "@/lib/scenario-design";
+import { getScenePlacement } from "@/lib/scene-placement";
 
 const result = calculateFeasibility(getParcelById("coyote-brush"), defaultAduConfig, defaultFinancialAssumptions);
 

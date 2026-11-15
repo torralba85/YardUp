@@ -21,7 +21,7 @@ import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import * as adsConversion from "@/lib/analytics/adsConversion";
 import * as gtag from "@/lib/analytics/gtag";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
-import { defaultPose } from "@/lib/scenario-design";
+import { defaultPose } from "@/lib/scenario";
 
 const briefFixture: AIProjectBrief = {
   headline: "Recorded garden studio study", summary: "Saved planning snapshot", bestFit: "Detached ADU",

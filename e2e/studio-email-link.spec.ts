@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
+import { buildScenarioShareUrl } from "../lib/scenario-url";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.setTimeout(90_000);

@@ -96,7 +96,7 @@ export const inspirationItems: InspirationItem[] = [
     title: "Long-Lot Retreat",
     style: "Quiet Minimal",
     // `sqft` must equal width x length: `isValidAduConfig` enforces it exactly
-    // (lib/scenario-design.ts), and applying a template that breaks it produces
+    // (lib/scenario.ts), and applying a template that breaks it produces
     // a config the scenario URL serializer rejects. 16 x 44 = 704, not 700.
     sqft: 704,
     width: 16,
@@ -147,7 +147,7 @@ export const inspirationItems: InspirationItem[] = [
  * `footprint` is derived from the concept's own `width * length` rather than
  * copied from its `sqft` label, so the result always satisfies the exact
  * `width * length === footprint` equality that `isValidAduConfig` enforces
- * (lib/scenario-design.ts). That equality is why this helper exists: routing a
+ * (lib/scenario.ts). That equality is why this helper exists: routing a
  * concept through `configForFootprint` snapped any area outside the
  * 400/600/800/1000 option list back to 600 and left the footprint contradicting
  * the dimensions actually applied. The studio still rendered and priced the

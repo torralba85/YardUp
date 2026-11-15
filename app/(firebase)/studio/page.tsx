@@ -9,13 +9,12 @@ import { useAuth } from "@/lib/auth-context";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
-import { parseScenarioParams } from "@/lib/scenario-url";
+import { parseScenarioParams, validLayoutToken } from "@/lib/scenario-url";
 import { peekAddressQuery } from "@/lib/address-handoff";
 import { peekInitialParcel } from "@/lib/parcel-handoff";
 import { trackStudioOpened } from "@/lib/analytics/events";
 import LeadScenarioEntry from "@/components/studio/LeadScenarioEntry";
 import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
-import { validLayoutToken } from "@/lib/scenario-share-url";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 import { AGENT_PASS_PARAM, rememberAgentPass } from "@/lib/agent-pass";
 
