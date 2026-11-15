@@ -34,7 +34,7 @@ export interface AduSource {
 export type AduConfidence = "primary" | "secondary" | "unverified";
 
 /** Where on a jurisdiction page a Studio CTA sits. */
-export type AduCtaPlacement = "mid" | "end" | "calculator";
+export type AduCtaPlacement = "top" | "mid" | "end" | "calculator";
 
 /**
  * Analytics event for a Studio CTA submission, separated by placement so

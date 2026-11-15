@@ -4,6 +4,7 @@ import {
   calculatorUrl,
   cityUrl,
   costPageUrl,
+  eligibilityUrl,
   hubUrl,
   jaduUrl,
   methodologyUrl,
@@ -130,6 +131,7 @@ licensed builder.
 State law baseline verified ${STATE_BASELINE_AS_OF}.
 
 - [California ADU rules](${hubUrl()}): the state floor every California city builds on, and how San Diego County cities, the unincorporated county, Sacramento and San José differ from it.
+- [Can I build an ADU in California](${eligibilityUrl()}): 5-point property eligibility checklist covering zoning, fire hazard zones, Coastal Zone permits, utilities/septic, and HOA protections (checked 2026-11-13).
 - [California junior ADU (JADU) rules](${jaduUrl()}): what a JADU is under state law (up to 500 sq ft inside a single-family home or attached garage), how it differs from an ADU, owner-occupancy and rental rules (checked ${JADU_AS_OF}).
 - [California ADU cost guide](${stateCostUrl()}): modeled build cost by unit size, cost-per-square-foot context, permit-fee rules, scope exclusions, and contractor quote guidance.
 - [California ADU rent by county](${rentUrl()}): HUD ${HUD_FMR_YEAR} Fair Market Rents for 12 counties by bedroom count, the change from FY2026, and a planning rent range (figures verified ${CA_RENT_VERIFIED}; CSV at ${rentCsvUrl()}, free to reuse under CC BY 4.0 with a link).
@@ -150,6 +152,7 @@ ${demoLines()}
 - [Instagram](${SOCIAL_LINKS.instagram})
 - [Facebook](${SOCIAL_LINKS.facebook})
 - [X](${SOCIAL_LINKS.x})
+- [LinkedIn](${SOCIAL_LINKS.linkedin})
 - [Crunchbase](${DIRECTORY_LINKS.crunchbase})
 
 ## Reference

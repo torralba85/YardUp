@@ -6,6 +6,13 @@ export const dynamicParams = false;
 export function generateStaticParams() { return Object.keys(landingDemos).map((city) => ({ city })); }
 export async function GET(_request: Request, { params }: { params: Promise<{ city: string }> }) {
   const { city } = await params;
-  if (!Object.hasOwn(landingDemos, city)) return new Response(null, { status: 404 });
+  if (!Object.hasOwn(landingDemos, city)) {
+    return new Response(null, {
+      status: 404,
+      headers: {
+        "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+      },
+    });
+  }
   return sampleCertificateResponse(city as LandingCity);
 }

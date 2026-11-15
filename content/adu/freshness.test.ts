@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { CALIFORNIA_COST_GUIDE_AS_OF } from "@/components/adu/CaliforniaAduCostGuide";
 import { JADU_AS_OF } from "@/content/adu/ca/jadu";
+import { STATE_BASELINE_AS_OF } from "@/content/adu/state-baseline";
 import { ADU_CITIES, ADU_COST_PAGES } from "@/lib/adu/content";
+import { ELIGIBILITY_GUIDE_AS_OF } from "@/lib/adu/dates";
 
 /**
  * Re-verification gate for the ADU program: California ADU law has changed
@@ -12,6 +15,16 @@ import { ADU_CITIES, ADU_COST_PAGES } from "@/lib/adu/content";
 const REVIEW_CADENCE_DAYS = 90;
 
 describe("adu re-verification cadence", () => {
+  it("keeps the shared statewide baseline within the 90-day cadence", () => {
+    const ageDays =
+      (Date.now() - new Date(`${STATE_BASELINE_AS_OF}T00:00:00Z`).getTime()) /
+      (1000 * 60 * 60 * 24);
+    expect(
+      ageDays,
+      `State baseline last verified ${STATE_BASELINE_AS_OF} — re-verify Gov. Code §§66311.5–66333`,
+    ).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
+  });
+
   it("keeps every city's as-of date within the 90-day review cadence", () => {
     const now = Date.now();
     for (const city of ADU_CITIES) {
@@ -45,6 +58,17 @@ describe("adu re-verification cadence", () => {
         ageDays,
         `${cost.slug} cost page fees last checked ${cost.asOf} — re-verify against the fee schedule`,
       ).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
+    }
+  });
+
+  it("keeps statewide cost and eligibility guides within the 90-day cadence", () => {
+    const now = Date.now();
+    for (const [label, asOf] of [
+      ["California cost guide", CALIFORNIA_COST_GUIDE_AS_OF],
+      ["California eligibility guide", ELIGIBILITY_GUIDE_AS_OF],
+    ] as const) {
+      const ageDays = (now - new Date(`${asOf}T00:00:00Z`).getTime()) / (1000 * 60 * 60 * 24);
+      expect(ageDays, `${label} last verified ${asOf}`).toBeLessThanOrEqual(REVIEW_CADENCE_DAYS);
     }
   });
 });

@@ -29,6 +29,7 @@
     "smoke:firebase": "node scripts/firebase-scenario-smoke.mjs",
     "smoke:signup": "node scripts/firebase-signup-smoke.mjs",
     "smoke:google-sign-in": "node scripts/ci/google-sign-in.mjs",
+    "smoke:headers": "node scripts/ci/verify-production-headers.mjs",
     "store:feature-graphic": "node scripts/render-feature-graphic.mjs",
     "deploy": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026",
     "deploy:dry-run": "firebase deploy --only hosting,functions,firestore:rules --project yardup-2026 --dry-run",

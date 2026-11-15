@@ -7,6 +7,9 @@ import { buildAduSitemapXml } from "./build-xml";
  */
 export function GET(): Response {
   return new Response(buildAduSitemapXml(), {
-    headers: { "Content-Type": "application/xml; charset=utf-8" },
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
   });
 }

@@ -4,6 +4,7 @@ import {
   calculatorUrl,
   cityUrl,
   costPageUrl,
+  eligibilityUrl,
   hubUrl,
   jaduUrl,
   METHODOLOGY_AS_OF,
@@ -12,39 +13,26 @@ import {
   rentUrl,
   stateCostUrl,
 } from "@/lib/adu/content";
-import { JADU_AS_OF } from "@/content/adu/ca/jadu";
-import { CA_RENT_VERIFIED } from "@/content/adu/ca/rent";
+import {
+  calculatorLastModified,
+  cityLastModified,
+  CITY_NAV_UPDATED,
+  costPageLastModified,
+  eligibilityLastModified,
+  hubLastModified,
+  jaduLastModified,
+  laterDate,
+  methodologyLastModified,
+  permitStudyLastModified,
+  PLANNING_LINKS_UPDATED,
+  PLANS_SECTION_ADDED,
+  rentLastModified,
+  stateCostLastModified,
+} from "@/lib/adu/dates";
+import { CALIFORNIA_COST_GUIDE_AS_OF } from "@/components/adu/CaliforniaAduCostGuide";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 
-/** The later of two ISO (`YYYY-MM-DD`) dates. */
-export function laterDate(a: string, b: string): string {
-  return a > b ? a : b;
-}
-
-/**
- * When pages' links changed without a new content review. A page's displayed
- * as-of date stays put; its sitemap date takes the later of the two. The
- * planning-links list gained the San José and Sacramento guides, and those two
- * guides gained links to the other counties' guides.
- */
-export const PLANNING_LINKS_UPDATED = "2026-11-06";
-
-/**
- * #385 added the official pre-approved plans section to every guide whose
- * jurisdiction has a verified plan catalog; it shipped 2026-11-08.
- */
-export const PLANS_SECTION_ADDED = "2026-11-08";
-
-/** Per-guide changes made without a new rules review, by slug. */
-export const CITY_NAV_UPDATED: Record<string, string> = {
-  "san-diego-county": PLANS_SECTION_ADDED,
-  "san-diego": PLANS_SECTION_ADDED,
-  carlsbad: "2026-11-11",
-  "imperial-beach": PLANS_SECTION_ADDED,
-  "la-mesa": PLANS_SECTION_ADDED,
-  sacramento: PLANS_SECTION_ADDED,
-  "san-jose": PLANNING_LINKS_UPDATED,
-};
+export { CITY_NAV_UPDATED, laterDate, PLANNING_LINKS_UPDATED, PLANS_SECTION_ADDED };
 
 /** XML-escape a sitemap value. */
 function escapeXml(value: string): string {
@@ -64,44 +52,43 @@ function escapeXml(value: string): string {
  */
 export function buildAduSitemapXml(): string {
   const urls = [
-    // The hub, statewide cost guide and calculator last changed with the planning links.
-    { loc: hubUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
-    { loc: stateCostUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
-    { loc: calculatorUrl(), lastmod: PLANNING_LINKS_UPDATED, changefreq: "monthly", priority: "0.8" },
+    { loc: hubUrl(), lastmod: hubLastModified(), changefreq: "monthly", priority: "0.8" },
+    { loc: eligibilityUrl(), lastmod: eligibilityLastModified(), changefreq: "monthly", priority: "0.8" },
+    { loc: stateCostUrl(), lastmod: stateCostLastModified(CALIFORNIA_COST_GUIDE_AS_OF), changefreq: "monthly", priority: "0.8" },
+    { loc: calculatorUrl(), lastmod: calculatorLastModified(), changefreq: "monthly", priority: "0.8" },
     {
       loc: methodologyUrl(),
-      lastmod: laterDate(METHODOLOGY_AS_OF, PLANNING_LINKS_UPDATED),
+      lastmod: methodologyLastModified(METHODOLOGY_AS_OF),
       changefreq: "monthly",
       priority: "0.6",
     },
     {
       loc: rentUrl(),
-      lastmod: laterDate(CA_RENT_VERIFIED, PLANNING_LINKS_UPDATED),
+      lastmod: rentLastModified(),
       changefreq: "monthly",
       priority: "0.8",
     },
     {
       loc: jaduUrl(),
-      lastmod: laterDate(JADU_AS_OF, PLANNING_LINKS_UPDATED),
+      lastmod: jaduLastModified(),
       changefreq: "monthly",
       priority: "0.8",
     },
     {
       loc: permitStudyUrl(),
-      lastmod: SAN_DIEGO_PERMIT_STUDY.generatedAt,
+      lastmod: permitStudyLastModified(SAN_DIEGO_PERMIT_STUDY.generatedAt),
       changefreq: "monthly",
       priority: "0.7",
     },
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
-      lastmod: laterDate(city.asOf, CITY_NAV_UPDATED[city.slug] ?? city.asOf),
+      lastmod: cityLastModified(city.slug, city.asOf),
       changefreq: "monthly",
       priority: "0.7",
     })),
     ...ADU_COST_PAGES.map((cost) => ({
       loc: costPageUrl(cost),
-      // Every cost page renders the planning links.
-      lastmod: laterDate(cost.asOf, PLANNING_LINKS_UPDATED),
+      lastmod: costPageLastModified(cost.asOf),
       changefreq: "monthly",
       priority: "0.7",
     })),

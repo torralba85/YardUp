@@ -6,7 +6,7 @@ import { landingDemos, type LandingCity } from "@/lib/landing-demo";
 
 export function SampleCertificateDialog({ city, onClose }: { city: LandingCity; onClose: () => void }) {
   const demo = landingDemos[city];
-  const href = city === "seattle" ? "/sample-certificate" : `/sample-certificate/${city}`;
+  const href = city === "san-diego" ? "/sample-certificate" : `/sample-certificate/${city}`;
   return (
     <Dialog
       title={`${demo.name} sample Certificate`}

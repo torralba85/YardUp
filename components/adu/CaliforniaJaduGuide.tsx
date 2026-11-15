@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
+import { JaduComparisonDiagram } from "./JaduComparisonDiagram";
 import {
   JADU_AS_OF,
   JADU_FAQS,
@@ -18,6 +19,7 @@ import {
   opengraphImageUrl,
   stateCostPath,
 } from "@/lib/adu/content";
+import { jaduLastModified } from "@/lib/adu/dates";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -43,7 +45,7 @@ export function CaliforniaJaduGuide() {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "LotFoundry", item: "https://lotfoundry.net/" },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
       { "@type": "ListItem", position: 2, name: "California ADU rules", item: hubUrl() },
       { "@type": "ListItem", position: 3, name: "Junior ADU (JADU) rules", item: jaduUrl() },
     ],
@@ -52,7 +54,7 @@ export function CaliforniaJaduGuide() {
     headline: "Junior ADU (JADU) Rules in California (2026)",
     image: opengraphImageUrl(jaduUrl()),
     datePublished: JADU_PUBLISHED,
-    dateModified: JADU_AS_OF,
+    dateModified: jaduLastModified(),
   });
 
   return (
@@ -84,7 +86,12 @@ export function CaliforniaJaduGuide() {
       </div>
 
       <div className="mt-8">
-        <AduPlanningLinks current={jaduPath()} />
+        <AduStudioCta
+          city="California"
+          slug="california-jadu"
+          placement="top"
+          heading="Check how a JADU and detached ADU fit together on your lot"
+        />
       </div>
 
       <section aria-labelledby="jadu-glance" className="mt-12">
@@ -114,6 +121,8 @@ export function CaliforniaJaduGuide() {
           </table>
         </div>
       </section>
+
+      <JaduComparisonDiagram />
 
       <section aria-labelledby="jadu-vs-adu" className="mt-12">
         <h2 id="jadu-vs-adu" className="lf-card-heading text-lot-ink">
@@ -199,8 +208,8 @@ export function CaliforniaJaduGuide() {
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {JADU_FAQS.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -209,10 +218,63 @@ export function CaliforniaJaduGuide() {
         </div>
       </section>
 
+      <section aria-labelledby="jadu-owner-occupancy" className="mt-12">
+        <h2 id="jadu-owner-occupancy" className="lf-card-heading text-lot-ink">
+          When does a JADU require owner-occupancy under Gov. Code §66333(b)?
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Effective January 1, 2026 (AB 1154 amending Gov. Code §66333(b)), state
+          law ties owner-occupancy to bathroom sharing rather than applying a
+          blanket rule to every JADU:
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full border-collapse text-left text-sm">
+            <caption className="sr-only">
+              California JADU vs. ADU owner-occupancy rules under state law
+            </caption>
+            <thead>
+              <tr className="border-b border-lot-line">
+                <th scope="col" className="py-3 pr-4 font-semibold text-lot-ink">Unit type &amp; bath setup</th>
+                <th scope="col" className="py-3 pr-4 font-semibold text-lot-ink">Owner-occupancy rule</th>
+                <th scope="col" className="py-3 pr-4 font-semibold text-lot-ink">Statutory basis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className="py-3 pr-4 font-semibold text-lot-ink">JADU with shared bathroom</th>
+                <td className="py-3 pr-4 text-lot-stone">Required (owner in main home or JADU)</td>
+                <td className="py-3 pr-4 text-lot-stone">Gov. Code §66333(b)</td>
+              </tr>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className="py-3 pr-4 font-semibold text-lot-ink">JADU with its own bathroom</th>
+                <td className="py-3 pr-4 text-lot-stone">Not required under 2026 state law</td>
+                <td className="py-3 pr-4 text-lot-stone">Gov. Code §66333(b)</td>
+              </tr>
+              <tr className="border-t border-lot-line">
+                <th scope="row" className="py-3 pr-4 font-semibold text-lot-ink">Standard detached or attached ADU</th>
+                <td className="py-3 pr-4 text-lot-stone">Prohibited by state law</td>
+                <td className="py-3 pr-4 text-lot-stone">Gov. Code §66315</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div className="mt-10">
+        <AduPlanningLinks current={jaduPath()} />
+      </div>
+
       <section aria-labelledby="jadu-sources" className="mt-12">
         <h2 id="jadu-sources" className="lf-card-heading text-lot-ink">
           Sources and as-of date
         </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          For cost, rent, and payback formulas across unit sizes, see{" "}
+          <Link href="/adu/how-we-estimate" className={linkClass}>
+            how LotFoundry estimates ADU feasibility
+          </Link>
+          .
+        </p>
         <p className="lf-body mt-3 text-lot-stone">
           Every rule on this page is California state law, checked against the
           sources below on {JADU_AS_OF}. Your city&apos;s own code may lag behind

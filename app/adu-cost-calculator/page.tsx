@@ -21,7 +21,7 @@ import { SITE_NAME } from "@/lib/site-identity";
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
 const DESCRIPTION =
-  "Free California ADU cost calculator: compare build cost, rent, payback, loan payments and cash flow in Los Angeles, San Diego or Santa Clara County.";
+  "Free California ADU cost calculator: compare build cost, rent, simple payback, and loan cash flow across LA, San Diego, and Santa Clara counties.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -76,7 +76,7 @@ const breadcrumbJsonLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
-    { "@type": "ListItem", position: 1, name: "LotFoundry", item: "https://lotfoundry.net/" },
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
     { "@type": "ListItem", position: 2, name: "California ADU rules", item: hubUrl() },
     { "@type": "ListItem", position: 3, name: "ADU cost calculator", item: calculatorUrl() },
   ],
@@ -85,6 +85,7 @@ const breadcrumbJsonLd = {
 const appJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
+  "@id": `${calculatorUrl()}#app`,
   name: "California ADU Cost Calculator",
   url: calculatorUrl(),
   applicationCategory: "FinanceApplication",
@@ -118,32 +119,24 @@ export default function AduCostCalculatorPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
       />
 
-      <div className="lf-body space-y-4 text-lg leading-relaxed">
+      <div className="lf-body space-y-3 text-lg leading-relaxed">
         {sample600 ? (
           <p>
-            For a 600 sq ft detached ADU, this planning model estimates{" "}
-            {formatCurrency(sample600.costLow)} to {formatCurrency(sample600.costHigh)}{" "}
-            in build cost, including an allowance for design and permit soft
-            costs. Using county HUD rent assumptions, modeled simple payback
-            spans about {Math.min(...paybacks600).toFixed(0)} to{" "}
-            {Math.max(...paybacks600).toFixed(0)} years across the three counties.
-            These are estimates, not local contractor quotes or guaranteed returns.
+            A 600 sq ft detached ADU models at{" "}
+            {formatCurrency(sample600.costLow)}–{formatCurrency(sample600.costHigh)}{" "}
+            with design and permit soft costs, paying back in{" "}
+            {Math.min(...paybacks600).toFixed(0)}–{Math.max(...paybacks600).toFixed(0)}{" "}
+            years on HUD county rent. Adjust county, size, finish, rent, or add
+            a loan below—free, no account required.
           </p>
         ) : null}
-        <p>
-          Use the calculator free, without an account. Change the county, size,
-          finish and rent assumption to compare scenarios. Los Angeles, San Diego
-          and Santa Clara have separate rent anchors; construction uses the same
-          national cost base. The build range excludes financing and unusual site work.
-          Use the optional loan calculator below to compare monthly payments and rental cash flow.
-        </p>
       </div>
 
       <AduCostCalculator />
 
       <section aria-labelledby="adu-compare-scenarios">
         <h2 id="adu-compare-scenarios" className="lf-card-heading text-lot-ink">
-          Compare two sizes before you commit
+          How should you compare two ADU sizes before committing?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Start with 600 sq ft and Conservative (HUD rent), then try 800 sq ft
@@ -165,11 +158,9 @@ export default function AduCostCalculatorPage() {
         </p>
       </section>
 
-      <AduPlanningLinks current="/adu-cost-calculator" />
-
       <section aria-labelledby="adu-cost-by-size">
         <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
-          Modeled build cost by unit size
+          What does a California ADU cost to build by size?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Build cost by size, cedar finish and shed roof. Build cost uses the
@@ -213,7 +204,7 @@ export default function AduCostCalculatorPage() {
 
       <section aria-labelledby="adu-rental-income">
         <h2 id="adu-rental-income" className="lf-card-heading text-lot-ink">
-          ADU rental income by county
+          What does an ADU rent for by California county?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Monthly rent at the county&apos;s HUD Fair Market Rent: studio rent
@@ -251,7 +242,7 @@ export default function AduCostCalculatorPage() {
 
       <section aria-labelledby="adu-payback">
         <h2 id="adu-payback" className="lf-card-heading text-lot-ink">
-          ADU payback and ROI
+          What is modeled ADU payback and ROI?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Simple payback is the midpoint build cost divided by a year of rent
@@ -295,7 +286,7 @@ export default function AduCostCalculatorPage() {
 
       <section aria-labelledby="adu-estimate-method">
         <h2 id="adu-estimate-method" className="lf-card-heading text-lot-ink">
-          What the estimate includes
+          What does the calculator estimate include?
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
@@ -329,7 +320,7 @@ export default function AduCostCalculatorPage() {
 
       <section aria-labelledby="adu-cost-rules">
         <h2 id="adu-cost-rules" className="lf-card-heading text-lot-ink">
-          State rules that change your budget
+          Which California rules change your ADU budget?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           California caps what a city can charge and require. ADUs of 750 sq ft
@@ -354,6 +345,21 @@ export default function AduCostCalculatorPage() {
           .
         </p>
       </section>
+
+      <section aria-labelledby="adu-builders" className="border-t border-lot-line pt-8">
+        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+          For builders and designers
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Compare project scopes with homeowner feasibility briefs via{" "}
+          <Link href="/builder" className="underline underline-offset-2 hover:text-lot-ink">
+            the LotFoundry builder portal
+          </Link>
+          .
+        </p>
+      </section>
+
+      <AduPlanningLinks current="/adu-cost-calculator" />
 
       <AduStudioCta city="California" slug="adu-cost-calculator" placement="end" />
     </LegalPageShell>

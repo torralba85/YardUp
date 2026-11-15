@@ -39,6 +39,7 @@ const appRootUrl = `${appUrl.replace(/\/+$/, "")}/`;
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  "@id": `${appRootUrl}#app`,
   name: "LotFoundry",
   description:
     "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",

@@ -11,6 +11,7 @@ import {
 } from "@/lib/feasibility";
 import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
 import { landingDemos, landingScenarios } from "@/lib/landing-demo";
+import LandingPage, { metadata as homeMetadata } from "@/app/page";
 import SanDiegoPage, { metadata as sanDiegoMetadata } from "@/app/san-diego/page";
 
 const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
@@ -65,6 +66,16 @@ const scenarios = (["conservative", "market", "optimistic"] as const).map(
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
 
 describe("landing address handoff", () => {
+  it("leads the homepage with the San Diego demo and California copy", () => {
+    render(<LandingPage />);
+    expect(String(homeMetadata.title)).toContain("California");
+    expect(String(homeMetadata.title).length).toBeLessThanOrEqual(60);
+    expect(homeMetadata.description).toContain("California");
+    expect(screen.getByText(/Check any California address/i)).toBeVisible();
+    expect(screen.getByText("COYOTE BRUSH COURT DEMO, SAN DIEGO · 600 SQ FT · 1 BED CONCEPT")).toBeVisible();
+    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
+  });
+
   it("renders the San Diego page with its own metadata, kicker, demo and provenance", () => {
     render(<SanDiegoPage />);
     expect(sanDiegoMetadata.alternates?.canonical).toBe("https://lotfoundry.net/san-diego");
@@ -421,7 +432,7 @@ describe("landing address handoff", () => {
   });
 
   it("shows the engine's market-case result in the hero and opens the demo lot from it", () => {
-    render(<LotMoreLanding scenarios={scenarios} />);
+    render(<LotMoreLanding city="seattle" scenarios={scenarios} />);
     const sample = screen.getByRole("link", {
       name: /^Just looking\? See a sample result.*Seattle/i,
     });
@@ -443,7 +454,7 @@ describe("landing address handoff", () => {
   });
 
   it("reproduces the advertised market figures through the scenario parser", () => {
-    render(<LotMoreLanding scenarios={scenarios} />);
+    render(<LotMoreLanding city="seattle" scenarios={scenarios} />);
     const href = screen
       .getByRole("link", { name: /^Just looking\? See a sample result.*Seattle/i })
       .getAttribute("href")!;
@@ -471,7 +482,7 @@ describe("landing address handoff", () => {
   });
 
   it("clears a typed address when the visitor chooses the explicit demo", () => {
-    render(<LotMoreLanding scenarios={scenarios} />);
+    render(<LotMoreLanding city="seattle" scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[0],
       { target: { value: "456 Pine St, Denver, CO" } },
@@ -492,7 +503,7 @@ describe("landing address handoff", () => {
   });
 
   it("updates maquette inspection readouts and interactive massing sandbox figures", () => {
-    render(<LotMoreLanding scenarios={scenarios} />);
+    render(<LotMoreLanding city="seattle" scenarios={scenarios} />);
     expect(screen.getByText(/24′ × 25′ footprint · 1 bed/)).toBeVisible();
     // One inspection point at a time, so the pins are a radio group.
     const points = screen.getByRole("radiogroup", { name: "Maquette inspection points" });

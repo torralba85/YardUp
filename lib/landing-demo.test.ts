@@ -43,9 +43,9 @@ describe("San Diego demo", () => {
     }
   });
 
-  it("uses San Diego rent while the homepage keeps Seattle", () => {
+  it("uses San Diego rent for both the San Diego page and the homepage default", () => {
     expect(landingScenarios("san-diego").map(({ rent }) => rent)).toEqual([2335, 2615, 2919]);
-    expect(landingScenarios()).toEqual(landingScenarios("seattle"));
+    expect(landingScenarios()).toEqual(landingScenarios("san-diego"));
     expect(landingDemos["san-diego"]).toMatchObject({ city: "San Diego", region: "CA", parcelId: "coyote-brush", name: "Coyote Brush Court" });
   });
 });

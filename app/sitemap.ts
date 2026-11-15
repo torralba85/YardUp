@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
-import { laterDate } from "./sitemap-adu.xml/build-xml";
+import { laterDate } from "@/lib/adu/dates";
 
 const baseUrl = CANONICAL_ORIGIN;
 
@@ -24,10 +24,10 @@ const baseUrl = CANONICAL_ORIGIN;
  * their published versions, or a later edit that kept the version.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-11-06",
+  "/": "2026-11-13",
   "/studio": "2026-11-06",
-  "/about": "2026-11-06",
-  "/help": "2026-11-06",
+  "/about": "2026-11-13",
+  "/help": "2026-11-13",
   "/feedback": "2026-11-06",
   // #362 added processors to both policies on 2026-11-03 without a new
   // version, /privacy was retitled on 2026-11-06, and /terms added

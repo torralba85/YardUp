@@ -119,8 +119,16 @@ describe("Firebase Hosting static asset delivery", () => {
     const rootMap = Object.fromEntries(
       rootRule!.headers.map((h) => [h.key, h.value]),
     );
+    expect(rootMap["Strict-Transport-Security"]).toBe(
+      "max-age=31536000; includeSubDomains",
+    );
     expect(rootMap["X-Content-Type-Options"]).toBe("nosniff");
     expect(rootMap["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
+  });
+
+  it("writes poweredByHeader: false config into functions/.next/standalone", () => {
+    expect(prepareScript).toContain('"next.config.js"');
+    expect(prepareScript).toContain("poweredByHeader: false");
   });
 
   // This Hosting site also serves auth.lotfoundry.net, whose /__/auth/iframe

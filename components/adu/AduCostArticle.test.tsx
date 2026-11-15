@@ -5,6 +5,7 @@ import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { sanDiego } from "@/content/adu/ca/san-diego";
 import { sacramento } from "@/content/adu/ca/sacramento";
 import { sanJose } from "@/content/adu/ca/san-jose";
+import { cityLastModified } from "@/lib/adu/dates";
 import { AduArticle } from "./AduArticle";
 import { AduCostArticle } from "./AduCostArticle";
 
@@ -129,19 +130,21 @@ describe("AduArticle article markup and related guides", () => {
       .find((entry) => entry["@type"] === "Article");
   }
 
-  it("gives the Article its share image and publish date", () => {
+  it("gives the Article its share image and synchronized lastmod date", () => {
     const { container } = render(<AduArticle content={sanDiego} />);
     const article = articleJsonLd(container);
     expect(article.image).toBe("https://lotfoundry.net/adu/ca/san-diego/opengraph-image");
     expect(article.datePublished).toBe(sanDiego.published);
-    expect(article.dateModified).toBe(sanDiego.asOf);
+    expect(article.dateModified).toBe(cityLastModified(sanDiego.slug, sanDiego.asOf));
   });
 
   it("never dates the last edit before publication", () => {
     // Sacramento's rules were checked the day before the guide went live.
     expect(sacramento.asOf < sacramento.published).toBe(true);
     const { container } = render(<AduArticle content={sacramento} />);
-    expect(articleJsonLd(container).dateModified).toBe(sacramento.published);
+    const modified = articleJsonLd(container).dateModified as string;
+    expect(modified >= sacramento.published).toBe(true);
+    expect(modified).toBe(cityLastModified(sacramento.slug, sacramento.asOf));
   });
 
   it("links a metro's first guide to the other counties' guides", () => {

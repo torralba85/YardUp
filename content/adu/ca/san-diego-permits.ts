@@ -65,9 +65,9 @@ export const SAN_DIEGO_PERMIT_STUDY: PermitStudy = data as PermitStudy;
 export const SAN_DIEGO_PERMIT_STUDY_PUBLISHED = "2026-10-28";
 
 /** City of San Diego open-data catalog page for the permit file. */
-export const PERMIT_DATASET_URL = "https://data.sandiego.gov/datasets/development-permits-set2/";
+export const PERMIT_DATASET_URL = "https://data.sandiego.gov/datasets/development-permits/";
 /** City of San Diego open-data catalog page for community planning areas. */
-export const PLAN_AREAS_DATASET_URL = "https://data.sandiego.gov/datasets/cmty-plan/";
+export const PLAN_AREAS_DATASET_URL = "https://data.sandiego.gov/datasets/gis-community-planning-districts/";
 
 /** CSV of the planning-area table, one row per area. */
 export function permitStudyCsv(study: PermitStudy = SAN_DIEGO_PERMIT_STUDY): string {

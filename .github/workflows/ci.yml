@@ -60,7 +60,7 @@ jobs:
             --gitleaks-ignore-path .gitleaksignore --log-opts="--all --full-history" \
             --ignore-gitleaks-allow --redact=100 --no-banner --no-color --timeout 120
       - name: Test CI scope and release safeguards
-        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs scripts/ci/serving-revision.checks.mjs
+        run: node --test scripts/ci/scope.checks.mjs scripts/ci/analytics.checks.mjs scripts/ci/google-sign-in.checks.mjs scripts/ci/serving-revision.checks.mjs scripts/ci/production-headers.checks.mjs
       - name: Determine verification and deployment scope
         id: scope
         run: node scripts/ci/scope.mjs

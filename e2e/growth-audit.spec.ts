@@ -18,12 +18,12 @@ test("market demo, full sample, and keyboard dismissal agree", async ({ page }, 
   const rent = page.getByRole("radiogroup", { name: "Demo rent assumption" });
   await expect(rent.getByRole("radio", { name: "market", exact: true })).toHaveAttribute("aria-checked", "true");
   await page.getByText("What’s behind these numbers?").click();
-  await expect(page.locator("#numbers details")).toContainText("$19,035");
+  await expect(page.locator("#numbers details")).toContainText("$21,182");
   await rent.getByRole("radio", { name: "conservative", exact: true }).click();
-  await expect(page.locator("#numbers details")).toContainText("$16,605");
+  await expect(page.locator("#numbers details")).toContainText("$18,914");
   const preview = page.getByRole("button", { name: "View full sample / save PDF" });
   await preview.click();
-  const dialog = page.getByRole("dialog", { name: "Oak Street sample Certificate" });
+  const dialog = page.getByRole("dialog", { name: "Coyote Brush Court sample Certificate" });
   await expect(dialog).toBeVisible();
   // The shared ui/Dialog title: Space Grotesk 500, the same on every dialog.
   await expect(dialog.getByRole("heading", { level: 2 })).toHaveCSS("font-family", /space.*grotesk/i);
@@ -87,7 +87,7 @@ test("sample remains usable at 320px", async ({ page }, testInfo) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole("button", { name: "View full sample / save PDF" }).click();
-  const dialog = page.getByRole("dialog", { name: "Oak Street sample Certificate" });
+  const dialog = page.getByRole("dialog", { name: "Coyote Brush Court sample Certificate" });
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().width <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("sample-dialog-320.png") });

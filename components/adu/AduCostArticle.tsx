@@ -10,6 +10,7 @@ import {
   methodologyPath,
   opengraphImageUrl,
 } from "@/lib/adu/content";
+import { costPageLastModified } from "@/lib/adu/dates";
 import type { AduFaq, JurisdictionCostContent } from "@/lib/adu/types";
 import {
   defaultFinancialAssumptions,
@@ -20,6 +21,7 @@ import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
+import { CostBreakdownDiagram } from "./CostBreakdownDiagram";
 import { RentAndPayback } from "./RentAndPayback";
 
 const tableClass = "w-full border-collapse text-left text-sm";
@@ -110,7 +112,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
     headline: cost.h1,
     image: opengraphImageUrl(costPageUrl(cost)),
     datePublished: cost.published,
-    dateModified: cost.asOf,
+    dateModified: costPageLastModified(cost.asOf),
   });
   const ctaSlug = `${cost.slug}-cost`;
 
@@ -150,12 +152,17 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
       </div>
 
       <div className="mt-8">
-        <AduPlanningLinks current={costPagePath(cost)} />
+        <AduStudioCta
+          city={city.city}
+          slug={ctaSlug}
+          placement="top"
+          heading={`Check buildable yard area and ADU budget on your ${city.city} lot`}
+        />
       </div>
 
       <section aria-labelledby="adu-cost-by-size" className="mt-12">
         <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
-          ADU build cost in {city.city} by size
+          What does a {city.city} ADU cost by size?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Cedar finish and a shed roof, with the soft-cost allowance included.
@@ -197,7 +204,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
 
       <section aria-labelledby="adu-rent" className="mt-12">
         <h2 id="adu-rent" className="lf-card-heading text-lot-ink">
-          What a {city.city} ADU rents for, and when it pays back
+          What does a {city.city} ADU rent for, and when does it pay back?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Studio rent for 400 sq ft, one-bedroom for 600 and 800 sq ft, and
@@ -239,12 +246,22 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
             ))}
           </ul>
         ) : null}
+        {cost.coveredCities.includes("chula-vista") ? (
+          <p className="lf-body mt-4 text-sm text-lot-stone">
+            Looking specifically at Chula Vista permit fees? See{" "}
+            <Link href="/adu/ca/chula-vista#adu-fees" className={linkClass}>
+              Chula Vista&apos;s preapproved standard-plan flat review fees
+            </Link>
+            .
+          </p>
+        ) : null}
       </section>
 
       <section aria-labelledby="adu-estimate-method" className="mt-12">
         <h2 id="adu-estimate-method" className="lf-card-heading text-lot-ink">
-          What the estimate includes
+          What is included in the estimate?
         </h2>
+        <CostBreakdownDiagram />
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
             Hard construction cost of ${lowFinish}–${highFinish} per sq ft
@@ -326,14 +343,32 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
             </details>
           ))}
         </div>
+      </section>
+
+      <div className="mt-10">
+        <AduPlanningLinks current={costPagePath(cost)} />
+      </div>
+
+      <section aria-labelledby="adu-builders" className="mt-12 border-t border-lot-line pt-8">
+        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+          For builders and designers
+        </h2>
+        <p className="lf-body mt-3 text-lot-stone">
+          Share homeowner feasibility snapshots with setback limits, utility assumptions, and
+          bid-leveling checklists. Contractors serving {city.county} can join via{" "}
+          <Link href="/builder" className={linkClass}>
+            the LotFoundry builder portal
+          </Link>
+          .
+        </p>
       </section>
 
       <section aria-labelledby="adu-sources" className="mt-12">

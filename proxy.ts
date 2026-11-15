@@ -44,7 +44,16 @@ export function proxy(request: NextRequest) {
   const host = requestedHost(request);
   if (DUPLICATE_HOSTS.has(host)) {
     const destination = new URL(CANONICAL_ORIGIN);
-    destination.pathname = request.nextUrl.pathname;
+    destination.pathname =
+      request.nextUrl.pathname === "/adu" || request.nextUrl.pathname === "/adu/"
+        ? "/adu/ca"
+        : request.nextUrl.pathname;
+    destination.search = request.nextUrl.search;
+    return NextResponse.redirect(destination, 301);
+  }
+  if (request.nextUrl.pathname === "/adu" || request.nextUrl.pathname === "/adu/") {
+    const destination = new URL(CANONICAL_ORIGIN);
+    destination.pathname = "/adu/ca";
     destination.search = request.nextUrl.search;
     return NextResponse.redirect(destination, 301);
   }

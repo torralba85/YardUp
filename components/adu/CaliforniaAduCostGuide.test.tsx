@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { stateCostLastModified } from "@/lib/adu/dates";
 import { CaliforniaAduCostGuide } from "./CaliforniaAduCostGuide";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -64,7 +65,7 @@ describe("CaliforniaAduCostGuide", () => {
     // Reviewed 2026-10-07, published 2026-10-08: markup never dates an edit before release.
     expect(jsonLd(container, "Article")).toMatchObject({
       datePublished: "2026-10-08",
-      dateModified: "2026-10-08",
+      dateModified: stateCostLastModified(),
       image: "https://lotfoundry.net/adu/ca/cost/opengraph-image",
     });
   });

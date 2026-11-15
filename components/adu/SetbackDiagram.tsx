@@ -1,5 +1,22 @@
 import type { JurisdictionContent } from "@/lib/adu/types";
 
+function wrapDiagramRule(text: string, maxChars = 24): string[] {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 /**
  * Visual of the short-ADU versus tall-ADU setback split (e.g. San
  * Diego's under-16-ft zero setback against the 4-ft rule at 16 ft and
@@ -10,6 +27,8 @@ import type { JurisdictionContent } from "@/lib/adu/types";
 export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
   const diagram = content.setbackDiagram;
   if (!diagram) return null;
+  const shortLines = wrapDiagramRule(diagram.shortRule);
+  const tallLines = wrapDiagramRule(diagram.tallRule);
 
   return (
     <figure
@@ -54,8 +73,12 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
             stroke="currentColor"
             strokeWidth="2"
           />
-          <text x="10" y="198" fontSize="12" fill="currentColor">
-            {diagram.shortRule}
+          <text x="10" y="198" fontSize="11" fill="currentColor">
+            {shortLines.map((line, index) => (
+              <tspan key={line} x="10" dy={index === 0 ? 0 : 14}>
+                {line}
+              </tspan>
+            ))}
           </text>
         </g>
 
@@ -87,8 +110,12 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
           {/* Stand-off arrows on the rear and side gaps. */}
           <line x1="232" y1="160" x2="232" y2="178" stroke="currentColor" strokeWidth="1.5" />
           <line x1="200" y1="118" x2="218" y2="118" stroke="currentColor" strokeWidth="1.5" />
-          <text x="200" y="198" fontSize="12" fill="currentColor">
-            {diagram.tallRule}
+          <text x="200" y="198" fontSize="11" fill="currentColor">
+            {tallLines.map((line, index) => (
+              <tspan key={line} x="200" dy={index === 0 ? 0 : 14}>
+                {line}
+              </tspan>
+            ))}
           </text>
         </g>
       </svg>

@@ -62,9 +62,9 @@ export function CookieConsentBanner() {
         data-pending={pending ? "" : undefined}
         className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-index-toast) sm:px-4 sm:pt-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl flex-col gap-2 rounded-none border-t border-lot-line bg-lot-chalk px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-6 sm:border sm:p-5">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-3xl flex-col gap-1.5 rounded-none border-t border-lot-line bg-lot-chalk px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-6 sm:border sm:p-5">
           <p className="lf-caption flex-1 text-lot-stone">
-            Allow Google Analytics and Google Ads cookies to measure how people find and use LotFoundry? Personalized ads stay off, and Google never gets your address, email, phone, or results.
+            Allow Google Analytics and Google Ads cookies to measure how people find us? Google never gets your address or results.
           </p>
           <div className="flex shrink-0 items-center gap-3">
             <Link

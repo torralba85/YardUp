@@ -31,7 +31,7 @@ export const sacramento: JurisdictionContent = {
   metaDescription:
     "Sacramento ADU rules: a 1,200 sq ft detached ADU with 3 ft setbacks, or three units under the state option. No parking minimums. See cost, rent, payback.",
   introAnswer: [
-    "Yes. The City of Sacramento lets you choose between two rulebooks for the ADUs on your lot. Under the City's local option (City Code §17.228.105(B)), a single-family lot can have two ADUs, or one ADU and a junior ADU, and a detached ADU can be up to 1,200 square feet. Under the state option (§17.228.105(C) and Gov. Code §66323), you can have three: a conversion, a junior ADU and a new detached ADU of up to 800 square feet.",
+    "Yes. Sacramento gives single-family lots two rulebooks under City Code §17.228.105: the local option allows two units (two ADUs, or one ADU plus one JADU, up to 1,200 sq ft detached), while the state option (§66323) allows three (conversion, JADU, and an 800 sq ft detached ADU).",
     "You cannot mix the two options on one lot, so the choice sets your size, height and setbacks. The local option uses the zone's height limit (35 feet in R-1) and needs side and rear setbacks of only 3 feet. The state option caps a detached ADU at 18 feet, or 20 feet to match the house's roof pitch, with 4-foot setbacks.",
     "Parking won't decide the design. Sacramento's 2040 General Plan, adopted in February 2024, ended minimum off-street parking requirements for every property in the city.",
   ],
@@ -40,7 +40,7 @@ export const sacramento: JurisdictionContent = {
   metaParkingNote: "no parking minimums",
   glance: [
     { label: "Two rulebooks", value: "Choose the City's local option or the state option for the whole lot", note: "City Code §17.228.105(A): the two options may not be combined" },
-    { label: "Units allowed — local option", value: "2 ADUs, or 1 ADU + 1 JADU, or 2 JADUs on a single-unit lot", note: "A duplex or multi-unit lot may have up to 2 ADUs (§17.228.105(B)(1)(a))" },
+    { label: "Units allowed — local option", value: "Up to 2 ADUs total, or 1 ADU + 1 JADU on a single-unit lot", note: "A single-unit lot is limited to at most 1 JADU (§17.228.105(B)(3)); a duplex or multi-unit lot may have up to 2 ADUs (§17.228.105(B)(1)(a))" },
     { label: "Units allowed — state option", value: "1 conversion ADU + 1 JADU + 1 detached ADU of up to 800 sq ft", note: "Multi-unit lots: up to 8 detached ADUs (never more than the existing units) plus conversions of non-livable space (§17.228.105(C))" },
     { label: "Max size — detached", value: "Local option: 1,200 sq ft. State option: 800 sq ft", note: "Under the local option, two detached ADUs share the 1,200 sq ft between them" },
     { label: "Max size — attached", value: "50% of the house, or 850 sq ft (0–1 bedroom) / 1,000 sq ft (2+ bedrooms), whichever is greater", note: "Local option, §17.228.105(B)(2)(b)" },
@@ -56,7 +56,7 @@ export const sacramento: JurisdictionContent = {
     {
       heading: "Two rulebooks: choose one for the whole lot",
       paragraphs: [
-        "Most California cities write one ADU ordinance and let state law fill the gaps. Sacramento's code instead gives you two complete options and says they may not be combined. The local option in §17.228.105(B) is the more generous one on size and setbacks: a detached ADU of up to 1,200 square feet, an attached ADU of half the house or 850 to 1,000 square feet, the zone's own height limit, and 3-foot side and rear setbacks. Its limit is the count, two units on a single-unit lot, in any mix of attached ADUs, detached ADUs and junior ADUs.",
+        "Most California cities write one ADU ordinance and let state law fill the gaps. Sacramento's code instead gives you two complete options and says they may not be combined. The local option in §17.228.105(B) is the more generous one on size and setbacks: a detached ADU of up to 1,200 square feet, an attached ADU of half the house or 850 to 1,000 square feet, the zone's own height limit, and 3-foot side and rear setbacks. Its limit is the count: two units on a single-unit lot, up to two ADUs or one ADU plus at most one junior ADU.",
         "The state option in §17.228.105(C) follows Government Code §66323. It allows three units on a single-unit lot, but in fixed forms: one ADU converted from space inside the house or an existing accessory structure, one JADU, and one new detached ADU of up to 800 square feet and 18 feet, or 20 feet when the roof pitch matches the house. In exchange, no other objective development or design standard in the zoning code applies, so lot coverage, open space and design standards drop away. Units approved under this option may not be rented for less than 30 days.",
         "Under the local option, the zone's lot coverage and open-space rules still apply, except to ADUs that cover less than 800 square feet in total, and the ADU must meet the objective design standards for the lot. If a standard blocks your plan, the code lets you ask for a deviation through site plan and design review under chapter 17.808.",
       ],
@@ -146,7 +146,7 @@ export const sacramento: JurisdictionContent = {
     {
       question: "How many ADUs can I build on my lot in Sacramento?",
       answer:
-        "Two under the City's local option, in any mix of ADUs and junior ADUs, or three under the state option: one converted ADU, one junior ADU and one detached ADU of up to 800 square feet. You must pick one option for the whole lot. In the EA-2 and EA-3 overlay zones the limit is one ADU.",
+        "Up to two units under the City's local option (two ADUs, or one ADU and one junior ADU, with at most one JADU), or three under the state option: one converted ADU, one junior ADU and one detached ADU of up to 800 square feet. You must pick one option for the whole lot. In the EA-2 and EA-3 overlay zones the limit is one ADU.",
     },
     {
       question: "What are the ADU setbacks in Sacramento?",

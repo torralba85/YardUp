@@ -55,7 +55,19 @@ describe("proxy duplicate-host redirect", () => {
     expect(isPassThrough(response)).toBe(true);
   });
 
-  it.each(["/", "/about", "/studio", "/sitemap.xml", "/robots.txt"])(
+  it("301s /adu and /adu/ directly to /adu/ca in one hop", () => {
+    for (const path of ["/adu", "/adu/"]) {
+      const canonicalRes = proxy(request(path, { host: "lotfoundry.net" }));
+      expect(canonicalRes.status).toBe(301);
+      expect(canonicalRes.headers.get("location")).toBe("https://lotfoundry.net/adu/ca");
+
+      const duplicateRes = proxy(request(`${path}?ref=share`, { host: "yardup-2026.web.app" }));
+      expect(duplicateRes.status).toBe(301);
+      expect(duplicateRes.headers.get("location")).toBe("https://lotfoundry.net/adu/ca?ref=share");
+    }
+  });
+
+  it.each(["/", "/adu", "/adu/", "/about", "/studio", "/sitemap.xml", "/robots.txt"])(
     "runs on %s",
     (url) => {
       expect(unstable_doesMiddlewareMatch({ config, url })).toBe(true);

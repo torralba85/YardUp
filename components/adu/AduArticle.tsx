@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  STATE_BASELINE_AS_OF,
   STATE_BASELINE_PARAGRAPHS,
   STATE_BASELINE_SOURCES,
 } from "@/content/adu/state-baseline";
@@ -12,9 +13,11 @@ import {
   getNeighbors,
   getOtherCountyLeads,
   hubUrl,
+  methodologyPath,
   opengraphImageUrl,
   stateCostPath,
 } from "@/lib/adu/content";
+import { cityLastModified } from "@/lib/adu/dates";
 import type { JurisdictionContent } from "@/lib/adu/types";
 import { AduStudioCta } from "./AduStudioCta";
 import { AduConceptFigure } from "./AduConceptFigure";
@@ -75,7 +78,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
     headline: `ADU Rules in ${content.city}, ${content.stateName} (2026)`,
     image: opengraphImageUrl(cityUrl(content)),
     datePublished: content.published,
-    dateModified: content.asOf,
+    dateModified: cityLastModified(content.slug, content.asOf),
   });
 
   return (
@@ -104,9 +107,20 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         ))}
       </div>
 
+      <div className="mt-6">
+        <AduStudioCta city={content.city} slug={content.slug} placement="top" />
+      </div>
+
       {content.slug === "san-diego-county" ? (
         <p className="lf-body mt-6 text-lot-stone">
-          Is your property inside Carlsbad city limits? Read the{" "}
+          Inside City of San Diego limits? Read the{" "}
+          <Link
+            href="/adu/ca/san-diego"
+            className="font-semibold text-lot-ink underline underline-offset-2"
+          >
+            City of San Diego ADU guide
+          </Link>
+          . Inside Carlsbad? Read the{" "}
           <Link
             href="/adu/ca/carlsbad"
             className="font-semibold text-lot-ink underline underline-offset-2"
@@ -136,7 +150,6 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
               <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
             ))}
           </nav>
-          <AduPlanningLinks current="/adu/ca/san-diego" />
         </div>
       ) : null}
 
@@ -201,14 +214,14 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
 
       <section aria-labelledby="adu-state-law" className="mt-12">
         <h2 id="adu-state-law" className="lf-card-heading text-lot-ink">
-          What state law guarantees you
+          What does California state law guarantee?
         </h2>
         <div className="lf-body mt-3 space-y-3 text-lot-stone">
           {STATE_BASELINE_PARAGRAPHS.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
           <p className="text-sm">
-            Shared statewide baseline, last checked {content.asOf}. Sources:{" "}
+            Shared statewide baseline, last checked {STATE_BASELINE_AS_OF}. Sources:{" "}
             {STATE_BASELINE_SOURCES.map((source, index) => (
               <span key={source.url}>
                 {index > 0 ? "; " : ""}
@@ -291,7 +304,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
 
       <section aria-labelledby="adu-process" className="mt-12">
         <h2 id="adu-process" className="lf-card-heading text-lot-ink">
-          The {content.city} ADU permit process
+          What is the {content.city} ADU permit process?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">{content.processIntro}</p>
         <ol className="mt-4 list-decimal space-y-4 pl-6">
@@ -322,7 +335,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       {hasMarketFigures ? (
         <section aria-labelledby="adu-rent" className="mt-12">
           <h2 id="adu-rent" className="lf-card-heading text-lot-ink">
-            What it rents for, and when it pays back
+            How much can a {content.city} ADU rent for and when does it pay back?
           </h2>
           <div className="mt-4">
             <RentAndPayback content={content} />
@@ -340,8 +353,8 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {content.faqs.map((faq) => (
-            <details key={faq.question} className="group py-4">
-              <summary className="cursor-pointer font-semibold text-lot-ink marker:text-lot-orange-ink">
+            <details key={faq.question} className="group py-1">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -376,6 +389,10 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         </ul>
       </nav>
 
+      <div className="mt-12">
+        <AduPlanningLinks current={`/adu/${content.state}/${content.slug}`} />
+      </div>
+
       <section aria-labelledby="adu-sources" className="mt-12">
         <h2 id="adu-sources" className="lf-card-heading text-lot-ink">
           Sources and as-of date
@@ -383,7 +400,15 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <p className="lf-body mt-3 text-lot-stone">
           Every number on this page was checked against the sources below on{" "}
           {content.asOf}. Ordinances change once or twice a year — confirm
-          against the live code before spending money on plans.
+          against the live code before spending money on plans. Cost, rent and
+          payback figures follow{" "}
+          <Link
+            href={methodologyPath()}
+            className="font-semibold text-lot-ink underline underline-offset-2"
+          >
+            how we estimate ADU cost, rent and payback
+          </Link>
+          .
         </p>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           {content.sources.map((source) => (
