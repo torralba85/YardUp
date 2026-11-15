@@ -1,281 +1,197 @@
 # LotFoundry Brand Voice Guidelines
 
 ## Generation Metadata
-- Created: 2026-10-26
-- Version: 1
-- Replaces: none (first version)
-- Sources: 12 (see Appendix): the design system's voice and anti-pattern rules, the confirmed social voice profile, the approved content calendar, shipped landing, Studio, Certificate, builder, consent and email copy, the San Diego cost guide, llms.txt, and vault notes on builder outreach, partner decks and the Kickstarter story
-- Documents processed: 12
-- Conversations analyzed: 0. No call transcripts exist; Gong and Granola are not connected.
-- Discovery report used: No. Sources were gathered from the repo, `LotFoundry/memory/` and the Obsidian vault.
-- Overall confidence: Medium (0.75; see Confidence Scores)
+- Version: 2 (adopted 2026-11-15; replaces v1 dated 2026-10-26, archived at [`.claude/archive/brand-voice-guidelines-v1-2026-10-26.md`](./archive/brand-voice-guidelines-v1-2026-10-26.md))
+- Primary inputs: Brand discovery report (`lotfoundry-brand-discovery-2026-11-15.md`, dated 2026-11-15; 18 Drive candidates shortlisted, 7 Drive documents and 3 local authorities analyzed; 7 Notion searches returned no relevant documents; bounded coverage), v2 review draft (2026-11-15), v1 (2026-10-26), `docs/design/design-system.md` (with 2026-11-01/02 updates), `LotFoundry/memory/voice-profile.md` (confirmed 2026-10-12), and local code observations (`app/about/page.tsx`, `components/studio/CertificatePanel.tsx`, `lib/server/studio-scenario-email.ts`).
+- Conversations analyzed: 0. No call transcripts, founder-authored sample corpus, or message-level performance/conversion evidence analyzed.
+- Overall confidence: Medium (0.75 under the five-section rubric; see Confidence Scores).
 
-**Precedence.** `docs/design/design-system.md` §10–11 is the authority for in-product copy. If this file disagrees with it, the design system wins and this file is the bug. For brand social captions, `LotFoundry/memory/voice-profile.md` (confirmed by Andrew 2026-10-12) stays canonical; this file agrees with it and covers every other context.
+**Precedence.** `docs/design/design-system.md` (especially §§1–3, 8, 10–11, and decisions log) is the authority for product UI copy and visual/design work. If this file disagrees with it, the design system wins and this file is the bug. For brand social captions, `LotFoundry/memory/voice-profile.md` (confirmed by Andrew 2026-10-12) stays canonical; this file aligns with both and governs cross-channel voice.
+
+**Implementation boundary and holds.** Adopting this guideline establishes cross-channel voice policy; it does **not** by itself modify product UI copy, social profile display names, cloud documents, billing/entitlement behavior, or deployments. Existing partner holds—specifically **GreatBuildz**—remain in force; exploratory decks or proposed rewrites in this guide do not authorize outreach, distribution, or endorsement claims.
+
+---
+
+## Resolved Decisions (v2 Policy)
+
+| Topic | Policy in v2 | Reason and boundary |
+|---|---|---|
+| Authority | Keep `docs/design/design-system.md` authoritative for product/visual work and `memory/voice-profile.md` authoritative for social; this file is the active cross-channel guide. | Prevents a competing brand authority. Current verified authorities outrank historical capability claims. [S1–S4] |
+| Homeowner "unlock" | Use **Get your Certificate**, **Certificate purchased**, and **Includes the paid analysis** as appropriate to the actual action/state. | Concrete language replaces the marketing/access metaphor. Internal variable names need no copy-driven rename. Product strings noted in S9 still await a separate copy PR. [S2–S4, S9] |
+| Builder "unlock" | Allow **Unlock lead** and **Lead unlocked** only where that is the verified transaction and UI action. | Narrow literal exception, not permission for "unlock potential" or social use. [S3–S4] |
+| "Free" | Name the specific free activity and its limits. Keep a paid offer and its price distinct. | Recommended `/about` title: **About LotFoundry: Explore an ADU on Your Lot in 3D** (not yet implemented in `app/about/page.tsx`). First-address wording must match current entitlement behavior before publication. [S2–S4, S9] |
+| Disclosures | Use the full planning line by default; allow a defined short UI line and contextual additions. | Standardizes the baseline without deleting income, privacy, source, or jurisdiction-specific notices. See Disclosure System. [S1–S4] |
+| ADU vocabulary | Use **backyard home** in homeowner narrative; **ADU** in titles, search metadata, first-use definitions, and technical/regulatory discussion. | Resolves title/body drift without making code explanations awkward. [S1–S3] |
+| Naming and capitalization | **LotFoundry**, **Studio**, **Certificate of Feasibility**; shorten to **Certificate** after introduction. | Lowercase generic terms. Preserve exact legal names ("VeriShare LLC" / "VeriShare, DBA Lot Foundry" for KYC/tax/banking) and quotations where required. No social-profile rename is executed by this guide. [S2–S4] |
+| Historical documents | Treat superseded Kickstarter, funding, and legacy Certificate claims as historical references. Reverify and rewrite before reuse. | This classification does not edit, move, or archive those source files. [S4, S8] |
+| Partner certainty | Replace "We vet the lot" with **We help homeowners explore the lot**; replace unmeasured timing/answer claims with **An early planning picture**. | Examples for future authorized revisions. A disclaimer elsewhere does not cure an overconfident headline. **GreatBuildz remains on hold.** [S4, S7] |
+| Founder voice | Keep it separate from the brand voice. Draft structures may be prepared, but personal anecdotes, opinions, and claimed experience need Andrew's own words or confirmation. | No fabricated founder persona and no unnecessary block on neutral, clearly labeled drafts. [S2–S4] |
+| Competitor names | Use only where a relevant, accurate comparison helps the reader; source and date material claims. Prefer the planning process as the default comparison. | A removal from one deck does not create a universal ban. Avoid unverified superiority or relationship claims. [S4] |
 
 ---
 
 ## Executive Summary
 
-LotFoundry sounds like a calm studio presenting a model, not a bank approving a loan. The design system says so in those words, and every shipped surface follows it: short headlines that act as graphic objects, plain sentences, exact numbers with units, and a limit stated beside every claim. The product offers early-planning possibility for a backyard home. The voice never inflates that into a promise of permits, income or approval.
+LotFoundry speaks with the composure of a planning studio presenting a model, not a bank approving a loan. It shows a homeowner what a backyard-home concept could look like, explains the estimates, and helps them prepare useful questions for a designer or builder. The reader should feel informed and under no pressure when choosing their next step.
 
-The distinctive move is **honesty as reassurance**. Where other brands hype, LotFoundry says what a thing is, what it is not, and what to do next: "Does this mean I can build? No." "This does not mean your payment failed." "You will not be charged twice." That plainness is the brand's credibility. A homeowner should finish reading feeling better informed and under no pressure. A builder should feel respected and not sold to.
+Precision creates trust: short sentences, concrete actions, exact units, and a clear statement of scope beside each claim. A model can support early exploration; its output must not be presented as permit approval, guaranteed income, or confirmation that a particular design can be built. [S1–S3]
 
-Three reasons sit under every message, not one: a backyard home can be **for family, for income, or for what's next**. Income is one reason among three. The old income-only framing is retired.
+The signature reassurance move is **honesty as reassurance**: state what happened, what it does not mean, and what to do next (when verified system state supports it). Family, income, and future use carry equal weight—income is a possible motive, not the brand's sole promise. The strongest documented attribute is calm precision. No evidence reviewed establishes a best-converting headline or message. [S1–S4]
 
 ---
 
 ## We Are / We Are Not
 
-Voice is constant. It does not change by channel or audience.
+Voice stays constant across channels. Tone, depth, and formality adapt to the reader's task.
 
-| We Are | We Are Not |
-|--------|------------|
-| **Calm and precise**: steady sentences, exact figures with units | **Hyped or salesy**: exclamation marks, "excited", "game-changer" |
-| **Estimate-honest**: every figure says what it is and where it came from | **Promising**: guaranteed income, permits, approvals, "you can build" |
-| **Possibility-minded**: family, income, or what's next | **An investment pitch**: income-only, ROI-first, "passive income" |
-| **Plainspoken**: "backyard home", short words, one idea per line | **Jargon-first**: code-speak to homeowners, acronyms without a definition |
-| **Sourced and dated**: the code section, the agency, the date checked | **Vague or invented**: unsourced rules, made-up cost, rent or approval figures |
-| **Respectful of the reader's choice**: equal options, clear prices, no surprises | **Pushy or manipulative**: dark patterns, buried prices, auto-sent outreach |
-| **Restrained**: few words, each earning its place | **Decorative or aspirational**: "Unlock your property potential", "dream home" |
+| We Are | We Are Not | Evidence |
+|---|---|---|
+| **Calm and precise**: measured language, exact units | **Hyped, urgent, or inflated** | [S1 §1, S2, S3] |
+| **Estimate-honest**: show scope, basis, and uncertainty | **Promising approval, buildability, or income** | [S1 §10, S2, S5] |
+| **Possibility-minded**: family, income, future use | **An income-only investment pitch** | [S1 §10, S3] |
+| **Plainspoken**: familiar words and explicit actions | **Jargon-first or metaphor-heavy** | [S1 §10, S2, S3] |
+| **Sourced and dated**: claims have a verified basis | **Vague, invented, or copied forward unchecked** | [S1 §10, S2, S6] |
+| **Respectful of the reader's choice**: clear prices, equal options, no surprises | **Pushy, manipulative, or presumptive** | [S3, S5, S7] |
+| **Restrained**: words earn their space | **Decorative, boastful, or aspirational** | [S1 §11, S2, S3] |
 
-### Voice Attributes Detail
+### Voice Attributes in Practice
 
-#### 1. Calm and precise
-- **What it means**: A planner's register. Statements, not exclamations. Numbers carry the weight.
-- **How it shows up**: Sentences of about 12 words. Fragments in threes ("A smaller footprint. A different roof. A little more room around the home."). Exact units: 16 ft, 4 ft, 750 sq ft. Money is typographic, not decorated.
-- **What to avoid**: Exclamation marks (0 of 14 approved captions use one). "Excited", "thrilled", "amazing". Urgency devices.
-- **Evidence**: design-system §1 "Mood: bright, calm, confident, tactile. Things settle; nothing bounces." Voice profile: "calm, precise, planner-like; exact numbers with units." Landing: "Place a backyard home. Compare the estimates. Plan your next questions."
-- **Confidence**: High
-
-#### 2. Estimate-honest
-- **What it means**: Possibility, honestly bounded. Every estimate is labelled as one, and its limit sits next to it, not in a footer.
-- **How it shows up**: The words "estimate", "concept", "scenario", "feasibility". Provenance on every financial figure (demo or real parcel). Every concept image labelled illustrative. A direct "No" when the honest answer is no.
-- **What to avoid**: "Guaranteed", "approved", "you can build", any figure the model did not produce.
-- **Evidence**: design-system §10 "Estimate-honest… Never imply guaranteed income or permit approval." Landing FAQ: "Does this mean I can build? No. LotFoundry helps you explore an early concept." Studio verdict band and layout email: "Early planning estimates, not permit approval or guaranteed income." llms.txt test enforces "not a permit, a quote, or an appraisal."
-- **Confidence**: High
-
-#### 3. Possibility-minded (three pillars)
-- **What it means**: A backyard home serves a life, not only a spreadsheet.
-- **How it shows up**: Questions that open the reader's own reason: "What would you make room for?" Copy that names family, income and future use with equal weight.
-- **What to avoid**: Income-only framing, "passive income", "maximize ROI", treating rent as the point.
-- **Evidence**: design-system §10 "Three pillars, not one… The old income-only mandate is retired." Landing: "Keep the people you love nearby, with a little more independence for everyone." / "A home for grown children, future plans, or the life you haven't quite imagined yet." San Diego cost guide: "whether it is for family, for rental income or for what comes next."
-- **Confidence**: High
-
-#### 4. Plainspoken
-- **What it means**: Homeowner language first. Technical terms are defined once, then used.
-- **How it shows up**: "Backyard home" or "small home" in body copy. "ADU" in titles, headings, hashtags, and zoning or permitting statements. First use defines it: "An accessory dwelling unit, or ADU, is a smaller home on the same property…"
-- **What to avoid**: Unexplained acronyms (JADU, FHSZ, CDP) in homeowner copy, legalese, planner shorthand.
-- **Evidence**: CLAUDE.md preference, design-system §10 vocabulary, voice profile "Calls it", landing FAQ definition.
-- **Confidence**: High
-
-#### 5. Sourced and dated
-- **What it means**: A rule without a source and a date is not published.
-- **How it shows up**: Code sections and agencies named (SDMC §141.0302, HCD ADU Handbook March 2026, Information Bulletin 501). "Rules as of" and "fees as of" dates. Fact posts end "Source: <agency/document>, checked <date>. Planning information, not legal advice." Facts are re-read from the live source when each piece is drafted.
-- **What to avoid**: Rules stated as universal when the model uses defaults; carrying a fact forward from an old draft; rounding a code citation from memory.
-- **Evidence**: Voice profile disclaimers; content calendar ("Facts are re-read from the live guide and its cited source when each post is drafted"); llms.txt tests ("dates every jurisdiction", "claims no more about setbacks than the code models"); the Oct 6 fire-zone caption fix.
-- **Confidence**: High
-
-#### 6. Respectful of the reader's choice
-- **What it means**: The reader is never tricked, rushed or surprised. Prices are stated, choices carry equal weight, and anything sent in Andrew's name is sent by Andrew.
-- **How it shows up**: "One-time purchase for this property. No subscription." Equal-weight Accept and Decline in the consent banner. "You requested this one-time layout email. You have not been subscribed to marketing." Builder outreach is founder-sent only, never automated.
-- **What to avoid**: Pre-checked opt-ins, a bigger Accept than Decline, fake scarcity, hidden fees, auto-sent cold email.
-- **Evidence**: Studio email copy (`lib/server/studio-scenario-email.ts`); design-system decisions log 2026-10-17 (equal-weight consent); builder pipeline "Zero Auto-Sending"; CLAUDE.md "Never route analytics around consent."
-- **Confidence**: High
-
-#### 7. Restrained
-- **What it means**: The fewest words that carry the idea. Headlines short enough to behave as graphic objects.
-- **How it shows up**: Two- to six-word headlines ("Small homes. Big possibility.", landing Seattle demo kicker), one idea per line, no filler adjectives, no icon or sentence explaining the obvious.
-- **What to avoid**: "Unlock your property potential", stacked adjectives, paragraph-length headlines, decoration in words.
-- **Evidence**: design-system §3.2 "Headlines are short enough to behave as graphic objects. Body copy stays conversational." §11 bans "Unlock your property potential" copy. Landing headlines throughout.
-- **Confidence**: High
+1. **Calm and precise — High confidence.** Use a short statement, then explain what matters. The social profile describes "calm, precise, planner-like" language, with exact numbers and units (`16 ft`, `4 ft`, `750 sq ft`) and typographic money figures. Aim for roughly 12-word social sentences as a rhythm, not a rigid limit. Avoid exclamation marks, emoji, and artificial urgency. [S1 §1, S2]
+2. **Estimate-honest — High confidence.** Label figures as estimates, concepts, or scenarios, and make assumptions inspectable beside the number rather than buried in a footer. The design system states "Never imply guaranteed income or permit approval." Avoid "approved," "compliant," or "buildable" as unqualified product verdicts. Answer directly ("No.") when the honest answer is no. [S1 §10, S3–S4]
+3. **Possibility-minded — High confidence.** "For family," "for income," and "for what's next" define the three equal motives. A single piece may focus on one motive; the overall brand must not reduce every story to rent, ROI, or "passive income." [S1 §10, S3]
+4. **Plainspoken — High confidence.** Prefer "backyard home" or "small home" in homeowner narrative, define "accessory dwelling unit (ADU)" on first use where needed, and make buttons name the action. Use technical detail when it helps answer a real planning question rather than front-loading unexplained acronyms. [S1 §10, S2–S3]
+5. **Sourced and dated — High confidence.** Regulatory claims identify the jurisdiction, agency/code section, and date checked (e.g., `SDMC §141.0302`, `HCD ADU Handbook`). Financial figures identify their model/source and scenario. Social fact posts use `Source: <agency/document>, checked <date>.` (brackets are a production instruction, not publishable copy). Re-read facts from live sources rather than carrying them forward unchecked. [S1 §10, S2]
+6. **Respectful of the reader's choice — High confidence.** Offer a useful next step without manufacturing a deadline, buried price, asymmetric consent choice, or implied relationship. The builder pitch asks for critique and states limitations; cold builder outreach is founder-sent only (never automated). Avoid implying that a builder has agreed to participate or that an estimate replaces their work. [S3–S5]
+7. **Restrained — High confidence.** Keep headlines short enough to behave as graphic objects, one idea per line, with no filler adjectives or decorative clichés such as "Unlock your property potential." [S1 §§3.2, 11, S2–S3]
 
 ---
 
-## Brand Personality
+## Brand Personality — Confidence: Medium
 
-- **Archetype**: The Exhibiting Planner. A studio presenting a model: expert, unhurried, generous with what it knows, clear about what it does not.
-- **If our brand were a person**: A licensed architect friend who walks your backyard with a tape measure, tells you what they see and what they would check, never promises the permit, and hands you a list of good questions for the builder.
-- **Core values expressed in voice**: honesty about limits, respect for the homeowner's own reasons, precision, privacy, and restraint.
+- **Archetype:** The Exhibiting Planner, retained from v1: informed, unhurried, and clear about limits. This is an editorial interpretation, not a professional credential. [S1 §1, S3]
+- **Personality sketch:** A careful guide at a planning table who shows the model, explains the assumptions, and helps the homeowner identify the next question.
+- **Values expressed:** precision, honesty, choice, privacy, and restraint. Avoid language implying that LotFoundry itself is a licensed architect, planner, appraiser, or permitting authority.
 
 ---
 
-## Messaging Framework (Confidence: Medium)
+## Messaging Framework — Confidence: Medium
 
-*Why Medium: the messages are documented and used consistently across the landing, Studio and social, but there is no performance data yet to show which ones work (28-day search: 3 clicks; social results not read).*
+*No message-level conversion or engagement dataset was analyzed; confidence rests on consistent documentation across design, social, and product copy.*
 
 ### Primary Value Proposition
-**See what a backyard home could look like on your own lot, with early cost, rent and payback estimates, before you pay for plans.**
 
-Variations observed:
-- "Explore an ADU on your lot in 3D." (landing H1, Andrew's decision 2026-10-17)
-- "Check your lot before you pay for plans." (social campaign, Oct 3)
-- "Start with the lot. Then choose the plan." (social campaign, Oct 7)
-- "LotFoundry helps homeowners see ADU rent, build cost, and payback estimates for the land they already own." (`/about`)
+**Explore what a backyard home could look like on your lot, compare early planning estimates, and prepare your next questions before paying for plans.**
 
-### Key Message Pillars
+This is a guideline synthesis of [S1–S3, S5], not an effectiveness-tested slogan. Offer availability and supported locations need verification for the intended campaign.
 
-1. **Start with your lot**
-   - Core idea: Your real parcel, in 3D, comes before any plan or quote.
-   - When to use: Hero copy, offer posts, first-touch content.
-   - Example phrasing: "Start with the lot. Then choose the plan." / "One backyard. More than one possibility."
+Observed live/published variations aligned with this value proposition:
+- "Explore an ADU on your lot in 3D." (landing H1)
+- "Check your lot before you pay for plans." (social campaign)
+- "Start with the lot. Then choose the plan." (social campaign)
 
-2. **For family, for income, for what's next**
-   - Core idea: A backyard home serves the reader's own reason.
-   - When to use: Engagement questions, landing narrative, guide intros.
-   - Example phrasing: "What would you make room for?" / "Keep the people you love nearby, with a little more independence for everyone."
+### Message Pillars
 
-3. **Honest early numbers**
-   - Core idea: Cost, rent and payback as labelled estimates with their basis shown.
-   - When to use: Studio, Certificate, cost pages, proof posts.
-   - Example phrasing: "Compare the estimates." / "Rent uses San Diego County's HUD Fair Market Rent… compare it with site-specific quotes before you set a budget."
+| Pillar | Core idea and use | Phrasing |
+|---|---|---|
+| Family | Explore space for people and independence; homeowner stories | "What would you make room for?" — documented social phrase [S2] |
+| Income | Compare a rental scenario with disclosed cost and rent assumptions | "Compare estimated rent with the costs behind it." — guideline synthesis [S1 §10] |
+| What's next | Keep future uses open without claiming a financial outcome | "Explore a little more room for what comes next." — guideline synthesis [S1 §10] |
 
-4. **Better questions for your designer or builder**
-   - Core idea: LotFoundry prepares the homeowner; it does not replace the professional.
-   - When to use: Certificate copy, builder-facing copy, CTAs near the end of a page.
-   - Example phrasing: "Spot questions before requesting quotes." / "Give builders the same brief." / "bring better questions to your designer or builder"
-
-5. **Your first address is free; pay once if the Certificate is useful**
-   - Core idea: Low-friction entry with a clear, single price.
-   - When to use: CTAs and offer posts.
-   - Example phrasing: "Your first address is free to explore. No account needed." (voice profile) / "One-time purchase for this property. No subscription." (layout email)
+Support every pillar with the planning process: **start with the lot, compare a concept, inspect the estimates, then take better questions to a designer or builder**—with the first address free to explore and a clearly priced one-time Certificate if useful. Do not claim direct matching, vetted partners, instant results, guaranteed eligibility, or measured speed from legacy decks. [S4–S8]
 
 ### Competitive Positioning
-- **vs. the status quo (paying for plans first)**: Check the lot, size, roof and placement before paying a designer, so the paid conversation starts from better questions.
-- **vs. builder-run feasibility**: Independent estimates and one brief every builder can quote against ("so two quotes cover the same scope").
-- **Competitors by name**: not named in public copy or partner decks (inferred from Andrew removing a competitor from the GreatBuildz deck; see Open Question 8).
+
+The default comparison is the planning sequence: exploring assumptions before committing money to detailed plans (or getting multiple builder quotes against one shared brief). Name another business only when it helps explain a specific difference and the comparison has been verified; source and date material claims. Distinguish proposed partnerships from active relationships; an exploratory deck is not evidence of endorsement. [S4–S7]
 
 ---
 
-## Tone-by-Context Matrix (Confidence: Medium)
+## Tone-by-Context Matrix — Confidence: Medium
 
-*Why Medium: social captions and builder outreach have explicit written guidance; the other contexts are inferred from three or more shipped examples each; partner proposals rest on a single deck.*
+The source base is strongest for product and social rules. Outreach and proposal tone are supported by a small set of documents. Support tone is extrapolated from transactional copy, not an analyzed support-reply corpus.
 
-Voice is constant. Tone flexes along three dimensions.
+| Context | Formality | Energy | Technical depth | Direction and example |
+|---|---|---|---|---|
+| Landing | Medium | Calm, inviting | Low | State the activity first; headlines as objects: "Explore an ADU on your lot in 3D." [S1–S3] |
+| Social (brand account) | Low–medium | Restrained, curious | Low; precise for facts | One idea, one invitation: "Start with the lot. Then choose the plan." (documented phrase) [S2] |
+| Studio / Certificate | Medium | Steady | Only what helps the decision | Label the action and show provenance beside figures: "Get your Certificate." (v2 replacement; S9 still live) [S3–S4, S9] |
+| Errors / payments / transactional | Medium | Calm, direct | Enough to explain the state | State what happened, what it does not mean, and next step: "Your payment is confirmed. The Certificate is still loading." (draft; use only when verified system state proves it) [S3] |
+| Consent and privacy | Medium | Calm, neutral | Low | Ask plainly, name third parties, state what is not shared, keep Accept/Decline equal weight: "Google never gets your address or results." (shipped banner pattern) [S3] |
+| Planning guides | Medium–high | Measured | Appropriate to the question | Identify jurisdiction, agency/code section, date checked, assumptions, and exclusions. [S1 §10, S2–S3] |
+| Cold builder outreach | Medium | Respectful, curious | Low–medium | Ask for a specific critique; founder-sent first person without inventing personal history. [S2–S5] |
+| Partner proposals | Medium–high | Exploratory | Medium–high | Separate established facts, assumptions, and proposed terms: "Proposed pilot for discussion." (draft; GreatBuildz hold active) [S6–S7] |
+| Support | Medium | Warm, specific | Appropriate to the issue | Explain what is known and the next action; promise only support actions that can be delivered. (provisional) [S3] |
+| Founder content | Andrew's own | Context-dependent | Context-dependent | Preserve authentic phrasing; do not invent anecdotes or experiences. [S2] |
+| Machine-readable descriptions | Medium | Neutral | Explicit | Keep prices, geographic support, dates, and limitations aligned with verified product facts. [S3–S4] |
 
-| Context | Formality | Energy | Technical Depth | Key Principle | Example (source) |
-|---------|-----------|--------|-----------------|---------------|------------------|
-| Landing and marketing pages | Medium | Medium, warm | Low | Headlines as objects; one idea per line | "Explore an ADU on your lot in 3D." (landing H1) |
-| Social captions (brand account) | Medium-Low | Medium | Low, one exact fact | Headline first, one fact, "first address free" CTA, disclaimer last | "One backyard. More than one possibility." (X, Oct 11) |
-| City guides and cost pages | Medium-High | Low | High | Cite the section, date the rule, say what the model covers | "There is no single permit price per square foot for every ADU." (San Diego cost guide) |
-| Studio and Certificate UI | Medium | Low | Medium | Label the action; show provenance beside the number | "Continue to secure checkout" (CertificatePanel) |
-| Errors, payments, transactional email | Medium | Low, steady | Low | What happened, what it does not mean, what to do next | "We could not verify Certificate access yet. This does not mean your payment failed." (CertificatePanel) |
-| Consent and privacy | Medium | Low | Low | Ask plainly, name the third party, say what is not shared, equal choices | "Allow Google Analytics and Google Ads cookies to measure how people find us? Google never gets your address or results." (consent banner) |
-| Builder outreach (cold, founder-sent) | Medium-Low, first person | Medium | Medium | Ask for a critique, not a sale | No shipped example; see illustrative opener below |
-| Partner proposals and decks | Medium-High | Medium | Medium-High | Explore together; no SLAs, exclusivity or lock-in | GreatBuildz slides 7–8: "strict opt-in, independent estimates, transparent disclosures with no lock-in" (vault) |
-| Founder voice (Andrew's name) | Low, first person | Medium-High | Low | Andrew's own words; agents draft placeholders only | Kickstarter story opens on a personal backyard anecdote (vault) |
-| Machine-read text (llms.txt, meta descriptions) | High | Low | High | Literal, dated, priced, limits verbatim | "not a permit, a quote, or an appraisal" (llms.txt) |
+### Channel Rules
 
-### Context-Specific Guidelines
-
-#### Social Media (brand account)
-- **Overall tone**: Calm, useful, a little warm. One fact or one question per post.
-- **Opening approach**: No greeting. The first line is the headline, a short statement or question.
-- **Do's**: Exact numbers with units and the code section cited. CTA in the second-to-last paragraph ("Your first address is free to explore. No account needed."). "→" before a link, "•" for bullets. Hashtags: Instagram 4–7, Facebook 2–3, X 0–1. On Instagram write "Start at lotfoundry.net" (the account has no bio link).
-- **Don'ts**: Exclamation marks, emoji, "dream", "unlock", "excited", invented figures, "Lot Foundry" as two words in captions.
-- **Every post ends with**: "Early planning estimates, not a permit, survey or builder quote." Fact posts add "Source: <agency/document>, checked <date>. Planning information, not legal advice."
-- **Example**: "Taller isn't automatically bigger." (voice profile characteristic phrase)
-
-#### City Guides and Cost Pages (SEO)
-- **Overall tone**: A careful explainer. More formal, still plain.
-- **Opening approach**: State what the page prices or covers and for which kind of project, then the basis of the numbers.
-- **Do's**: Name the code section and edition. Show "rules as of" and "fees as of" dates. Separate what the model covers from what it does not ("The model does not price conversions."). Tell the reader what to ask for ("request an itemized assessment").
-- **Don'ts**: Present defaults as local rules. Restate an ordinance from memory. Promise a fee or a timeline.
-- **Example**: "Ask the builder to separate the costs below and to mark which items are allowances and which are excluded, so two quotes cover the same scope." (San Diego cost guide)
-
-#### Product UI, Errors and Transactional Messages
-- **Overall tone**: Steady and specific. The reader may be mid-payment or worried.
-- **Pattern**: What happened → what it does not mean → what to do next.
-- **Do's**: Name the system involved when it helps ("Stripe has your payment…"). Reassure with facts ("You will not be charged twice."). Buttons say the action ("Continue to secure checkout", "Open Your 3D Lot Layout").
-- **Don'ts**: A bare "Something went wrong" where a cause is known; blame ("You entered an invalid…"); jokes in error states.
-- **Example**: "Stripe has your payment, but the credits have not reached your dashboard yet. Refresh in a minute. You will not be charged again." (BuilderDashboard)
-
-#### Builder Outreach (cold, founder-sent)
-- **Overall tone**: A humble founder asking a respected builder for a two-minute critique of an early planning aid.
-- **Opening approach**: Name something specific about their work, then the ask. No pitch, no pricing in the first touch.
-- **Do's**: First person, short, one link to a demo lot, an easy out. Andrew reviews and sends every message himself.
-- **Don'ts**: Automated sends, guessed email addresses, claims that LotFoundry replaces their feasibility work, lead-volume promises.
-- **Illustrative opener** (not from a source; Andrew should rewrite it in his own words): "I'm building an early planning tool for homeowners in San Diego, and I'd value two minutes of your critique against what you see on real lots."
-
-#### Partner Proposals and Decks
-- **Overall tone**: Exploratory and precise. Peers comparing notes, not a vendor closing.
-- **Do's**: Frame pilots as low-friction exploration. Say opt-in, independent estimates and transparent disclosures. Check every claim about the partner against their own site.
-- **Don'ts**: SLAs, exclusivity, automatic next steps, endorsement language, naming competitors.
-- **Example**: GreatBuildz pilot slides 7–8 (local deck, revised 2026-10-22).
+- **Social:** No greeting or sign-off; the opening line is the headline. Place the CTA near the end ("Your first address is free to explore. No account needed.") and follow with the required disclosure. Use `→` before links and `•` for bullets; no emoji or exclamation marks. The confirmed profile uses 4–7 Instagram hashtags, 2–3 Facebook hashtags, and 0–1 on X. Verify the actual destination before saying "link in bio" (on Instagram `@lot.foundry`, use `Start at lotfoundry.net` when no bio link exists). These are documented defaults, not measured performance optima. [S2]
+- **Outreach:** One specific reason for contacting the business, one small ask, a relevant link, and an easy decline. Do not guess a recipient, invent familiarity, or imply the recipient is already a partner. Andrew reviews and sends founder outreach personally (zero auto-sending). Drafting does not authorize sending. [S3–S5]
+- **Proposals:** Label any pilot as proposed and distinguish model outputs from professional assessment. Keep assumptions and limitations near associated claims. Existing holds (including GreatBuildz) remain in force. [S4, S6–S7]
+- **Transactional copy:** Follow what happened -> what it does not mean -> what to do next, and state only reassurance the actual system state supports. "You will not be charged twice" is appropriate only where the transaction behavior justifies that promise. [S3]
+- **Consent and privacy:** Equal-weight controls, plain explanation of third parties, and zero routing of analytics around consent. [S1 log, S3]
 
 ---
 
-## Terminology Guide (Confidence: High)
+## Terminology Guide — Confidence: High for established rules; Medium for v2 resolutions
 
-### Must-Use Terms
-| Term | Usage | Instead Of | Example |
-|------|-------|------------|---------|
-| LotFoundry | Always one word in product, site and caption copy | "Lot Foundry", "Lotfoundry" | "Start at lotfoundry.net" / "LotFoundry helps you explore an early concept." |
-| backyard home / small home | Homeowner-facing body copy | "ADU" in narrative sentences | "Place a backyard home." |
-| ADU | Titles, headings, meta, hashtags, zoning and permit statements; define on first use | "granny flat", "in-law unit" in titles | "Explore an ADU on your lot in 3D." |
-| estimate / concept / scenario / feasibility | Any figure or image the model produces | "projection", "guarantee", "quote" | "Early planning estimates" |
-| Certificate of Feasibility | Full product name of the $29 report | "report", "certificate" in marketing headlines | "Your $29 Certificate of Feasibility includes build-cost allowances…" (layout email) |
-| supported markets / local rules | Geography-neutral copy | "everywhere", "all of California" | "Available parcel and market detail varies by location." |
+| Use | Scope | Avoid or replace |
+|---|---|---|
+| `LotFoundry` | Product, site, and brand copy | `Lot Foundry` / `Lotfoundry` (preserve exact legal or quoted forms where required) |
+| `backyard home` / `small home` | Homeowner narrative | Unexplained technical vocabulary |
+| `ADU` | Titles, search metadata, first-use definitions, and regulatory discussion | Forcing a colloquial substitute into legal/code explanations |
+| `Studio` | The named product workspace | Lowercase only for a generic studio |
+| `Certificate of Feasibility`; then `Certificate` | Named $29 product | Language implying that the name certifies permit approval |
+| `Get your Certificate` / `Certificate purchased` | Homeowner action or confirmed purchase state | `Unlock property certificate` / `Certificate unlocked` |
+| `Unlock lead` / `Lead unlocked` | Verified literal builder action only | `Unlock your potential` / social or homeowner "unlock" phrasing |
+| `early planning estimate` / `modeled scenario` / `concept` | Model output | Guaranteed result, unqualified `compliant` / `buildable` / `approved` verdict |
+| `supported locations` / `local rules` | Geographic scope | `everywhere` / universal parcel coverage / `real setbacks` outside verified jurisdictions |
+| `specific free activity` | Offer copy | Unqualified "free report", "free product", or "free feasibility" claim |
 
-### Preferred Terms
-| Term | Usage | Example |
-|------|-------|---------|
-| your lot / your first address | Second person, concrete | "Your first address is free to explore." |
-| the Studio / 3D studio | The feasibility workspace | "Explore in the studio" |
-| early planning estimates | Standard qualifier | "Early planning estimates, not a permit, survey or builder quote." |
-| worth exploring | Soft, honest invitation | "A detached unit may be worth exploring." (illustrative; phrase from the voice profile) |
-| before you pay for plans | Timing hook | "Check your lot before you pay for plans." |
-| illustrative / concept | Labels on artwork | "ILLUSTRATIVE CONCEPT · SCALE 1:100" |
-| one-time purchase / no subscription | Pricing clarity | "One-time purchase for this property. No subscription." (layout email) |
+Use exact units and currency where relevant. Verify prices, availability, entitlement limits, provider names, and feature descriptions at the time of publication. A previous draft or pitch deck is not a source of current pricing or product capabilities. [S1–S4]
 
-### Avoid These Terms
-| Term | Reason | Alternative |
-|------|--------|-------------|
-| passive income / ROI-first framing | Income is one pillar of three | "rental potential", "what a small home could earn" |
-| free (unqualified) | The Certificate costs $29 | "Your first address is free", "free account", "demo lots are always open" |
-| "Please" in every error | Reads as filler when repeated | State the next step directly |
-| real setbacks (outside California) | The model uses defaults there | "modeled setbacks" |
-| unlock (homeowner-facing) | Conflicts with the social ban; see Open Question 1 | "Get your Certificate", "includes" |
+### Editorial Prohibitions
 
-### Never-Use Terms
-| Term | Reason |
-|------|--------|
-| guaranteed / approved / "you can build" | Implies permit approval or certain income |
-| Unlock your property potential (and similar aspiration) | Named anti-pattern in design-system §11 |
-| dream / dream home | Inflates a planning aid into a promise |
-| excited / thrilled / game-changer | Hype register |
-| ! (exclamation mark) | 0 of 14 approved captions; hype register |
-| emoji | Not part of the brand register ("→" and "•" are the only symbols) |
-| invented cost, rent or approval figures | Every figure must come from the model or a cited source |
+Do not use hype words such as "dream," "game-changer," "excited," or "thrilled" in the brand register. Do not use exclamation marks or emoji (`→` and `•` only in social formatting). Do not promise permits, income, or approval; invent figures; manufacture urgency; or lead with "passive income" / ROI-only claims. The builder transaction exception does not permit aspirational "unlock" language. Exact quotations and necessary explanations of prohibited wording are editorial exceptions, not suggested marketing copy. [S1 §11, S2–S4]
 
 ---
 
-## Language Patterns (Confidence: Low)
+## Disclosure System
 
-*Why Low: there are no call transcripts and no per-message performance data. These patterns come from published copy only, so they show what the brand says, not what works best.*
+**Standard full line:**
 
-### Signature Phrases (from published copy, not transcripts)
-- "before you pay for plans"
-- "worth exploring"
-- "bring better questions to your designer or builder"
-- "Taller isn't automatically bigger."
-- "What would you make room for?"
-- "Save this for…"
-- "One backyard. More than one possibility."
+> Early planning estimates, not a permit, survey or builder quote.
 
-### Copy Anti-Patterns (bad examples are illustrative, written for this guide)
-1. **Promise phrasing**: "Find out if you can build an ADU." Problem: implies a verdict the product cannot give. Better: "See what could fit on your lot, and what to confirm locally."
-2. **Income as the point**: "Turn your backyard into passive income." Problem: one pillar presented as the whole story, and income implied as certain. Better: "Explore what a small home could earn, and what it might take to bring it to life." (landing)
-3. **Buried limit**: a figure in the body with the caveat only in the footer. Better: the limit sits beside the figure.
-4. **Unscoped free**: "Free ADU feasibility report." Problem: the report is $29. Better: "Your first address is free to explore. No account needed."
+Retains the confirmed social wording. Use in social posts and roomy marketing contexts. [S2]
+
+**Short UI variant:**
+
+> Planning estimates, not permits or quotes.
+
+Use only where space is constrained and the surrounding flow provides the full explanation. Does not replace relevant legal, payment, privacy, or jurisdiction-specific notices. [S3–S4]
+
+**Add when showing income or payback:**
+
+> Income figures are estimates, not guarantees.
+
+Show the assumptions and source beside the figure. Distinguish demo figures from a user's scenario. [S1 §10]
+
+**Regulatory facts:** Name the agency/document and date checked; retain `Planning information, not legal advice.` Cite the actual rule and its jurisdiction. [S2]
+
+**Concept imagery:** Visibly label illustrative concepts and avoid implying that an image shows an approved or buildable project. Follow the design system's legibility requirements. [S1 §§2.3, 8, 10]
+
+Machine-readable pages (`app/llms.txt`, structured metadata) may retain technically specific limits such as `not a permit, a quote, or an appraisal`. A consistent baseline does not require deleting context-specific protections. [S3]
 
 ---
 
 ## Content Examples
 
-### Excellent Examples
+Examples below distinguish **verified shipped/published copy** from **illustrative drafts and proposed code replacements**. Proposed replacements are not yet applied to product code unless separately committed.
 
-**Social post (X, Oct 11, 2026, verbatim from the voice profile)**
-```
+### Verified Published / Shipped Examples
+
+**Social post (X, Oct 11, 2026 — verbatim from social voice profile [S2])**
+```text
 One backyard. More than one possibility.
 
 Compare size, roof and placement in 3D, with early cost and rental estimates.
@@ -285,123 +201,110 @@ https://lotfoundry.net/?utm_source=x&utm_medium=organic_social&utm_campaign=one_
 
 Concepts, not permits or builder quotes.
 ```
-*Why it works*: The headline is a statement. One sentence of value with three concrete controls. "Free" is scoped to the first address. The limit is the last line. No exclamation, no emoji.
-*Note*: Its last line is the short disclaimer variant. New posts use the canonical line once Open Question 3 is settled.
+*Why it fits:* Statement headline, three concrete controls, scoped "free," limit at the end, no exclamation or emoji. (New posts default to the standard full disclaimer line when space allows.)
 
-**FAQ answer (landing)**
+**Landing FAQ answer (shipped landing copy [S3])**
 > Does this mean I can build?
 > No. LotFoundry helps you explore an early concept. It does not grant a permit or guarantee a buildable design. A local professional and your jurisdiction must confirm property conditions and applicable requirements.
 
-*Why it works*: The honest answer comes first, in one word. Then what the product does, what it does not, and who decides.
+*Why it fits:* Honest "No." first, clear scope of what the product does and does not do, and who decides.
 
-**Payment-delay message (builder dashboard)**
+**Payment-delay message (shipped builder dashboard copy [S3])**
 > Stripe has your payment, but the unlock has not reached your dashboard yet. Refresh in a minute, or select Unlock on the lead again. You will not be charged twice.
 
-*Why it works*: What happened, what to do, and the reassurance the reader actually needs, all in plain facts. (This is the lead-unlock variant. The credit-purchase variant, quoted under Product UI above, ends "You will not be charged again." Both are correct for their flows.)
+*Why it fits:* Literal builder transaction context; states what happened, next action, and verified reassurance.
 
-### Example to Avoid (constructed for illustration)
-> Unlock your backyard's potential! Find out in minutes if you can build a dream ADU and start earning passive income. Get your FREE feasibility report today!
+### Illustrative Drafts and Proposed Replacements
 
-*What's off-brand*: Exclamation marks, "unlock … potential" (a named anti-pattern), "dream", a buildability promise, income-only framing, unscoped "FREE" when the report costs $29, urgency ("today").
-*On-brand rewrite*:
-> What would you make room for?
-> See a backyard home on your own lot in 3D, with early cost and rent estimates.
-> Your first address is free to explore. No account needed.
+**Homeowner introduction — illustrative draft**
+> Start with your lot.
+>
+> Explore a backyard-home concept in 3D. Compare early estimates and bring better questions to your designer or builder.
+>
 > Early planning estimates, not a permit, survey or builder quote.
+
+*Why it fits:* Concrete activity, useful next step, adjacent limit; echoes the documented social phrase "Start with the lot. Then choose the plan." [S1–S3]
+
+**Free exploration and paid offer — illustrative draft**
+> Your first address is free to explore. No account needed.
+>
+> The Certificate of Feasibility is a separate, one-time purchase for the property.
+
+*Publication condition:* Verify the first-address entitlement and purchase terms, then show the current price beside the paid action. [S2–S4, S9]
+
+**Certificate, layout email, and About — proposed code replacements (pending separate copy PR)**
+
+| Current local wording | v2 target wording | Condition |
+|---|---|---|
+| `Unlock property certificate` | `Get your Certificate` | Display current price when the action starts a purchase |
+| `Certificate unlocked` | `Certificate purchased` | Only when purchase is confirmed; use `Certificate available` for access obtained another way |
+| `Unlocks this property permanently` | `Includes Certificate access for this property` | Verify entitlement duration; omit an unverified permanence claim |
+| `does not unlock the paid analysis` | `does not include the paid analysis` | Preserve the adjacent bearer-link privacy notice |
+| `About LotFoundry: Free ADU Feasibility Check` | `About LotFoundry: Explore an ADU on Your Lot in 3D` | Proposed metadata change; verify before shipping |
+
+These strings were observed in local code (`components/studio/CertificatePanel.tsx`, `lib/server/studio-scenario-email.ts`, `app/about/page.tsx`). Billing, live deployment, and entitlement behavior are separate from this document. [S9]
+
+**Partner headline — proposed rewrite (held material; do not send)**
+> We help homeowners explore the lot.
+>
+> An early planning picture, with assumptions and limits visible.
+
+*Why it fits:* Replaces "We vet the lot" and unmeasured answer/timing language without inventing a partner relationship. **This does not authorize updating or distributing held GreatBuildz material.** [S4, S7]
+
+**Off-brand example — constructed for illustration**
+> Unlock guaranteed passive income with an instantly approved dream ADU.
+
+*Problems:* Aspirational "unlock," guaranteed financial outcome, approval promise, and hype. Replace with the homeowner introduction above, using only verified capabilities. [S1–S4]
+
+---
+
+## Visual Alignment — Confidence: High for documented rules
+
+Retain **A LOT MORE**: chalk `#F5F5F0`, ink/carbon `#161616`, signal orange `#FF5B24`, orange-ink `#C43708`, stone `#65655F` (chalk only), and stone-on-dark `#B7B7AE`; **Space Grotesk** for display and **Manrope** for body/controls. Orange-filled actions use carbon labels. Never use signal-orange text on chalk. Keep financial figures typographic and neutrally colored (carbon on chalk, chalk on carbon); green is strictly for verified/eligible status. [S1 §§2–3]
+
+`docs/design/design-system.md` (2026-11-01/02) permits the landing hero's `backyard-life.webp` photograph, carbon scrims, and hero glass surfaces (with secondary text at chalk 86%+). This is a scoped exception, not a general gradient or glass rule. Retired Blue Hour / Golden Hour, serif/mono, and money-green directions must not replace the current authority. Uninspected historical folder images (dated Aug 8 in Drive metadata) must be visually verified before any reuse. [S1 §§1, 8, 11, log; S4]
 
 ---
 
 ## Confidence Scores
 
-| Section | Confidence | Basis | Sources |
-|---------|------------|-------|---------|
-| Voice Attributes | High | Explicit in design-system §1, §10 and §11 and in the confirmed voice profile; shown in shipped landing, Studio, email and guide copy | 8 |
-| Messaging Framework | Medium | Documented and used consistently, but no performance data shows which messages convert | 6 |
-| Tone Matrix | Medium | Explicit guidance for social and outreach; other contexts inferred from 3+ shipped examples each; partner proposals from one deck | 9 |
-| Terminology | High | Explicit lists in CLAUDE.md, design-system §10, the voice profile and the glossary; one open conflict ("unlock") | 5 |
-| Language Patterns | Low | No call transcripts; patterns come from published copy only, without outcome data | 3 |
-| Brand Personality | Medium (not weighted) | Archetype inferred from design-system §1 ("a studio presenting a model") and the attributes above | 2 |
-| Content Examples | High (not weighted) | Excellent examples are verbatim shipped or published copy; the off-brand example is labelled as constructed | 3 |
-| Executive Summary | N/A | A synthesis of the scored sections | n/a |
+Confidence reflects the evidence behind this guidance, not probability of approval, conversion, or product accuracy. V1 and the discovery report share underlying sources and do not count as independent corroboration.
 
-Aggregate: 0.30 + 0.15 + 0.12 + 0.15 + 0.03 = **0.75, Medium**. Bands: High 0.85–1.0, Medium 0.60–0.84, Low below 0.60. Recording two or three builder or partner calls, and reading social and Search Console results per message, would raise Messaging and Language Patterns.
+| Section | Rating | Evidence and limitation | Rubric contribution |
+|---|---|---|---|
+| Voice attributes | High | Explicit design/social rules plus operational examples [S1–S2, S5] | 1.0 × 30% = 0.30 |
+| Messaging framework | Medium | Documented pillars and pitch examples; no outcome evidence [S1–S2, S5–S7] | 0.6 × 25% = 0.15 |
+| Tone matrix | Medium | Explicit product/social guidance; small outreach/proposal sample; support remains provisional [S2–S3, S5–S7] | 0.6 × 20% = 0.12 |
+| Terminology | High | Explicit source vocabulary; product copy PRs still pending for S9 [S1–S3, S9] | 1.0 × 15% = 0.15 |
+| Conversational language patterns | Low / unavailable | No transcripts analyzed; no effectiveness ranking made | 0.3 × 10% = 0.03 |
 
----
-
-## Open Questions for Team Discussion
-
-### High Priority (blocks guideline completion)
-1. **Is "unlock" allowed in product copy?**
-   - What was found: The voice profile bans "unlock" and design-system §11 bans "Unlock your property potential". Shipped UI uses it as an access verb. Homeowner-facing: "Unlock property certificate", "Certificate unlocked" and "One-time purchase · No subscription · Unlocks this property permanently" (CertificatePanel), "Unlocked" (CertificatesClient), and the layout email's "does not unlock the paid analysis". Builder-facing: lead "Unlock" (BuilderDashboard, BuilderInbox) and "Total Unlocks" (BillingLedger).
-   - Agent recommendation: Ban it in all marketing, social and aspirational copy. Allow it only as the literal name of the builder lead-credit transaction ("Unlock lead", "Unlocked"), where builders already understand it. On homeowner surfaces, use "Get your Certificate" / "Certificate purchased", "Covers this property permanently" and "does not include the paid analysis".
-   - Need from you: Confirm or override. If confirmed, the homeowner strings above get a small copy PR.
-
-### Medium Priority (improves quality)
-2. **How "free" is scoped**
-   - What was found: The `/about` title says "Free ADU Feasibility Check" while the Certificate is $29. Elsewhere "free" is scoped: "Your first address is free", "free account", demo lots "always open". The llms.txt test exists so assistants do not call the product free-only.
-   - Agent recommendation: Always attach "free" to the specific thing that is free. Retitle `/about` to something like "About LotFoundry: Explore an ADU on Your Lot in 3D", or keep "Free" only as "Free First Lot Check".
-   - Need from you: Pick the `/about` title. It is an SEO surface, so a CTR test is reasonable.
-
-3. **One canonical disclaimer line**
-   - What was found: Five variants: "Early planning estimates, not a permit, survey or builder quote." (social) · "Early planning estimates, not permit approval or guaranteed income." (Studio) · "Concepts, not permits or builder quotes." (X) · "Planning estimates only." (landing footer) · "not a permit, a quote, or an appraisal" (llms.txt).
-   - Agent recommendation: Long form everywhere there is room: "Early planning estimates, not a permit, survey or builder quote." Surfaces that show income or payback add: "Income figures are estimates, not guarantees." Short form for tight UI: "Planning estimates, not permits or quotes." Keep llms.txt as is; it is tested and machine-read.
-   - Need from you: Confirm the three strings.
-
-4. **Founder voice**
-   - What was found: Anything in Andrew's name must use his own words (voice profile). The only long first-person sample is the Kickstarter story, which is constrained by Kickstarter's rules. The Nov 6 founder post is blocked on this.
-   - Agent recommendation: Paste 3–5 things you have written yourself (emails, posts, notes) and a sub-profile for "Andrew, founder" gets added beside the brand voice. Until then, agents draft clearly marked placeholders only.
-   - Need from you: The samples, or a decision that founder posts stay fully hand-written.
-
-### Low Priority (nice to have)
-5. **"ADU" in body copy**
-   - What was found: The rule is "ADU" in titles and "backyard home" in body copy, but `/about` body copy and the guides use "ADU" in running text.
-   - Agent recommendation: Guides keep "ADU" wherever they state a rule or quote a code (design-system §10 reserves "ADU" for zoning and permitting). Narrative homeowner copy, `/about` included, uses "backyard home".
-   - Need from you: Confirm.
-
-6. **"Lot Foundry" on social profiles**
-   - What was found: Copy uses "LotFoundry". The Facebook Page and YouTube display names read "Lot Foundry", and the legal record is "VeriShare, DBA Lot Foundry".
-   - Agent recommendation: Keep "LotFoundry" in all copy. Use "VeriShare (DBA Lot Foundry)" only for KYC, tax and banking. Rename social display names to "LotFoundry" when convenient, and keep "Lot Foundry" as a search alias in llms.txt.
-   - Need from you: Whether to rename the profiles.
-
-7. **Product-name capitalization**
-   - What was found: The landing writes "the studio" in lowercase; the voice profile writes "the Studio". CertificatePanel mixes "Certificate access" and "certificate access".
-   - Agent recommendation: Capitalize "Studio" and "Certificate" when they name the product; lowercase in generic use ("a certificate of occupancy").
-   - Need from you: Confirm.
-
-8. **Naming competitors**
-   - What was found: A competitor was removed from the GreatBuildz deck at your request. No written rule exists.
-   - Agent recommendation: Never name competitors in public copy, decks or outreach; position against the status quo (paying for plans first).
-   - Need from you: Confirm, or say where naming is acceptable (for example, internal analysis only).
+**Aggregate: 0.75, Medium.** Bands: High 0.85–1.00, Medium 0.60–0.84, Low below 0.60. Personality is Medium and visual alignment High, outside the five-section aggregate. No "language that works" or transcript-derived objection-handling section is asserted; observed phrases show documented usage, not measured conversion effectiveness.
 
 ---
 
-## Data Gaps & Recommendations
+## Remaining Evidence Gaps and Publication Gate
 
-- [ ] **No call transcripts**: Record or transcribe two or three builder and partner calls (Gong or Granola need connecting via `/mcp`) to ground the outreach and proposal tones.
-- [ ] **No performance data per message**: Read Metricool engagement and Search Console CTR by message to tell which pillar earns attention.
-- [ ] **No founder-voice samples**: See Open Question 4.
-- [ ] **No support-reply samples**: Five or so sent replies from support@lotfoundry.net would define the customer-support tone.
-- [ ] **No email marketing voice**: There is no list or ESP yet. Define it when the first newsletter is planned.
+| Priority | Gap | Recommendation | Decision or evidence needed |
+|---|---|---|---|
+| Medium | Founder voice has no authentic sample set | Keep brand voice separate; prepare outlines and use Andrew-authored words for personal assertions | Existing founder-authored samples if a personal sub-profile is wanted; otherwise keep founder content hand-written |
+| Medium | Support tone is inferred | Retain the steady transactional pattern; refine from anonymized real replies when available | Relevant support-reply sample corpus before claiming a validated support style |
+| Medium | No message-level performance comparison | Retain the documented voice; evaluate messaging via a separate bounded analytics review | Authorization and appropriate outcome data for that separate analysis |
+| Publication gate | Offers, claims, and links can change | Recheck price, eligibility, geography, source dates, and destination links when producing content | Current verified evidence for each published claim; never carry forward a deck's assertions |
 
 ---
 
-## Appendix: Sources
+## Appendix: Sources and Evidence States
 
-| # | Source | Platform | Type | Date | Key Sections Used | Confidence |
-|---|--------|----------|------|------|-------------------|------------|
-| 1 | `docs/design/design-system.md` §1, §3.2, §8, §10, §11, decisions log | Repo | AUTHORITATIVE | 2026-09-05, updated through 2026-10-17 | Voice, anti-patterns, three pillars, vocabulary | High |
-| 2 | `LotFoundry/memory/voice-profile.md` | Local memory | AUTHORITATIVE (confirmed by Andrew) | 2026-10-12 | Social register, never-use list, disclaimers, phrases | High |
-| 3 | `CLAUDE.md` (YardUp + LotFoundry workspace) | Repo | AUTHORITATIVE | current | "ADU" vs "backyard home", consent rule, names | High |
-| 4 | `LotFoundry/memory/glossary.md` | Local memory | REFERENCE | current | Names and spellings | High |
-| 5 | `LotFoundry/content-calendar.md` | Local | OPERATIONAL | 2026-10-12 | Published campaign headlines, fact-checking practice | Medium |
-| 6 | `components/landing/lot-more/LotMoreLanding.tsx` | Repo | SHIPPED COPY | 2026-10-26 | Headlines, pillars, FAQ, CTAs | High |
-| 7 | Studio, Certificate, builder dashboard and consent components | Repo | SHIPPED COPY | 2026-10-26 | Microcopy, errors, payment states, consent | High |
-| 8 | `lib/server/studio-scenario-email.ts` | Repo | SHIPPED COPY | 2026-10-26 | Transactional email, offer and disclosure | High |
-| 9 | `content/adu/ca/san-diego-cost.ts` | Repo | SHIPPED COPY | 2026-10-26 | Guide register, citations, scope statements | High |
-| 10 | `app/llms.txt/build-text.ts` and tests | Repo | SHIPPED COPY | 2026-10-26 | Machine-read register, tested limitations | High |
-| 11 | Vault: `lotfoundry-builder-pipeline`, `lotfoundry-greatbuildz-strategic-deck` (index) | Obsidian | OPERATIONAL | 2026-10-22 to 10-26 | Outreach tone, partner framing | Medium |
-| 12 | Vault: `lotfoundry-kickstarter-campaign` | Obsidian | OPERATIONAL | 2026-09-11 | Founder first-person voice | Low |
+| ID | Source | Category / date | Use and state |
+|---|---|---|---|
+| S1 | `docs/design/design-system.md` §§1–3, 8, 10–11, decisions log | Authoritative; active local source through 2026-11-02 | Product/visual authority; rechecked directly in repo |
+| S2 | `LotFoundry/memory/voice-profile.md` | Authoritative; Andrew-confirmed 2026-10-12 | Social phrasing, vocabulary, disclosures; rechecked directly |
+| S3 | `.claude/archive/brand-voice-guidelines-v1-2026-10-26.md` | Archived v1 cross-channel synthesis; 2026-10-26 | Prior baseline for tone, shipped examples, and resolved questions |
+| S4 | Obsidian wiki `lotfoundry-brand-discovery-2026-11-15.md` | Research synthesis; 2026-11-15 | Primary v2 input; source rankings, conflicts, and hold preservation |
+| S5 | Google Drive builder pitch deck, slides 1–2, 6–8 | Operational; 2026-10-13 | Feedback-first tone and modeled limits; analyzed in discovery |
+| S6 | Google Drive business review | Operational; updated 2026-10-22 (content as of 2026-10-18) | Separating proposals, assumptions, and established evidence; analyzed in discovery |
+| S7 | Google Drive pilot deck, slides 2–4, 6–8 | Operational; 2026-10-28 | Certainty conflict and proposal tone; analyzed in discovery; **GreatBuildz hold retained** |
+| S8 | Google Drive Kickstarter story, funding proposal, legacy Certificate | Historical framing; Sep 2 and legacy Jun/Aug dates | Conflict examples only; not current capability, price, legal, or positioning authority |
+| S9 | `app/about/page.tsx:6`, `components/studio/CertificatePanel.tsx:457-463`, `lib/server/studio-scenario-email.ts:29` | Local code observations; rechecked 2026-11-15 | Current shipped wording vs. proposed v2 replacements; no live behavior claimed |
 
-Consulted, not used for rules: `brand/cadastral-lyric.md`, a visual philosophy for the brand plate render. Its serif, monospace and sepia palette conflict with A LOT MORE, and `docs/design/README.md` gives design authority only to `docs/design/`. Its restraint ("does this earn its place?") agrees with attribute 7.
-
-No customer names, addresses or contact details appear in this document.
+No customer names, addresses, credentials, or private contact details appear in this document.
