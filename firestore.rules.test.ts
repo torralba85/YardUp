@@ -94,6 +94,20 @@ describe.skipIf(!hasFirestoreEmulator)("agent passes", () => {
   });
 });
 
+describe.skipIf(!hasFirestoreEmulator)("partner referral ledger", () => {
+  it("denies guest and signed-in reads and writes, including the referral owner", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "partnerReferrals", "referral-1"), { ownerUid: OWNER_ID, referralId: "LFR-TEST0001", status: "sent" });
+    });
+    for (const context of [rulesEnv().unauthenticatedContext(), rulesEnv().authenticatedContext(OWNER_ID)]) {
+      const ref = doc(context.firestore(), "partnerReferrals", "referral-1");
+      await assertFails(getDoc(ref));
+      await assertFails(setDoc(ref, { ownerUid: OWNER_ID, status: "contracted" }));
+      await assertFails(deleteDoc(ref));
+    }
+  });
+});
+
 function currentConsent(acceptedAt: unknown = serverTimestamp()) {
   return {
     termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,
@@ -252,6 +266,30 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
     );
   });
 
+  it("allows upgrading from the 2026-11-06 receipt to the current versions", async () => {
+    const acceptedAt = Timestamp.fromDate(new Date("2026-11-06T00:00:00Z"));
+    await seedProfile({
+      ...ownerProfile({
+        createdAt: acceptedAt,
+        updatedAt: acceptedAt,
+      }),
+      legalConsent: {
+        termsVersion: "2026-11-06",
+        privacyVersion: "2026-11-06",
+        adultConfirmed: true,
+        acceptedAt,
+      },
+    });
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+
+    await assertSucceeds(
+      updateDoc(doc(db, "users", OWNER_ID), {
+        legalConsent: currentConsent(),
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
   it("allows upgrading from the 2026-10-30 receipt to the current versions", async () => {
     const acceptedAt = Timestamp.fromDate(new Date("2026-10-30T00:00:00Z"));
     await seedProfile({
@@ -300,6 +338,23 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
     );
   });
 
+  it("accepts the 2026-11-06 versions on a new profile while stale pages roll over", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+
+    await assertSucceeds(
+      setDoc(
+        doc(db, "users", OWNER_ID),
+        ownerProfile({
+          legalConsent: {
+            ...currentConsent(),
+            termsVersion: "2026-11-06",
+            privacyVersion: "2026-11-06",
+          },
+        }),
+      ),
+    );
+  });
+
   it("accepts the 2026-10-30 versions on a new profile while stale pages roll over", async () => {
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
 
@@ -335,7 +390,7 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
   });
 
   it("never lets an existing receipt be rewritten to the previous versions", async () => {
-    const acceptedAt = Timestamp.fromDate(new Date("2026-11-06T00:00:00Z"));
+    const acceptedAt = Timestamp.fromDate(new Date("2026-11-10T00:00:00Z"));
     await seedProfile({
       ...ownerProfile({
         createdAt: acceptedAt,
@@ -362,6 +417,17 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
           ...currentConsent(),
           termsVersion: "2026-10-30",
           privacyVersion: "2026-10-30",
+        },
+        updatedAt: serverTimestamp(),
+      }),
+    );
+
+    await assertFails(
+      updateDoc(doc(db, "users", OWNER_ID), {
+        legalConsent: {
+          ...currentConsent(),
+          termsVersion: "2026-11-06",
+          privacyVersion: "2026-11-06",
         },
         updatedAt: serverTimestamp(),
       }),

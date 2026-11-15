@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="Terms & Conditions"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 10, 2026 · Version 2026-11-10"
     >
       <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
@@ -249,7 +249,29 @@ export default function TermsPage() {
           you directly.
         </p>
         <p>
-          Any statement that a partner&rsquo;s or builder&rsquo;s contractors are screened, vetted,
+          Our current referral partner is GreatBuildz Inc. If you choose it, the introduction email
+          goes to GreatBuildz with a copy to you, and your use of GreatBuildz&rsquo;s service is
+          governed by its own{" "}
+          <a
+            href="https://www.greatbuildz.com/terms-of-service/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            terms of service
+          </a>
+          . GreatBuildz, not you, may pay LotFoundry a referral fee based on a qualifying signed design
+          or construction contract, and reports the referral&rsquo;s status and contract price back
+          to us to calculate it. GreatBuildz texts you only if you also check the separate, optional
+          text box, and you can reply STOP at any time. You may send a stop-contact or deletion
+          request to either company, and each passes it to the other. Privacy Policy Sections 5 and
+          6 list what we send, what we receive back, and how long we keep it.
+        </p>
+        <p>
+          LotFoundry&rsquo;s part in a referral ends when the introduction email is sent. We take no
+          part in matching, bidding, pricing, or contracting, and we never give you a credit,
+          refund, or discount tied to a referral or a signed contract. Any statement that a
+          partner&rsquo;s or builder&rsquo;s contractors are screened, vetted,
           or licensed is that party&rsquo;s own statement. LotFoundry does not screen, background
           check, endorse, supervise, or take responsibility for any partner or any contractor or
           professional it introduces.

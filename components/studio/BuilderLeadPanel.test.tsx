@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState, type ComponentProps } from "react";
 import {
   defaultAduConfig,
@@ -71,6 +71,10 @@ function renderPanel(props: Partial<PanelProps> & { initialDraft?: BuilderLeadDr
 }
 
 describe("BuilderLeadPanel", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("requires consent before submit", async () => {
     const submit = vi.fn();
     renderPanel({ onSubmit: submit });
@@ -234,5 +238,218 @@ describe("BuilderLeadPanel", () => {
     render(<BaselinePanel onDraftChange={onDraftChange} />);
     await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
     expect(onDraftChange).not.toHaveBeenCalled();
+  });
+
+  it("submits to the LotFoundry network when no partner covers the lot", async () => {
+    const submit = vi.fn().mockResolvedValue({ matchedCount: 2 });
+    vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+    renderPanel({ onSubmit: submit });
+
+    expect(screen.queryByRole("radiogroup", { name: /Builder network/i })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+    expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "lotfoundry" }));
+  });
+
+  describe("GreatBuildz option", () => {
+    const laParcel = {
+      ...parcelPresets[0],
+      address: "123 Elm St, Pasadena, CA 91101",
+      city: "Pasadena",
+      state: "CA",
+      county: "Los Angeles",
+    };
+
+    function renderLa(props: Partial<PanelProps> & { initialDraft?: BuilderLeadDraft } = {}) {
+      return renderPanel({ parcelKey: "elm-street", parcel: laParcel, ...props });
+    }
+
+    it("is hidden while the launch flag is off", () => {
+      renderLa();
+      expect(screen.queryByRole("radio", { name: "GreatBuildz" })).not.toBeInTheDocument();
+    });
+
+    it("offers both networks, defaults to LotFoundry, and resets consent on switch", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa();
+
+      expect(screen.getByRole("radio", { name: "LotFoundry builders" })).toHaveAttribute("aria-checked", "true");
+      await userEvent.click(screen.getByRole("checkbox", { name: /18 or older/i }));
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+
+      const consent = screen.getByRole("checkbox", { name: /to GreatBuildz Inc\., with a copy to me/i });
+      expect(consent).not.toBeChecked();
+      expect(screen.getByText(/referral fee, which doesn't change what I pay/i)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "privacy policy" })).toHaveAttribute("href", "https://www.greatbuildz.com/privacy-policy/");
+      expect(screen.getByRole("link", { name: "terms" })).toHaveAttribute("href", "https://www.greatbuildz.com/terms-of-service/");
+      expect(screen.getByRole("region", { name: "Project details shared with GreatBuildz" })).toBeInTheDocument();
+      // The LotFoundry builder count does not apply to a GreatBuildz send.
+      expect(screen.queryByText(/Goes to 2 builders/)).not.toBeInTheDocument();
+    });
+
+    const sent = { partnerName: "GreatBuildz", referralId: "LFR-ABCDEF12", status: "sent", duplicate: false } as const;
+
+    it("offers GreatBuildz alone where no LotFoundry builder serves the lot", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue(sent);
+      renderLa({ matches: { status: "ready", count: 0 }, onSubmit: submit });
+
+      expect(screen.queryByText("No builders are registered for this area yet.")).not.toBeInTheDocument();
+      expect(screen.queryByRole("radio", { name: "LotFoundry builders" })).not.toBeInTheDocument();
+      expect(screen.getByText(/Share this address and feasibility snapshot with GreatBuildz, which serves this area/)).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("keeps the no-builders message for projects under the GreatBuildz minimum", () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa({ matches: { status: "ready", count: 0 }, result: { ...result, costLow: 50000, costHigh: 70000 } });
+      expect(screen.getByText("No builders are registered for this area yet.")).toBeInTheDocument();
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("submits a GreatBuildz referral and shows the referral number", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue(sent);
+      renderLa({ onSubmit: submit });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent("Sent to GreatBuildz. Your referral number is LFR-ABCDEF12.");
+      expect(status).toHaveTextContent(/copied on the introduction email/);
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("offers the optional text box only for GreatBuildz, once a phone number is given", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa();
+      const textBox = () => screen.queryByRole("checkbox", { name: /may also call and text me/i });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(textBox()).not.toBeInTheDocument();
+      await userEvent.type(screen.getByRole("textbox", { name: "Phone (optional)" }), "626-555-0100");
+      expect(textBox()).not.toBeChecked();
+      expect(textBox()).toHaveAccessibleName(/^Optional: GreatBuildz Inc\. may also call and text me/);
+
+      await userEvent.click(screen.getByRole("radio", { name: "LotFoundry builders" }));
+      expect(textBox()).not.toBeInTheDocument();
+    });
+
+    it.each([false, true])("sends smsConsent: %s, since the text box is never required", async (ticked) => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue(sent);
+      renderLa({ onSubmit: submit, initialDraft: { ...janeDraft, phone: "626-555-0100" } });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      if (ticked) await userEvent.click(screen.getByRole("checkbox", { name: /may also call and text me/i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz", smsConsent: ticked }));
+    });
+
+    it("clears the text box when the homeowner switches networks", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      renderLa({ initialDraft: { ...janeDraft, phone: "626-555-0100" } });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /may also call and text me/i }));
+      await userEvent.click(screen.getByRole("radio", { name: "LotFoundry builders" }));
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(screen.getByRole("checkbox", { name: /may also call and text me/i })).not.toBeChecked();
+    });
+
+    it("shows a queued referral as pending without claiming an email was sent", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue({ ...sent, status: "queued" });
+      renderLa({ onSubmit: submit });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent("Referral received. Your referral number is LFR-ABCDEF12.");
+      expect(status).toHaveTextContent("Your introduction to GreatBuildz is pending.");
+      expect(status).toHaveTextContent("You don't need to submit again.");
+      expect(status).not.toHaveTextContent("Sent to GreatBuildz");
+      expect(status).not.toHaveTextContent("You're copied on the introduction email.");
+    });
+
+    it("asks a guest to sign in before a GreatBuildz send", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn();
+      const requestSignIn = vi.fn();
+      renderLa({ signedIn: false, matches: { status: "guest" }, onSubmit: submit, onRequestSignIn: requestSignIn });
+
+      await userEvent.click(screen.getByRole("radio", { name: "GreatBuildz" }));
+      expect(screen.getByText("Sign in or create a free account to send it.")).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
+      expect(requestSignIn).toHaveBeenCalledTimes(1);
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("asks for consent again when sign-in shows no LotFoundry builder serves the lot", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue(sent);
+      const props = { parcelKey: "elm-street", parcel: laParcel, onSubmit: submit };
+      const { rerender } = renderPanel({ ...props, signedIn: false, matches: { status: "guest" } });
+
+      await userEvent.click(screen.getByRole("checkbox", { name: /with matched builders/i }));
+      await userEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
+      // Signed in now; the builder check then finds no LotFoundry builders.
+      rerender(<StatefulPanel {...props} matches={{ status: "loading" }} />);
+      rerender(<StatefulPanel {...props} matches={{ status: "ready", count: 0 }} />);
+
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "No LotFoundry builders serve this area yet, so this goes to GreatBuildz. Please review the consent below.",
+      );
+      const consent = screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i });
+      expect(consent).not.toBeChecked();
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+      expect(submit).not.toHaveBeenCalled();
+
+      await userEvent.click(consent);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ network: "greatbuildz" }));
+    });
+
+    it("asks for consent again when the builder check finds none after the box was ticked", async () => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const props = { parcelKey: "elm-street", parcel: laParcel };
+      const { rerender } = renderPanel({ ...props, matches: { status: "loading" } });
+
+      await userEvent.click(screen.getByRole("checkbox", { name: /with matched builders/i }));
+      rerender(<StatefulPanel {...props} matches={{ status: "ready", count: 0 }} />);
+
+      expect(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i })).not.toBeChecked();
+      expect(screen.getByRole("status")).toHaveTextContent(/so this goes to GreatBuildz/);
+    });
+
+    it.each([
+      [{ status: "queued", duplicate: false }, "Referral received. Your referral number is LFR-ABCDEF12.", "Your introduction to GreatBuildz is pending."],
+      [{ status: "sent", duplicate: true }, "Already sent to GreatBuildz. Your referral number is LFR-ABCDEF12.", "We didn't send it again."],
+      [{ status: "queued", duplicate: true }, "Already received. Your referral number is LFR-ABCDEF12.", "Your introduction to GreatBuildz is pending."],
+    ] as const)("says what actually happened to the referral: %o", async (outcome, headline, next) => {
+      vi.stubEnv("NEXT_PUBLIC_GREATBUILDZ_REFERRAL", "true");
+      const submit = vi.fn().mockResolvedValue({ ...sent, ...outcome });
+      renderLa({ matches: { status: "ready", count: 0 }, onSubmit: submit });
+
+      await userEvent.click(screen.getByRole("checkbox", { name: /to GreatBuildz Inc\./i }));
+      await userEvent.click(screen.getByRole("button", { name: /Submit snapshot/i }));
+
+      const status = await screen.findByRole("status");
+      expect(status).toHaveTextContent(headline);
+      expect(status).toHaveTextContent(next);
+      // Only a fresh, delivered referral may say the homeowner was copied.
+      expect(status).not.toHaveTextContent(/copied on the introduction email/);
+    });
   });
 });

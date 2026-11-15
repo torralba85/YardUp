@@ -237,6 +237,8 @@ jobs:
           ENABLE_GOOGLE_PLAY_VERIFICATION="${{ secrets.ENABLE_GOOGLE_PLAY_VERIFICATION }}"
           TYPESAFE_GEOCODE_PICKER="${{ secrets.TYPESAFE_GEOCODE_PICKER }}"
           TYPESAFE_ZONING_SHADOW="${{ vars.TYPESAFE_ZONING_SHADOW }}"
+          GREATBUILDZ_REFERRAL_EMAIL="${{ vars.GREATBUILDZ_REFERRAL_EMAIL }}"
+          GREATBUILDZ_REFERRAL_CC="${{ vars.GREATBUILDZ_REFERRAL_CC }}"
           EOF
           cat > .env.production.local <<EOF
           NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}"
@@ -251,6 +253,8 @@ jobs:
           NEXT_PUBLIC_GOOGLE_PLACES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_PLACES_KEY }}"
           NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAP_TILES_KEY }}"
           NEXT_PUBLIC_GA_MEASUREMENT_ID="${{ secrets.NEXT_PUBLIC_GA_MEASUREMENT_ID }}"
+          # GreatBuildz referral launch switch. Unset keeps the option and its API off.
+          NEXT_PUBLIC_GREATBUILDZ_REFERRAL="${{ vars.NEXT_PUBLIC_GREATBUILDZ_REFERRAL }}"
           EOF
       - name: Install functions dependencies
         run: npm ci --prefix functions

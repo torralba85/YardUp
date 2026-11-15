@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { AdvisorIntakeSummary } from "./AdvisorIntakeSummary";
 import { buildConnectionSnapshot, validateOwnerContact } from "@/lib/marketplace";
+import {
+  availablePartnerNetwork,
+  partnerConsentText,
+  partnerSmsConsentText,
+  type BuilderNetworkChoice,
+  type PartnerReferralStatus,
+} from "@/lib/partner-referrals";
 import type { BuilderMatchState } from "@/lib/use-builder-matches";
 import type {
   ADUConfig,
@@ -13,7 +20,7 @@ import type {
 import type { ConnectionSnapshot, OwnerContact } from "@/lib/marketplace-types";
 import type { Parcel } from "@/lib/parcel-types";
 import { Button } from "@/components/ui/Button";
-import { Checkbox, FieldLabel, Input, Textarea } from "@/components/ui/Field";
+import { Checkbox, FieldLabel, Input, Segmented, Textarea } from "@/components/ui/Field";
 
 /** Payload emitted when a homeowner submits the connect-with-builders form. */
 export interface BuilderLeadSubmitInput {
@@ -21,6 +28,53 @@ export interface BuilderLeadSubmitInput {
   contact: OwnerContact;
   /** The full feasibility snapshot to attach to the lead. */
   snapshot: ConnectionSnapshot;
+  /**
+   * Where the homeowner asked us to send it: the LotFoundry marketplace, or a
+   * partner network offered for this lot (see `lib/partner-referrals.ts`).
+   */
+  network: BuilderNetworkChoice;
+  /** The homeowner checked the optional partner text box (partner sends only). */
+  smsConsent: boolean;
+}
+
+/** What the submit handler reports back, per network. */
+export type BuilderLeadSubmitResult =
+  | { matchedCount: number }
+  | PartnerReferralOutcome;
+
+/** A partner send as the API recorded it. */
+interface PartnerReferralOutcome {
+  partnerName: string;
+  referralId: string;
+  /** `queued` means the introduction email hasn't gone yet; ops sends it by hand. */
+  status: PartnerReferralStatus;
+  /** This project was already referred, so nothing new was sent. */
+  duplicate: boolean;
+}
+
+/** What the homeowner is told after a partner send, by what actually happened. */
+function partnerOutcomeMessage({ partnerName, referralId, status, duplicate }: PartnerReferralOutcome) {
+  const emailed = status !== "queued";
+  if (duplicate) {
+    return emailed
+      ? {
+          message: `Already sent to ${partnerName}. Your referral number is ${referralId}.`,
+          next: "We didn't send it again. To change your details, reply to the introduction email.",
+        }
+      : {
+          message: `Already received. Your referral number is ${referralId}.`,
+          next: `Your introduction to ${partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
+        };
+  }
+  return emailed
+    ? {
+        message: `Sent to ${partnerName}. Your referral number is ${referralId}.`,
+        next: `You're copied on the introduction email. A ${partnerName} project advisor will contact you to set up a free consultation.`,
+      }
+    : {
+        message: `Referral received. Your referral number is ${referralId}.`,
+        next: `Your introduction to ${partnerName} is pending. LotFoundry will follow up and copy you when it is sent. You don't need to submit again.`,
+      };
 }
 
 /**
@@ -44,9 +98,11 @@ const ERROR_ID = "builder-lead-error";
  * {@link ConnectionSnapshot} from the current parcel/config/result, and emits
  * a {@link BuilderLeadSubmitInput} on submit.
  *
- * Where no builder serves the area it says so in place of the form; a guest's
- * Submit opens sign-in instead of failing after they fill everything in; and a
- * sent snapshot replaces the form so it cannot be sent twice.
+ * Where a partner network covers the lot (flag-gated), the homeowner chooses
+ * who receives it; where no LotFoundry builder serves the area, the partner is
+ * the only network offered. With neither, it says so in place of the form. A
+ * guest's Submit opens sign-in instead of failing after they fill everything
+ * in, and a sent snapshot replaces the form so it cannot be sent twice.
  *
  * @param props - Open state, the contact draft and its setter, the
  *   parcel/config/result to snapshot, the sign-in and builder-match state, and
@@ -80,13 +136,18 @@ export default function BuilderLeadPanel({
   /** How many builders serve this parcel, from `useBuilderMatches`. */
   matches: BuilderMatchState;
   onClose: () => void;
-  onSubmit: (input: BuilderLeadSubmitInput) => Promise<{ matchedCount: number }>;
+  onSubmit: (input: BuilderLeadSubmitInput) => Promise<BuilderLeadSubmitResult>;
   onRequestSignIn: () => void;
 }) {
-  const [consent, setConsent] = useState(false);
+  // The network the box was ticked for. Consent counts only while that network
+  // is still the one selected, so it never follows the details to someone else.
+  const [consentFor, setConsentFor] = useState<BuilderNetworkChoice | null>(null);
+  // The optional text box follows the same rule, and is never a condition of sending.
+  const [smsConsentFor, setSmsConsentFor] = useState<BuilderNetworkChoice | null>(null);
+  const [network, setNetwork] = useState<BuilderNetworkChoice>("lotfoundry");
   // `field` is null for a failed send, which is reported beside Submit.
   const [error, setError] = useState<{ field: ContactField | null; message: string } | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ message: string; next: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -110,14 +171,38 @@ export default function BuilderLeadPanel({
   if (!open) return null;
   const snapshot = buildConnectionSnapshot({ parcelKey, parcel, config, assumptions, result });
   const noBuilders = matches.status === "ready" && matches.count === 0;
+  const partner = availablePartnerNetwork(snapshot);
+  const networks: BuilderNetworkChoice[] = partner
+    ? noBuilders ? [partner.id] : ["lotfoundry", partner.id]
+    : ["lotfoundry"];
+  // Coverage and matches can change with the address; never submit to a hidden option.
+  const activeNetwork = networks.includes(network) ? network : networks[0];
+  const toPartner = partner !== null && activeNetwork === partner.id;
+  const consent = consentFor === activeNetwork;
+  // The recipient changed after the box was ticked, e.g. a guest signed in and
+  // the builder check found no LotFoundry builders here.
+  const consentMoved = consentFor !== null && !consent;
+  // Offered only for a partner send with a number to text.
+  const smsOffered = toPartner && draft.phone.trim() !== "";
+  const smsConsent = smsOffered && smsConsentFor === activeNetwork;
   const matchNote =
     matches.status === "guest"
       ? "Sign in or create a free account to send it."
-      : matches.status === "loading"
-        ? "Checking which builders serve this area…"
-        : matches.status === "ready"
-          ? `Goes to ${matches.count} builder${matches.count === 1 ? "" : "s"} who serve${matches.count === 1 ? "s" : ""} this area.`
-          : null;
+      : toPartner
+        ? null
+        : matches.status === "loading"
+          ? "Checking which builders serve this area…"
+          : matches.status === "ready"
+            ? `Goes to ${matches.count} builder${matches.count === 1 ? "" : "s"} who serve${matches.count === 1 ? "s" : ""} this area.`
+            : null;
+
+  function chooseNetwork(next: BuilderNetworkChoice) {
+    setNetwork(next);
+    // Consent is specific to who receives the details, so it never carries over.
+    setConsentFor(null);
+    setSmsConsentFor(null);
+    setError(null);
+  }
 
   function fieldProps(field: ContactField) {
     const invalid = error?.field === field;
@@ -152,12 +237,23 @@ export default function BuilderLeadPanel({
     }
     startTransition(async () => {
       try {
-        const submitted = await onSubmit({ contact: validation.contact, snapshot });
-        setSuccess(
-          submitted.matchedCount === 1
-            ? "Sent to 1 local builder."
-            : `Sent to ${submitted.matchedCount} local builders.`,
-        );
+        const submitted = await onSubmit({
+          contact: validation.contact,
+          snapshot,
+          network: activeNetwork,
+          smsConsent,
+        });
+        if ("referralId" in submitted) {
+          setSuccess(partnerOutcomeMessage(submitted));
+        } else {
+          setSuccess({
+            message:
+              submitted.matchedCount === 1
+                ? "Sent to 1 local builder."
+                : `Sent to ${submitted.matchedCount} local builders.`,
+            next: "Interested builders may contact you about your project. There's nothing more to send.",
+          });
+        }
       } catch (err) {
         setError({ field: null, message: err instanceof Error ? err.message : "Could not submit this snapshot." });
       }
@@ -180,7 +276,11 @@ export default function BuilderLeadPanel({
             Connect with local builders
           </h2>
           <p className="mt-1 text-sm leading-6 text-lot-stone">
-            Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project.
+            {partner && networks.length > 1
+              ? "Choose who receives this address and feasibility snapshot. Whoever you choose may contact you about your project."
+              : partner
+                ? `Share this address and feasibility snapshot with ${partner.name}, which serves this area. ${partner.name} may contact you about your project.`
+                : "Share this address and feasibility snapshot with registered builders that serve this area. Builders may contact you about your project."}
           </p>
         </div>
         <button
@@ -202,16 +302,14 @@ export default function BuilderLeadPanel({
         >
           <p className="flex items-center gap-2 text-sm font-semibold text-status-eligible">
             <CheckCircle2 size={16} aria-hidden="true" className="shrink-0" />
-            {success}
+            {success.message}
           </p>
-          <p className="mt-1 text-sm leading-6 text-lot-stone">
-            Interested builders may contact you about your project. There&apos;s nothing more to send.
-          </p>
+          <p className="mt-1 text-sm leading-6 text-lot-stone">{success.next}</p>
           <Button type="button" variant="primary" size="md" className="mt-4" onClick={onClose}>
             Done
           </Button>
         </div>
-      ) : noBuilders ? (
+      ) : noBuilders && !partner ? (
         <div className="mt-4 border border-lot-line bg-lot-surface p-4">
           <p className="text-sm font-semibold text-lot-ink">No builders are registered for this area yet.</p>
           <p className="mt-1 text-sm leading-6 text-lot-stone">
@@ -223,9 +321,38 @@ export default function BuilderLeadPanel({
         </div>
       ) : (
         <>
+          {partner && (
+            <div className="mt-4 space-y-2">
+              {networks.length > 1 && (
+                <>
+                  <p id="builder-lead-network-label" className="text-sm font-semibold text-lot-ink">
+                    Builder network
+                  </p>
+                  <Segmented
+                    aria-labelledby="builder-lead-network-label"
+                    value={activeNetwork}
+                    onChange={chooseNetwork}
+                    options={[
+                      { value: "lotfoundry", label: "LotFoundry builders" },
+                      { value: partner.id, label: partner.name },
+                    ]}
+                  />
+                </>
+              )}
+              <p className="text-sm leading-6 text-lot-stone">
+                {toPartner
+                  ? `${partner.name} is an independent contractor-matching service in ${partner.serviceAreaLabel}. When you submit, LotFoundry emails your project to ${partner.name} and copies you. A ${partner.name} project advisor then offers you a free consultation and introduces contractors or architects from its network.`
+                  : "Registered builders that serve this area see a preview without your contact details. A builder sees your details only after paying LotFoundry to unlock this snapshot."}
+              </p>
+            </div>
+          )}
+
           {snapshot.advisorIntake && (
             <div className="mt-4">
-              <AdvisorIntakeSummary intake={snapshot.advisorIntake} title="Project details shared with builders" />
+              <AdvisorIntakeSummary
+                intake={snapshot.advisorIntake}
+                title={toPartner ? `Project details shared with ${partner.name}` : "Project details shared with builders"}
+              />
             </div>
           )}
 
@@ -278,6 +405,13 @@ export default function BuilderLeadPanel({
                 onChange={(event) => onDraftChange({ ...draft, message: event.target.value })}
               />
             </div>
+            {consentMoved && (
+              <p role="status" className="text-sm font-semibold leading-6 text-lot-ink md:col-span-2">
+                {toPartner
+                  ? `No LotFoundry builders serve this area yet, so this goes to ${partner.name}. Please review the consent below.`
+                  : "This now goes to LotFoundry builders. Please review the consent below."}
+              </p>
+            )}
             <label
               htmlFor="builder-lead-consent"
               className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
@@ -285,15 +419,54 @@ export default function BuilderLeadPanel({
               <Checkbox
                 id="builder-lead-consent"
                 checked={consent}
-                onChange={(event) => setConsent(event.target.checked)}
+                onChange={(event) => setConsentFor(event.target.checked ? activeNetwork : null)}
                 className="mt-0.5"
                 {...fieldProps("consent")}
               />
               <span>
-                I&apos;m 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn&apos;t required to buy anything. LotFoundry doesn&apos;t verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing.
+                {toPartner
+                  ? partnerConsentText(partner)
+                  : "I'm 18 or older and I direct LotFoundry to share my name, email, optional phone and message, exact property address, and backyard home snapshot with matched builders. Builders pay LotFoundry to unlock these details and may contact me about this project by email, phone, or text, including automated texts. Message and data rates may apply; reply STOP to opt out of texts. Consent isn't required to buy anything. LotFoundry doesn't verify builder licenses, bonds, or insurance; check any contractor at cslb.ca.gov before signing."}
               </span>
             </label>
             {fieldError("consent")}
+            {smsOffered && (
+              <label
+                htmlFor="builder-lead-sms-consent"
+                className="flex cursor-pointer items-start gap-2 text-sm leading-6 text-lot-stone md:col-span-2"
+              >
+                <Checkbox
+                  id="builder-lead-sms-consent"
+                  checked={smsConsent}
+                  onChange={(event) => setSmsConsentFor(event.target.checked ? activeNetwork : null)}
+                  className="mt-0.5"
+                />
+                <span>{partnerSmsConsentText(partner)}</span>
+              </label>
+            )}
+            {toPartner && (
+              <p className="text-sm leading-6 text-lot-stone md:col-span-2">
+                Read the {partner.name}{" "}
+                <a
+                  href={partner.privacyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                >
+                  privacy policy
+                </a>{" "}
+                and{" "}
+                <a
+                  href={partner.termsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                >
+                  terms
+                </a>
+                .
+              </p>
+            )}
             {matchNote && <p className="text-sm text-lot-stone md:col-span-2">{matchNote}</p>}
             {/* Beside Submit, not atop the form: the form is taller than most
                 screens, so a message up there appeared out of view. */}

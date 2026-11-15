@@ -34,7 +34,7 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 10, 2026 · Version 2026-11-10"
     >
       <LegalSection title="Who We Are &amp; Scope">
         <p>
@@ -82,7 +82,9 @@ export default function PrivacyPage() {
             <strong>Marketplace &amp; Referral Requests:</strong> When you ask to connect with
             builders (or with a referral partner, if offered), the name, email, optional phone and
             message, exact property address, and project snapshot you choose to send, plus a record
-            of your request and its status.
+            of your request and its status. For a referral partner, we also receive from that partner
+            the contract type, signing date, contract price, and amounts paid on any contract you
+            sign through it (see Section 5).
           </li>
           <li>
             <strong>User Photos &amp; Visual Content:</strong> Optional photographs of your parcel or
@@ -241,6 +243,36 @@ export default function PrivacyPage() {
           policy. We keep a record of your consent and a referral number so the partner can report
           the referral&rsquo;s status back to us for fee reconciliation.
         </p>
+        <p>
+          <strong>GreatBuildz.</strong> Our current referral partner is GreatBuildz Inc., a
+          contractor-matching service in ten California counties. If you choose GreatBuildz and
+          check its consent box, we email your name, email, optional phone and message, property
+          address, lot and zoning facts, backyard home design summary, and $25,000 build-cost range to
+          GreatBuildz&rsquo;s team, with a copy to you. We never send your exact cost or rent figures,
+          photos, Certificate, saved scenarios, account identifiers, or payment details. GreatBuildz
+          handles what it receives under its{" "}
+          <a
+            href="https://www.greatbuildz.com/privacy-policy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            privacy policy
+          </a>
+          . A GreatBuildz project advisor may contact you by phone or email to set up the free
+          consultation GreatBuildz offers. GreatBuildz calls or texts you using automated technology
+          only if you also check the separate, optional text box, and it shares your project with
+          contractors or architects only after you agree to be matched with them.
+        </p>
+        <p>
+          GreatBuildz reports each referral&rsquo;s status to us by its referral number (introduced,
+          engaged, contracted, or closed) and, for a signed contract, its type, signing date, price,
+          and payments, which we use only to reconcile referral fees. GreatBuildz keeps these in a
+          tracking sheet shared with us, open only to named accounts at the two companies, that
+          identifies you only by your last name, county, and ZIP code. GreatBuildz may pay us a
+          referral fee on a signed contract. We keep our own record of the referral, with your
+          consent receipt, in a server-only ledger that no other user can read.
+        </p>
       </LegalSection>
 
       <LegalSection title="6. Data Retention &amp; Account Deletion">
@@ -266,9 +298,21 @@ export default function PrivacyPage() {
         <p>
           <strong>Information already shared at your direction.</strong> Deleting your LotFoundry
           account does not delete information a builder already unlocked or a referral partner
-          already received. Contact that builder or partner directly to ask them to delete it, or
-          email <SupportEmail /> and we will forward your request to any referral partner that
-          received your project.
+          already received. Contact that builder directly to ask them to delete it. For a referral
+          partner, send a deletion or stop-contact request to either us at <SupportEmail /> or the
+          partner: each passes it to the other by referral number, within two business days for a
+          request to stop calls, texts, or emails and within five business days for any other
+          request, and the partner removes your details from the shared tracking sheet. The partner
+          also clears your last name from that sheet within 90 days after the referral&rsquo;s
+          12-month window closes or its last fee is paid.
+        </p>
+        <p>
+          When you delete your account, we remove the contact details and project facts from our
+          referral record and keep the referral number, partner, county, project size, status, and
+          fee records needed to reconcile referral fees. We also keep your referral consent receipt
+          (the consent text and version, when you agreed, which boxes you checked, and the phone
+          number they covered) for four years after the referral, so either company can show what
+          you agreed to if a question about calls or texts arises.
         </p>
       </LegalSection>
 

@@ -28,6 +28,12 @@ export interface BuildersPanelProps {
   feasibilityStatus?: FeasibilityStatus;
   /** The connect button, so focus can return to it when the form closes. */
   connectRef?: Ref<HTMLButtonElement>;
+  /**
+   * A partner network that serves this lot (flag-gated, see
+   * `lib/partner-referrals.ts`). Connecting stays open without LotFoundry
+   * builders, because the form can send the project to the partner instead.
+   */
+  partnerName?: string;
 }
 
 /**
@@ -45,6 +51,7 @@ export default function BuildersPanel({
   onConnect,
   feasibilityStatus = "unknown",
   connectRef,
+  partnerName,
 }: BuildersPanelProps) {
   const { user } = useAuth();
   const [builders, setBuilders] = useState<BuilderDirectoryProfile[] | null>(null);
@@ -124,12 +131,14 @@ export default function BuildersPanel({
       ) : noneMatched ? (
         <div className="rounded-none border border-lot-line bg-lot-surface p-6 text-center">
           <p className="text-sm font-semibold text-lot-ink">
-            No builders are registered for {parcelCity} yet.
+            No {partnerName ? "LotFoundry " : ""}builders are registered for {parcelCity} yet.
           </p>
           <p className="lf-body-sm mt-1 text-lot-stone">
             {loadError
               ? "We couldn't load the builder network — check your connection and try again."
-              : "The network is growing. Save your concept and check back; we'll match you as builders join."}
+              : partnerName
+                ? `You can send your project to ${partnerName}, an independent contractor-matching service that serves this area.`
+                : "The network is growing. Save your concept and check back; we'll match you as builders join."}
           </p>
         </div>
       ) : (
@@ -171,13 +180,15 @@ export default function BuildersPanel({
           leftIcon={<Hammer size={17} />}
           onClick={onConnect}
           ref={connectRef}
-          disabled={Boolean(user) && (loading || noneMatched)}
+          disabled={Boolean(user) && !partnerName && (loading || noneMatched)}
         >
           Connect with builders
         </Button>
         <p className="lf-caption text-center text-lot-stone">
-          Free for homeowners — builders pay LotFoundry for the introduction, never you. Builder registration and license information are not guarantees of licensing, insurance, qualifications, availability, or work quality.
-          Your contact details are only shared with builders you choose to hear from.
+          Free for homeowners — builders pay LotFoundry for the introduction, never you. Builder registration and license information are not guarantees of licensing, insurance, qualifications, availability, or work quality.{" "}
+          {partnerName
+            ? `Your contact details are only shared with the builders or partner you choose; ${partnerName} may pay LotFoundry a referral fee that doesn't change what you pay.`
+            : "Your contact details are only shared with builders you choose to hear from."}
         </p>
       </div>
 

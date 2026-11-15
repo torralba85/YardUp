@@ -703,6 +703,28 @@ export function trackBuilderConnectionSubmitted(params: {
   trackEvent("builder_connection_submitted", p);
 }
 
+/**
+ * 13b. partner_referral_submitted — a homeowner sent their project to a
+ * partner network (GreatBuildz) instead of the LotFoundry marketplace. Fires
+ * only after the referral is recorded. Partner id is a bounded slug; no PII.
+ */
+export function trackPartnerReferralSubmitted(params: {
+  partner_id: "greatbuildz";
+  feasibility_status: FeasibilityStatus;
+  adu_sqft_bucket?: AduSqftBucket;
+  state_code?: string;
+}): void {
+  const p: Record<string, unknown> = {
+    partner_id: params.partner_id,
+    feasibility_status: params.feasibility_status,
+  };
+  if (params.adu_sqft_bucket) p.adu_sqft_bucket = params.adu_sqft_bucket;
+  if (params.state_code && /^[A-Z]{2}$/i.test(params.state_code)) {
+    p.state_code = params.state_code.toUpperCase();
+  }
+  trackEvent("partner_referral_submitted", p);
+}
+
 /** 14. builder_lead_preview_viewed */
 export function trackBuilderLeadPreviewViewed(params: {
   triage_status: TriageStatus;

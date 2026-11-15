@@ -73,6 +73,29 @@ export async function POST(request: NextRequest) {
       await batch.commit();
     }
 
+    // Partner referrals keep a non-PII business record (referral id, partner,
+    // county, status) for referral-fee reconciliation, plus the consent record
+    // (text, version, time, boxes and the phone number it covered) until its
+    // `retainUntil`, to answer calling and texting claims. The contact handoff
+    // and the owner link are removed; what the partner already received is the
+    // partner's to delete under its own policy.
+    const ownedReferrals = await db
+      .collection("partnerReferrals")
+      .where("ownerUid", "==", uid)
+      .get();
+    for (let i = 0; i < ownedReferrals.docs.length; i += DELETE_BATCH) {
+      const batch = db.batch();
+      for (const referralSnap of ownedReferrals.docs.slice(i, i + DELETE_BATCH)) {
+        batch.update(referralSnap.ref, {
+          ownerUid: FieldValue.delete(),
+          handoff: FieldValue.delete(),
+          ownerDeleted: true,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+    }
+
     // Signed-in feedback can contain reply email and free-form personal data.
     await deleteQueryInBatches(
       db,

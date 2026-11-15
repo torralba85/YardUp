@@ -85,7 +85,7 @@ them in Play Console's required dimensions.
 | Precise location | Yes, from a user-entered property address geocoded server-side | No | App functionality | No |
 | Photos | Yes, only when the user submits an optional style-match photo | No | App functionality | No |
 | Purchase history | Yes | No | App functionality | No |
-| Other user-generated content (saved studies and feedback) | Yes | No | App functionality | No |
+| Other user-generated content (saved studies and feedback) | Yes | Yes, the backyard home design summary and $25k build-cost range, after a homeowner submits a builder connection or GreatBuildz referral request | App functionality | No |
 | Device or other IDs | Yes | No | Security and fraud prevention | Yes |
 
 Notes for the form:
@@ -96,6 +96,18 @@ Notes for the form:
   request (`app/privacy/page.tsx` §5, `lib/marketplace.ts`).
   Declare these under the Shared column, purpose "App functionality," basis
   "User provided."
+- GreatBuildz referrals (launch-gated by `NEXT_PUBLIC_GREATBUILDZ_REFERRAL`):
+  when a homeowner checks the required GreatBuildz box and submits, the name,
+  email, phone (if given), message, property address, design summary and
+  $25k cost range are emailed to GreatBuildz Inc., an independent business,
+  not a service provider (`lib/server/partner-referrals.ts`). Play's
+  user-initiated/consent exception arguably covers this, but declare it as
+  shared like the builder marketplace: same rows, purpose "App functionality".
+  Data GreatBuildz reports back (status, contract price, payments) arrives by a
+  shared sheet, not through the app, so it adds no Data safety row. Submit this
+  update before launch and Publish it on launch day (managed publishing); the
+  app itself needs no new AAB because the TWA loads the referral flow from
+  lotfoundry.net.
 - The homeowner's name is shared on the same trigger as the email, phone, and
   address: `OwnerContact` in `lib/marketplace-types.ts` carries `name`
   alongside them, and the whole record is revealed to a builder when a lead is
@@ -155,7 +167,8 @@ OpenStreetMap (Nominatim/OSM tiles), Esri World Imagery, Regrid, ATTOM, the US
 Census geocoder, USGS 3DEP, public county/state parcel GIS services (including
 CAL FIRE), USA Structures, OpenAI, TypeSafe, Resend, Cloudflare Web Analytics,
 Stripe, and store billing process data for LotFoundry; the builder marketplace
-disclosure above is the only third-party sharing claim.
+and GreatBuildz referral disclosures above are the only third-party sharing
+claims.
 
 ## Content rating
 

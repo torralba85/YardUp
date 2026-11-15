@@ -100,6 +100,7 @@ rules_version = '2';
 //
 // Admin-Only Collections (Read and write strictly disabled for all clients):
 //   - studioScenarioLeads/{leadId}
+//   - partnerReferrals/{referralDocId}
 //   - agentPasses/{code} and agentPasses/{code}/redemptions/{uid}
 //   - feedback/{ticketId}
 //   - activeCheckoutSessions/{reservationId}
@@ -167,12 +168,12 @@ service cloud.firestore {
 
     function isCurrentLegalConsent(consent) {
       return isWellFormedLegalConsent(consent) &&
-        consent.termsVersion == "2026-11-06" &&
-        consent.privacyVersion == "2026-11-06" &&
+        consent.termsVersion == "2026-11-10" &&
+        consent.privacyVersion == "2026-11-10" &&
         consent.acceptedAt == request.time;
     }
 
-    // Pages loaded before the 2026-11-06 and 2026-10-30 releases (open tabs,
+    // Pages loaded before the 2026-11-10, 2026-11-06 and 2026-10-30 releases (open tabs,
     // the Android app) still send the previous versions when they register a
     // new account. Accept that receipt only where none exists yet, so a stale
     // page can still sign up during the rollout; LegalReacceptGate then asks
@@ -180,8 +181,10 @@ service cloud.firestore {
     // aged out.
     function isPreviousLegalConsent(consent) {
       return isWellFormedLegalConsent(consent) &&
-        ((consent.termsVersion == "2026-10-30" &&
-          consent.privacyVersion == "2026-10-30") ||
+        ((consent.termsVersion == "2026-11-06" &&
+          consent.privacyVersion == "2026-11-06") ||
+          (consent.termsVersion == "2026-10-30" &&
+            consent.privacyVersion == "2026-10-30") ||
           (consent.termsVersion == "2026-08-26" &&
             consent.privacyVersion == "2026-08-26")) &&
         consent.acceptedAt == request.time;
@@ -203,8 +206,8 @@ service cloud.firestore {
           isPreviousLegalConsent(request.resource.data.legalConsent)) ||
         (hasConsent && isCurrentLegalConsent(request.resource.data.legalConsent) &&
           (!hadConsent ||
-            resource.data.legalConsent.termsVersion != "2026-11-06" ||
-            resource.data.legalConsent.privacyVersion != "2026-11-06"));
+            resource.data.legalConsent.termsVersion != "2026-11-10" ||
+            resource.data.legalConsent.privacyVersion != "2026-11-10"));
     }
 
     function isValidUserProfile(userId) {
@@ -629,6 +632,13 @@ service cloud.firestore {
 
     // Private lead + durable email queue (Admin SDK only).
     match /studioScenarioLeads/{leadId} {
+      allow read, write: if false;
+    }
+
+    // Partner referral ledger (GreatBuildz). Holds the homeowner contact sent to
+    // the partner plus consent and delivery receipts. Admin SDK only, via
+    // /api/partners/referral; no client may read or write it.
+    match /partnerReferrals/{referralDocId} {
       allow read, write: if false;
     }
 
