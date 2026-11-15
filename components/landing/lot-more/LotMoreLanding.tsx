@@ -1503,6 +1503,7 @@ export function LotMoreLanding({
               <div className={styles.footerGroup}>
                 <h3>Explore</h3>
                 <ul>
+                  <li><Link href="/can-i-build-a-backyard-home">Can I build a backyard home?</Link></li>
                   <li><Link href="/studio" prefetch={false} onClick={() => stashEntrySource("landing_cta")}>The studio</Link></li>
                   <li><Link href="/adu-cost-calculator">ADU cost calculator</Link></li>
                   <li><a href={GOOGLE_PLAY_URL} rel="noopener" aria-label="Android app on Google Play">Google Play</a></li>
