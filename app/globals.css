@@ -436,4 +436,20 @@ html[data-lf-consent="unset"] [data-consent-banner][data-pending] {
       animation-name: lf-dialog-panel-in;
     }
   }
+
+  /* Exit (ui/Dialog sets `data-closing` while it settles out): softer and
+     shorter than the enter, 12px down with a fade, so the sheet leaves without
+     competing for attention with what comes next. */
+  @keyframes lf-dialog-scrim-out {
+    to { opacity: 0; }
+  }
+  @keyframes lf-dialog-panel-out {
+    to { opacity: 0; transform: translateY(12px); }
+  }
+  .lf-dialog-scrim[data-closing] {
+    animation: lf-dialog-scrim-out 150ms ease-in both;
+  }
+  .lf-dialog-panel[data-closing] {
+    animation: lf-dialog-panel-out 150ms ease-in both;
+  }
 }

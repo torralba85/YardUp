@@ -60,6 +60,9 @@ export interface DialogProps {
 
 const subscribe = () => () => undefined;
 
+/** Exit settle: shorter than the 300ms enter, so leaving never fights the next thing. */
+const EXIT_MS = 150;
+
 // Shared across every open dialog: one scroll lock, and a stack so only the
 // topmost dialog answers Escape.
 let scrollLocks = 0;
@@ -140,10 +143,35 @@ export function Dialog({
   const generatedId = React.useId();
   const headingId = titleId ?? `${generatedId}-title`;
   const descriptionId = description ? `${generatedId}-description` : undefined;
+  const [closing, setClosing] = React.useState(false);
+  const exitTimer = React.useRef<number | null>(null);
   const dismissible = Boolean(onClose);
-  const canDismiss = dismissible && !busy;
+  const canDismiss = dismissible && !busy && !closing;
 
   useFocusTrap(panelRef, isClient);
+
+  React.useEffect(
+    () => () => {
+      if (exitTimer.current !== null) window.clearTimeout(exitTimer.current);
+    },
+    [],
+  );
+
+  // Every dismissal (Escape, scrim, close button) settles the sheet out first:
+  // opacity and 12px, shorter than the enter. The parent still unmounts through
+  // `onClose`; reduced motion skips the settle and closes at once.
+  const requestClose = React.useCallback(() => {
+    if (!onClose || exitTimer.current !== null) return;
+    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      onClose();
+      return;
+    }
+    setClosing(true);
+    exitTimer.current = window.setTimeout(() => {
+      exitTimer.current = null;
+      onClose();
+    }, EXIT_MS);
+  }, [onClose]);
 
   // Open-edge work runs once per mount: isolate the page, lock scroll, move
   // focus in, and undo all of it (returning focus) on unmount.
@@ -174,19 +202,20 @@ export function Dialog({
       if (event.key !== "Escape" || event.defaultPrevented) return;
       if (openStack[openStack.length - 1] !== hostRef.current) return;
       event.preventDefault();
-      onClose?.();
+      requestClose();
     }
     // window, not document: keydowns from inside the page bubble up to it, and so do
     // events dispatched on window itself.
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isClient, canDismiss, onClose]);
+  }, [isClient, canDismiss, requestClose]);
 
   if (!isClient) return null;
 
   return createPortal(
     <div
       ref={hostRef}
+      data-closing={closing || undefined}
       className={cn(
         "lf-dialog-scrim fixed inset-0 z-(--z-index-modal) flex items-end justify-center bg-lot-scrim sm:items-center sm:p-6",
         printable && "print:static print:block print:bg-transparent print:p-0",
@@ -197,7 +226,7 @@ export function Dialog({
         pressedOnScrim.current = event.target === event.currentTarget;
       }}
       onClick={(event) => {
-        if (pressedOnScrim.current && event.target === event.currentTarget && canDismiss) onClose?.();
+        if (pressedOnScrim.current && event.target === event.currentTarget && canDismiss) requestClose();
         pressedOnScrim.current = false;
       }}
     >
@@ -209,6 +238,7 @@ export function Dialog({
         aria-labelledby={headingId}
         aria-describedby={descriptionId}
         tabIndex={-1}
+        data-closing={closing || undefined}
         className={cn(
           "lf-dialog-panel relative flex max-h-[92dvh] w-full flex-col border-[1.5px] border-lot-ink bg-lot-chalk text-lot-ink outline-none sm:max-h-[min(92dvh,56rem)]",
           SIZE[size],
@@ -244,7 +274,7 @@ export function Dialog({
               <button
                 ref={closeRef}
                 type="button"
-                onClick={() => onClose?.()}
+                onClick={requestClose}
                 disabled={busy}
                 aria-label={closeLabel}
                 aria-keyshortcuts="Escape"

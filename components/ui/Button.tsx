@@ -115,10 +115,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <span
-            aria-hidden
-            className="h-4 w-4 shrink-0 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent"
-          />
+          // The spinner settles in rather than popping into the icon's slot.
+          <span aria-hidden className="shrink-0 motion-safe:animate-[lf-fade-in_150ms_ease-out]">
+            <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent" />
+          </span>
         ) : leftIcon ? (
           <span aria-hidden className="shrink-0">
             {leftIcon}

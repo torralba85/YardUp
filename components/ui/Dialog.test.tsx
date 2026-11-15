@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Dialog } from "./Dialog";
 
 function Harness({ blocking = false, busy = false }: { blocking?: boolean; busy?: boolean }) {
@@ -29,6 +29,11 @@ function Harness({ blocking = false, busy = false }: { blocking?: boolean; busy?
 }
 
 describe("Dialog", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
   it("is a named, described modal dialog portalled to body with the mounted-sheet look", async () => {
     const { container } = render(<Harness />);
     await userEvent.click(screen.getByRole("button", { name: "Open" }));
@@ -96,6 +101,45 @@ describe("Dialog", () => {
     await userEvent.keyboard("{Escape}");
     await userEvent.click(screen.getByRole("dialog").parentElement as HTMLElement);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("settles out for 150ms before closing when motion is allowed, and ignores a second dismissal meanwhile", () => {
+    // The jsdom default (`matches: false`) is the reduced-motion path the other
+    // tests exercise; this is what a browser without that preference does.
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      matches: query === "(prefers-reduced-motion: no-preference)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(() => true),
+    }));
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    render(
+      <Dialog title="Unlock this lead" onClose={onClose}>
+        body
+      </Dialog>,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).not.toHaveAttribute("data-closing");
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(dialog).toHaveAttribute("data-closing");
+    expect(dialog.parentElement).toHaveAttribute("data-closing");
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(dialog.parentElement as HTMLElement);
+    act(() => {
+      vi.advanceTimersByTime(149);
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("only the topmost of two stacked dialogs answers Escape", async () => {
