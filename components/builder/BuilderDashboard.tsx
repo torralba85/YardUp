@@ -1,8 +1,6 @@
 "use client";
 
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchBuilderInbox,
@@ -23,6 +21,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Segmented } from "@/components/ui/Field";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
 import {
   type BuilderCheckoutReturn,
@@ -333,26 +332,20 @@ function BuilderHeader({
   onSignOut: () => void;
 }) {
   return (
-    <header className="border-b border-lot-line bg-lot-chalk">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
-        <Link
-          href="/"
-          aria-label="LotFoundry home"
-          className="shrink-0 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-        >
-          <BrandLockup className="h-7 w-auto" />
-        </Link>
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="hidden min-w-0 truncate text-sm text-lot-stone sm:block">{identity}</span>
+    <SiteHeader
+      width="max-w-6xl"
+      actions={
+        <>
+          <span className="hidden min-w-0 max-w-48 truncate text-sm text-lot-stone xl:block">{identity}</span>
           <AccountMenu
             displayName={displayName}
             roleLabel="Builder"
             onSignOut={onSignOut}
             tone="light"
           />
-        </div>
-      </div>
-    </header>
+        </>
+      }
+    />
   );
 }
 

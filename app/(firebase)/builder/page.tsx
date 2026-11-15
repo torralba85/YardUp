@@ -1,10 +1,9 @@
 "use client";
 
-import { BrandLockup } from "@/components/ui/BrandLockup";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import BuilderDashboard from "@/components/builder/BuilderDashboard";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -41,18 +40,7 @@ export default function BuilderPage() {
   if (loading || !user || !profile || profile.role !== "builder") {
     return (
       <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-        <header className="border-b border-lot-line bg-lot-chalk">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 lg:px-8">
-            <Link
-              href="/"
-              aria-label="LotFoundry home"
-              className="rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              <BrandLockup className="h-7 w-auto" />
-            </Link>
-            <Skeleton className="h-9 w-9 rounded-full" />
-          </div>
-        </header>
+        <SiteHeader width="max-w-6xl" actions={<Skeleton className="h-9 w-9 rounded-full" />} />
         <main id="main-content" tabIndex={-1} className="p-4 lg:p-8" aria-busy="true">
           <div
             role="status"

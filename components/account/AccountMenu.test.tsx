@@ -22,6 +22,7 @@ describe("AccountMenu", () => {
 
     await user.click(screen.getByRole("button", { name: /account menu/i }));
 
+    expect(screen.getByRole("menuitem", { name: /^home$/i })).toHaveAttribute("href", "/");
     expect(screen.getByRole("menuitem", { name: /settings/i })).toHaveAttribute(
       "href",
       "/settings",

@@ -93,8 +93,10 @@ test("robots and sitemap are reachable", async ({ request }) => {
 test("unknown route shows branded 404 recovery", async ({ page }) => {
   await page.goto("/this-route-does-not-exist-lf");
   await expect(page.getByRole("heading", { name: /page not found/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /^home$/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /get help/i })).toBeVisible();
+  const main = page.getByRole("main");
+  await expect(main.getByRole("link", { name: /^home$/i })).toBeVisible();
+  await expect(main.getByRole("link", { name: /get help/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "LotFoundry home", exact: true })).toHaveAttribute("href", "/");
 });
 
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -13,6 +12,7 @@ import { SecurityPanel } from "./SecurityPanel";
 import { DataExportButton } from "./DataExportButton";
 import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
 import { SiteFooter } from "@/components/legal/SiteFooter";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 
 /**
  * Authenticated settings destination: profile, security, data export, help,
@@ -41,29 +41,35 @@ export function SettingsClient() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
-        <p className="lf-body-sm text-lot-stone">Loading account…</p>
+      <div className="min-h-dvh">
+        <SiteHeader />
+        <div className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
+          <p className="lf-body-sm text-lot-stone">Loading account…</p>
+        </div>
       </div>
     );
   }
 
   if (!user || !profile) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <h1 className="lf-section-heading">Account settings</h1>
-        <p className="lf-body-sm mt-3 text-lot-stone">
-          Sign in to manage your profile, security, and data.
-        </p>
-        <Link
-          href="/login?next=/settings"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
-        >
-          Sign in
-        </Link>
-        <div className="mt-4">
-          <Link href="/signup?next=/settings" className="text-sm font-medium text-lot-orange-ink">
-            Create account
+      <div className="min-h-dvh">
+        <SiteHeader />
+        <div className="mx-auto max-w-md px-4 py-16 text-center">
+          <h1 className="lf-section-heading">Account settings</h1>
+          <p className="lf-body-sm mt-3 text-lot-stone">
+            Sign in to manage your profile, security, and data.
+          </p>
+          <Link
+            href="/login?next=/settings"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
+          >
+            Sign in
           </Link>
+          <div className="mt-4">
+            <Link href="/signup?next=/settings" className="text-sm font-medium text-lot-orange-ink">
+              Create account
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -73,19 +79,16 @@ export function SettingsClient() {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-lot-line bg-lot-chalk">
-        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-4 px-4">
-          <Link href="/" className="shrink-0">
-            <BrandLockup className="h-7 w-auto" />
-          </Link>
+      <SiteHeader
+        actions={
           <Link
             href={buildersAllowed && profile.role === "builder" ? "/builder" : "/studio"}
             className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
           >
             Back to {buildersAllowed && profile.role === "builder" ? "dashboard" : "studio"}
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <div className="mx-auto max-w-2xl space-y-8 px-4 py-10">
         <div>

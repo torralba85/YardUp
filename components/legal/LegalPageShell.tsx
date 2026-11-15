@@ -1,11 +1,11 @@
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter } from "./SiteFooter";
+import { SiteHeader } from "./SiteHeader";
 
 /**
- * Shared A LOT MORE chrome for legal and support pages: brand header, prose
- * main, and {@link SiteFooter}.
+ * Shared A LOT MORE chrome for legal and support pages: {@link SiteHeader}
+ * (home link and main menu), prose main, and {@link SiteFooter}.
  */
 export function LegalPageShell({
   title,
@@ -18,24 +18,18 @@ export function LegalPageShell({
 }) {
   return (
     <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-      <header className="border-b border-lot-line/50">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link
-            href="/"
-            className="flex min-h-11 items-center gap-2 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-          >
-            <BrandLockup className="h-8 w-auto" />
-          </Link>
+      <SiteHeader
+        actions={
           <Link
             href="/studio"
             // Legal/support pages are Firebase-free; don't prefetch the group.
             prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-control px-4 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            className="inline-flex min-h-11 items-center rounded-control px-3 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             Open studio
           </Link>
-        </div>
-      </header>
+        }
+      />
 
       <main id="main-content" className="mx-auto max-w-prose px-6 py-16">
         <h1 className="lf-section-heading text-lot-ink">{title}</h1>
