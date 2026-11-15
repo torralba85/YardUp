@@ -18,6 +18,9 @@ pre-consent journey. Normal GA4 session attribution handles later navigation.
    arbitrary free text or click IDs as campaign labels.
 2. Include source, medium and campaign together. Unknown/incomplete combinations
    and duplicated campaign parameters are ignored; unknown content is dropped.
+   Outreach links whose source names a partner (an agent code, a builder slug)
+   go in `PARTNER_CAMPAIGNS` instead: GA4 receives one generic source for the
+   campaign, such as `agent_referral`, and never the partner's name.
 3. Verify a consented visit in the browser, a declined visit, and an internal QA
    visit. Keep local browser tests intercepted so they do not reach production GA4.
 4. After a separately authorized release, verify the processed campaign in GA4
