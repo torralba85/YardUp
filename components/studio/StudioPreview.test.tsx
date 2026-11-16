@@ -5,7 +5,8 @@ import StudioPreview from "./StudioPreview";
 import { calculateScenarioFeasibility, defaultPose } from "@/lib/scenario";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 import { SceneStatus } from "./SceneStatus";
-import { getScenePlacement } from "@/lib/scene-placement";
+import { getScenePlacement, getSnapToFitPose } from "@/lib/scene-placement";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 
 const result = calculateFeasibility(getParcelById("coyote-brush"), defaultAduConfig, defaultFinancialAssumptions);
 
@@ -60,6 +61,19 @@ describe("free certificate preview", () => {
     expect(screen.getByText("Setback conflict.")).toBeInTheDocument();
     expect(screen.queryByText("Modeled site fit details")).not.toBeInTheDocument();
     expect(screen.queryByText(/20 sf of modeled coverage/)).not.toBeInTheDocument();
+  });
+
+  it("keeps a geometric fit on a live lot as a check mark and carries the evidence caveat as text", () => {
+    const parcel = SAMPLE_LIVE_PARCEL;
+    const start = defaultPose(parcel, defaultAduConfig);
+    const pose = getSnapToFitPose(parcel, defaultAduConfig, start) ?? start;
+    const placement = getScenePlacement(parcel, defaultAduConfig, pose);
+    expect(placement.status).toBe("fits");
+    render(<SceneStatus analysisUnlocked={false} placement={placement} remainingCapacity={20} isProxy parcel={parcel} />);
+    const title = screen.getByText("Fits the estimated model");
+    expect(title).toHaveClass("text-lot-ink");
+    expect(screen.getByRole("status")).toHaveClass("border-lot-line");
+    expect(screen.getByText(/Fit is not zoning approval/)).toBeInTheDocument();
   });
 });
 

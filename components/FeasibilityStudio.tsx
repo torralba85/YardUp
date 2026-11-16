@@ -354,10 +354,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   );
   const { parcelId, config, pose, assumptions, preapprovedPlan } = activeScenario;
 
-  const selectPreset = useCallback(
-    (id: string) => dispatchScenario({ type: "select-preset", parcel: getParcelById(id) }),
-    [],
-  );
+  // Every preset pick goes through ParcelContext too: `select-preset` rewrites
+  // the scenario's sceneKey, so dispatching it while the context still holds an
+  // estimated or live lot would reset the pose and plan without switching lots.
   const switchToPreset = useCallback(
     (id: string) => {
       const preset = getParcelById(id);
@@ -478,9 +477,9 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
 
-  const { planInUse, planOutlineFit, planSizeUndo, planPlacementNote } = describePlanControls(
-    activeScenario,
-    activeParcel,
+  const { planInUse, planOutlineFit, planSizeUndo, planPlacementNote } = useMemo(
+    () => describePlanControls(activeScenario, activeParcel),
+    [activeScenario, activeParcel],
   );
   const planBrowser = (
     <PreapprovedPlansSection
@@ -489,8 +488,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       layout={isDesktop ? "panel" : "inline"}
       selected={preapprovedPlan}
       onSelect={(reference) => {
-        const { placementOutcome } = evaluatePlanSizing(activeParcel, activeScenario, reference);
-        dispatchScenario({ type: "select-plan", reference, parcel: activeParcel });
+        // One placement search: evaluate on the resolved lot view, then apply
+        // that exact result, so analytics and state cannot disagree.
+        const { nextState, placementOutcome } = evaluatePlanSizing(activeParcel, activeScenario, reference);
+        dispatchScenario({ type: "apply-plan", nextState });
         trackPreapprovedPlanSelected({
           jurisdiction_id: reference.jurisdictionId,
           plan_id: reference.planId,
@@ -1482,7 +1483,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             config={config}
             assumptions={assumptions}
             result={result}
-            onParcelChange={selectPreset}
+            onParcelChange={switchToPreset}
             onConfigChange={setConfig}
             onAssumptionsChange={setAssumptions}
             onReset={resetScenario}
@@ -1692,7 +1693,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               config={config}
               assumptions={assumptions}
               result={result}
-              onParcelChange={selectPreset}
+              onParcelChange={switchToPreset}
               onConfigChange={setConfig}
               onAssumptionsChange={setAssumptions}
               onReset={resetScenario}

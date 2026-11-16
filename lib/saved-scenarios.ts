@@ -10,8 +10,8 @@
  * @module saved-scenarios
  */
 import type { ADUConfig, FinancialAssumptions } from "./feasibility";
-import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario";
-export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario";
+import { isValidAduConfig, isValidFinancialAssumptions, isValidPose, migrateDesign } from "./scenario-validation";
+export { isValidAduConfig, isValidFinancialAssumptions } from "./scenario-validation";
 import type { Pose2D } from "./scene-model";
 import { normalizePlanReference, type PreapprovedPlanReference } from "./preapproved-plans";
 import type { ExistingBuildingGeometry, GeoJsonPolygon, LiveParcelData, ParcelFireHazard } from "./parcel-types";

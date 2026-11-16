@@ -458,9 +458,6 @@ Component package providing domain logic and interface implementations for lib.
 - `parcel-types.ts:FireHazardZone` - Type Definition
 - `parcel-types.ts:ParcelFireHazard` - TypeScript Interface
 - `parcel-types.ts:GeoJsonPolygon` - TypeScript Interface
-- `placement-evidence.ts:PlacementEvidenceStatus` - TypeScript Interface
-- `placement-evidence.ts:describePlacementWithEvidence` - Exported Function
-- `placement-search.ts:findBestFitPose` - Exported Function
 - `placement-validation.ts:PLACEMENT_TOLERANCE_FT` - Exported constant / variable
 - `placement-validation.ts:REVIEW_SEPARATION_FT` - Exported constant / variable
 - `placement-validation.ts:buildSetbackEnvelope` - Exported Function
@@ -510,23 +507,30 @@ Component package providing domain logic and interface implementations for lib.
 - `saved-scenarios.ts:isValidSavedScenario` - Exported Function
 - `saved-scenarios.ts:migrateSavedScenario` - Exported Function
 - `saved-scenarios.ts:createSavedScenarioStore` - Exported Function
-- `scenario-design.ts:SCENARIO_VERSION` - Exported constant / variable
-- `scenario-design.ts:HEIGHT_CONVENTION` - Exported constant / variable
-- `scenario-design.ts:CommittedDesign` - TypeScript Interface
-- `scenario-design.ts:isRecord` - Exported constant / variable
-- `scenario-design.ts:isValidAduConfig` - Exported Function
-- `scenario-design.ts:isValidFinancialAssumptions` - Exported Function
-- `scenario-design.ts:isValidPose` - Exported Function
-- `scenario-design.ts:defaultPose` - Exported constant / variable
-- `scenario-design.ts:migrateDesign` - Exported Function
-- `scenario-email.ts:isPlainPlaceText` - Exported Function
-- `scenario-email.ts:parseEmailScenario` - Exported Function
-- `scenario-restoration.ts:ProjectBriefState` - TypeScript Interface
-- `scenario-restoration.ts:calculateScenarioFeasibility` - Exported Function
-- `scenario-restoration.ts:restoreScenario` - Exported Function
-- `scenario-share-url.ts:validLayoutToken` - Exported Function
-- `scenario-share-url.ts:buildScenarioShareUrl` - Exported Function
-- `scenario-share-url.ts:isAllowedScenarioUrl` - Exported Function
+- `scenario-validation.ts:SCENARIO_VERSION` - Exported constant / variable
+- `scenario-validation.ts:HEIGHT_CONVENTION` - Exported constant / variable
+- `scenario-validation.ts:CommittedDesign` - TypeScript Interface
+- `scenario-validation.ts:isRecord` - Exported constant / variable
+- `scenario-validation.ts:isValidAduConfig` - Exported Function
+- `scenario-validation.ts:isValidFinancialAssumptions` - Exported Function
+- `scenario-validation.ts:isValidPose` - Exported Function
+- `scenario-validation.ts:defaultPose` - Exported constant / variable
+- `scenario-validation.ts:migrateDesign` - Exported Function
+- `scenario.ts:ProjectBriefState` - TypeScript Interface
+- `scenario.ts:StudioScenarioState` - TypeScript Interface
+- `scenario.ts:ScenarioAction` - Type Definition
+- `scenario.ts:isPlainPlaceText` - Exported Function
+- `scenario.ts:parseEmailScenario` - Exported Function
+- `scenario.ts:calculateScenarioFeasibility` - Exported Function
+- `scenario.ts:restoreScenario` - Exported Function
+- `scenario.ts:evaluatePlanSizing` - Exported Function
+- `scenario.ts:createScenarioState` - Exported Function
+- `scenario.ts:scenarioReducer` - Exported Function
+- `scenario.ts:resolveScenarioForLot` - Exported Function
+- `scenario.ts:describePlanControls` - Exported Function
+- `scenario-url.ts:validLayoutToken` - Exported Function
+- `scenario-url.ts:buildScenarioShareUrl` - Exported Function
+- `scenario-url.ts:isAllowedScenarioUrl` - Exported Function
 - `scenario-url.ts:ScenarioState` - TypeScript Interface
 - `scenario-url.ts:defaultScenarioState` - Exported constant / variable
 - `scenario-url.ts:parseScenarioParams` - Exported Function
@@ -588,15 +592,17 @@ Component package providing domain logic and interface implementations for lib.
 - `scene-model.ts:projectPolygonToLocal` - Exported Function
 - `scene-model.ts:SceneModel` - TypeScript Interface
 - `scene-model.ts:buildSceneModel` - Exported Function
+- `scene-placement.ts:AduPlacementBounds` - TypeScript Interface
+- `scene-placement.ts:PlacementEvidenceStatus` - TypeScript Interface
+- `scene-placement.ts:findBestFitPose` - Exported Function
+- `scene-placement.ts:getSnapToFitPose` - Exported Function
+- `scene-placement.ts:getScenePlacement` - Exported Function
+- `scene-placement.ts:getDefaultAduPose` - Exported Function
+- `scene-placement.ts:getAduPlacementBounds` - Exported Function
+- `scene-placement.ts:snapPoseToSetbackEnvelope` - Exported Function
+- `scene-placement.ts:describePlacement` - Exported Function
 - `scene-quality.ts:SceneQuality` - Type Definition
 - `scene-quality.ts:SCENE_QUALITY` - Exported constant / variable
-- `site-fit.ts:getSnapToFitPose` - Exported Function
-- `site-fit.ts:getScenePlacement` - Exported Function
-- `site-fit.ts:getDefaultAduPose` - Exported Function
-- `site-fit.ts:SiteFitCapacityStatus` - TypeScript Interface
-- `site-fit.ts:AduPlacementBounds` - TypeScript Interface
-- `site-fit.ts:getAduPlacementBounds` - Exported Function
-- `site-fit.ts:getSiteFitCapacityStatus` - Exported Function
 - `social-links.ts:SOCIAL_LINKS` - Exported constant / variable
 - `social-links.ts:SOCIAL_URLS` - Exported constant / variable
 - `social-links.ts:DIRECTORY_LINKS` - Exported constant / variable
@@ -621,9 +627,8 @@ Component package providing domain logic and interface implementations for lib.
 - `studio-enhancements-store.ts:UtilityEstimate` - TypeScript Interface
 - `studio-enhancements-store.ts:StudioEnhancementsState` - TypeScript Interface
 - `studio-enhancements-store.ts:getStudioEnhancementsSnapshot` - Exported Function
-- `studio-enhancements-store.ts:updateStudioParcel` - Exported Function
-- `studio-enhancements-store.ts:updateStudioDesign` - Exported Function
 - `studio-enhancements-store.ts:setUtilityAnchor` - Exported Function
+- `studio-enhancements-store.ts:setUtilityParcelKey` - Exported Function
 - `studio-enhancements-store.ts:setUtilityEstimate` - Exported Function
 - `studio-enhancements-store.ts:registerSitePlanCapture` - Exported Function
 - `studio-enhancements-store.ts:useStudioEnhancements` - Exported Function
@@ -675,6 +680,8 @@ Component package providing domain logic and interface implementations for lib.
 - `zoning.ts:CapacityBasis` - Type Definition
 - `zoning.ts:ZoningResult` - TypeScript Interface
 - `zoning.ts:calculateZoning` - Exported Function
+- `zoning.ts:ZoningCapacityStatus` - TypeScript Interface
+- `zoning.ts:getZoningCapacityStatus` - Exported Function
 
 ### Subdirectories
 - [adu](<./adu/README.md>) - Domain modeling, utility functions, and calculation engines for adu.

@@ -1094,7 +1094,9 @@ export default function ParcelScene({
     [parcel, config, activePose],
   );
   const envelopeSetbacks = useMemo(() => aduSetbacks(parcel, config), [parcel, config]);
-  const placementTone = describePlacement(placement, parcel).tone;
+  // Geometry-only tone: the ring and footprint tint follow the modeled fit,
+  // while the live-lot evidence caveat is read out by SceneStatus.
+  const placementTone = describePlacement(placement).tone;
 
   // --- Camera framing ------------------------------------------------------
   // The controller reads `bounds` from a ref and only refits when a framing

@@ -35,8 +35,9 @@ export function ParcelPlan({
   const points = (corners: { x: number; z: number }[] | null) =>
     corners?.map((p) => `${p.x},${p.z}`).join(" ");
   const placementFeedback = describePlacement(placement, parcel);
+  // Colour follows the geometric status; the evidence caveat is text, not tint.
   const color =
-    placementFeedback.tone === "clear" ? COLOR["status-eligible"] : placementFeedback.tone === "blocked" ? COLOR["status-blocked"] : COLOR["status-review"];
+    placement.status === "fits" ? COLOR["status-eligible"] : placement.status === "blocked" ? COLOR["status-blocked"] : COLOR["status-review"];
   return (
     <svg
       role="img"

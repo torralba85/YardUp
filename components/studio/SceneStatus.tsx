@@ -30,10 +30,13 @@ export function SceneStatus({
 }) {
   const status = describePlacement(placement, parcel);
   const coverage = getZoningCapacityStatus(remainingCapacity, parcel, capacityBasis);
-  const needsReview = status.tone !== "clear" || coverage.tone !== "ok";
-  const StatusIcon = status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
-  const statusColor = status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
-  const titleColor = status.tone === "clear" ? "text-lot-ink" : statusColor;
+  // A geometric fit keeps its check mark; the evidence caveat for a live lot
+  // is carried by `missingEvidenceNotice` below, not by the icon or border.
+  const isFits = placement.status === "fits";
+  const needsReview = !isFits && (status.tone !== "clear" || coverage.tone !== "ok");
+  const StatusIcon = isFits || status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
+  const statusColor = isFits || status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
+  const titleColor = isFits || status.tone === "clear" ? "text-lot-ink" : statusColor;
   const setbackConflict =
     placement.envelopeStatus === "overflow" || placement.envelopeStatus === "empty";
 

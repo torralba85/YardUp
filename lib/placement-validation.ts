@@ -126,8 +126,8 @@ function signedArea(ring: LocalPoint[]): number {
  * given footprint's half-width/half-depth to bound valid *center* positions
  * for dragging one footprint size — this is the raw land, so the same
  * envelope can be tested against a footprint at any rotation (see
- * `getBuildableEnvelope` in `lib/scene-placement.ts` for the `Parcel`-typed
- * adapter).
+ * `getScenePlacement` in `lib/scene-placement.ts` for the `Parcel`-typed
+ * adapter, which builds it from `aduSetbacks(parcel, config)`).
  *
  * Mirrors `getAduPlacementBounds`'s existing collapse-to-midpoint behavior
  * when setbacks consume more than the lot's own width/length: an inverted
@@ -437,7 +437,7 @@ export interface PlacementInput {
   aduLength: number;
   /** The ADU's actual current pose, e.g. `AduSceneModel.pose`. */
   pose: Pose2D;
-  /** Buildable envelope ring in local feet (see `buildSetbackEnvelope` / `getBuildableEnvelope`), or `null` when it could not be built. */
+  /** Buildable envelope ring in local feet (see `buildSetbackEnvelope`), or `null` when it could not be built. */
   envelope: LocalPoint[] | null;
   /** Existing house footprint corners, e.g. `ExistingHouseSceneModel.corners`. `null`/`undefined` means unknown — never assumed clear. */
   existingHouseCorners?: LocalPoint[] | null;

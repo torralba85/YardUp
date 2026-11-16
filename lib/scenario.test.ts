@@ -6,6 +6,7 @@ import {
   createScenarioState,
   defaultPose,
   describePlanControls,
+  evaluatePlanSizing,
   isPlainPlaceText,
   isValidAduConfig,
   migrateDesign,
@@ -209,6 +210,18 @@ describe("scenarioReducer", () => {
     const synced = scenarioReducer(state, { type: "sync-lot", sceneKey: nextLot.id, parcel: nextLot });
     expect(synced.preapprovedPlan).toBeNull();
     expect(synced.pose).toEqual(defaultPose(nextLot, synced.config));
+  });
+
+  it("applies a plan evaluation computed once by the caller", () => {
+    const coyoteBrush = getParcelById("coyote-brush");
+    const state = scenarioReducer(createScenarioState(), { type: "select-preset", parcel: coyoteBrush });
+    const planRef = { jurisdictionId: "ca-san-diego-county", planId: "san-diego-county-plan-a" };
+    const { nextState, placementOutcome } = evaluatePlanSizing(coyoteBrush, state, planRef);
+    expect(["kept", "moved", "none"]).toContain(placementOutcome);
+    // The handler tracks `placementOutcome` and applies `nextState` as-is, so
+    // the search runs once and analytics match what the Studio shows.
+    expect(scenarioReducer(state, { type: "apply-plan", nextState })).toBe(nextState);
+    expect(nextState).toEqual(scenarioReducer(state, { type: "select-plan", reference: planRef, parcel: coyoteBrush }));
   });
 
   it("ignores invalid poses and restores saved scenarios atomically", () => {
