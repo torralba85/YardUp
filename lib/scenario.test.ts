@@ -7,6 +7,7 @@ import {
   defaultPose,
   describePlanControls,
   evaluatePlanSizing,
+  hydrationPose,
   isPlainPlaceText,
   isValidAduConfig,
   migrateDesign,
@@ -210,6 +211,21 @@ describe("scenarioReducer", () => {
     const synced = scenarioReducer(state, { type: "sync-lot", sceneKey: nextLot.id, parcel: nextLot });
     expect(synced.preapprovedPlan).toBeNull();
     expect(synced.pose).toEqual(defaultPose(nextLot, synced.config));
+  });
+
+  it("recalculates placement when certificate recovery lands on a different lot", () => {
+    const [origin, destination] = parcelPresets;
+    const explicit = { x: 3, z: -7, rotationDeg: 90 };
+
+    // Same lot: the shared or restored placement is the buyer's and stays.
+    expect(hydrationPose(explicit, false, origin, defaultAduConfig)).toEqual(explicit);
+    // Different lot: the pose is another property's coordinates.
+    expect(hydrationPose(explicit, true, destination, defaultAduConfig)).toEqual(
+      defaultPose(destination, defaultAduConfig),
+    );
+    expect(hydrationPose(null, false, destination, defaultAduConfig)).toEqual(
+      defaultPose(destination, defaultAduConfig),
+    );
   });
 
   it("applies a plan evaluation computed once by the caller", () => {
