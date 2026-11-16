@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "About LotFoundry: Free ADU Feasibility Check";
+const title = "About LotFoundry: Free California ADU Feasibility Check";
 const description =
   "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners check ADU rent, build cost and payback estimates for a lot they already own.";
 

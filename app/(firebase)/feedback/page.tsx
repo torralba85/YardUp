@@ -3,7 +3,7 @@ import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { FeedbackForm } from "./FeedbackForm";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "Send Feedback or Report a Problem | LotFoundry";
+const title = "Send Feedback, Report a Bug or Data Error | LotFoundry";
 const description =
   "Report LotFoundry bugs, incorrect parcel or zoning data, billing problems, or product ideas, and learn what details help us investigate.";
 

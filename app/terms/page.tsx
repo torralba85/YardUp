@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "Terms & Conditions | LotFoundry";
+const title = "Terms & Conditions: Studio, Payments & AI | LotFoundry";
 const description =
   "Read the LotFoundry Terms & Conditions covering the feasibility studio, AI features, marketplace, payments, estimates, and acceptable use.";
 

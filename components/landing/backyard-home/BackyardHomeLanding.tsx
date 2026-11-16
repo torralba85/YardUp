@@ -290,6 +290,10 @@ export function BackyardHomeLanding() {
                       src={PARCEL_BEFORE.src}
                       srcSet={PARCEL_BEFORE.srcSet}
                       sizes="(max-width: 768px) 45vw, 240px"
+                      width={1536}
+                      height={1024}
+                      loading="lazy"
+                      decoding="async"
                       alt="Residential backyard before adding an accessory dwelling unit"
                       className="aspect-[4/3] w-full object-cover"
                     />
@@ -308,6 +312,10 @@ export function BackyardHomeLanding() {
                       src={PARCEL_AFTER.src}
                       srcSet={PARCEL_AFTER.srcSet}
                       sizes="(max-width: 768px) 45vw, 240px"
+                      width={1536}
+                      height={1024}
+                      loading="lazy"
+                      decoding="async"
                       alt="Illustrative backyard home concept placed inside San Diego setbacks"
                       className="aspect-[4/3] w-full object-cover"
                     />
