@@ -425,6 +425,20 @@ export function scenarioReducer(
 }
 
 /**
+ * Placement to hydrate with. An explicit pose (URL or restored layout) holds the
+ * coordinates of the lot it was made on, so a recovery that lands on a different
+ * lot recalculates rather than carrying them across.
+ */
+export function hydrationPose(
+  explicitPose: Pose2D | null,
+  changesLot: boolean,
+  parcel: Parcel,
+  config: ADUConfig,
+): Pose2D {
+  return (changesLot ? null : explicitPose) ?? defaultPose(parcel, config);
+}
+
+/**
  * Pure read view scoped to the active lot so external lot switches never render
  * a prior lot's pose or pre-approved plan while the reducer catches up.
  */

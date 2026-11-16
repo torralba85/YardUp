@@ -26,9 +26,9 @@ import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import {
   calculateScenarioFeasibility,
   createScenarioState,
-  defaultPose,
   describePlanControls,
   evaluatePlanSizing,
+  hydrationPose,
   isValidAduConfig,
   isValidFinancialAssumptions,
   isValidPose,
@@ -632,10 +632,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       : parcelMode === "preset"
         ? merged.parcelId
         : sceneKey;
-    const targetPose = explicitPose ?? defaultPose(targetParcel, merged.config);
-    // Checkout can return to the same preset; only discard its plan when recovery switches lots.
-    const recoveryChangesLot = certMatchingPreset
-      && planScopeForLot(certMatchingPreset, "preset") !== planScopeForLot(hydrationParcel, parcelMode);
+    // Checkout can return to the same preset; only discard its plan and placement when recovery switches lots.
+    const recoveryChangesLot = Boolean(certMatchingPreset)
+      && planScopeForLot(certMatchingPreset!, "preset") !== planScopeForLot(hydrationParcel, parcelMode);
+    const targetPose = hydrationPose(explicitPose, recoveryChangesLot, targetParcel, merged.config);
     dispatchScenario({
       type: "hydrate",
       sceneKey: targetSceneKey,
