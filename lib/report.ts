@@ -11,7 +11,7 @@ import { marketProvenanceLine } from "./market/market-basis";
 import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
-import { getSiteFitCapacityStatus } from "./site-fit";
+import { getZoningCapacityStatus } from "./zoning";
 import { parcelConfidence, parcelDataNotice } from "./parcel-confidence";
 import {
   buildCashFlowProForma,
@@ -130,7 +130,7 @@ export function buildReportText({
     `Lot coverage: ${coverageLabel(parcel, result)}`,
     `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${setbacksLabel(parcel, config)}`,
     `Estimated area after modeled setbacks: ${buildableArea(parcel, config).toLocaleString()} sf`,
-    `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title}`,
+    `Remaining coverage capacity: ${getZoningCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
       ? result.warnings.map((warning, index) => `Review note ${index + 1}: ${warning}`)
@@ -212,7 +212,7 @@ export function buildReportHtml({
       setbacksLabel(parcel, config),
     ],
     ["Estimated area after modeled setbacks", `${buildableArea(parcel, config).toLocaleString()} sf`],
-    ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title],
+    ["Remaining coverage capacity", getZoningCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],

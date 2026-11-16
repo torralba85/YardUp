@@ -3,7 +3,7 @@ import { parcelConfidence } from "./parcel-confidence";
 import { bedroomClassForFootprint } from "./market/bedroom";
 import { isValidLiveParcelData, migrateSavedScenario } from "./saved-scenarios";
 import type { LiveParcelData } from "./parcel-types";
-import { getDefaultAduPose } from "./site-fit";
+import { getDefaultAduPose } from "./scene-placement";
 import { getParcelById } from "./feasibility";
 
 /** Only included in the homeowner-consented, gated contact payload. */

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
+import { buildScenarioShareUrl } from "../lib/scenario-url";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test("a remembered agent code can be removed and replaced on desktop and mobile", async ({ page }, testInfo) => {

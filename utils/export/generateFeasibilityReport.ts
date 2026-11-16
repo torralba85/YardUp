@@ -3,6 +3,7 @@
 import { COLOR } from "@/lib/design-tokens";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import type { Pose2D } from "@/lib/scene-model";
+import { getScenePlacement } from "@/lib/scene-placement";
 import {
   getStudioEnhancementsSnapshot,
   type UtilityEstimate,
@@ -196,9 +197,9 @@ export async function generateFeasibilityReport({
     y,
   );
   y += 31;
-  const placement = getStudioEnhancementsSnapshot().placement;
+  const placement = getScenePlacement(parcel, config, pose);
   context.fillText(
-    placement?.houseClearanceFt !== null && placement?.houseClearanceFt !== undefined
+    placement.houseClearanceFt !== null && placement.houseClearanceFt !== undefined
       ? `Building separation: ${Math.max(placement.houseClearanceFt, 0).toFixed(1)} ft modeled`
       : "Building separation: verify on survey",
     left,
@@ -243,19 +244,23 @@ export async function generateFeasibilityReport({
   return jpegPagePdf(jpeg, page.width, page.height);
 }
 
-export async function generateAndDownloadCurrentFeasibilityReport(): Promise<void> {
-  const current = getStudioEnhancementsSnapshot();
-  if (!current.parcel || !current.config || !current.pose) {
+export async function generateAndDownloadCurrentFeasibilityReport(current?: {
+  parcel?: Parcel | null;
+  config?: ADUConfig | null;
+  pose?: Pose2D | null;
+}): Promise<void> {
+  if (!current?.parcel || !current.config || !current.pose) {
     throw new Error("Load a parcel and ADU concept before exporting the site plan.");
   }
-  const snapshotDataUrl = current.sitePlanCapture
-    ? await current.sitePlanCapture().catch(() => null)
+  const { utilityEstimate, sitePlanCapture } = getStudioEnhancementsSnapshot();
+  const snapshotDataUrl = sitePlanCapture
+    ? await sitePlanCapture().catch(() => null)
     : null;
   const pdf = await generateFeasibilityReport({
     parcel: current.parcel,
     config: current.config,
     pose: current.pose,
-    utilityEstimate: current.utilityEstimate,
+    utilityEstimate,
     snapshotDataUrl,
   });
   const slug = current.parcel.address.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "site-plan";

@@ -1,7 +1,7 @@
 import { expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
-import { getScenePlacement } from "@/lib/site-fit";
+import { getScenePlacement } from "@/lib/scene-placement";
 import { SnapToFitControl } from "./SnapToFitControl";
 
 it("commits a validated placement using the current footprint", () => {

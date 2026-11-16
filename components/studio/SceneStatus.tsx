@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { CheckCircle2, ChevronDown, TriangleAlert, XCircle } from "lucide-react";
 import type { PlacementResult } from "@/lib/placement-validation";
-import { describePlacementWithEvidence } from "@/lib/placement-evidence";
-import { getSiteFitCapacityStatus } from "@/lib/site-fit";
+import { describePlacement } from "@/lib/scene-placement";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import type { Parcel } from "@/lib/parcel-types";
-import type { CapacityBasis } from "@/lib/zoning";
-import { updateStudioParcel } from "@/lib/studio-enhancements-store";
+import { getZoningCapacityStatus, type CapacityBasis } from "@/lib/zoning";
 
 /**
  * The one modeled-site-fit readout, shared by the 3D scene and the 2D
@@ -31,19 +28,17 @@ export function SceneStatus({
   isProxy: boolean;
   parcel?: Parcel;
 }) {
-  const status = describePlacementWithEvidence(placement, parcel);
-  const coverage = getSiteFitCapacityStatus(remainingCapacity, parcel, capacityBasis);
+  const status = describePlacement(placement, parcel);
+  const coverage = getZoningCapacityStatus(remainingCapacity, parcel, capacityBasis);
+  // A geometric fit keeps its check mark; the evidence caveat for a live lot
+  // is carried by `missingEvidenceNotice` below, not by the icon or border.
   const isFits = placement.status === "fits";
   const needsReview = !isFits && (status.tone !== "clear" || coverage.tone !== "ok");
-  const StatusIcon = isFits ? CheckCircle2 : status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
-  const statusColor = isFits ? "text-status-eligible" : status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
-  const titleColor = isFits ? "text-lot-ink" : statusColor;
+  const StatusIcon = isFits || status.tone === "clear" ? CheckCircle2 : status.tone === "blocked" ? XCircle : TriangleAlert;
+  const statusColor = isFits || status.tone === "clear" ? "text-status-eligible" : status.tone === "blocked" ? "text-status-blocked" : "text-status-review";
+  const titleColor = isFits || status.tone === "clear" ? "text-lot-ink" : statusColor;
   const setbackConflict =
     placement.envelopeStatus === "overflow" || placement.envelopeStatus === "empty";
-
-  useEffect(() => {
-    if (parcel) updateStudioParcel(parcel, placement);
-  }, [parcel, placement]);
 
   return (
     <div

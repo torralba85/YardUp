@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
+import { buildScenarioShareUrl } from "@/lib/scenario-url";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),

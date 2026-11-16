@@ -8,7 +8,7 @@ import {
 } from "./adu-setbacks";
 import { defaultAduConfig, parcelPresets, type ADUConfig, type Parcel } from "./feasibility";
 import { buildAduHeightModel } from "./scene-model";
-import { getAduPlacementBounds, getScenePlacement } from "./site-fit";
+import { getAduPlacementBounds, getScenePlacement } from "./scene-placement";
 import { buildableArea, summarizeFeasibility } from "./feasibility-verdict";
 
 // The fallback a live California lookup gets when no zoning setbacks are published.

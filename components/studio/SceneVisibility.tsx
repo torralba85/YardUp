@@ -11,13 +11,15 @@ import {
   UtilityTrenchLine,
   utilityRunDistanceFt,
 } from "@/components/canvas/UtilityTrenchLine";
-import { buildSetbackEnvelope } from "@/lib/placement-validation";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import { buildSetbackEnvelope, type PlacementResult } from "@/lib/placement-validation";
 import { aduSetbacks } from "@/lib/adu-setbacks";
-import { buildExistingHouseSceneModel, rectangleCorners } from "@/lib/scene-model";
+import { buildExistingHouseSceneModel, rectangleCorners, type Pose2D } from "@/lib/scene-model";
 import {
   registerSitePlanCapture,
   setUtilityAnchor,
   setUtilityEstimate,
+  setUtilityParcelKey,
   useStudioEnhancements,
 } from "@/lib/studio-enhancements-store";
 import { exportOrthographicView } from "@/utils/canvas/exportOrthographicView";
@@ -30,9 +32,26 @@ import { COLOR } from "@/lib/design-tokens";
  * means they share the Studio's coordinate system and never need a second 3D
  * renderer.
  */
-export function SceneVisibility({ utilityMode = false }: { utilityMode?: boolean }) {
+export function SceneVisibility({
+  utilityMode = false,
+  parcel = null,
+  config = null,
+  pose = null,
+  placement = null,
+}: {
+  utilityMode?: boolean;
+  parcel?: Parcel | null;
+  config?: ADUConfig | null;
+  pose?: Pose2D | null;
+  placement?: PlacementResult | null;
+}) {
   const { gl, scene, setFrameloop, invalidate, get } = useThree();
-  const { parcel, config, pose, placement, utilityAnchor } = useStudioEnhancements();
+  const { utilityAnchor } = useStudioEnhancements();
+  const parcelKey = parcel ? `${parcel.address}|${parcel.city}` : null;
+
+  useEffect(() => {
+    setUtilityParcelKey(parcelKey);
+  }, [parcelKey]);
 
   useEffect(() => {
     const previous = get().frameloop;

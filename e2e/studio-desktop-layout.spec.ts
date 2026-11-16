@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
+import { buildScenarioShareUrl } from "../lib/scenario-url";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 // A common laptop viewport. At this height the 2026-10-18 shell clipped every

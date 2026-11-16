@@ -1,8 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
-import { parseScenarioParams } from "../lib/scenario-url";
-import { getScenePlacement } from "../lib/site-fit";
+import { buildScenarioShareUrl, parseScenarioParams } from "../lib/scenario-url";
+import { getScenePlacement } from "../lib/scene-placement";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.setTimeout(90_000);

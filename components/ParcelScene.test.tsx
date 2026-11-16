@@ -2,7 +2,7 @@ import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { defaultAduConfig, parcelPresets } from "@/lib/feasibility";
-import { getDefaultAduPose } from "@/lib/site-fit";
+import { getDefaultAduPose } from "@/lib/scene-placement";
 import { EXISTING_HOUSE_ROOF_OVERHANG_FT } from "@/lib/scene-model";
 import ParcelScene, {
   computeShadowFrustumHalfExtent,

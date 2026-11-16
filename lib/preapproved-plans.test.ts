@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ADU_CITIES } from "./adu/content";
 import { defaultAduConfig, footprintOptions } from "./feasibility";
-import { isValidAduConfig } from "./scenario-design";
+import { isValidAduConfig } from "./scenario";
 import { preapprovedPrograms, preapprovedPlans } from "./preapproved-plans-data";
 import {
   configForPlan,

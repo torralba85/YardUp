@@ -5,8 +5,7 @@ import { CheckCircle2, Copy, Mail, TriangleAlert } from "lucide-react";
 import { Checkbox, Input, FieldLabel } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import type { SavedScenario } from "@/lib/saved-scenarios";
-import { serializeScenarioParams } from "@/lib/scenario-url";
-import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-share-url";
+import { buildScenarioShareUrl, isAllowedScenarioUrl, serializeScenarioParams } from "@/lib/scenario-url";
 import { readCapturedEmail, rememberCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { trackEvent } from "@/lib/analytics/gtag";
 

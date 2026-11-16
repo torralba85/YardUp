@@ -21,7 +21,7 @@ import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { type Pose2D } from "@/lib/scene-model";
 import { type PlacementResult } from "@/lib/placement-validation";
-import { describePlacementWithEvidence } from "@/lib/placement-evidence";
+import { describePlacement } from "@/lib/scene-placement";
 import { loadCesium } from "@/lib/cesium-loader";
 import {
   describePhotorealRoute,
@@ -333,7 +333,7 @@ export default function CesiumNeighborhoodView({
   placement,
   onReturnToModel,
 }: CesiumNeighborhoodViewProps) {
-  const placementFeedback = describePlacementWithEvidence(placement, parcel);
+  const placementFeedback = describePlacement(placement, parcel);
   const placementStyle = PLACEMENT_STYLE[placementFeedback.tone];
   const PlacementIcon = placementStyle.Icon;
   const containerRef = useRef<HTMLDivElement>(null);

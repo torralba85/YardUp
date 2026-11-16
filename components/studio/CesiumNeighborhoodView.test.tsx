@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CesiumNeighborhoodView, { configureCesiumSceneQuality, type CesiumModule, type CesiumViewerInstance } from "./CesiumNeighborhoodView";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { calculateFeasibility, defaultAduConfig, defaultFinancialAssumptions, parcelPresets } from "@/lib/feasibility";
-import { getScenePlacement } from "@/lib/site-fit";
+import { getScenePlacement } from "@/lib/scene-placement";
 import type { Pose2D } from "@/lib/scene-model";
 import { setGeoidModuleForTesting, resetGeoidForTesting } from "@/lib/geoid";
 

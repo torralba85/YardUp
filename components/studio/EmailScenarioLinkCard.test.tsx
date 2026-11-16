@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import EmailScenarioLinkCard from "./EmailScenarioLinkCard";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "@/lib/scenario-share-url";
+import { buildScenarioShareUrl } from "@/lib/scenario-url";
 import { GTAG_READY_EVENT } from "@/lib/analytics/gtag";
 import { writeConsent } from "@/lib/analytics/consent";
 
