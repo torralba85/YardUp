@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Award, ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { claimCertificatesByEmail } from "@/lib/certificate-checkout";
 import { Button } from "@/components/ui/Button";
 import { Bezel } from "@/components/ui/Bezel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -31,9 +33,37 @@ function formatPrice(cents: number): string {
 
 export function CertificatesClient() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, logout } = useAuth();
+  const { user, profile, loading: authLoading, logout, refreshProfile, sendVerification } = useAuth();
   const { certificates, loading: certsLoading, error, refresh } =
     useUserPurchasedCertificates(user?.uid);
+  const [recoveredCount, setRecoveredCount] = useState(0);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [checkingRecovery, setCheckingRecovery] = useState(false);
+  const [recoveryError, setRecoveryError] = useState(false);
+  const [recoveryAttempt, setRecoveryAttempt] = useState(0);
+  const claimedUidRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading || !user || !user.emailVerified) return;
+    if (claimedUidRef.current === user.uid) return;
+    claimedUidRef.current = user.uid;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const idToken = await user.getIdToken();
+        const outcome = await claimCertificatesByEmail(idToken);
+        if (!cancelled && (outcome.claimedCertKeys.length > 0 || outcome.alreadyOwnedCertKeys.length > 0)) {
+          setRecoveredCount(outcome.claimedCertKeys.length);
+          refresh();
+        }
+      } catch {
+        if (!cancelled) setRecoveryError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, refresh, user, user?.emailVerified, recoveryAttempt]);
 
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "Member";
   const roleLabel = profile?.role === "builder" ? "Builder" : "Lot owner";
@@ -125,6 +155,65 @@ export function CertificatesClient() {
             Every certificate remains unlocked permanently and can be reopened in the 3D Studio anytime.
           </p>
         </div>
+
+        {recoveryError && (
+          <div className="mt-6 border border-lot-line p-4">
+            <p role="alert" className="text-sm text-lot-ink">Could not check for guest purchases. Your existing certificates are still available.</p>
+            <Button type="button" variant="secondary" size="xs" className="mt-2" onClick={() => {
+              claimedUidRef.current = null;
+              setRecoveryError(false);
+              setRecoveryAttempt((attempt) => attempt + 1);
+            }}>Retry guest purchase recovery</Button>
+          </div>
+        )}
+
+        {recoveredCount > 0 && (
+          <p
+            role="status"
+            className="mt-6 rounded-none border border-status-eligible/30 bg-status-eligible-soft px-4 py-3 text-sm text-status-eligible"
+          >
+            Recovered {recoveredCount} guest {recoveredCount === 1 ? "certificate" : "certificates"} linked to your verified email.
+          </p>
+        )}
+
+        {!certsLoading && !user.emailVerified && (
+          <div className="mt-6 rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-xs leading-5 text-lot-ink">
+            <p>
+              Purchased as a guest? Verify your email address ({user.email}) to recover any certificates bought with the same email.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {typeof sendVerification === "function" && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => {
+                    void sendVerification()
+                      .then(() => setVerificationSent(true))
+                      .catch(() => undefined);
+                  }}
+                >
+                  {verificationSent ? "Verification email sent" : "Resend verification email"}
+                </Button>
+              )}
+              {typeof refreshProfile === "function" && (
+                <Button
+                  type="button"
+                  variant="commit"
+                  size="xs"
+                  loading={checkingRecovery}
+                  onClick={() => {
+                    setCheckingRecovery(true);
+                    claimedUidRef.current = null;
+                    void refreshProfile().finally(() => setCheckingRecovery(false));
+                  }}
+                >
+                  I&apos;ve verified — check again
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {certsLoading ? (
           <div className="space-y-4 py-12" role="status" aria-busy="true">

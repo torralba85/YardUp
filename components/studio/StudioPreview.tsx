@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Lock } from "lucide-react";
 import { formatCompactCurrency, formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
@@ -17,12 +18,13 @@ export function rentRangeLabel(result: FeasibilityResult) {
  * Sticky offsets are measured inside the pane's padding, so a -1.25rem bottom
  * cancels the rail's `p-5` and the bar sits flush with the pane edge.
  */
-export default function StudioPreview({ result, onUnlock, ctaLabel = "See what’s behind the numbers", busy = false, ctaNote, error, stickyCta = false }: {
+export default function StudioPreview({ result, onUnlock, ctaLabel = "See what’s behind the numbers", busy = false, ctaNote, consentControl, error, stickyCta = false }: {
   result: FeasibilityResult;
   onUnlock: () => void;
   ctaLabel?: string;
   busy?: boolean;
   ctaNote?: string;
+  consentControl?: ReactNode;
   error?: string | null;
   stickyCta?: boolean;
 }) {
@@ -79,6 +81,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
+      {consentControl}
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
       <div className={stickyCta ? "sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t border-lot-line bg-lot-chalk px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6" : undefined}>
         <Button fullWidth variant="primary" onClick={onUnlock} loading={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>

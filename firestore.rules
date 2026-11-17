@@ -119,16 +119,23 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isNonAnonymous() {
+      return isAuthenticated() &&
+        (!("firebase" in request.auth.token) ||
+         !("sign_in_provider" in request.auth.token.firebase) ||
+         request.auth.token.firebase.sign_in_provider != "anonymous");
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+      return isNonAnonymous() && request.auth.uid == userId;
     }
 
     function isBuilder(builderId) {
-      return isAuthenticated() && request.auth.uid == builderId;
+      return isNonAnonymous() && request.auth.uid == builderId;
     }
 
     function hasUnlockGrant(requestId) {
@@ -665,20 +672,20 @@ service cloud.firestore {
 
     // Homeowner ADU connection requests, private contact PII, and builder responses.
     match /connectionRequests/{requestId} {
-      allow read: if isSignedIn() && (
+      allow read: if isNonAnonymous() && (
         resource.data.ownerUid == request.auth.uid ||
         request.auth.uid in resource.data.matchedBuilderIds
       );
-      allow create: if isSignedIn() && isValidConnectionRequest();
+      allow create: if isNonAnonymous() && isValidConnectionRequest();
       allow update, delete: if false;
 
       // PII paywall: readable only by homeowner or builders with an active unlock grant.
       match /private/{privateDoc} {
-        allow read: if isSignedIn() && (
+        allow read: if isNonAnonymous() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
           hasUnlockGrant(requestId)
         );
-        allow create: if isSignedIn() &&
+        allow create: if isNonAnonymous() &&
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid &&
           isValidContactSubdoc();
         allow update, delete: if false;
@@ -686,11 +693,11 @@ service cloud.firestore {
 
       // Builder response status tracking.
       match /builderResponses/{builderId} {
-        allow read: if isSignedIn() && (
+        allow read: if isNonAnonymous() && (
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid ||
           request.auth.uid == builderId
         );
-        allow create: if isSignedIn() &&
+        allow create: if isNonAnonymous() &&
           get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.ownerUid == request.auth.uid &&
           builderId in get(/databases/$(database)/documents/connectionRequests/$(requestId)).data.matchedBuilderIds &&
           isValidBuilderResponse(builderId) &&
@@ -705,7 +712,7 @@ service cloud.firestore {
     // Paid lead-unlock grants: deterministic "{builderId}_{requestId}".
     // Written only by Stripe webhook / server Admin SDK.
     match /leadUnlocks/{lockId} {
-      allow read: if isSignedIn()
+      allow read: if isNonAnonymous()
         && resource != null
         && resource.data.builderId == request.auth.uid;
       allow create, update, delete: if false;
@@ -713,11 +720,17 @@ service cloud.firestore {
 
     // Paid certificate purchases: deterministic "{uid}_{certKey}".
     // Written only by Stripe webhook / server Admin SDK.
+    // Anonymous checkout sessions may read their own grant; link/claim preserves or transfers ownership.
     match /certificatePurchases/{purchaseId} {
       allow read: if isSignedIn()
         && resource != null
         && resource.data.uid == request.auth.uid;
       allow create, update, delete: if false;
+    }
+
+    // Recovery ledger prevents replaying a payment into the former guest UID.
+    match /certificateTransfers/{transferId} {
+      allow read, write: if false;
     }
 
     // Real estate agent passes and redemptions (Admin SDK only).
@@ -730,7 +743,7 @@ service cloud.firestore {
 
     // Store purchase grants (Admin SDK only).
     match /purchaseGrants/{grantId} {
-      allow read: if isSignedIn()
+      allow read: if isNonAnonymous()
         && resource != null
         && resource.data.uid == request.auth.uid;
       allow create, update, delete: if false;

@@ -15,9 +15,13 @@ const authMocks = vi.hoisted(() => ({
   onAuthStateChanged: vi.fn(),
   sendEmailVerification: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
+  signInAnonymously: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),
   signInWithPopup: vi.fn(),
   signInWithRedirect: vi.fn(),
+  linkWithCredential: vi.fn(),
+  linkWithPopup: vi.fn(),
+  linkWithRedirect: vi.fn(),
   getRedirectResult: vi.fn(),
   signOut: vi.fn(),
   updateProfile: vi.fn(),
@@ -73,14 +77,18 @@ vi.mock("firebase/auth", () => ({
   OAuthProvider: oauthProvider.OAuthProvider,
   onAuthStateChanged: authMocks.onAuthStateChanged,
   sendPasswordResetEmail: authMocks.sendPasswordResetEmail,
+  signInAnonymously: authMocks.signInAnonymously,
   signInWithEmailAndPassword: authMocks.signInWithEmailAndPassword,
   signInWithPopup: authMocks.signInWithPopup,
   signInWithRedirect: authMocks.signInWithRedirect,
+  linkWithCredential: authMocks.linkWithCredential,
+  linkWithPopup: authMocks.linkWithPopup,
+  linkWithRedirect: authMocks.linkWithRedirect,
   getRedirectResult: authMocks.getRedirectResult,
   signOut: authMocks.signOut,
   updateProfile: authMocks.updateProfile,
   sendEmailVerification: authMocks.sendEmailVerification,
-  EmailAuthProvider: { credential: vi.fn() },
+  EmailAuthProvider: { credential: vi.fn((email: string, password: string) => ({ email, password })) },
   reauthenticateWithCredential: vi.fn(),
   updatePassword: vi.fn(),
   verifyBeforeUpdateEmail: vi.fn(),
@@ -980,6 +988,7 @@ describe("AuthProvider social sign-in inside the Android app", () => {
     expect(JSON.parse(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY) ?? "null")).toEqual({
       role: "builder",
       consented: true,
+      mode: "sign-in",
     });
     // The redirect can return to the Firebase-free landing, which only mounts an
     // auth island (and so finishes sign-in) for a browser carrying this hint.
@@ -1013,6 +1022,7 @@ describe("AuthProvider social sign-in inside the Android app", () => {
         expect(JSON.parse(window.sessionStorage.getItem(auth.SOCIAL_REDIRECT_KEY) ?? "null")).toEqual({
           role: "builder",
           consented: true,
+          mode: "sign-in",
         });
       } finally {
         userAgent.mockRestore();
@@ -1114,5 +1124,202 @@ describe("AuthProvider social sign-in inside the Android app", () => {
     expect(firestoreMocks.setDoc).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).toBeNull();
     expect(window.localStorage.getItem("lf:member-session")).toBeNull();
+  });
+
+  it("keeps user null and exposes checkoutUser for anonymous Firebase sessions without creating a profile or member hint", async () => {
+    const anonUser = { uid: "anon-1", isAnonymous: true, email: null, displayName: null };
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      cb(anonUser);
+      return vi.fn();
+    });
+
+    function Probe() {
+      const { user, checkoutUser, profile, loading } = useAuth();
+      if (loading) return <span>loading</span>;
+      return (
+        <span>
+          user:{user ? user.uid : "null"}|checkout:{checkoutUser ? checkoutUser.uid : "null"}|profile:{profile ? "yes" : "null"}
+        </span>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("user:null|checkout:anon-1|profile:null")).toBeInTheDocument(),
+    );
+    expect(firestoreMocks.getDoc).not.toHaveBeenCalled();
+    expect(firestoreMocks.setDoc).not.toHaveBeenCalled();
+    expect(hasMemberSessionHint()).toBe(false);
+  });
+
+  it("signs in anonymously via ensureCheckoutUser and links email preserving the same UID with legal consent", async () => {
+    firestoreMocks.doc.mockImplementation((_db, collection, uid) => ({ path: `${collection}/${uid}` }));
+    const anonUser = { uid: "anon-uid-1", isAnonymous: true, email: null, displayName: null };
+    const linkedEmailUser = {
+      uid: "anon-uid-1",
+      isAnonymous: false,
+      email: "owner@example.com",
+      displayName: "Alma Reyes",
+    };
+    let authStateCb: ((u: unknown) => void) | null = null;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      authStateCb = cb;
+      cb(null);
+      return vi.fn();
+    });
+    authMocks.signInAnonymously.mockImplementation(async () => {
+      firebaseMocks.auth.currentUser = anonUser as unknown as typeof firebaseMocks.auth.currentUser;
+      authStateCb?.(anonUser);
+      return { user: anonUser };
+    });
+    authMocks.linkWithCredential.mockImplementation(async () => {
+      firebaseMocks.auth.currentUser =
+        linkedEmailUser as unknown as typeof firebaseMocks.auth.currentUser;
+      return { user: linkedEmailUser };
+    });
+    firestoreMocks.getDoc.mockResolvedValue({ exists: () => false });
+    firestoreMocks.setDoc.mockResolvedValue(undefined);
+    authMocks.updateProfile.mockResolvedValue(undefined);
+    authMocks.sendEmailVerification.mockResolvedValue(undefined);
+
+    function Harness() {
+      const { user, checkoutUser, ensureCheckoutUser, linkCheckoutWithEmail } = useAuth();
+      return (
+        <div>
+          <span>
+            user:{user?.uid ?? "null"}|checkout:{checkoutUser?.uid ?? "null"}
+          </span>
+          <button type="button" onClick={() => void ensureCheckoutUser()}>
+            Start guest
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void linkCheckoutWithEmail(
+                "owner@example.com",
+                "password123",
+                "Alma Reyes",
+                CURRENT_LEGAL_CONSENT,
+              )
+            }
+          >
+            Link email
+          </button>
+        </div>
+      );
+    }
+
+    const userEvents = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+
+    await userEvents.click(screen.getByRole("button", { name: "Start guest" }));
+    await waitFor(() =>
+      expect(screen.getByText("user:null|checkout:anon-uid-1")).toBeInTheDocument(),
+    );
+    expect(hasMemberSessionHint()).toBe(false);
+
+    await userEvents.click(screen.getByRole("button", { name: "Link email" }));
+    await waitFor(() =>
+      expect(screen.getByText("user:anon-uid-1|checkout:anon-uid-1")).toBeInTheDocument(),
+    );
+    expect(authMocks.linkWithCredential).toHaveBeenCalledWith(anonUser, {
+      email: "owner@example.com",
+      password: "password123",
+    });
+    expect(firestoreMocks.setDoc).toHaveBeenCalledWith(
+      { path: "users/anon-uid-1" },
+      expect.objectContaining({
+        email: "owner@example.com",
+        displayName: "Alma Reyes",
+        role: "user",
+        legalConsent: expect.objectContaining({
+          termsVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+          privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+          adultConfirmed: true,
+        }),
+      }),
+      { merge: true },
+    );
+    expect(hasMemberSessionHint()).toBe(true);
+  });
+
+  it("links Google onto an anonymous checkout session preserving UID and leaves anonymous session intact on collision", async () => {
+    const anonUser = { uid: "anon-uid-2", isAnonymous: true, email: null, displayName: null };
+    const linkedGoogleUser = {
+      uid: "anon-uid-2",
+      isAnonymous: false,
+      email: "google@example.com",
+      displayName: "Google User",
+    };
+    firebaseMocks.auth.currentUser = anonUser as unknown as typeof firebaseMocks.auth.currentUser;
+    authMocks.onAuthStateChanged.mockImplementation((_auth, cb) => {
+      cb(anonUser);
+      return vi.fn();
+    });
+    firestoreMocks.getDoc.mockResolvedValue({ exists: () => false });
+    firestoreMocks.setDoc.mockResolvedValue(undefined);
+
+    authMocks.linkWithPopup
+      .mockRejectedValueOnce({ code: "auth/credential-already-in-use" })
+      .mockImplementationOnce(async () => {
+        firebaseMocks.auth.currentUser =
+          linkedGoogleUser as unknown as typeof firebaseMocks.auth.currentUser;
+        return { user: linkedGoogleUser };
+      });
+
+    function Harness() {
+      const { user, checkoutUser, linkCheckoutWithGoogle } = useAuth();
+      const [errCode, setErrCode] = useState("");
+      return (
+        <div>
+          <span>
+            user:{user?.uid ?? "null"}|checkout:{checkoutUser?.uid ?? "null"}|err:{errCode}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              void linkCheckoutWithGoogle(CURRENT_LEGAL_CONSENT).catch((err) =>
+                setErrCode(String((err as { code?: string })?.code ?? "")),
+              )
+            }
+          >
+            Link Google
+          </button>
+        </div>
+      );
+    }
+
+    const userEvents = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+
+    // First attempt collides with an existing account — anonymous checkout session remains intact.
+    await userEvents.click(screen.getByRole("button", { name: "Link Google" }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("user:null|checkout:anon-uid-2|err:auth/credential-already-in-use"),
+      ).toBeInTheDocument(),
+    );
+    expect(authMocks.deleteUser).not.toHaveBeenCalled();
+
+    // Second attempt succeeds and preserves UID anon-uid-2.
+    await userEvents.click(screen.getByRole("button", { name: "Link Google" }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("user:anon-uid-2|checkout:anon-uid-2|err:auth/credential-already-in-use"),
+      ).toBeInTheDocument(),
+    );
   });
 });

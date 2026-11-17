@@ -236,3 +236,39 @@ describe("projectBriefDef.finalize", () => {
     warn.mockRestore();
   });
 });
+
+describe("projectBriefDef.authorize", () => {
+  beforeEach(() => {
+    purchases.hasCertificate.mockReset();
+  });
+
+  it("allows anonymous checkout sessions only when they hold a certificate for the parcel", async () => {
+    const input = validInput();
+    purchases.hasCertificate.mockResolvedValueOnce(true);
+    await expect(
+      projectBriefDef.authorize!(input, { uid: "anon-1", isAnonymous: true }),
+    ).resolves.toBeNull();
+
+    purchases.hasCertificate.mockResolvedValueOnce(false);
+    const denied = await projectBriefDef.authorize!(input, {
+      uid: "anon-2",
+      isAnonymous: true,
+    });
+    expect(denied?.status).toBe(403);
+
+    purchases.hasCertificate.mockRejectedValueOnce(new Error("firestore down"));
+    const failedClosed = await projectBriefDef.authorize!(input, {
+      uid: "anon-3",
+      isAnonymous: true,
+    });
+    expect(failedClosed?.status).toBe(403);
+  });
+
+  it("allows registered non-anonymous members without requiring a prior purchase", async () => {
+    const input = validInput();
+    await expect(
+      projectBriefDef.authorize!(input, { uid: "member-1", isAnonymous: false }),
+    ).resolves.toBeNull();
+    expect(purchases.hasCertificate).not.toHaveBeenCalled();
+  });
+});
