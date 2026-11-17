@@ -21,11 +21,11 @@ import { clearInitialParcel, peekInitialParcel } from "./parcel-handoff";
 import { peekAddressQuery } from "./address-handoff";
 
 /**
- * Shown once an anonymous visitor has spent their free lookup. Names what they
+ * Shown once an anonymous visitor has spent their free lookups. Names what they
  * already got and what signing in buys, rather than reading as a refusal.
  */
 const GUEST_LIMIT_MESSAGE =
-  "That was your free lookup. Create a free account to search another address.";
+  "You've used your 3 free lookups. Create a free account to search another address.";
 
 /**
  * Which kind of parcel is currently active: a built-in demo `preset`, an

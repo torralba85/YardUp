@@ -1387,6 +1387,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onFineTune={() => setFineTuneOpen(true)}
           onContinue={() => setJourneyStep("act")}
           onCreateAccount={!user ? () => openSignup("post_result") : undefined}
+          emailLinkCard={emailLinkCard}
         />
       );
     } else {
@@ -1658,6 +1659,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
+              {emailLinkCard}
             </div>}
           </div>
         ) : activeStep === "design" ? (

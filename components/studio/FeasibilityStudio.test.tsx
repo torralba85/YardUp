@@ -275,9 +275,32 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(pose).toEqual(defaultPose(EMAIL_SCENARIO.liveParcel!, defaultAduConfig));
   });
 
+  it("offers free capture on desktop Rules & Fit and mobile Check while withholding it on Design and demo parcels", async () => {
+    stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+    window.history.replaceState(null, "", "/studio");
+    render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+    await screen.findByTestId("parcel-scene");
+    expect(await screen.findByRole("region", { name: "Save your layout link" })).toBeInTheDocument();
+    expect(screen.queryByText("Email this layout for later")).toBeNull();
+
+    fireEvent.click(stepButton(/Design/));
+    expect(screen.queryByRole("region", { name: "Save your layout link" })).toBeNull();
+  });
+
+  it("offers free capture on mobile CheckStep for live parcels", async () => {
+    stubMobileMatchMedia();
+    stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+    window.history.replaceState(null, "", "/studio");
+    render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
+    expect(await screen.findByRole("region", { name: "Save your layout link" })).toBeInTheDocument();
+  });
+
   it("does not offer email capture for a demo parcel", async () => {
     render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
     await screen.findByTestId("parcel-scene");
+    expect(screen.queryByRole("region", { name: "Save your layout link" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Certificate.*upcoming/i }));
     await screen.findByRole("heading", { name: "Your Certificate of Feasibility." });
     expect(screen.queryByText("Email this layout for later")).toBeNull();

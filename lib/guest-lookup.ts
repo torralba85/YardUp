@@ -24,11 +24,12 @@ const GUEST_LOOKUP_KEY = "lf:guest-lookups";
 /**
  * How many real-address lookups an anonymous visitor may run before signing in.
  *
- * One, per the growth decision recorded in the SEO/growth audit: enough for the
- * "that's my lot" moment that earns the account, without handing out unlimited
- * free lookups.
+ * Three, per the approved growth plan: enough for a visitor to test their lot
+ * (and compare another property or fix a typo) without an account wall, while
+ * keeping the server-side `geocode-guest` / `parcel-guest` rate limiters as the
+ * actual cost ceiling.
  */
-export const GUEST_LOOKUP_LIMIT = 1;
+export const GUEST_LOOKUP_LIMIT = 3;
 
 function readCount(): number {
   if (typeof window === "undefined") return 0;

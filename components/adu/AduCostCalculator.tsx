@@ -504,7 +504,7 @@ export function AduCostCalculator({
                 Check my address free
               </button>
               <p className="text-xs text-lot-stone text-center">
-                Free first search · No account or credit card needed
+                Up to 3 free guest searches · No account or credit card needed
               </p>
             </form>
           </div>

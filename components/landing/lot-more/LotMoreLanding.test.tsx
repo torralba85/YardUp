@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LotMoreLanding } from "./LotMoreLanding";
-import { GUEST_LOOKUP_LIMIT, consumeGuestLookup } from "@/lib/guest-lookup";
+import { GUEST_LOOKUP_LIMIT, consumeGuestLookup, guestLookupsRemaining } from "@/lib/guest-lookup";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
+import { clearInitialParcel, peekInitialParcel } from "@/lib/parcel-handoff";
 import {
   calculateFeasibility,
   defaultAduConfig,
@@ -14,9 +16,16 @@ import { landingDemos, landingScenarios } from "@/lib/landing-demo";
 import LandingPage, { metadata as homeMetadata } from "@/app/page";
 import SanDiegoPage, { metadata as sanDiegoMetadata } from "@/app/san-diego/page";
 
-const { push, stash } = vi.hoisted(() => ({ push: vi.fn(), stash: vi.fn() }));
+const { push, stash, acquireMock } = vi.hoisted(() => ({
+  push: vi.fn(),
+  stash: vi.fn(),
+  acquireMock: vi.fn(),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/address-handoff", () => ({ stashAddressQuery: stash }));
+vi.mock("@/lib/live-parcel-acquisition", () => ({
+  acquireLiveParcel: acquireMock,
+}));
 vi.mock("next/dynamic", () => ({
   default: (loader: () => unknown) =>
     loader.toString().includes("LandingMemberNav")
@@ -192,6 +201,9 @@ describe("landing address handoff", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
+    acquireMock.mockReset();
+    acquireMock.mockResolvedValue({ ...SAMPLE_LIVE_PARCEL });
+    clearInitialParcel();
     window.localStorage.clear();
     window.sessionStorage.clear();
     vi.stubGlobal(
@@ -257,15 +269,39 @@ describe("landing address handoff", () => {
   }
 
   // The account ask is the most expensive step in this funnel. A first-time
-  // visitor must reach their own lot without meeting it.
-  it("routes a first-time visitor straight to the studio with the trimmed address", () => {
+  // visitor must see their inline lot answer and open 3D without meeting it.
+  it("shows inline lot answer from the hero and opens Studio via stashed parcel", async () => {
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
       screen.getAllByLabelText("Property address", { exact: true })[0],
-      { target: { value: "  456 Pine St, Denver, CO  " } },
+      { target: { value: "  500 Cedar Ave, San Jose, CA  " } },
     );
     fireEvent.click(
       screen.getAllByRole("button", { name: "Explore my lot" })[0],
+    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const answer = await screen.findByRole("region", {
+      name: "Inline lot feasibility answer",
+    });
+    expect(answer).toHaveTextContent("500 Cedar Ave, San Jose, CA");
+    expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT - 1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
+    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
+    expect(consumeEntrySource()).toBe("landing_cta");
+  });
+
+  it("routes from the closing form straight to the studio with the trimmed address", () => {
+    render(<LotMoreLanding scenarios={scenarios} />);
+    fireEvent.change(
+      screen.getAllByLabelText("Property address", { exact: true })[1],
+      { target: { value: "  456 Pine St, Denver, CO  " } },
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Explore my lot" })[1],
     );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -301,7 +337,7 @@ describe("landing address handoff", () => {
     );
   });
 
-  it("does not let a remembered session block an available guest lookup", () => {
+  it("does not let a remembered session block an available guest lookup", async () => {
     window.localStorage.setItem("lf:member-session", "1");
     render(<LotMoreLanding scenarios={scenarios} />);
     fireEvent.change(
@@ -313,7 +349,10 @@ describe("landing address handoff", () => {
     );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(stash).toHaveBeenCalledExactlyOnceWith("456 Pine St, Denver, CO");
+    await screen.findByRole("region", { name: "Inline lot feasibility answer" });
+    expect(acquireMock).toHaveBeenCalledWith({ kind: "address", query: "456 Pine St, Denver, CO" }, null);
+    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    expect(stash).toHaveBeenCalledExactlyOnceWith("");
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
   });
 

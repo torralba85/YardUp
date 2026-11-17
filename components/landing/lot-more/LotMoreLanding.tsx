@@ -44,6 +44,7 @@ import { defaultScenarioState, serializeScenarioParams } from "@/lib/scenario-ur
 import styles from "./LotMoreLanding.module.css";
 import { COLOR } from "@/lib/design-tokens";
 import { SampleCertificateDialog } from "./SampleCertificateDialog";
+import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { landingDemos, type LandingDemo, type LandingCity } from "@/lib/landing-demo";
 import { constructionBudgetRows, type ConstructionBudget } from "@/lib/finance";
 
@@ -392,11 +393,19 @@ export function LotMoreLanding({
     input?.focus({ preventScroll: true });
   }
 
-  function addressForm(id: string) {
+  function addressForm(
+    id: string,
+    override?: {
+      onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+      disabled?: boolean;
+      busyLabel?: string;
+    },
+  ) {
+    const busy = authOpen || entering || Boolean(override?.disabled);
     return (
       <form
         className={styles.addressForm}
-        onSubmit={(event) => submit(event, id)}
+        onSubmit={override?.onSubmit ?? ((event) => submit(event, id))}
         noValidate
       >
         <label className={styles.fieldLabel} htmlFor={`${id}-address`}>
@@ -421,9 +430,13 @@ export function LotMoreLanding({
           <button
             type="submit"
             className={styles.primaryButton}
-            disabled={authOpen || entering}
+            disabled={busy}
           >
-            {authOpen || entering ? "Opening…" : "Explore my lot"}
+            {override?.disabled
+              ? (override.busyLabel ?? "Checking…")
+              : authOpen || entering
+                ? "Opening…"
+                : "Explore my lot"}
             <ArrowUpRight size={19} aria-hidden="true" />
           </button>
         </div>
@@ -433,9 +446,46 @@ export function LotMoreLanding({
           </p>
         )}
         <p id={`${id}-note`} className={styles.formNote}>
-          Free to explore. No account needed for your first address.
+          Free to explore. No account needed for up to 3 addresses.
         </p>
       </form>
+    );
+  }
+
+  function heroLotAnswer() {
+    return (
+      <LotAnswerCard
+        surface="landing"
+        query={query}
+        onQueryChange={(next) => {
+          setQuery(next);
+          setErrorForm(null);
+        }}
+        onAuthGateRequired={(trimmed) => {
+          pendingAddress.current = trimmed;
+          setAuthOpen(true);
+        }}
+        renderForm={({ submit: runHeroLookup, loading: answerLoading }) =>
+          addressForm("hero", {
+            disabled: answerLoading,
+            busyLabel: "Checking…",
+            onSubmit: (event) => {
+              event.preventDefault();
+              if (!query.trim()) {
+                setErrorForm("hero");
+                (
+                  event.currentTarget.elements.namedItem("address") as HTMLInputElement
+                ).focus();
+                return;
+              }
+              submitButton.current = event.currentTarget.querySelector(
+                'button[type="submit"]',
+              );
+              void runHeroLookup(query);
+            },
+          })
+        }
+      />
     );
   }
 
@@ -573,7 +623,7 @@ export function LotMoreLanding({
                   ? "Check any California address to see what could fit, compare estimated build costs, and explore rental potential."
                   : "See what could fit, compare estimated build costs, and explore rental potential."}
               </p>
-              {addressForm("hero")}
+              {heroLotAnswer()}
             </div>
             <div className={styles.heroAside}>
               {/* A real engine result, one tap from the address box. A cold
@@ -1196,8 +1246,8 @@ export function LotMoreLanding({
                     <strong>Free</strong>
                   </dt>
                   <dd>
-                    3D layout exploration and an estimated monthly rent range.
-                    Your first address needs no account.
+                    3D layout exploration, build cost, payback, and an estimated
+                    monthly rent range. Up to 3 addresses need no account.
                   </dd>
                 </div>
                 <div>
@@ -1428,7 +1478,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "Can I check my address?",
-                  "Yes. Your first address lookup needs no account — enter it above and the studio opens on your own lot. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, Austin, and San Diego demo lots are always open.",
+                  "Yes. Up to 3 address lookups need no account — enter yours above for an instant lot summary and open it in the 3D studio. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, Austin, and San Diego demo lots are always open.",
                 ],
                 [
                   "How are the estimates calculated?",

@@ -1,12 +1,13 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { pushMock, stashAddressQueryMock, stashEntrySourceMock, trackEventMock } =
+const { pushMock, stashAddressQueryMock, stashEntrySourceMock, trackEventMock, acquireMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
     stashAddressQueryMock: vi.fn(),
     stashEntrySourceMock: vi.fn(),
     trackEventMock: vi.fn(),
+    acquireMock: vi.fn(),
   }));
 
 vi.mock("next/navigation", () => ({
@@ -25,13 +26,21 @@ vi.mock("@/lib/analytics/gtag", () => ({
   trackEvent: trackEventMock,
 }));
 
+vi.mock("@/lib/live-parcel-acquisition", () => ({
+  acquireLiveParcel: acquireMock,
+}));
+
 vi.mock("@/lib/guest-lookup", () => ({
   canGuestLookup: () => true,
+  consumeGuestLookup: vi.fn(),
+  resetGuestLookups: vi.fn(),
 }));
 
 import CanIBuildABackyardHomePage, {
   metadata,
 } from "@/app/can-i-build-a-backyard-home/page";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
+import { clearInitialParcel, peekInitialParcel } from "@/lib/parcel-handoff";
 
 describe("/can-i-build-a-backyard-home", () => {
   beforeEach(() => {
@@ -39,6 +48,9 @@ describe("/can-i-build-a-backyard-home", () => {
     stashAddressQueryMock.mockReset();
     stashEntrySourceMock.mockReset();
     trackEventMock.mockReset();
+    acquireMock.mockReset();
+    acquireMock.mockResolvedValue({ ...SAMPLE_LIVE_PARCEL });
+    clearInitialParcel();
   });
 
   afterEach(() => {
@@ -93,7 +105,7 @@ describe("/can-i-build-a-backyard-home", () => {
     expect(jsonLdNode?.textContent).not.toContain("FAQPage");
   });
 
-  it("walks through 5 yes/no questions and hands the address off to /studio", () => {
+  it("walks through 5 yes/no questions, shows inline answer, and hands off parcel to /studio", async () => {
     render(<CanIBuildABackyardHomePage />);
 
     fireEvent.click(screen.getByRole("button", { name: /Yes, residential lot/i }));
@@ -129,9 +141,14 @@ describe("/can-i-build-a-backyard-home", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /Check my lot/i }));
 
-    expect(stashAddressQueryMock).toHaveBeenCalledWith(
-      "1420 Coyote Brush Ct, San Diego, CA",
-    );
+    const answer = await screen.findByRole("region", {
+      name: "Inline lot feasibility answer",
+    });
+    expect(answer).toHaveTextContent("500 Cedar Ave, San Jose, CA");
+
+    fireEvent.click(screen.getByRole("button", { name: /Open in 3D/i }));
+    expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
+    expect(stashAddressQueryMock).toHaveBeenCalledWith("");
     expect(stashEntrySourceMock).toHaveBeenCalledWith("landing_cta");
     expect(pushMock).toHaveBeenCalledWith("/studio");
   });
