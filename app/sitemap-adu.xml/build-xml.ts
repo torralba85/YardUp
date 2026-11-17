@@ -1,3 +1,4 @@
+import { PERMIT_AREAS, permitAreaUrl, permitAreaLastModified } from "@/lib/adu/permit-areas";
 import {
   ADU_CITIES,
   ADU_COST_PAGES,
@@ -80,6 +81,7 @@ export function buildAduSitemapXml(): string {
       changefreq: "monthly",
       priority: "0.7",
     },
+    ...PERMIT_AREAS.map((area) => ({ loc: permitAreaUrl(area), lastmod: permitAreaLastModified(), changefreq: "monthly", priority: "0.6" })),
     ...ADU_CITIES.map((city) => ({
       loc: cityUrl(city),
       lastmod: cityLastModified(city.slug, city.asOf),

@@ -70,5 +70,5 @@ export function methodologyLastModified(asOf = "2026-10-24"): string {
 }
 
 export function permitStudyLastModified(generatedAt: string): string {
-  return generatedAt;
+  return laterDate(generatedAt, "2026-11-16");
 }
