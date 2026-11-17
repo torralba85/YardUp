@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import type {
   AIParcelRisk,
   AIProjectBrief,
@@ -153,6 +154,21 @@ export const projectBriefDef: AIPanelDefinition<
 > = {
   id: "project-brief",
   namespace: "ai-project-brief",
+  allowAnonymous: true,
+  authorize: async (input, { uid, isAnonymous }) => {
+    if (!isAnonymous) return null;
+    try {
+      if (await hasCertificate(uid, certificateKey(input.parcel))) {
+        return null;
+      }
+    } catch {
+      // Fail closed for anonymous callers if the purchase check fails.
+    }
+    return NextResponse.json(
+      { error: "Unlock this property certificate or sign in to generate property notes." },
+      { status: 403 },
+    );
+  },
   rateLimit: { limit: 8, windowMs: 60_000, dailyLimit: 30 },
   maxOutputTokens: 4096,
   requiredToolSequence: ["lookup_permit_tracks", "get_stage_benchmarks"],

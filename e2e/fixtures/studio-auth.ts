@@ -25,3 +25,41 @@ export async function mockTestOwnerAuth(page: Page) {
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, json: { error: "Unavailable in browser fixture" } }));
 }
+
+/** Browser-only Firebase anonymous auth fixture for guest web checkout tests. */
+export async function mockGuestAnonymousCheckoutAuth(page: Page) {
+  const uid = "studio-e2e-anon";
+  const now = Math.floor(Date.now() / 1000);
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  const idToken = `${encode({ alg: "none" })}.${encode({
+    sub: uid,
+    user_id: uid,
+    iat: now,
+    exp: now + 3600,
+    auth_time: now,
+    firebase: { sign_in_provider: "anonymous" },
+  })}.test-only`;
+
+  await page.route(/https:\/\/[^/]*googleapis\.com\//, async (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname === "identitytoolkit.googleapis.com" && url.pathname.endsWith("accounts:signUp")) {
+      await route.fulfill({
+        json: {
+          kind: "identitytoolkit#SignupNewUserResponse",
+          localId: uid,
+          idToken,
+          refreshToken: "test-only",
+          expiresIn: "3600",
+        },
+      });
+    } else if (url.hostname === "identitytoolkit.googleapis.com" && url.pathname.endsWith("accounts:lookup")) {
+      await route.fulfill({
+        json: {
+          users: [{ localId: uid, providerUserInfo: [] }],
+        },
+      });
+    } else {
+      await route.abort();
+    }
+  });
+}

@@ -12,10 +12,14 @@ import {
 import {
   type User,
   onAuthStateChanged,
+  signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
+  linkWithCredential,
+  linkWithPopup,
+  linkWithRedirect,
   getRedirectResult,
   GoogleAuthProvider,
   OAuthProvider,
@@ -34,7 +38,11 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { detectPurchaseChannel } from "./commerce/purchase-channel";
-import { CURRENT_LEGAL_CONSENT, type LegalConsent } from "./legal-consent";
+import {
+  CURRENT_LEGAL_CONSENT,
+  isValidCurrentLegalConsent,
+  type LegalConsent,
+} from "./legal-consent";
 import {
   forgetMemberSession,
   rememberMemberSession,
@@ -77,9 +85,20 @@ export interface UserProfile {
 export type SocialSignInResult = UserCredential & { profileCreated: boolean };
 
 interface AuthContextType {
+  /** Registered (non-anonymous) Firebase user; `null` for guests and anonymous checkout sessions. */
   user: User | null;
+  /** Active checkout identity (either the registered `user` or a silent anonymous checkout session). */
+  checkoutUser: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  ensureCheckoutUser: () => Promise<User>;
+  linkCheckoutWithEmail: (
+    email: string,
+    password: string,
+    displayName: string,
+    legalConsent: LegalConsent,
+  ) => Promise<UserCredential>;
+  linkCheckoutWithGoogle: (legalConsent: LegalConsent) => Promise<UserCredential>;
   signIn: (email: string, password: string) => Promise<UserCredential>;
   signUp: (
     email: string,
@@ -115,6 +134,7 @@ export const SOCIAL_REDIRECT_KEY = "lotfoundry:social-redirect";
 interface PendingSocialRedirect {
   role: UserRole;
   consented: boolean;
+  mode: "sign-in" | "link";
 }
 
 /**
@@ -130,12 +150,13 @@ function prefersRedirectSignIn(): boolean {
     (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent));
 }
 
-function stashSocialRedirect(role: UserRole, legalConsent?: LegalConsent) {
-  const consented = Boolean(legalConsent) &&
-    legalConsent?.termsVersion === CURRENT_LEGAL_CONSENT.termsVersion &&
-    legalConsent?.privacyVersion === CURRENT_LEGAL_CONSENT.privacyVersion &&
-    legalConsent?.adultConfirmed === true;
-  const pending: PendingSocialRedirect = { role, consented };
+function stashSocialRedirect(
+  role: UserRole,
+  legalConsent?: LegalConsent,
+  mode: "sign-in" | "link" = "sign-in",
+) {
+  const consented = isValidCurrentLegalConsent(legalConsent);
+  const pending: PendingSocialRedirect = { role, consented, mode };
   window.sessionStorage.setItem(SOCIAL_REDIRECT_KEY, JSON.stringify(pending));
   // The redirect may return to the Firebase-free landing, which only mounts an
   // auth island for a member hint. Without one, nothing would finish sign-in.
@@ -151,6 +172,7 @@ function takeSocialRedirect(): PendingSocialRedirect | null {
     return {
       role: parsed.role === "builder" ? "builder" : "user",
       consented: parsed.consented === true,
+      mode: parsed.mode === "link" ? "link" : "sign-in",
     };
   } catch {
     return null;
@@ -181,7 +203,12 @@ async function completeSocialRedirect(
         legalConsent: pending.consented ? CURRENT_LEGAL_CONSENT : undefined,
       });
     } catch (error) {
-      await signOut(auth).catch(() => undefined);
+      // Never sign out a newly linked anonymous UID: doing so would strand the
+      // paid certificate it owns. LegalReacceptGate still blocks until consent
+      // is persisted.
+      if (pending.mode !== "link") {
+        await signOut(auth).catch(() => undefined);
+      }
       throw error;
     }
     return null;
@@ -209,6 +236,7 @@ async function completeSocialRedirect(
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [checkoutUser, setCheckoutUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const profileRequestRef = useRef(0);
@@ -365,6 +393,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event !== authEventRef.current) return;
         if (failure) setRedirectError(failure);
         const current = auth.currentUser;
+        setCheckoutUser(current);
+        if (current?.isAnonymous) {
+          setUser(null);
+          setProfile(null);
+          forgetMemberSession();
+          if (event === authEventRef.current) setLoading(false);
+          return;
+        }
         setUser(current);
         try {
           if (current) {
@@ -386,6 +422,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (u && pendingAuthRoleRef.current !== null) return;
       const event = ++authEventRef.current;
       setLoading(true);
+      setCheckoutUser(u);
+      if (u?.isAnonymous) {
+        // Anonymous checkout sessions hold a checkout uid only: never expose
+        // them as registered members, create a users/{uid} profile, or write
+        // the member-session hint.
+        ++profileRequestRef.current;
+        setUser(null);
+        setProfile(null);
+        setRedirectError(null);
+        setLoading(false);
+        return;
+      }
       setUser(u);
       setProfile(null);
       try {
@@ -426,6 +474,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       invalidateRequests();
       unsubscribe();
     };
+  }, [ensureProfile]);
+
+  const ensureCheckoutUser = useCallback(async (): Promise<User> => {
+    const existing = auth.currentUser;
+    if (existing) {
+      setCheckoutUser(existing);
+      return existing;
+    }
+    const cred = await signInAnonymously(auth);
+    setCheckoutUser(cred.user);
+    return cred.user;
+  }, []);
+
+  const linkCheckoutWithEmail = useCallback(async (
+    email: string,
+    password: string,
+    displayName: string,
+    legalConsent: LegalConsent,
+  ): Promise<UserCredential> => {
+    const current = auth.currentUser;
+    if (!current) {
+      throw new Error("No active checkout session to save.");
+    }
+    if (!current.isAnonymous) {
+      throw new Error("Your session is already linked to an account.");
+    }
+    if (!isValidCurrentLegalConsent(legalConsent)) {
+      throw new Error(
+        "Confirm that you are 18 or older and accept the Terms and Privacy Policy.",
+      );
+    }
+    const nameError = validateDisplayName(displayName);
+    if (nameError) throw new Error(nameError);
+    const emailError = validateEmail(email);
+    if (emailError) throw new Error(emailError);
+    const pwError = validatePassword(password);
+    if (pwError) throw new Error(pwError);
+
+    const trimmedEmail = email.trim();
+    const trimmedName = displayName.trim();
+    pendingAuthRoleRef.current = "user";
+    try {
+      const credential = EmailAuthProvider.credential(trimmedEmail, password);
+      const linked = await linkWithCredential(current, credential);
+      await updateProfile(linked.user, { displayName: trimmedName }).catch(
+        () => undefined,
+      );
+      hadUserRef.current = true;
+      rememberMemberSession();
+      setCheckoutUser(linked.user);
+      setUser(linked.user);
+      await ensureProfile(linked.user, {
+        displayName: trimmedName,
+        email: trimmedEmail,
+        role: "user",
+        legalConsent,
+      });
+      await Promise.resolve(sendEmailVerification(linked.user)).catch(
+        () => undefined,
+      );
+      setLoading(false);
+      return linked;
+    } finally {
+      pendingAuthRoleRef.current = null;
+    }
+  }, [ensureProfile]);
+
+  const linkCheckoutWithGoogle = useCallback(async (
+    legalConsent: LegalConsent,
+  ): Promise<UserCredential> => {
+    const current = auth.currentUser;
+    if (!current) {
+      throw new Error("No active checkout session to save.");
+    }
+    if (!current.isAnonymous) {
+      throw new Error("Your session is already linked to an account.");
+    }
+    if (!isValidCurrentLegalConsent(legalConsent)) {
+      throw new Error(
+        "Confirm that you are 18 or older and accept the Terms and Privacy Policy.",
+      );
+    }
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    if (prefersRedirectSignIn()) {
+      stashSocialRedirect("user", legalConsent, "link");
+      try {
+        await linkWithRedirect(current, provider);
+      } catch (error) {
+        window.sessionStorage.removeItem(SOCIAL_REDIRECT_KEY);
+        throw error;
+      }
+      return new Promise<never>(() => undefined);
+    }
+    pendingAuthRoleRef.current = "user";
+    try {
+      const linked = await linkWithPopup(current, provider);
+      hadUserRef.current = true;
+      rememberMemberSession();
+      setCheckoutUser(linked.user);
+      setUser(linked.user);
+      await ensureProfile(linked.user, { role: "user", legalConsent });
+      setLoading(false);
+      return linked;
+    } finally {
+      pendingAuthRoleRef.current = null;
+    }
   }, [ensureProfile]);
 
   const signIn = (email: string, password: string) =>
@@ -538,6 +693,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ++profileRequestRef.current;
       pendingAuthRoleRef.current = null;
       setUser(null);
+      setCheckoutUser(null);
       setProfile(null);
       clearInitialParcel();
       forgetMemberSession();
@@ -553,21 +709,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     const current = auth.currentUser;
-    if (!current) return;
+    if (!current || current.isAnonymous) return;
     await current.reload();
     const refreshed = auth.currentUser;
     if (refreshed?.emailVerified && typeof refreshed.getIdToken === "function") {
       await Promise.resolve(refreshed.getIdToken(true)).catch(() => undefined);
     }
     setUser(refreshed);
-    if (refreshed) {
+    if (refreshed && !refreshed.isAnonymous) {
       await ensureProfile(refreshed, { email: refreshed.email });
     }
   };
 
   const updateAccountName = async (displayName: string) => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in.");
+    if (!current || current.isAnonymous) throw new Error("You must be signed in.");
     const error = validateDisplayName(displayName);
     if (error) throw new Error(error);
     const name = displayName.trim();
@@ -577,14 +733,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const reauthWithPassword = async (currentPassword: string) => {
     const current = auth.currentUser;
-    if (!current?.email) throw new Error("You must be signed in with email.");
+    if (!current || current.isAnonymous || !current.email) {
+      throw new Error("You must be signed in with email.");
+    }
     const credential = EmailAuthProvider.credential(current.email, currentPassword);
     await reauthenticateWithCredential(current, credential);
   };
 
   const changeAccountEmail = async (email: string, currentPassword: string) => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in.");
+    if (!current || current.isAnonymous) throw new Error("You must be signed in.");
     const emailError = validateEmail(email);
     if (emailError) throw new Error(emailError);
     await reauthWithPassword(currentPassword);
@@ -596,7 +754,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     nextPassword: string,
   ) => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in.");
+    if (!current || current.isAnonymous) throw new Error("You must be signed in.");
     const pwError = validatePassword(nextPassword);
     if (pwError) throw new Error(pwError);
     await reauthWithPassword(currentPassword);
@@ -605,7 +763,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendVerification = async () => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in.");
+    if (!current || current.isAnonymous) throw new Error("You must be signed in.");
     await sendEmailVerification(current);
   };
 
@@ -625,7 +783,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const deleteAccount = async () => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in to delete your account.");
+    if (!current || current.isAnonymous) {
+      throw new Error("You must be signed in to delete your account.");
+    }
 
     const token = await current.getIdToken();
     const res = await fetch("/api/account/delete", {
@@ -642,6 +802,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     forgetMemberSession();
     await signOut(auth).catch(() => undefined);
     setUser(null);
+    setCheckoutUser(null);
     setProfile(null);
     // Deletion ends a session exactly as logout does, so it needs the same hard
     // navigation. Clearing `user` alone leaves the Studio's mounted state and
@@ -658,7 +819,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const acceptCurrentLegalTerms = async () => {
     const current = auth.currentUser;
-    if (!current) throw new Error("You must be signed in.");
+    if (!current || current.isAnonymous) throw new Error("You must be signed in.");
     const docRef = doc(db, "users", current.uid);
 
     try {
@@ -687,8 +848,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        checkoutUser,
         profile,
         loading,
+        ensureCheckoutUser,
+        linkCheckoutWithEmail,
+        linkCheckoutWithGoogle,
         signIn,
         signUp,
         signInWithGoogle,

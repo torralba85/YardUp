@@ -1,8 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const mocks = vi.hoisted(() => ({
-  auth: { uid: "user-1" } as { uid: string; email?: string; emailVerified?: boolean },
+  auth: { uid: "user-1" } as {
+    uid: string;
+    email?: string;
+    emailVerified?: boolean;
+    isAnonymous?: boolean;
+  },
   purchased: false,
   stripe: null as null | {
     checkout: {
@@ -129,6 +136,7 @@ function postRequest(body: unknown): NextRequest {
 }
 
 beforeEach(() => {
+  resetRateLimitBuckets();
   mocks.auth = { uid: "user-1" };
   mocks.purchased = false;
   mocks.stripe = null;
@@ -363,7 +371,7 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(args.cancel_url).not.toContain("cert=");
   });
 
-  it("reconciles a completed paid Session on retry", async () => {
+  it.each([false, true])("reconciles only while the paid grant still belongs to the checkout uid (transferred=%s)", async (transferred) => {
     const create = vi
       .fn()
       .mockResolvedValue({ id: "cs_1", url: "https://stripe.test/cert/1" });
@@ -379,12 +387,15 @@ describe("POST /api/stripe/checkout-certificate", () => {
     mocks.stripe = { checkout: { sessions: { create, retrieve } } };
 
     await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+    if (transferred) mocks.grant.mockResolvedValueOnce(false);
     const res = await POST(
       postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }),
     );
 
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "granted", reconciled: true });
+    expect(res.status).toBe(transferred ? 409 : 200);
+    const body = await res.json();
+    if (transferred) expect(body.error).toContain("recovered to another account");
+    else expect(body).toEqual({ status: "granted", reconciled: true });
     expect(mocks.grant).toHaveBeenCalledWith(
       expect.objectContaining({
         uid: "user-1",
@@ -605,6 +616,121 @@ describe("POST /api/stripe/checkout-certificate", () => {
       // A paid return must never look like a cancellation.
       expect(success.searchParams.get("checkout")).toBe("returned");
       expect(success.searchParams.has("step")).toBe(false);
+    });
+  });
+
+  describe("anonymous guest web checkout", () => {
+    it("requires current legal consent before starting anonymous checkout", async () => {
+      mocks.auth = { uid: "anon-1", isAnonymous: true };
+      const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/anon" });
+      mocks.stripe = { checkout: { sessions: { create } } };
+
+      const missing = await POST(
+        postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }),
+      );
+      expect(missing.status).toBe(400);
+
+      const stale = await POST(
+        postRequest({
+          certKey: "parcel-1",
+          checkoutAttemptId: "attempt-1",
+          legalConsent: { ...CURRENT_LEGAL_CONSENT, termsVersion: "2020-01-01" },
+        }),
+      );
+      expect(stale.status).toBe(400);
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("stamps anonymousCheckout and consent version into Stripe metadata without customer_email", async () => {
+      mocks.auth = { uid: "anon-1", isAnonymous: true };
+      const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/anon" });
+      mocks.stripe = { checkout: { sessions: { create } } };
+
+      const res = await POST(
+        postRequest({
+          certKey: "parcel-1",
+          parcelName: "123 Main Street",
+          checkoutAttemptId: "attempt-1",
+          legalConsent: CURRENT_LEGAL_CONSENT,
+        }),
+      );
+
+      expect(res.status).toBe(200);
+      await expect(res.json()).resolves.toEqual({ url: "https://stripe.test/anon" });
+      const args = create.mock.calls[0][0];
+      expect(args).not.toHaveProperty("customer_email");
+      expect(args.metadata).toMatchObject({
+        purchaseType: "certificate",
+        uid: "anon-1",
+        certKey: "parcel-1",
+        anonymousCheckout: "true",
+        consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+        privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+      });
+      expect(typeof args.metadata.consentAcceptedAt).toBe("string");
+    });
+
+    it("records buyerEmail and consent metadata during inline complete-session reconciliation", async () => {
+      mocks.auth = { uid: "anon-1", isAnonymous: true };
+      const reservation = {
+        attemptId: "attempt-1",
+        parameters: {
+          origin: "http://localhost",
+          customerEmail: "",
+          parcelName: "123 Main Street",
+          anonymousCheckout: "true",
+          consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+          privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+          consentAcceptedAt: "2026-11-16T20:00:00.000Z",
+        },
+        sessionId: "cs_done",
+        sessionUrl: "https://stripe.test/done",
+        expiresAtMs: Date.now() + 60_000,
+      };
+      mocks.reservations.set("certificate:anon-1:parcel-1", reservation);
+      mocks.stripe = {
+        checkout: {
+          sessions: {
+            create: vi.fn(),
+            retrieve: vi.fn().mockResolvedValue({
+              id: "cs_done",
+              mode: "payment",
+              status: "complete",
+              payment_status: "paid",
+              currency: "usd",
+              amount_total: 2900,
+              customer_details: { email: "Guest@Example.COM" },
+              metadata: {
+                purchaseType: "certificate",
+                uid: "anon-1",
+                certKey: "parcel-1",
+                anonymousCheckout: "true",
+                consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+                privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+                consentAcceptedAt: "2026-11-16T20:00:00.000Z",
+              },
+            }),
+          },
+        },
+      };
+
+      const res = await POST(
+        postRequest({
+          certKey: "parcel-1",
+          checkoutAttemptId: "attempt-1",
+          legalConsent: CURRENT_LEGAL_CONSENT,
+        }),
+      );
+      expect(res.status).toBe(200);
+      expect(mocks.grant).toHaveBeenCalledWith(
+        expect.objectContaining({
+          uid: "anon-1",
+          certKey: "parcel-1",
+          buyerEmail: "guest@example.com",
+          anonymousCheckout: true,
+          consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+        }),
+      );
     });
   });
 });

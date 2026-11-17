@@ -381,4 +381,36 @@ describe("POST /api/stripe/webhook", () => {
     expect((await POST(webhookRequest())).status).toBe(200);
     expect(mocks.grantCertificate).not.toHaveBeenCalled();
   });
+
+  it("stores Stripe-collected customer_details email and anonymous consent receipt on certificate grants", async () => {
+    installEvent(
+      paidSession({
+        id: "sess_guest_cert",
+        amount_total: 2900,
+        customer_details: { email: "Buyer@Example.COM" },
+        metadata: {
+          purchaseType: "certificate",
+          uid: "anon_1",
+          certKey: "1234-oak-street-seattle",
+          anonymousCheckout: "true",
+          consentVersion: "2026-11-06",
+          privacyVersion: "2026-11-06",
+          consentAcceptedAt: "2026-11-16T20:00:00.000Z",
+        },
+      }),
+    );
+
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.grantCertificate).toHaveBeenCalledWith({
+      uid: "anon_1",
+      certKey: "1234-oak-street-seattle",
+      stripeSessionId: "sess_guest_cert",
+      amount: 2900,
+      buyerEmail: "buyer@example.com",
+      anonymousCheckout: true,
+      consentVersion: "2026-11-06",
+      privacyVersion: "2026-11-06",
+      consentAcceptedAt: "2026-11-16T20:00:00.000Z",
+    });
+  });
 });

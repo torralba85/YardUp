@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { BarChart3, CheckCircle2, FileText, Home, Landmark, Lock, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import type { FeasibilityStatus } from "@/lib/analytics/events";
@@ -45,6 +46,8 @@ export interface EstimateSummaryPanelProps {
   reportCtaBusy?: boolean;
   /** Short reassurance shown directly beneath the CTA (e.g. purchase terms). */
   reportCtaNote?: string;
+  /** Optional legal consent control rendered directly above the CTA (guest web checkout). */
+  consentControl?: ReactNode;
   /** Error message to display above the CTA button if checkout or generation fails. */
   error?: string | null;
   /** True once the certificate is purchased: the cash-flow row shows its figures. */
@@ -67,13 +70,14 @@ export default function EstimateSummaryPanel({
   reportCtaLabel = "See what’s behind the numbers",
   reportCtaBusy = false,
   reportCtaNote,
+  consentControl,
   error,
   certificateUnlocked = false,
   feeJurisdiction = "other",
 }: EstimateSummaryPanelProps) {
   if (!certificateUnlocked) {
     return <StudioPreview result={result} onUnlock={onGenerateReport} ctaLabel={reportCtaLabel}
-      busy={reportCtaBusy} ctaNote={reportCtaNote} error={error} />;
+      busy={reportCtaBusy} ctaNote={reportCtaNote} consentControl={consentControl} error={error} />;
   }
   const isCompliant = result.zoningStatus === "Compliant";
   const CoverageIcon = isCompliant ? CheckCircle2 : TriangleAlert;

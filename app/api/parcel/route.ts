@@ -103,14 +103,15 @@ export async function GET(request: NextRequest) {
   const requestedAddress = sanitizeAddress(searchParams.get("address"));
 
   // Autocomplete selections bypass /api/geocode, so check their address here
-  // too. Verify the token before spending ATTOM quota, and overlap the lookup
-  // with the existing parcel providers. Guests keep the keyless chain.
+  // too. Verify any supplied bearer token so anonymous/forged tokens stay on
+  // the keyless chain and never spend Regrid or ATTOM quota.
+  const auth = !guest ? await requireApiAuth(request) : null;
+  const effectiveGuest = guest || !auth || auth instanceof NextResponse;
   let attomLookup: Promise<AttomLookup> | undefined;
-  if (!guest && process.env.ATTOM_API_KEY && requestedAddress && canLookUpAttomAddress(requestedAddress)) {
-    const auth = await requireApiAuth(request);
-    if (!(auth instanceof NextResponse)) attomLookup = fetchAttomAddress(requestedAddress);
+  if (!effectiveGuest && process.env.ATTOM_API_KEY && requestedAddress && canLookUpAttomAddress(requestedAddress)) {
+    attomLookup = fetchAttomAddress(requestedAddress);
   }
-  const response = await resolveParcel(lat, lng, requestedAddress, guest);
+  const response = await resolveParcel(lat, lng, requestedAddress, effectiveGuest);
   if (!attomLookup || !response.ok) return response;
   const data = await response.json() as LiveParcelData;
   return NextResponse.json(withAttomAddressEvidence(data, await attomLookup), {

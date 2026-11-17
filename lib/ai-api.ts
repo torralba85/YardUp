@@ -46,7 +46,7 @@ export async function requestADUConcept({
   config: ADUConfig;
 }): Promise<AIADUConcept> {
   const user = auth.currentUser;
-  if (!user) {
+  if (!user || user.isAnonymous) {
     throw new AIRequestError("Sign in to generate an AI style-match concept.");
   }
 
@@ -114,7 +114,7 @@ export async function requestParcelInsights(
   // routes to keep AI spend off the OpenAI bill, but it still consumes metered
   // Gemini quota — so it carries the same signed-in requirement as every other
   // live lookup.
-  if (!auth.currentUser) {
+  if (!auth.currentUser || auth.currentUser.isAnonymous) {
     throw new AIRequestError("Sign in to generate AI parcel insights.");
   }
 

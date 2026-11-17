@@ -28,7 +28,7 @@ test("email capture appears on results and stays out of the design flow", async 
   }
 });
 
-test("free lot link queues a real design and carries email into certificate signup", async ({ page }, testInfo) => {
+test("free lot link queues a real design and carries email into the account dialog", async ({ page }, testInfo) => {
   await mockTestOwnerAuth(page);
   const parcel = EMAIL_SCENARIO.liveParcel!;
   await page.route("**/api/geocode?**", (route) => route.fulfill({ json: { lat: parcel.lat, lng: parcel.lng, formattedAddress: parcel.address } }));
@@ -66,7 +66,8 @@ test("free lot link queues a real design and carries email into certificate sign
   expect(new URL(captured!.scenarioUrl as string).origin).toBe("https://lotfoundry.net");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("email-link-queued.png"), fullPage: true });
-  await page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first().click();
+  // Web guests now check out anonymously, so the account dialog opens from the header (or after purchase).
+  await page.getByRole("button", { name: /^Sign in$/i }).filter({ visible: true }).first().click();
   await expect(page.getByRole("dialog").getByLabel("Email", { exact: true })).toHaveValue("layout-owner@example.test");
 });
 
@@ -96,9 +97,9 @@ test("emailed layout restores the real parcel without a guest lookup and survive
   expect(parcelLookups).toBe(0);
   await expect.poll(() => new URL(page.url()).searchParams.get("layout")).toBe("a".repeat(48));
   await card.screenshot({ path: testInfo.outputPath("email-link-restored.png") });
-  await page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first().click();
+  // Web guests now check out anonymously; an existing member signs in from the header.
+  await page.getByRole("button", { name: /^Sign in$/i }).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("button", { name: "Already have an account? Sign in" }).click();
   await dialog.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
   await dialog.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
   await dialog.locator('button[type="submit"]').click();

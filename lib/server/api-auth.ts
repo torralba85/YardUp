@@ -8,6 +8,16 @@ interface AuthResult {
   email?: string;
   /** Whether Firebase has verified that the account owns {@link email}. */
   emailVerified?: boolean;
+  /** True only when explicitly opted-in via `allowAnonymous` and the token is anonymous. */
+  isAnonymous?: boolean;
+}
+
+export interface RequireApiAuthOptions {
+  /**
+   * Allow Firebase anonymous sessions (used only for guest web certificate
+   * checkout and paid-certificate project briefs). Defaults to `false`.
+   */
+  allowAnonymous?: boolean;
 }
 
 function getAdminAuth() {
@@ -43,6 +53,7 @@ function getAdminAuth() {
  */
 export async function requireApiAuth(
   request: NextRequest,
+  options?: RequireApiAuthOptions,
 ): Promise<AuthResult | NextResponse> {
   if (
     process.env.NODE_ENV === "test" ||
@@ -62,6 +73,16 @@ export async function requireApiAuth(
 
   try {
     const decoded = await getAdminAuth().verifyIdToken(match[1]);
+    const isAnonymous = decoded.firebase?.sign_in_provider === "anonymous";
+    if (isAnonymous) {
+      if (!options?.allowAnonymous) {
+        return NextResponse.json(
+          { error: "Account sign-in required" },
+          { status: 403 },
+        );
+      }
+      return { uid: decoded.uid, isAnonymous: true };
+    }
     if (typeof decoded.email !== "string" || !decoded.email) {
       return { uid: decoded.uid };
     }

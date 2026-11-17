@@ -57,17 +57,18 @@ export default function AIProjectBriefPanel({
   onGenerate,
   onViewCertificate,
 }: AIProjectBriefPanelProps) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, checkoutUser, loading: authLoading } = useAuth();
+  const activeUser = checkoutUser ?? user;
   const [authOpen, setAuthOpen] = useState(false);
 
   async function handleGenerate() {
-    if (!user) {
+    if (!activeUser) {
       setAuthOpen(true);
       return;
     }
 
     try {
-      await onGenerate(await user.getIdToken());
+      await onGenerate(await activeUser.getIdToken());
     } catch {
       // The studio owns the visible error so it persists across step changes.
     }
@@ -95,7 +96,7 @@ export default function AIProjectBriefPanel({
           aria-label={response ? "Refresh property notes and timeline" : "Generate property notes and timeline"}
           className="shrink-0"
         >
-          {loading ? "Building" : !user ? "Sign in" : response ? "Refresh" : "Generate"}
+          {loading ? "Building" : !activeUser ? "Sign in" : response ? "Refresh" : "Generate"}
         </Button>
       </div>
 
