@@ -251,7 +251,10 @@ test.describe("web certificate checkout", () => {
       await route.fulfill({ status: 401, json: { error: "unauthorized" } });
     });
 
+    // The native shell opens on its own onboarding; a guest reaches the demo lot through it.
     await page.goto("/studio?parcel=oak-street&step=certificate");
+    await page.getByRole("button", { name: /Seattle, WA/ }).click();
+    await page.getByRole("button", { name: /Open the Studio/ }).click();
     const cta = page.getByRole("button", { name: /Continue to purchase/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await expect(page.getByRole("checkbox")).toHaveCount(0);
