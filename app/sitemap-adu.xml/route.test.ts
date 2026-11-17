@@ -1,3 +1,4 @@
+import { PERMIT_AREAS } from "@/lib/adu/permit-areas";
 import { describe, expect, it } from "vitest";
 import {
   ADU_CITIES,
@@ -57,7 +58,7 @@ describe("sitemap-adu.xml", () => {
     expect(xml).toContain(`<loc>${rentUrl()}</loc>`);
     expect(xml).toContain(`<loc>${permitStudyUrl()}</loc>`);
     expect(xml).toContain(`<loc>${jaduUrl()}</loc>`);
-    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + 8);
+    expect(xml.match(/<url>/g)?.length).toBe(ADU_CITIES.length + ADU_COST_PAGES.length + PERMIT_AREAS.length + 8);
     expect(xml).not.toContain("& ");
   });
 

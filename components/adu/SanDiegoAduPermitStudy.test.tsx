@@ -34,11 +34,12 @@ describe("SanDiegoAduPermitStudy", () => {
     expect(within(rows[rows.length - 1]).getByRole("rowheader")).toHaveTextContent(/\(through /);
   });
 
-  it("shows the top 20 planning areas and points to the full CSV", () => {
+  it("shows every planning area, links qualifying areas and offers the CSV", () => {
     render(<SanDiegoAduPermitStudy />);
 
     const table = screen.getByRole("table", { name: "City of San Diego ADU and JADU permits by community planning area" });
-    expect(within(table).getAllByRole("row")).toHaveLength(21);
+    expect(within(table).getAllByRole("row")).toHaveLength(study.byArea.length + 1);
+    expect(within(table).getAllByRole("link")).toHaveLength(study.byArea.filter((area) => area.approvals >= 50).length);
     expect(
       screen.getByRole("link", { name: `Download all ${study.byArea.length} areas as CSV` }),
     ).toHaveAttribute("href", "/adu/ca/san-diego/permits/adu-permits-by-planning-area.csv");

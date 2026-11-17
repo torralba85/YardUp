@@ -1,3 +1,4 @@
+import { PERMIT_AREA_MIN_APPROVALS, permitAreaPath } from "@/lib/adu/permit-areas";
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduStudioCta } from "./AduStudioCta";
@@ -26,8 +27,6 @@ const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
 const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
 
-/** Planning areas shown in the on-page table; the CSV carries every area. */
-const AREA_ROWS = 20;
 
 const number = (value: number) => value.toLocaleString("en-US");
 const percent = (share: number | null) => (share == null ? "-" : `${Math.round(share * 100)}%`);
@@ -56,9 +55,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
   const leader = byArea[0];
   const top5 = byArea.slice(0, 5);
   const top5Share = Math.round((top5.reduce((sum, area) => sum + area.units, 0) / totals.units) * 100);
-  const shown = byArea.slice(0, AREA_ROWS);
-  const rest = byArea.slice(AREA_ROWS);
-  const restUnits = rest.reduce((sum, area) => sum + area.units, 0);
+  const shown = byArea;
   const sizes = study.approvalsByUnitCount;
   const multiUnitAreas = byArea
     .filter((area) => area.multiUnitShare != null && area.approvals >= 100)
@@ -233,7 +230,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
           ADU permits by community planning area
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
-          The {AREA_ROWS} planning areas with the most permitted units, placed by
+          All {byArea.length} planning areas, ordered by permitted units and placed by
           each permit&apos;s mapped location.
           {multiUnitAreas.length > 0 ? (
             <>
@@ -262,7 +259,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
             <tbody>
               {shown.map((area) => (
                 <tr key={area.name} className="border-t border-lot-line">
-                  <th scope="row" className={thClass}>{area.name}</th>
+                  <th scope="row" className={thClass}>{area.approvals >= PERMIT_AREA_MIN_APPROVALS ? <Link href={permitAreaPath(area)} className={linkClass}>{area.name}</Link> : area.name}</th>
                   <td className={tdClass}>{number(area.units)}</td>
                   <td className={tdClass}>{number(area.approvals)}</td>
                   <td className={tdClass}>{number(area.bonusAduUnits)}</td>
@@ -275,7 +272,6 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
           </table>
         </div>
         <p className="lf-body mt-4 text-sm text-lot-stone">
-          The other {rest.length} planning areas account for {number(restUnits)} units.{" "}
           <a href={permitStudyCsvPath()} className={linkClass} download>
             Download all {byArea.length} areas as CSV
           </a>

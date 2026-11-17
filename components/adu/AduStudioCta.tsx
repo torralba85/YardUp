@@ -74,8 +74,8 @@ export function AduStudioCta({
             : "mt-2 max-w-prose text-sm leading-relaxed text-lot-stone-on-dark"
         }
       >
-        Free: 3D fit and rent range — no account needed for your first address.
-        Optional $29 Certificate of Feasibility: build cost, payback, financing,
+        Free: 3D fit, rent range, build cost and payback — no account needed for your first address.
+        Optional $29 Certificate of Feasibility: financing,
         a fee audit and a 3-builder bid checklist.{" "}
         <Link
           href="/#report"
