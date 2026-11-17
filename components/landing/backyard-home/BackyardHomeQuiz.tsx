@@ -4,10 +4,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, RotateCcw } from "lucide-react";
-import { type FormEvent, useCallback, useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
+import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { Bezel } from "@/components/ui/Bezel";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Field";
 import { PanelHeader } from "@/components/ui/Panel";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { stashAddressQuery } from "@/lib/address-handoff";
@@ -19,7 +19,6 @@ import {
   type QuizAnswer,
   type QuizAnswers,
 } from "@/lib/eligibility-quiz";
-import { canGuestLookup } from "@/lib/guest-lookup";
 
 const LandingAuthGate = dynamic(
   () => import("@/components/landing/LandingAuthGate"),
@@ -40,7 +39,6 @@ export function BackyardHomeQuiz() {
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [view, setView] = useState<QuizView>("questions");
   const [address, setAddress] = useState("");
-  const [addressError, setAddressError] = useState<string | null>(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
 
   const currentQuestion = QUIZ_QUESTIONS[stepIndex];
@@ -84,7 +82,6 @@ export function BackyardHomeQuiz() {
   const handleRetake = () => {
     setAnswers({});
     setStepIndex(0);
-    setAddressError(null);
     setView("questions");
   };
 
@@ -103,22 +100,6 @@ export function BackyardHomeQuiz() {
     },
     [address, demoSize, evaluation.verdict, router, view],
   );
-
-  const handleAddressSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = address.trim();
-    if (!trimmed) {
-      setAddressError("Enter a street address and city to test your parcel.");
-      return;
-    }
-    setAddressError(null);
-
-    if (!canGuestLookup()) {
-      setShowAuthGate(true);
-      return;
-    }
-    proceedToStudio("quiz_address_form");
-  };
 
   const progressPercent = Math.round(
     ((stepIndex + 1) / QUIZ_QUESTIONS.length) * 100,
@@ -277,63 +258,40 @@ export function BackyardHomeQuiz() {
             />
           )}
 
-          <form
-            onSubmit={handleAddressSubmit}
-            className="space-y-3 border-t border-lot-line pt-4"
-            noValidate
-          >
-            <label
-              htmlFor={addressInputId}
-              className="block lf-body-sm font-medium text-lot-ink"
-            >
-              Check your exact address in the 3D studio
-            </label>
-            <div className="flex flex-col gap-2.5 sm:flex-row">
-              <Input
-                id={addressInputId}
-                type="text"
-                autoComplete="street-address"
-                placeholder="1420 Coyote Brush Ct, San Diego, CA"
-                value={address}
-                onChange={(event) => {
-                  setAddress(event.target.value);
-                  if (addressError) setAddressError(null);
-                }}
-                aria-invalid={addressError ? "true" : undefined}
-                aria-describedby={
-                  addressError ? `${addressInputId}-error` : undefined
-                }
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                rightIcon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
-              >
-                Check my lot
-              </Button>
-            </div>
-            {addressError ? (
-              <p
-                id={`${addressInputId}-error`}
-                role="alert"
-                className="lf-caption text-status-blocked"
-              >
-                {addressError}
-              </p>
-            ) : (
-              <p className="lf-caption text-lot-stone flex items-center gap-1.5">
-                <Check
-                  className="h-3.5 w-3.5 shrink-0 text-status-eligible"
-                  aria-hidden="true"
-                />
-                <span>
-                  No account required for your first lot lookup. Estimates only.
-                </span>
-              </p>
-            )}
-          </form>
+          <div className="border-t border-lot-line pt-4">
+            <LotAnswerCard
+              surface="quiz"
+              tone="light"
+              footprint={demoSize}
+              query={address}
+              onQueryChange={setAddress}
+              inputId={addressInputId}
+              inputLabel="Check your exact address in the 3D studio"
+              inputLabelSrOnly={false}
+              placeholder="1420 Coyote Brush Ct, San Diego, CA"
+              submitLabel="Check my lot"
+              onLookupStart={() => {
+                trackEvent("eligibility_quiz_studio_cta", {
+                  source: "quiz_address_form",
+                  completed: view === "result",
+                  verdict: view === "result" ? evaluation.verdict : "skipped",
+                  recommended_sq_ft: demoSize,
+                });
+              }}
+              onAuthGateRequired={() => setShowAuthGate(true)}
+              helperText={
+                <p className="lf-caption text-lot-stone flex items-center gap-1.5">
+                  <Check
+                    className="h-3.5 w-3.5 shrink-0 text-status-eligible"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    No account required for up to 3 lot lookups. Estimates only.
+                  </span>
+                </p>
+              }
+            />
+          </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-lot-line pt-3">
             <div className="flex flex-wrap items-center gap-2">

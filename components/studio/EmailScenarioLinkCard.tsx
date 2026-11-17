@@ -76,7 +76,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
   }
 
   return (
-    <section aria-labelledby={`${id}-heading`} className="@container min-w-0 rounded-none border border-lot-line bg-lot-surface p-4 text-lot-ink">
+    <section aria-labelledby={`${id}-heading`} className="relative @container min-w-0 rounded-none border border-lot-line bg-lot-surface p-4 text-lot-ink">
       <div className="flex items-start gap-3">
         <Mail size={19} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
         <div className="min-w-0">

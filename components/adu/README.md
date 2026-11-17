@@ -19,6 +19,9 @@ Reusable user interface components and presentation widgets for adu.
 - `CostBands.tsx:CostBands` - Exported Function
 - `DataReuseNote.tsx:DATA_LICENSE` - Exported constant / variable
 - `DataReuseNote.tsx:DataReuseNote` - Exported Function
+- `LotAnswerCard.tsx:LotAnswerFormControls` - TypeScript Interface
+- `LotAnswerCard.tsx:LotAnswerCardProps` - TypeScript Interface
+- `LotAnswerCard.tsx:LotAnswerCard` - Exported Function
 - `RentAndPayback.tsx:RentAndPayback` - Exported Function
 - `SanDiegoAduPermitStudy.tsx:SanDiegoAduPermitStudy` - Exported Function
 - `SetbackDiagram.tsx:SetbackDiagram` - Exported Function

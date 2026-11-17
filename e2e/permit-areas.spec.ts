@@ -1,6 +1,14 @@
 import { test, expect } from "@playwright/test";
+import { SAMPLE_LIVE_PARCEL } from "../test/fixtures/live-parcel";
 
 test("neighborhood data is reachable, dated, and usable on this viewport", async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
+  // The page's address box answers inline first; keep that lookup synthetic.
+  await page.route("**/api/geocode?**", (route) => route.fulfill({ json: {
+    lat: SAMPLE_LIVE_PARCEL.lat, lng: SAMPLE_LIVE_PARCEL.lng,
+    formattedAddress: `${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`,
+  } }));
+  await page.route("**/api/parcel?**", (route) => route.fulfill({ json: { ...SAMPLE_LIVE_PARCEL, source: "county-gis" } }));
   await page.goto("/adu/ca/san-diego/permits");
   const link = page.locator('table a[href*="/permits/"]').first();
   const name = await link.textContent();
@@ -11,10 +19,13 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `https://lotfoundry.net${new URL(page.url()).pathname}`);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("permit-area.png"), fullPage: true });
-  await page.getByRole("textbox", { name: /street address/i }).fill("123 Example St, San Diego, CA");
+  await page.getByRole("textbox", { name: /street address/i }).fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
   await page.getByRole("button", { name: "Check my address" }).click();
-  await expect(page).toHaveURL(/\/studio$/);
-  expect(page.url()).not.toContain("Example");
+  const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
+  await expect(answer).toBeVisible();
+  await answer.getByRole("button", { name: "Open in 3D" }).click();
+  await expect(page).toHaveURL(/\/studio(?:\?|$)/);
+  expect(page.url()).not.toContain(SAMPLE_LIVE_PARCEL.address.split(" ")[1]);
 });
 
 test("unknown planning areas return 404", async ({ request }) => {

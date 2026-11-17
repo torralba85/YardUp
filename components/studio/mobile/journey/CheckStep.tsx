@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { AlertTriangle, ArrowRight, CheckCircle2, SlidersHorizontal, XCircle } from "lucide-react";
 import {
   formatCompactCurrency,
@@ -39,6 +40,7 @@ export interface CheckStepProps {
   onFineTune: () => void;
   onContinue: () => void;
   onCreateAccount?: () => void;
+  emailLinkCard?: ReactNode;
 }
 
 export default function CheckStep({
@@ -49,11 +51,13 @@ export default function CheckStep({
   onFineTune,
   onContinue,
   onCreateAccount,
+  emailLinkCard,
 }: CheckStepProps) {
   if (!certificateUnlocked) {
     return <section aria-label="Feasibility check" className="space-y-5 px-5 py-7">
       <StudioPreview result={result} onUnlock={onContinue} />
       <Button variant="secondary" fullWidth onClick={onFineTune}>Keep exploring the 3D concept</Button>
+      {emailLinkCard}
     </section>;
   }
   const summary = summarizeFeasibility(parcel, result, config);

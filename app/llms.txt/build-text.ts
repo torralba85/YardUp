@@ -89,7 +89,7 @@ export function buildLlmsTxt(): string {
 > Feasibility for one property is a one-time ${price} purchase.
 
 LotFoundry answers "can I build an ADU on my lot, and is it worth it?" before
-you pay for plans or a feasibility study. The first address lookup requires no
+you pay for plans or a feasibility study. Up to 3 address lookups require no
 account.
 
 It is a planning aid, not a permit, a quote, or an appraisal. Ordinance facts on
@@ -118,7 +118,7 @@ licensed builder.
 ## Pricing
 
 - Free: 3D layout exploration, estimated monthly rent range, build cost range,
-  monthly net cash flow, and simple payback. The first address needs no
+  monthly net cash flow, and simple payback. Up to 3 addresses need no
   account; a free account looks up more.
 - Certificate of Feasibility: ${price} one-time on the web, for one property.
   Itemized hard and soft cost allowances, debt-service financing scenarios, a
