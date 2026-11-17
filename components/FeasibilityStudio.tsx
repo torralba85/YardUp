@@ -587,11 +587,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
-  // immediately after address resolution, so a parcel-mode change while on
-  // Find advances the journey to Earn in the same pass.
-  const [prevParcelMode, setPrevParcelMode] = useState(parcelMode);
-  if (parcelMode !== prevParcelMode) {
-    setPrevParcelMode(parcelMode);
+  // immediately after address resolution, so a newly resolved non-demo parcel
+  // while on Find advances the journey to Earn in the same pass. Keyed on the
+  // parcel itself, not parcelMode: a second lookup after Back stays "live", and
+  // keying on the mode left the guest on Find with the new lot already loaded.
+  const [prevParcel, setPrevParcel] = useState(liveParcel);
+  if (liveParcel !== prevParcel) {
+    setPrevParcel(liveParcel);
     if (parcelMode !== "preset" && journeyStep === "find") {
       setJourneyStep("earn");
     }
@@ -664,7 +666,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // A restored or shared non-default scenario proves the find decision was
     // already made — start the mobile journey at the Earn reveal instead of
     // the onboarding plate. A pending address handoff owns its own advance
-    // (the parcel-mode render adjustment fires when the search resolves).
+    // (the parcel render adjustment fires when the search resolves).
     if (!incomingAddress && isNonDefaultScenario(parsed)) {
       setDemoCommitted(true);
       setJourneyStep((step) => (step === "find" ? "earn" : step));

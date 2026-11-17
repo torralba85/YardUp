@@ -10,18 +10,25 @@ const parcel = {
   setbacks: { front: 20, rear: 20, side: 5 },
 };
 
+/** Each searched house number on the fixture street resolves to its own synthetic lot. */
+function lotFor(text: string | null) {
+  const number = Number(/(\d+) NE 88th St/.exec(text ?? "")?.[1] ?? 1421);
+  return { address: `${number} NE 88th St`, lat: parcel.lat + (number - 1421) * 0.0001, lng: parcel.lng };
+}
+
 async function mockLookup(page: Page) {
   await mockTestOwnerAuth(page);
   const calls = { geocode: 0, parcel: 0 };
   await page.route("**/api/geocode?**", async (route) => {
     calls.geocode++;
     expect(route.request().headers().authorization).toBeUndefined();
-    await route.fulfill({ json: { lat: parcel.lat, lng: parcel.lng, formattedAddress: "1421 NE 88th St, Seattle, WA 98115" } });
+    const lot = lotFor(new URL(route.request().url()).searchParams.get("q"));
+    await route.fulfill({ json: { lat: lot.lat, lng: lot.lng, formattedAddress: `${lot.address}, Seattle, WA 98115` } });
   });
   await page.route("**/api/parcel?**", async (route) => {
     calls.parcel++;
     expect(route.request().headers().authorization).toBeUndefined();
-    await route.fulfill({ json: parcel });
+    await route.fulfill({ json: { ...parcel, ...lotFor(new URL(route.request().url()).searchParams.get("address")) } });
   });
   await page.route("**/api/aerial?**", (route) => route.fulfill({
     contentType: "image/svg+xml",
@@ -51,8 +58,9 @@ test("sample card preserves its advertised market scenario", async ({ page, isMo
   await expect(page.getByRole("main")).toContainText("$2,335–$2,919");
 });
 
-test("native guest gets one successful lookup, preserves Back, and is asked to sign in for another", async ({ page, isMobile }, testInfo) => {
+test("native guest gets three successful lookups, preserves Back, and is asked to sign in for a fourth", async ({ page, isMobile }, testInfo) => {
   test.skip(!isMobile, "Native onboarding is exercised at phone width");
+  test.setTimeout(60_000);
   const calls = await mockLookup(page);
   await page.addInitScript(() => {
     Object.assign(window, { LotFoundryNative: { platform: "android" } });
@@ -61,20 +69,27 @@ test("native guest gets one successful lookup, preserves Back, and is asked to s
   await page.getByRole("button", { name: /Explore my property/ }).click();
   await expect(page.getByTestId("app-guide")).toBeVisible();
   await page.getByRole("button", { name: /Open the Studio/ }).click();
-  await expect(page.getByRole("heading", { name: /Start with your address/ })).toBeVisible();
-  await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
-  await page.getByRole("button", { name: "Search", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Your backyard could earn/ })).toBeVisible();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(calls).toEqual({ geocode: 1, parcel: 1 });
-  await page.screenshot({ path: testInfo.outputPath("native-guest-first-lookup.png"), fullPage: true });
+  const addressStep = page.getByRole("heading", { name: /Start with your address/ });
+  const search = async (address: string) => {
+    await page.getByRole("searchbox", { name: "Search property address" }).fill(address);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+  };
+  const freeLookups = ["1421 NE 88th St, Seattle, WA", "1423 NE 88th St, Seattle, WA", "1425 NE 88th St, Seattle, WA"];
+  for (let index = 0; index < freeLookups.length; index++) {
+    if (index > 0) await page.goBack();
+    await expect(addressStep).toBeVisible();
+    await search(freeLookups[index]);
+    await expect(page.getByRole("heading", { name: /Your backyard could earn/ })).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(calls).toEqual({ geocode: index + 1, parcel: index + 1 });
+    if (index === 0) await page.screenshot({ path: testInfo.outputPath("native-guest-first-lookup.png"), fullPage: true });
+  }
   await page.goBack();
-  await expect(page.getByRole("heading", { name: /Start with your address/ })).toBeVisible();
-  await page.getByRole("searchbox", { name: "Search property address" }).fill("1423 NE 88th St, Seattle, WA");
-  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(addressStep).toBeVisible();
+  await search("1427 NE 88th St, Seattle, WA");
   await expect(page.getByRole("dialog")).toBeVisible();
-  expect(calls).toEqual({ geocode: 1, parcel: 1 });
-  expect(new URL(page.url()).search).not.toMatch(/1421|1423|Seattle/);
+  expect(calls).toEqual({ geocode: 3, parcel: 3 });
+  expect(new URL(page.url()).search).not.toMatch(/1421|1423|1425|1427|Seattle/);
 });
 
 test("unverified aerial is context only, without invented house, ADU or setback locations", async ({ page, isMobile }, testInfo) => {

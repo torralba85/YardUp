@@ -68,7 +68,7 @@ function cityLabel(city: string) {
 /**
  * Native-app entry to the Studio (Android TWA and iOS shell only; the web keeps
  * its direct Studio). Welcome → quick guide → address-first workspace uses
- * the same one-lookup guest allowance as the web. Demo cities need no account.
+ * the same three-lookup guest allowance as the web. Demo cities need no account.
  * Each screen gets a history entry so the Android back
  * gesture steps back through onboarding instead of leaving the app.
  */

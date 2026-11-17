@@ -186,8 +186,8 @@ export function ParcelProvider({ initialPreset, children }: ParcelProviderProps)
       try {
         const data = await acquireLiveParcel({ kind: "coords", lat, lng, address }, user);
         if (generation !== lookupGeneration.current) return;
-        // Spent only on a resolved lookup: a failed fetch must not burn the
-        // visitor's single try.
+        // Spent only on a resolved lookup: a failed fetch must not burn one of
+        // the visitor's free tries.
         if (!user) consumeGuestLookup();
         setParcel(data);
         setParcelMode("live");

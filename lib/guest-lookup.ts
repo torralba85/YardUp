@@ -63,7 +63,7 @@ export function canGuestLookup(): boolean {
  * Record that an anonymous lookup was spent.
  *
  * Called only after a lookup actually resolves. A failed geocode or an
- * unreachable parcel service must not burn the visitor's single try.
+ * unreachable parcel service must not burn one of the visitor's free tries.
  */
 export function consumeGuestLookup(): void {
   if (typeof window === "undefined") return;

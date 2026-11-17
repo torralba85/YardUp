@@ -811,6 +811,47 @@ describe("FeasibilityStudio (guided spine)", () => {
       expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
     });
 
+    it("advances a second mobile lookup after Back to the new lot's Earn reveal", async () => {
+      // Regression: the journey only advanced Find -> Earn when parcelMode
+      // changed, so a second live lookup (live -> live) left the guest on Find
+      // with the new lot loaded, and "Check my address" spent another free lookup.
+      stubMobileMatchMedia();
+      const user = userEvent.setup();
+      const lots = { "101 First St": "First St", "202 Second St": "Second St" } as const;
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = new URL(String(input), "http://localhost");
+        const query = url.searchParams.get("q") ?? url.searchParams.get("address") ?? "";
+        const address = Object.keys(lots).find((candidate) => query.includes(candidate)) ?? "101 First St";
+        if (url.pathname.includes("/api/geocode")) {
+          return new Response(JSON.stringify({
+            lat: SAMPLE_LIVE_PARCEL.lat,
+            lng: SAMPLE_LIVE_PARCEL.lng,
+            formattedAddress: `${address}, ${SAMPLE_LIVE_PARCEL.city}`,
+          }), { status: 200 });
+        }
+        return new Response(JSON.stringify({ ...SAMPLE_LIVE_PARCEL, address }), { status: 200 });
+      });
+      render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+      const search = async (address: string) => {
+        const input = screen.getByLabelText("Search property address");
+        await user.clear(input);
+        await user.type(input, `${address}, ${SAMPLE_LIVE_PARCEL.city}`);
+        await user.click(within(screen.getByRole("search")).getByRole("button", { name: /^Search$/ }));
+      };
+
+      await search("101 First St");
+      expect(await screen.findByRole("heading", { name: /Your backyard could earn/i })).toBeInTheDocument();
+      expect(screen.getAllByText(/101 First St/).length).toBeGreaterThan(0);
+
+      act(() => popToJourneyStep("find"));
+      expect(await screen.findByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
+
+      await search("202 Second St");
+      expect(await screen.findByRole("heading", { name: /Your backyard could earn/i })).toBeInTheDocument();
+      expect(screen.getAllByText(/202 Second St/).length).toBeGreaterThan(0);
+    });
+
     it.each(["desktop", "mobile"])("hides demo results after a parcel failure and restores live results on retry (%s)", async (layout) => {
       if (layout === "mobile") stubMobileMatchMedia();
       const user = userEvent.setup();
