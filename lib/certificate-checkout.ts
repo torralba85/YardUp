@@ -1,3 +1,4 @@
+import type { LegalConsent } from "@/lib/legal-consent";
 import { STORE_PRODUCTS } from "@/lib/commerce/products";
 import {
   createPurchaseClient,
@@ -57,6 +58,8 @@ export interface StartCertificateCheckoutInput {
   lng?: number;
   /** Full structured live parcel data when available. */
   parcelData?: Record<string, unknown>;
+  /** Legal consent receipt confirmed before guest web checkout. */
+  legalConsent?: LegalConsent;
 }
 
 /**
@@ -111,6 +114,7 @@ export async function startCertificateCheckout(
         lat: input.lat,
         lng: input.lng,
         parcelData: input.parcelData,
+        ...(input.legalConsent ? { legalConsent: input.legalConsent } : {}),
       }),
     });
   } catch {
@@ -140,4 +144,49 @@ export async function startCertificateCheckout(
   }
   clearCheckoutAttemptId("certificate", input.certKey);
   return { kind: "granted", demo: Boolean(data.demo) };
+}
+
+export interface ClaimCertificatesOutcome {
+  claimedCertKeys: string[];
+  alreadyOwnedCertKeys: string[];
+}
+
+/**
+ * Claim paid Stripe guest purchases whose verified Stripe customer email
+ * matches the authenticated member's verified Firebase email address.
+ */
+export async function claimCertificatesByEmail(
+  idToken: string,
+  certKey?: string,
+): Promise<ClaimCertificatesOutcome> {
+  let res: Response;
+  try {
+    res = await fetch("/api/certificates/claim", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(certKey ? { certKey } : {}),
+    });
+  } catch {
+    throw new CertificateCheckoutError(
+      "Could not check for guest purchases. Check your connection and try again.",
+    );
+  }
+
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new CertificateCheckoutError(
+      data?.error ?? `Could not recover guest purchases (${res.status}).`,
+    );
+  }
+
+  const data = (await res.json()) as Partial<ClaimCertificatesOutcome> | null;
+  return {
+    claimedCertKeys: Array.isArray(data?.claimedCertKeys) ? data.claimedCertKeys : [],
+    alreadyOwnedCertKeys: Array.isArray(data?.alreadyOwnedCertKeys)
+      ? data.alreadyOwnedCertKeys
+      : [],
+  };
 }

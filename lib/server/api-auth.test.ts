@@ -89,4 +89,22 @@ describe("requireApiAuth", () => {
     expect(result).toBeInstanceOf(NextResponse);
     expect((result as NextResponse).status).toBe(401);
   });
+
+  it("403s on anonymous tokens unless allowAnonymous is enabled", async () => {
+    mocks.verifyIdToken.mockResolvedValue({
+      uid: "anon-1",
+      firebase: { sign_in_provider: "anonymous" },
+    });
+
+    const denied = await requireApiAuth(request("Bearer anon-token"));
+    expect(denied).toBeInstanceOf(NextResponse);
+    expect((denied as NextResponse).status).toBe(403);
+
+    await expect(
+      requireApiAuth(request("Bearer anon-token"), { allowAnonymous: true }),
+    ).resolves.toEqual({
+      uid: "anon-1",
+      isAnonymous: true,
+    });
+  });
 });

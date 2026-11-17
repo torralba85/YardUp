@@ -121,6 +121,11 @@ export async function POST(request: NextRequest) {
     const metadata = session.metadata ?? {};
     const uid = metadata.uid;
     const certKey = metadata.certKey;
+    const rawBuyerEmail = session.customer_details?.email ?? session.customer_email;
+    const buyerEmail =
+      typeof rawBuyerEmail === "string" && rawBuyerEmail.trim()
+        ? rawBuyerEmail.trim().toLowerCase()
+        : undefined;
     if (uid && certKey) {
       await grantCertificate({
         uid,
@@ -134,6 +139,15 @@ export async function POST(request: NextRequest) {
         zip: metadata.zip,
         lat: toFiniteNumber(metadata.lat),
         lng: toFiniteNumber(metadata.lng),
+        ...(buyerEmail ? { buyerEmail } : {}),
+        ...(metadata.anonymousCheckout === "true" ? { anonymousCheckout: true } : {}),
+        ...(metadata.consentVersion
+          ? {
+              consentVersion: metadata.consentVersion,
+              privacyVersion: metadata.privacyVersion,
+              consentAcceptedAt: metadata.consentAcceptedAt,
+            }
+          : {}),
       });
     } else {
       console.error(

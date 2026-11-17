@@ -69,6 +69,7 @@ with `npm run deploy:rules` when that is the explicitly intended scope.
 ```text
 /api/ai/**      -> apiAi
 /api/stripe/**  -> apiStripe
+/api/certificates/claim -> apiStripe
 /api/store/**   -> apiStore
 /api/**         -> api
 **              -> app
@@ -76,6 +77,30 @@ with `npm run deploy:rules` when that is the explicitly intended scope.
 
 Keep `firebase.json`, `functions/index.js`, and `scripts/prepare-firebase.js`
 aligned whenever a function boundary changes.
+
+### Guest web certificate checkout
+
+Guest purchases use a Firebase anonymous UID until the buyer links a Google or
+email account. The Anonymous sign-in provider must be enabled in the intended
+Firebase project before release; this code change does not enable it. Google
+Play purchases continue to require a registered account.
+
+Deploy the updated Firestore rules together with the application. Anonymous
+users may read their own certificate grants but cannot create member profiles,
+saved scenarios, builder records or purchase grants. `certificateTransfers` is
+an Admin-only recovery ledger: retain it to prevent old Stripe webhooks or
+checkout reconciliation from recreating a transferred entitlement.
+
+The `/api/certificates/claim` Hosting rewrite must precede `/api/**` and target
+`apiStripe`; recovery verifies payment and buyer email directly with Stripe.
+Only an authenticated account with a verified matching email may recover a
+purchase, and a different currently linked owner blocks recovery.
+
+Before release, run the real Stripe test-mode journey in an isolated test
+environment: guest checkout, webhook grant, certificate return, Google/email
+linking, sign out/in, and cleared-storage recovery. Verify that replaying the
+webhook cannot restore the old UID's access. Browser fixtures and unit tests
+cover these boundaries separately but do not establish that full integration.
 
 ## Environment and secrets
 

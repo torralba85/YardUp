@@ -55,6 +55,15 @@ describe("Firebase AI API routing", () => {
     );
   });
 
+  it("routes certificate recovery to the function holding Stripe credentials", () => {
+    const rewrites = firebaseConfig.hosting.rewrites;
+    const claimIndex = rewrites.findIndex((rewrite) => rewrite.source === "/api/certificates/claim");
+    expect(claimIndex).toBeGreaterThanOrEqual(0);
+    expect(claimIndex).toBeLessThan(rewrites.findIndex((rewrite) => rewrite.source === "/api/**"));
+    expect(rewrites[claimIndex].function).toBe("apiStripe");
+    expect(functionsSource).toContain("secrets: [stripeSecretKey, stripeWebhookSecret]");
+  });
+
   it("routes native store verification to its isolated optional-secret function", () => {
     const rewrites = firebaseConfig.hosting.rewrites;
     const storeRewriteIndex = rewrites.findIndex(

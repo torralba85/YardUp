@@ -1,9 +1,14 @@
 import { randomUUID } from "crypto";
+import { getAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminDb } from "./firebase-admin";
+import { CERTIFICATE_PRICE_CENTS } from "../certificate-pricing";
+import { getStripe } from "../stripe";
+import { getAdminApp, getAdminDb } from "./firebase-admin";
 import { purchaseId } from "../certificate-purchases-id";
+import { hasExpectedPayment } from "./stripe-payment-guard";
 
 const CERTIFICATE_PURCHASES = "certificatePurchases";
+const CERTIFICATE_TRANSFERS = "certificateTransfers";
 
 /** Firestore caps a document at 1MB; keep parcel snapshots well under it so
  * an oversized payload can never fail a grant after payment succeeded. */
@@ -63,6 +68,16 @@ export interface GrantCertificateInput {
   lng?: number;
   /** Structured live parcel data when available. */
   parcelData?: Record<string, unknown>;
+  /** Lowercased email collected by Stripe Checkout for verified-email recovery. */
+  buyerEmail?: string;
+  /** Whether the checkout originated from an anonymous Firebase session. */
+  anonymousCheckout?: boolean;
+  /** Terms version accepted before purchase. */
+  consentVersion?: string;
+  /** Privacy policy version accepted before purchase. */
+  privacyVersion?: string;
+  /** ISO-8601 timestamp when legal consent was confirmed for this checkout. */
+  consentAcceptedAt?: string;
 }
 
 /** The grant document's Firestore ref, at the deterministic `{uid}_{certKey}` id. */
@@ -94,28 +109,36 @@ export function certificateGrantData(input: GrantCertificateInput): Record<strin
   if (input.parcelData && isStorableParcelData(input.parcelData)) {
     docData.parcelData = input.parcelData;
   }
+  const buyerEmail = normalizeEmail(input.buyerEmail);
+  if (buyerEmail) docData.buyerEmail = buyerEmail;
+  if (input.anonymousCheckout) docData.anonymousCheckout = true;
+  if (input.consentVersion) docData.consentVersion = input.consentVersion;
+  if (input.privacyVersion) docData.privacyVersion = input.privacyVersion;
+  if (input.consentAcceptedAt) docData.consentAcceptedAt = input.consentAcceptedAt;
   return docData;
 }
 
 /**
  * Write the certificate grant via the Admin SDK (which bypasses the
- * `certificatePurchases` "no client write" rule). Uses `create()` so a replay or
- * Stripe retry hits ALREADY_EXISTS and is swallowed — the grant is written
- * exactly once and never re-stamped. Returns true if this call created the
- * grant, false if it already existed.
+ * `certificatePurchases` "no client write" rule). Atomically checks the grant
+ * and transfer ledger so Stripe retries cannot restore a recovered grant to
+ * its former owner. Returns true only when this call creates a new grant.
  */
 export async function grantCertificate(
   input: GrantCertificateInput,
 ): Promise<boolean> {
   const ref = certificateGrantRef(input.uid, input.certKey);
 
-  try {
-    await ref.create(certificateGrantData(input));
+  const db = getAdminDb();
+  const transferRef = db.collection(CERTIFICATE_TRANSFERS).doc(encodeURIComponent(input.stripeSessionId));
+  return db.runTransaction(async (tx) => {
+    const [grant, transfer] = await Promise.all([tx.get(ref), tx.get(transferRef)]);
+    // Keep the original payment consumed after recovery. A delayed webhook or
+    // Checkout reconciliation must never recreate the former owner's grant.
+    if (grant.exists || transfer.exists) return false;
+    tx.create(ref, certificateGrantData(input));
     return true;
-  } catch (err) {
-    if (isAlreadyExists(err)) return false;
-    throw err;
-  }
+  });
 }
 
 /**
@@ -133,9 +156,218 @@ export async function hasCertificate(uid: string, certKey: string): Promise<bool
   return snap.exists;
 }
 
-/** Firestore Admin throws code 6 / "already-exists" when create() hits an
- * existing doc — the idempotency signal, not a real failure. */
-function isAlreadyExists(err: unknown): boolean {
-  const code = (err as { code?: number | string } | null)?.code;
-  return code === 6 || code === "already-exists";
+function normalizeEmail(raw: string | null | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+export interface ClaimCertificatesInput {
+  /** Verified destination account UID receiving the recovered grants. */
+  targetUid: string;
+  /** Verified email address from the caller's Firebase ID token. */
+  verifiedEmail: string;
+  /** Optional specific property key to filter the claim. */
+  certKey?: string;
+}
+
+export interface ClaimCertificatesResult {
+  claimedCertKeys: string[];
+  alreadyOwnedCertKeys: string[];
+}
+
+export class ClaimConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ClaimConfigurationError";
+  }
+}
+
+export interface ClaimCertificatesDeps {
+  retrieveSession?: (
+    sessionId: string,
+  ) => Promise<Awaited<ReturnType<NonNullable<Awaited<ReturnType<typeof getStripe>>>["checkout"]["sessions"]["retrieve"]>> | null>;
+  getAuthUser?: (uid: string) => Promise<{
+    email?: string;
+    emailVerified?: boolean;
+    providerData: Array<{ providerId: string }>;
+  } | null>;
+}
+
+/**
+ * Recover paid Stripe certificate grants matching a caller's verified email and
+ * move them transactionally from the original checkout UID (e.g. an anonymous
+ * session before browser storage was cleared or after an account-exists
+ * collision) to `targetUid`.
+ *
+ * Security invariants:
+ * - Only non-demo Stripe Checkout sessions (`cs_*`) verified directly against
+ *   Stripe (`complete` + `paid` + expected USD amount + matching certKey +
+ *   matching metadata uid + matching Stripe customer email) may be claimed.
+ * - Never steals a grant belonging to another registered user with a different
+ *   or unverified email.
+ * - Transfers via an atomic, idempotent Firestore transaction creating
+ *   `{targetUid}_{certKey}` and deleting `{sourceUid}_{certKey}`.
+ */
+export async function claimCertificatesByVerifiedEmail(
+  input: ClaimCertificatesInput,
+  deps: ClaimCertificatesDeps = {},
+): Promise<ClaimCertificatesResult> {
+  const email = normalizeEmail(input.verifiedEmail);
+  if (!email) {
+    return { claimedCertKeys: [], alreadyOwnedCertKeys: [] };
+  }
+
+  let retrieveSession = deps.retrieveSession;
+  if (!retrieveSession) {
+    const stripe = await getStripe();
+    if (!stripe) {
+      throw new ClaimConfigurationError("Payments are not configured.");
+    }
+    retrieveSession = (id) => stripe.checkout.sessions.retrieve(id);
+  }
+
+  const getAuthUser =
+    deps.getAuthUser ??
+    (async (uid: string) => {
+      try {
+        return await getAuth(getAdminApp()).getUser(uid);
+      } catch (err) {
+        if ((err as { code?: string } | null)?.code === "auth/user-not-found") {
+          return null;
+        }
+        throw err;
+      }
+    });
+
+  const db = getAdminDb();
+  const matches = await db
+    .collection(CERTIFICATE_PURCHASES)
+    .where("buyerEmail", "==", email)
+    .get();
+
+  const claimedCertKeys = new Set<string>();
+  const alreadyOwnedCertKeys = new Set<string>();
+
+  for (const docSnap of matches.docs) {
+    const data = docSnap.data();
+    const certKey = typeof data.certKey === "string" ? data.certKey.trim() : "";
+    const sourceUid = typeof data.uid === "string" ? data.uid.trim() : "";
+    const stripeSessionId =
+      typeof data.stripeSessionId === "string" ? data.stripeSessionId.trim() : "";
+
+    if (!certKey || !sourceUid) continue;
+    if (input.certKey && certKey !== input.certKey) continue;
+
+    if (sourceUid === input.targetUid) {
+      alreadyOwnedCertKeys.add(certKey);
+      continue;
+    }
+
+    // Never claim demo, native store, or agent pass grants via email recovery.
+    if (data.demo === true || !stripeSessionId.startsWith("cs_")) {
+      continue;
+    }
+
+    // Confirm authoritative payment + email directly from Stripe.
+    let session: Awaited<ReturnType<typeof retrieveSession>>;
+    try {
+      session = await retrieveSession(stripeSessionId);
+    } catch {
+      // A provider outage is not evidence that the buyer has no purchase.
+      throw new Error("Could not verify the payment. Please try recovery again.");
+    }
+    if (!session) continue;
+
+    const sessionEmail = normalizeEmail(
+      session.customer_details?.email ?? session.customer_email,
+    );
+    if (
+      session.status !== "complete" ||
+      session.payment_status !== "paid" ||
+      !hasExpectedPayment(session, CERTIFICATE_PRICE_CENTS, "certificates/claim") ||
+      session.metadata?.purchaseType !== "certificate" ||
+      session.metadata?.certKey !== certKey ||
+      session.metadata?.uid !== sourceUid ||
+      sessionEmail !== email
+    ) {
+      continue;
+    }
+
+    // Owner isolation: transfer only from an anonymous session or an account
+    // whose own verified email matches the claimant's verified email.
+    // anonymousCheckout is historical: the UID may since have been linked.
+    const sourceUser = await getAuthUser(sourceUid);
+    if (sourceUser && sourceUser.providerData.length > 0) {
+      const sourceEmail = normalizeEmail(sourceUser.email);
+      if (!sourceUser.emailVerified || sourceEmail !== email) {
+        continue;
+      }
+    }
+
+    const sourceRef = docSnap.ref;
+    const targetRef = certificateGrantRef(input.targetUid, certKey);
+    const transferRef = db.collection(CERTIFICATE_TRANSFERS).doc(encodeURIComponent(stripeSessionId));
+
+    const outcome = await db.runTransaction(async (tx) => {
+      const [sourceInTx, targetInTx, transferInTx] = await Promise.all([
+        tx.get(sourceRef),
+        tx.get(targetRef),
+        tx.get(transferRef),
+      ]);
+
+      if (transferInTx.exists) return "skipped" as const;
+
+      if (!sourceInTx.exists) {
+        if (
+          targetInTx.exists &&
+          targetInTx.data()?.stripeSessionId === stripeSessionId
+        ) {
+          return "claimed" as const;
+        }
+        return "skipped" as const;
+      }
+
+      const current = sourceInTx.data();
+      if (
+        !current ||
+        current.uid !== sourceUid ||
+        current.certKey !== certKey ||
+        current.stripeSessionId !== stripeSessionId ||
+        normalizeEmail(typeof current.buyerEmail === "string" ? current.buyerEmail : undefined) !== email
+      ) {
+        return "skipped" as const;
+      }
+
+      if (targetInTx.exists) {
+        if (targetInTx.data()?.stripeSessionId === stripeSessionId) {
+          tx.create(transferRef, { targetUid: input.targetUid, stripeSessionId, createdAt: FieldValue.serverTimestamp() });
+          tx.delete(sourceRef);
+          return "claimed" as const;
+        }
+        return "already_owned" as const;
+      }
+
+      tx.create(targetRef, {
+        ...current,
+        uid: input.targetUid,
+        transferredFromUid: sourceUid,
+        claimedAt: FieldValue.serverTimestamp(),
+      });
+      tx.create(transferRef, { targetUid: input.targetUid, stripeSessionId, createdAt: FieldValue.serverTimestamp() });
+      tx.delete(sourceRef);
+      return "claimed" as const;
+    });
+
+    if (outcome === "claimed") {
+      claimedCertKeys.add(certKey);
+    } else if (outcome === "already_owned") {
+      alreadyOwnedCertKeys.add(certKey);
+    }
+  }
+
+  return {
+    claimedCertKeys: Array.from(claimedCertKeys),
+    alreadyOwnedCertKeys: Array.from(alreadyOwnedCertKeys),
+  };
 }

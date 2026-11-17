@@ -178,7 +178,8 @@ export default function FeasibilityStudio({ demoChosen = false, nativeShell = fa
 }
 
 function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { demoChosen: boolean; nativeShell: boolean; initialScenario?: SavedScenario }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, checkoutUser, loading: authLoading } = useAuth();
+  const activeCheckoutUser = checkoutUser ?? user;
   const {
     parcel: liveParcel,
     parcelMode,
@@ -711,7 +712,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     else if (grant.address) await searchByAddress(grant.address, expectedSelectionVersion);
   }, [parcelMode, restoreLiveParcel, searchByAddress]);
   const certificateRecovery = useCertificateRecovery({
-    uid: user?.uid,
+    uid: activeCheckoutUser?.uid,
     certKey: certificateKey(activeParcel),
     ready: hydratedFromUrl && !authLoading,
     hydrated: hydratedFromUrl,
@@ -920,14 +921,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   );
 
   const handleRetryProjectBrief = useCallback(async () => {
-    if (!user) return;
+    if (!activeCheckoutUser) return;
     try {
-      const idToken = await user.getIdToken();
+      const idToken = await activeCheckoutUser.getIdToken();
       await handleGenerateProjectBrief(idToken);
     } catch {
       // Error state is captured inside handleGenerateProjectBrief
     }
-  }, [handleGenerateProjectBrief, user]);
+  }, [activeCheckoutUser, handleGenerateProjectBrief]);
 
   const openSignup = useCallback(
     (source: AuthPromptSource, resumeSave = false) => {
@@ -1511,7 +1512,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
             styleMatchConcept={activeStyleMatchConcept}
-            onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
+            onRetryProjectBrief={activeCheckoutUser ? handleRetryProjectBrief : undefined}
             onClose={() => setReportOpen(false)}
             onDownload={downloadReport}
             onExportCsv={exportCsv}
@@ -1772,7 +1773,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
           styleMatchConcept={activeStyleMatchConcept}
-          onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
+          onRetryProjectBrief={activeCheckoutUser ? handleRetryProjectBrief : undefined}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
           onExportCsv={exportCsv}

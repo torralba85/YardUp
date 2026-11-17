@@ -908,4 +908,64 @@ describe.skipIf(!hasFirestoreEmulator)("connectionRequests/{requestId} ownerVeri
   });
 });
 
+describe.skipIf(!hasFirestoreEmulator)("anonymous checkout isolation rules", () => {
+  it("keeps payment transfer markers inaccessible to all client sessions", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "certificateTransfers", "anon-1_lot-1"), { targetUid: "member-1" });
+    });
+    for (const provider of ["anonymous", "password"] as const) {
+      const db = rulesEnv().authenticatedContext("anon-1", { firebase: { sign_in_provider: provider } }).firestore();
+      await assertFails(getDoc(doc(db, "certificateTransfers", "anon-1_lot-1")));
+      await assertFails(deleteDoc(doc(db, "certificateTransfers", "anon-1_lot-1")));
+      await assertFails(setDoc(doc(db, "certificateTransfers", "anon-1_lot-2"), { targetUid: "anon-1" }));
+    }
+  });
+
+  it("allows an anonymous checkout uid to read only its own certificatePurchases grant and blocks member writes", async () => {
+    await rulesEnv().withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "certificatePurchases", "anon-1_lot-1"), {
+        uid: "anon-1",
+        certKey: "lot-1",
+        status: "granted",
+      });
+      await setDoc(doc(context.firestore(), "certificatePurchases", "other-1_lot-1"), {
+        uid: "other-1",
+        certKey: "lot-1",
+        status: "granted",
+      });
+    });
+
+    const anonDb = rulesEnv()
+      .authenticatedContext("anon-1", { firebase: { sign_in_provider: "anonymous" } })
+      .firestore();
+
+    await assertSucceeds(getDoc(doc(anonDb, "certificatePurchases", "anon-1_lot-1")));
+    await assertFails(getDoc(doc(anonDb, "certificatePurchases", "other-1_lot-1")));
+    await assertFails(
+      setDoc(doc(anonDb, "certificatePurchases", "anon-1_lot-2"), {
+        uid: "anon-1",
+        certKey: "lot-2",
+      }),
+    );
+    await assertFails(
+      setDoc(
+        doc(anonDb, "users", "anon-1"),
+        ownerProfile({ legalConsent: currentConsent() }),
+      ),
+    );
+    await assertFails(
+      setDoc(doc(anonDb, "builders", "anon-1"), {
+        ownerUid: "anon-1",
+        companyName: "Anon Builder",
+        contactEmail: "anon@example.com",
+        serviceAreas: ["San Diego, CA"],
+        active: true,
+        credits: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+});
+
 

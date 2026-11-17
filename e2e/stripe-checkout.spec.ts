@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
-import { mockTestOwnerAuth } from "./fixtures/studio-auth";
+import { mockGuestAnonymousCheckoutAuth, mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 // Browser-side audit of the web certificate checkout. The Stripe API and the
 // hosted Checkout page are both stubbed: no key, no Session, and no charge ever
@@ -166,27 +166,44 @@ test.describe("web certificate checkout", () => {
     await expect(notice).toHaveCount(0);
   });
 
-  test("a guest sees the price, then creates an account before any checkout request", async ({ page }) => {
-    let checkoutCalls = 0;
+  test("a web guest accepts Terms & Privacy and proceeds to Stripe without creating an account first", async ({ page }) => {
+    await mockGuestAnonymousCheckoutAuth(page);
+    let checkoutRequest: Request | null = null;
     await page.route(CERTIFICATE_ROUTE, async (route) => {
-      checkoutCalls += 1;
-      await route.fulfill({ status: 401, json: { error: "unauthorized" } });
+      checkoutRequest = route.request();
+      await route.fulfill({ json: { url: STRIPE_CHECKOUT_URL } });
     });
+    await page.route("https://checkout.stripe.com/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "<title>Stripe Checkout (stub)</title><h1>Stub checkout</h1>" }),
+    );
 
     await page.goto("/studio?parcel=oak-street&step=certificate");
     const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
+
+    // Must confirm 18+, Terms & Privacy before checkout begins.
     await cta.click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    // Purchase intent opens the account step in sign-up mode, not "Welcome back".
-    await expect(dialog.getByText("Save your property")).toBeVisible();
-    expect(checkoutCalls).toBe(0);
+    await expect(page.getByText(/18 or older and accept the Terms and Privacy Policy/).first()).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(checkoutRequest).toBeNull();
+
+    // Checking consent proceeds via anonymous checkout directly to Stripe.
+    await page.getByRole("checkbox").filter({ visible: true }).first().check();
+    await cta.click();
+
+    await page.waitForURL(STRIPE_CHECKOUT_URL);
+    await expect(page.getByRole("heading", { name: "Stub checkout" })).toBeVisible();
+    expect(checkoutRequest).not.toBeNull();
+    const req = checkoutRequest as unknown as Request;
+    const body = req.postDataJSON() as Record<string, unknown>;
+    expect(body.legalConsent).toMatchObject({
+      termsVersion: "2026-11-06",
+      privacyVersion: "2026-11-06",
+      adultConfirmed: true,
+    });
   });
 
-  test("a guest who buys on a real address lands in Checkout after signing in", async ({ page }) => {
-    // Public synthetic lot. Signing in swaps /studio to the signed-in gate,
-    // remounting the Studio; the purchase must survive that remount.
+  test("a web guest on a real address lands directly in Checkout after accepting terms", async ({ page }) => {
     const lot = {
       address: "1421 NE 88th St", city: "Seattle, WA 98115", state: "WA", zip: "98115",
       lat: 47.69217, lng: -122.31232, source: "fallback", zoning: "R-1 (estimated)",
@@ -194,7 +211,7 @@ test.describe("web certificate checkout", () => {
       existingHouseSqft: 0, maxLotCoveragePercent: 40,
       setbacks: { front: 20, rear: 20, side: 5 },
     };
-    await mockTestOwnerAuth(page);
+    await mockGuestAnonymousCheckoutAuth(page);
     await page.route("**/api/geocode?**", (route) =>
       route.fulfill({ json: { lat: lot.lat, lng: lot.lng, formattedAddress: "1421 NE 88th St, Seattle, WA 98115" } }),
     );
@@ -215,17 +232,36 @@ test.describe("web certificate checkout", () => {
     const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await expect(page.getByText("1421 NE 88th St").first()).toBeVisible();
+    await page.getByRole("checkbox").filter({ visible: true }).first().check();
     await cta.click();
-
-    const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Already have an account? Sign in" }).click();
-    await dialog.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
-    await dialog.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
-    await dialog.locator('button[type="submit"]').click();
 
     await page.waitForURL(STRIPE_CHECKOUT_URL);
     await expect(page.getByRole("heading", { name: "Stub checkout" })).toBeVisible();
     expect(checkoutBodies).toHaveLength(1);
     expect(checkoutBodies[0].certKey).toBe("1421-ne-88th-st-seattle-wa-98115");
+  });
+
+  test("native shell guest still requires account sign-up before Play Billing purchase", async ({ page }) => {
+    let checkoutCalls = 0;
+    await page.addInitScript(() => {
+      Object.assign(window, { LotFoundryNative: { platform: "android" } });
+    });
+    await page.route(CERTIFICATE_ROUTE, async (route) => {
+      checkoutCalls += 1;
+      await route.fulfill({ status: 401, json: { error: "unauthorized" } });
+    });
+
+    // The native shell opens on its own onboarding; a guest reaches the demo lot through it.
+    await page.goto("/studio?parcel=oak-street&step=certificate");
+    await page.getByRole("button", { name: /Seattle, WA/ }).click();
+    await page.getByRole("button", { name: /Open the Studio/ }).click();
+    const cta = page.getByRole("button", { name: /Continue to purchase/ }).filter({ visible: true }).first();
+    await expect(cta).toBeVisible();
+    await expect(page.getByRole("checkbox")).toHaveCount(0);
+    await cta.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Save your property")).toBeVisible();
+    expect(checkoutCalls).toBe(0);
   });
 });

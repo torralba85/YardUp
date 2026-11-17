@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CertificatesClient } from "./CertificatesClient";
 import type { PurchasedCertificate } from "@/lib/purchased-certificates";
@@ -17,6 +17,8 @@ const authState = vi.hoisted(() => ({
     uid: "u1",
     email: "owner@example.com",
     displayName: "Alma Reyes",
+    emailVerified: false,
+    getIdToken: vi.fn().mockResolvedValue("token-1"),
   } as unknown,
   profile: {
     uid: "u1",
@@ -25,6 +27,8 @@ const authState = vi.hoisted(() => ({
     role: "user" as const,
   },
   loading: false,
+  refreshProfile: vi.fn(),
+  sendVerification: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -33,6 +37,8 @@ vi.mock("@/lib/auth-context", () => ({
     profile: authState.profile,
     loading: authState.loading,
     logout: vi.fn(),
+    refreshProfile: authState.refreshProfile,
+    sendVerification: authState.sendVerification,
   }),
 }));
 
@@ -60,6 +66,8 @@ describe("CertificatesClient", () => {
       uid: "u1",
       email: "owner@example.com",
       displayName: "Alma Reyes",
+      emailVerified: false,
+      getIdToken: vi.fn().mockResolvedValue("token-1"),
     };
     authState.loading = false;
     certState.certificates = [];
@@ -151,5 +159,71 @@ describe("CertificatesClient", () => {
     render(<CertificatesClient />);
     expect(screen.getByText("Complimentary")).toBeInTheDocument();
     expect(screen.queryByText(/Amount:/)).not.toBeInTheDocument();
+  });
+
+  it("checks recovery when verification updates the existing Firebase User object", async () => {
+    const sameUser = { uid: "u1", email: "owner@example.com", emailVerified: false, getIdToken: vi.fn().mockResolvedValue("verified-token") };
+    authState.user = sameUser;
+    authState.refreshProfile.mockImplementation(async () => { sameUser.emailVerified = true; });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ claimedCertKeys: ["lot-1"], alreadyOwnedCertKeys: [] }), { status: 200 }),
+    );
+    try {
+      render(<CertificatesClient />);
+      fireEvent.click(screen.getByRole("button", { name: /I've verified/ }));
+      await waitFor(() => expect(certState.refresh).toHaveBeenCalledTimes(1));
+    } finally { fetchSpy.mockRestore(); }
+  });
+
+  it("offers recovery retry after an outage without hiding existing certificates", async () => {
+    authState.user = { uid: "u1", emailVerified: true, getIdToken: vi.fn().mockResolvedValue("token") };
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "Temporarily unavailable" }), { status: 503 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ claimedCertKeys: [], alreadyOwnedCertKeys: ["lot-1"] }), { status: 200 }));
+    try {
+      render(<CertificatesClient />);
+      expect(await screen.findByRole("alert")).toHaveTextContent("Could not check for guest purchases");
+      fireEvent.click(screen.getByRole("button", { name: "Retry guest purchase recovery" }));
+      await waitFor(() => expect(certState.refresh).toHaveBeenCalledTimes(1));
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    } finally { fetchSpy.mockRestore(); }
+  });
+
+  it("recovers guest purchases automatically when signed in with a verified email", async () => {
+    authState.user = {
+      uid: "u1",
+      email: "owner@example.com",
+      displayName: "Alma Reyes",
+      emailVerified: true,
+      getIdToken: vi.fn().mockResolvedValue("verified-token"),
+    };
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ claimedCertKeys: ["lot-1"], alreadyOwnedCertKeys: [] }),
+        { status: 200 },
+      ),
+    );
+
+    try {
+      render(<CertificatesClient />);
+
+      await waitFor(() =>
+        expect(fetchSpy).toHaveBeenCalledWith(
+          "/api/certificates/claim",
+          expect.objectContaining({
+            method: "POST",
+            headers: expect.objectContaining({
+              Authorization: "Bearer verified-token",
+            }),
+          }),
+        ),
+      );
+      await waitFor(() => expect(certState.refresh).toHaveBeenCalledTimes(1));
+      expect(await screen.findByRole("status")).toHaveTextContent(
+        /Recovered 1 guest certificate/,
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });
