@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SAMPLE_LIVE_PARCEL } from "../test/fixtures/live-parcel";
 
 test.describe("/can-i-build-a-backyard-home", () => {
   test("renders cleanly with zero horizontal overflow across viewports", async ({
@@ -43,11 +44,24 @@ test.describe("/can-i-build-a-backyard-home", () => {
     expect(errors).toEqual([]);
   });
 
-  test("completes the 5-step yes/no quiz and hands off an address to /studio without leaking it in the URL", async ({
+  test("completes the 5-step yes/no quiz, renders inline lot answer, and hands off parcel to /studio without leaking address in URL", async ({
     page,
   }, testInfo) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
+
+    await page.route("**/api/geocode?**", (route) =>
+      route.fulfill({
+        json: {
+          lat: SAMPLE_LIVE_PARCEL.lat,
+          lng: SAMPLE_LIVE_PARCEL.lng,
+          formattedAddress: `${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`,
+        },
+      }),
+    );
+    await page.route("**/api/parcel?**", (route) =>
+      route.fulfill({ json: { ...SAMPLE_LIVE_PARCEL, source: "county-gis" } }),
+    );
 
     await page.goto("/can-i-build-a-backyard-home", {
       waitUntil: "domcontentloaded",
@@ -70,11 +84,18 @@ test.describe("/can-i-build-a-backyard-home", () => {
 
     await page
       .getByLabel(/Check your exact address in the 3D studio/i)
-      .fill("1420 Coyote Brush Ct, San Diego, CA");
+      .fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
     await page.getByRole("button", { name: /Check my lot/i }).click();
 
+    const answer = page.getByRole("region", {
+      name: "Inline lot feasibility answer",
+    });
+    await expect(answer).toBeVisible();
+    await expect(answer).toContainText(SAMPLE_LIVE_PARCEL.address);
+    await answer.getByRole("button", { name: "Open in 3D" }).click();
+
     await expect(page).toHaveURL(/\/studio(?:\?|$)/, { timeout: 15000 });
-    expect(page.url()).not.toContain("Coyote");
+    expect(page.url()).not.toContain("Cedar");
     expect(errors).toEqual([]);
   });
 

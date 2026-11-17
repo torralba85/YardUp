@@ -5,7 +5,7 @@ import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.setTimeout(90_000);
 
-test("email capture stays out of the first result and design flow", async ({ page, isMobile }) => {
+test("email capture appears on results and stays out of the design flow", async ({ page, isMobile }) => {
   await mockTestOwnerAuth(page);
   await page.route("**/api/studio/scenario-link/*", (route) => route.fulfill({ json: { scenario: EMAIL_SCENARIO } }));
   const url = new URL(buildScenarioShareUrl(EMAIL_SCENARIO, "d".repeat(48)));
@@ -13,19 +13,19 @@ test("email capture stays out of the first result and design flow", async ({ pag
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
   if (isMobile) {
     await expect(page.getByRole("button", { name: "Shape your ADU" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Shape your ADU" }).click();
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Check feasibility" }).click();
+    await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & Fit/ }).click();
     await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
-  }
-  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
-  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
-  if (isMobile) {
-    await page.getByRole("button", { name: "Shape your ADU" }).click();
-  } else {
+    await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+    await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
   }
-  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
-  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
 });
 
 test("free lot link queues a real design and carries email into certificate signup", async ({ page }, testInfo) => {

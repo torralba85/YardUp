@@ -390,7 +390,7 @@ describe("ParcelProvider estimated mode", () => {
     expect(mocks.geocodeAddress).not.toHaveBeenCalled();
     expect(mocks.fetchParcel).not.toHaveBeenCalled();
     expect(result.current.parcelError).toBe(
-      "That was your free lookup. Create a free account to search another address.",
+      "You've used your 3 free lookups. Create a free account to search another address.",
     );
     // The lot they already resolved stays on screen — the ask must not wipe it.
     expect(result.current.parcelMode).toBe("live");
@@ -400,9 +400,11 @@ describe("ParcelProvider estimated mode", () => {
     mockResolvedLookup();
     const { result, rerender } = renderHook(() => useParcel(), { wrapper });
 
-    await act(async () => {
-      await result.current.searchByAddress("100 Main Los Angeles");
-    });
+    for (let i = 0; i < GUEST_LOOKUP_LIMIT; i += 1) {
+      await act(async () => {
+        await result.current.searchByAddress("100 Main Los Angeles");
+      });
+    }
 
     mocks.geocodeAddress.mockClear();
     mocks.fetchParcel.mockClear();
@@ -425,6 +427,20 @@ describe("ParcelProvider estimated mode", () => {
     expect(result.current.authRequired).toBe(false);
     expect(mocks.geocodeAddress).toHaveBeenCalledWith("200 Oak Los Angeles", "token");
     expect(mocks.fetchParcel).toHaveBeenCalled();
+  });
+
+  it("consumes an initial stashed parcel without re-fetching or spending a guest lookup", async () => {
+    const { stashInitialParcel } = await import("./parcel-handoff");
+    const { guestLookupsRemaining } = await import("./guest-lookup");
+    stashInitialParcel(liveParcelFixture);
+
+    const { result } = renderHook(() => useParcel(), { wrapper });
+
+    expect(result.current.parcelMode).toBe("live");
+    expect(result.current.parcel).toEqual(liveParcelFixture);
+    expect(mocks.geocodeAddress).not.toHaveBeenCalled();
+    expect(mocks.fetchParcel).not.toHaveBeenCalled();
+    expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT);
   });
 
   it("does not spend the guest allowance on a lookup that fails", async () => {
@@ -450,9 +466,11 @@ describe("ParcelProvider estimated mode", () => {
     mockResolvedLookup();
     const { result, rerender } = renderHook(() => useParcel(), { wrapper });
 
-    await act(async () => {
-      await result.current.searchByAddress("100 Main Los Angeles");
-    });
+    for (let i = 0; i < GUEST_LOOKUP_LIMIT; i += 1) {
+      await act(async () => {
+        await result.current.searchByAddress("100 Main Los Angeles");
+      });
+    }
 
     signIn();
     rerender();

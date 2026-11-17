@@ -284,6 +284,9 @@
      photo (design-system §2.3 rule 6). */
   --hero-text-muted: color-mix(in srgb, var(--chalk) 86%, transparent);
 }
+.hero:has([aria-label="Inline lot feasibility answer"]) {
+  max-height: none;
+}
 .heroMedia {
   position: absolute;
   inset: 0;

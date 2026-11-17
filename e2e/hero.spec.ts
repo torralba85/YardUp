@@ -10,7 +10,10 @@ test.describe("A lot more landing", () => {
     });
     let guestGeocode = false;
     let guestParcel = false;
+    let geocodeCount = 0;
+    let parcelCount = 0;
     await page.route("**/api/geocode?**", (route) => {
+      geocodeCount += 1;
       guestGeocode = !route.request().headers().authorization;
       return route.fulfill({ json: {
         lat: SAMPLE_LIVE_PARCEL.lat,
@@ -19,6 +22,7 @@ test.describe("A lot more landing", () => {
       } });
     });
     await page.route("**/api/parcel?**", (route) => {
+      parcelCount += 1;
       guestParcel = !route.request().headers().authorization;
       return route.fulfill({ json: { ...SAMPLE_LIVE_PARCEL, source: "county-gis" } });
     });
@@ -27,11 +31,19 @@ test.describe("A lot more landing", () => {
     await page.getByRole("region", { name: "Explore your lot", exact: true })
       .getByRole("button", { name: "Explore my lot" }).click();
 
+    const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
+    await expect(answer).toBeVisible();
+    await expect(answer).toContainText(SAMPLE_LIVE_PARCEL.address);
+    await expect.poll(() => guestGeocode).toBe(true);
+    await expect.poll(() => guestParcel).toBe(true);
+
+    await answer.getByRole("button", { name: "Open in 3D" }).click();
     await expect(page).toHaveURL(/\/studio/);
     await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("dialog")).not.toBeVisible();
-    await expect.poll(() => guestGeocode).toBe(true);
-    await expect.poll(() => guestParcel).toBe(true);
+    // Studio consumes the stashed parcel without re-fetching geocode or parcel.
+    expect(geocodeCount).toBe(1);
+    expect(parcelCount).toBe(1);
     const search = new URL(page.url()).searchParams;
     expect(Array.from(search.values()).join(" ")).not.toContain(SAMPLE_LIVE_PARCEL.address);
     expect(search.has("q")).toBe(false);
@@ -70,7 +82,10 @@ test.describe("A lot more landing", () => {
     await expect(page.locator("#closing-address")).toHaveValue(
       "456 Pine St, Denver, CO",
     );
-    await hero.getByRole("button", { name: "Explore my lot" }).click();
+    await page
+      .locator('[aria-labelledby="closing-title"]')
+      .getByRole("button", { name: "Explore my lot" })
+      .click();
 
     // A first-time visitor reaches the studio without an account prompt; the
     // address rides session storage, never the URL, so it stays out of
@@ -81,12 +96,12 @@ test.describe("A lot more landing", () => {
     expect(suggestRequests).toEqual([]);
   });
 
-  test("asks a visitor who already used their free lookup to sign in", async ({
+  test("asks a visitor who already used their free lookups to sign in", async ({
     page,
   }) => {
     await page.goto("/");
-    // Spend the anonymous allowance, as a return visit would have.
-    await page.evaluate(() => window.localStorage.setItem("lf:guest-lookups", "1"));
+    // Spend the 3-lookup anonymous allowance, as a return visit would have.
+    await page.evaluate(() => window.localStorage.setItem("lf:guest-lookups", "3"));
     await page.reload();
 
     const hero = page.getByRole("region", {

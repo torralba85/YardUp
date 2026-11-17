@@ -28,6 +28,8 @@ import {
   trackCertificatePaywallViewed,
   trackCertificatePurchase,
   trackFeasibilityResultViewed,
+  trackLotAnswerOpenStudio,
+  trackLotAnswerViewed,
   trackParcelLookupCompleted,
   trackPreapprovedPlanSelected,
   trackReportExported,
@@ -547,6 +549,42 @@ describe("analytics events module", () => {
       });
 
       expect(trackEventSpy).not.toHaveBeenCalledWith("parcel_lookup_completed", expect.anything());
+    });
+
+    it("emits lot_answer_viewed and lot_answer_open_studio with bounded non-PII parameters", () => {
+      trackLotAnswerViewed({
+        surface: "landing",
+        parcel_source: "county_gis",
+        feasibility_status: "review_needed",
+        lot_size_bucket: "5000_7499",
+        adu_sqft_bucket: "600_799",
+        lot_quality: "parcel_record",
+        state_code: "ca",
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("lot_answer_viewed", {
+        surface: "landing",
+        parcel_source: "county_gis",
+        feasibility_status: "review_needed",
+        lot_size_bucket: "5000_7499",
+        adu_sqft_bucket: "600_799",
+        lot_quality: "parcel_record",
+        state_code: "CA",
+      });
+
+      trackLotAnswerOpenStudio({
+        surface: "quiz",
+        parcel_source: "fallback",
+        feasibility_status: "review_needed",
+        adu_sqft_bucket: "400_599",
+      });
+
+      expect(trackEventSpy).toHaveBeenCalledWith("lot_answer_open_studio", {
+        surface: "quiz",
+        parcel_source: "fallback",
+        feasibility_status: "review_needed",
+        adu_sqft_bucket: "400_599",
+      });
     });
   });
 });
