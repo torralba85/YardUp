@@ -32,6 +32,8 @@ fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/agent-pass.test.ts:generic-api-key:
 fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/agent-pass.test.ts:generic-api-key:69
 fce78e3ba1c4f0fb9126795cab82d40c09797ce5:lib/server/agent-passes.test.ts:generic-api-key:49
 fce78e3ba1c4f0fb9126795cab82d40c09797ce5:scripts/agent-pass.test.ts:generic-api-key:47
+# 2026-11-17: My Certificates locality test quoted a synthetic address slug after `certKey:` (keyword match, no credential); moved into a constant in the next commit
+1d2dd94669434941efcad2e5494af304b01f6c83:components/account/CertificatesClient.test.tsx:generic-api-key:145
 
 # Public Cloudflare Web Analytics beacon identifier
 cd9350a1cce65d5bcadc4839f1cb09e8d9b8b72d:app/layout.tsx:generic-api-key:129

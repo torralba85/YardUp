@@ -138,6 +138,30 @@ describe("CertificatesClient", () => {
     );
   });
 
+  it("shows a live-lookup locality once when the city already carries state and ZIP", () => {
+    const lot = "202-c-st-san-diego-ca-92101";
+    certState.certificates = [
+      {
+        id: `u1_${lot}`,
+        certKey: lot,
+        uid: "u1",
+        stripeSessionId: "cs_123",
+        amount: 2900,
+        status: "granted",
+        demo: false,
+        createdAt: new Date("2026-11-17T12:00:00Z"),
+        address: "202 C St",
+        city: "San Diego, CA 92101",
+        state: "CA",
+        zip: "92101",
+      },
+    ];
+
+    render(<CertificatesClient />);
+    expect(screen.getByText("San Diego, CA 92101")).toBeInTheDocument();
+    expect(screen.queryByText(/CA 92101, CA/)).not.toBeInTheDocument();
+  });
+
   it("labels a $0 agent-pass certificate as complimentary instead of a price", () => {
     const listing = "1234-elm-st-san-diego";
     certState.certificates = [
@@ -187,6 +211,34 @@ describe("CertificatesClient", () => {
       await waitFor(() => expect(certState.refresh).toHaveBeenCalledTimes(1));
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     } finally { fetchSpy.mockRestore(); }
+  });
+
+  it("claims with a refreshed ID token so a pre-verification token is never sent", async () => {
+    // Verifying via the email link updates user.emailVerified on reload, but the
+    // cached ID token keeps email_verified=false for up to an hour; the claim
+    // route rejects that with 403 and the buyer is stuck on "Retry".
+    authState.user = {
+      uid: "u1",
+      email: "owner@example.com",
+      emailVerified: true,
+      getIdToken: vi.fn(async (forceRefresh?: boolean) => (forceRefresh ? "fresh-token" : "stale-token")),
+    };
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ claimedCertKeys: ["lot-1"], alreadyOwnedCertKeys: [] }), { status: 200 }),
+    );
+    try {
+      render(<CertificatesClient />);
+      await waitFor(() =>
+        expect(fetchSpy).toHaveBeenCalledWith(
+          "/api/certificates/claim",
+          expect.objectContaining({
+            headers: expect.objectContaining({ Authorization: "Bearer fresh-token" }),
+          }),
+        ),
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it("recovers guest purchases automatically when signed in with a verified email", async () => {
