@@ -127,9 +127,9 @@ function SignupForm() {
           source: "direct_signup",
           role,
         });
-        await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+        const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
         clearSignupFormState();
-        trackSignupSucceeded({
+        if (credential.profileCreated) trackSignupSucceeded({
           method: "google",
           surface: "signup_page",
           source: "direct_signup",
@@ -164,9 +164,9 @@ function SignupForm() {
           source: "direct_signup",
           role,
         });
-        await signInWithApple(role, CURRENT_LEGAL_CONSENT);
+        const credential = await signInWithApple(role, CURRENT_LEGAL_CONSENT);
         clearSignupFormState();
-        trackSignupSucceeded({
+        if (credential.profileCreated) trackSignupSucceeded({
           method: "apple",
           surface: "signup_page",
           source: "direct_signup",
