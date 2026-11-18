@@ -1399,6 +1399,34 @@ describe("CertificatePanel", () => {
     expect(new URLSearchParams(window.location.search).has("step")).toBe(false);
   });
 
+  it("preserves a demo preset in the scenario URL without queuing an address lookup when linking", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.access.purchased = true;
+    mocks.auth.linkCheckoutWithGoogle.mockResolvedValueOnce({ user: { uid: "anon-buyer-1" } });
+    const preset = parcelPresets[0];
+    window.history.replaceState(null, "", `/studio?parcel=${preset.id}`);
+
+    render(<CertificatePanel {...createProps({ parcel: preset, parcelName: `${preset.address}, ${preset.city}` })} />);
+
+    const saveSection = screen
+      .getByRole("heading", { name: "Save this certificate to an account" })
+      .closest("section")!;
+    fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => expect(mocks.auth.linkCheckoutWithGoogle).toHaveBeenCalledTimes(1));
+    expect(peekInitialParcel()).toBeNull();
+    expect(peekAddressQuery()).toBeNull();
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get("parcel")).toBe(preset.id);
+    expect(params.get("step")).toBe("certificate");
+  });
+
   it("stashes an estimated parcel address query and certificate step before Google linking", async () => {
     mocks.auth.user = null;
     mocks.auth.checkoutUser = {

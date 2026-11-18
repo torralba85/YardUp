@@ -186,8 +186,8 @@ export default function CertificatePanel({
     let stashedAddress = false;
     if (isLive) {
       stashedParcel = stashInitialParcel(parcel as unknown as LiveParcelData);
-    } else {
-      // The grant stores this same one-line name; a bare street line is ambiguous.
+    } else if ("source" in parcel && parcel.source === "estimated") {
+      // Demo presets restore from the scenario URL. Estimated parcels need a full address.
       const addressQuery =
         parcelName.trim() ||
         [parcel.address, parcel.city]
