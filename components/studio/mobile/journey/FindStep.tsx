@@ -85,10 +85,8 @@ export default function FindStep({
           onSelect={onSelect}
           onSubmitText={onSubmitText}
           onQueryChange={setQueryText}
+          showPrivacyNote
         />
-        <p className="mt-2 text-xs leading-5 text-lot-stone">
-          We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
-        </p>
         {parcelLoading && (
           <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
             <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
@@ -133,6 +131,7 @@ export default function FindStep({
           variant="primary"
           size="lg"
           fullWidth
+          disabled={hasQuery && parcelLoading}
           rightIcon={<ArrowRight size={16} />}
           onClick={() => {
             if (hasQuery) {

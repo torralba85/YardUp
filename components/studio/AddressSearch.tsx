@@ -49,6 +49,8 @@ export interface AddressSearchProps {
    * steals focus on first paint.
    */
   autoFocusSignal?: number;
+  /** Render the ephemeral-address privacy reassurance line beneath the input. */
+  showPrivacyNote?: boolean;
 }
 
 /**
@@ -119,6 +121,7 @@ export default function AddressSearch({
   placeholder = "Search property address…",
   disabled = false,
   autoFocusSignal,
+  showPrivacyNote = false,
 }: AddressSearchProps) {
   const hasPlacesKey = looksLikeBrowserKey(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const { user } = useAuth();
@@ -713,6 +716,12 @@ export default function AddressSearch({
           Type a full address (street, city, state) and press Search.
         </p>
       ) : null}
+
+      {showPrivacyNote && (
+        <p className="mt-2 text-xs leading-5 text-lot-stone">
+          We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
+        </p>
+      )}
     </form>
   );
 }

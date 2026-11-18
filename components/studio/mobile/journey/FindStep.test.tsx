@@ -155,4 +155,18 @@ describe("FindStep", () => {
     expect(onSubmitText).toHaveBeenCalledWith("5124 35th St, San Diego, CA");
     expect(onReveal).not.toHaveBeenCalled();
   });
+
+  it("disables typed address submission while parcelLoading is true", async () => {
+    const user = userEvent.setup();
+    render(<FindStep {...defaultProps} parcelLoading />);
+
+    const demoCta = screen.getByRole("button", { name: "See a San Diego example" });
+    expect(demoCta).toBeEnabled();
+
+    await user.type(
+      screen.getByRole("searchbox", { name: /search property address/i }),
+      "5124 35th St, San Diego, CA",
+    );
+    expect(screen.getByRole("button", { name: "Check my address" })).toBeDisabled();
+  });
 });

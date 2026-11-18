@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Lock } from "lucide-react";
 import { formatCompactCurrency, formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
+import { formatPaybackYears } from "@/lib/finance";
 import { Button } from "@/components/ui/Button";
 
 export function rentRangeLabel(result: FeasibilityResult) {
@@ -41,10 +42,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
 
   const buildCostLabel = `${formatCompactCurrency(result.costLow)}â€“${formatCompactCurrency(result.costHigh)}`;
   const annualNoiLabel = `${formatCompactCurrency(result.annualNoi)} /yr`;
-  const paybackLabel =
-    result.annualNoi > 0 && Number.isFinite(result.paybackYears)
-      ? `${result.paybackYears} yrs`
-      : "â€”";
+  const paybackLabel = formatPaybackYears(result.paybackYears, result.annualNoi, "yrs");
 
   return (
     <section aria-label="Free property preview" className="space-y-5 border border-lot-line bg-lot-chalk p-5 sm:p-6">
@@ -75,7 +73,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
         </div>
       </div>
       <p className="text-xs leading-5 text-lot-stone">
-        Estimated construction range. Excludes site grading, utility trenching, municipal impact fees, and architectural soft costs.
+        Estimated construction range (includes modeled design, engineering, and permit soft-cost allowance). Excludes site grading, utility extensions, soil conditions, and municipal impact fees.
       </p>
       <p className="text-sm leading-6 text-lot-stone">Answer whether rent covers your loan payment and whether your builderâ€™s scope is complete. Includes cost allowances, financing comparisons, local permit steps, items to verify, a scope checklist, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}

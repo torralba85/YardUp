@@ -226,8 +226,10 @@ describe("ReportPreview certificate packet", () => {
     expect(screen.queryByText(/SB 13/)).not.toBeInTheDocument();
   });
 
-  it("prints a 12-line RFQ sheet with a checkbox per builder", () => {
+  it("prints a 12-line scope sheet with a checkbox per builder", () => {
     renderPacket();
+    expect(screen.getByText("3-builder scope checklist")).toBeInTheDocument();
+    expect(screen.getByText(/Scope sheet ·/)).toBeInTheDocument();
     const sheet = screen.getByRole("heading", { name: "Scope Checklist" }).closest("section")!;
     expect(sheet.className).toMatch(/print:break-before-page/);
     expect(within(sheet).getAllByRole("rowheader")).toHaveLength(12);

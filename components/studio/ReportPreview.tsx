@@ -32,7 +32,7 @@ import {
   type AuditTone,
   type PermitFeeAudit,
 } from "@/lib/certificate-permit-audit";
-import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
+import { SCOPE_CHECKLIST, SCOPE_CHECKLIST_BUILDERS } from "@/lib/certificate-bid-checklist";
 import { buildAduHeightModel } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -270,7 +270,7 @@ export default function ReportPreview({
                 "Cost estimate range",
                 "Leveraged cash-flow pro forma",
                 ...(permitAudit ? [permitAudit.jurisdiction === "other" ? "Permit fee & submittal audit" : "750 sq ft fee & permit audit"] : []),
-                "3-builder bid-leveling checklist",
+                "3-builder scope checklist",
                 "Modeled site-fit flags",
                 "Rental analysis",
                 "Assumptions",
@@ -578,7 +578,7 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
       aria-labelledby="certificate-bid-checklist-heading"
       className="mt-6 border-t border-lot-ink pt-5 print:break-before-page"
     >
-      <p className="lf-dataprint text-lot-orange-ink">Builder RFQ sheet · {parcelName}</p>
+      <p className="lf-dataprint text-lot-orange-ink">Scope sheet · {parcelName}</p>
       <h3 id="certificate-bid-checklist-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
         Scope Checklist
       </h3>
@@ -594,7 +594,7 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
                 <span className="sr-only">Item number</span>
               </th>
               <th scope="col" className="lf-dataprint py-2 pr-3 text-left text-lot-stone">Scope item</th>
-              {BID_LEVELING_BUILDERS.map((builder) => (
+              {SCOPE_CHECKLIST_BUILDERS.map((builder) => (
                 <th key={builder} scope="col" className="lf-dataprint w-24 px-1 py-2 text-center text-lot-stone">
                   {builder}
                 </th>
@@ -602,14 +602,14 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
             </tr>
           </thead>
           <tbody>
-            {BID_LEVELING_CHECKLIST.map((item, index) => (
+            {SCOPE_CHECKLIST.map((item, index) => (
               <tr key={item.id} className="border-b border-lot-line align-top">
                 <td className="py-2 pr-2 tabular-nums text-lot-stone">{String(index + 1).padStart(2, "0")}</td>
                 <th scope="row" className="py-2 pr-3 text-left font-normal">
                   <span className="block text-sm font-semibold leading-5 text-lot-ink">{item.title}</span>
                   <span className="mt-0.5 block leading-5 text-lot-stone">{item.ask}</span>
                 </th>
-                {BID_LEVELING_BUILDERS.map((builder) => (
+                {SCOPE_CHECKLIST_BUILDERS.map((builder) => (
                   <td key={builder} className="px-1 py-1 text-center">
                     <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
                       <Checkbox

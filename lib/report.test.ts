@@ -308,4 +308,26 @@ describe("buildReportCsv", () => {
     expect(csv).toContain("AI Style Match Concept URL,https://example.com/concept.jpg");
     expect(csv).toContain("AI Style Match Reference Photo URL,https://example.com/home.jpg");
   });
+
+  it("formats non-positive payback as '—' across text, html, and csv outputs", () => {
+    const base = makeInput();
+    const input = {
+      ...base,
+      result: {
+        ...base.result,
+        annualNoi: 0,
+        paybackYears: Number.POSITIVE_INFINITY,
+      },
+    };
+    const text = buildReportText(input);
+    const html = buildReportHtml(input);
+    const csv = buildReportCsv(input);
+
+    expect(text).toContain("Payback: —");
+    expect(text).not.toContain("Infinity");
+    expect(html).toContain('<td class="amt">—</td>');
+    expect(html).not.toContain("Infinity");
+    expect(csv).toContain("Simple Payback (years),—");
+    expect(csv).not.toContain("Infinity");
+  });
 });

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { BarChart3, CheckCircle2, FileText, Home, Landmark, Lock, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { hasValidPayback } from "@/lib/finance";
 import type { FeasibilityStatus } from "@/lib/analytics/events";
 import {
   buildCashFlowProForma,
@@ -111,11 +112,13 @@ export default function EstimateSummaryPanel({
     },
     {
       label: "Payback",
-      value: (
+      value: hasValidPayback(result.paybackYears, result.annualNoi) ? (
         <>
           {result.paybackYears}{" "}
           <span className="font-sans text-xs font-medium text-lot-stone">yrs</span>
         </>
+      ) : (
+        "—"
       ),
       detail: "At mid-range cost",
       icon: SlidersHorizontal,

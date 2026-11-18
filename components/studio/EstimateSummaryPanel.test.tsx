@@ -97,4 +97,12 @@ describe("750 sq ft impact-fee row", () => {
     expect(screen.getByText(/exempts a lot's first two ADUs from its own impact fees/)).toBeInTheDocument();
     expect(screen.queryByText(/in proportion to the main house/)).not.toBeInTheDocument();
   });
+
+  it("formats non-positive payback as '—' in unlocked view instead of Infinity", () => {
+    const nonPositive = { ...compliant, annualNoi: 0, paybackYears: Number.POSITIVE_INFINITY };
+    render(<EstimateSummaryPanel parcelName="Lot" result={nonPositive}
+      feasibilityStatus="eligible" onGenerateReport={vi.fn()} certificateUnlocked />);
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByText(/Infinity/i)).not.toBeInTheDocument();
+  });
 });
