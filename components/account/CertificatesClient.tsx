@@ -15,6 +15,7 @@ import { AccountMenu } from "@/components/account/AccountMenu";
 import {
   useUserPurchasedCertificates,
   formatCertKeyFallback,
+  formatCertificateLocality,
   buildStudioUrlForCertificate,
 } from "@/lib/purchased-certificates";
 
@@ -271,11 +272,7 @@ export function CertificatesClient() {
                 const fallback = formatCertKeyFallback(cert.certKey);
                 const title = cert.parcelName || cert.address || fallback.title;
                 const subtitle =
-                  cert.city && cert.state
-                    ? `${cert.city}, ${cert.state}${cert.zip ? ` ${cert.zip}` : ""}`
-                    : cert.city
-                      ? `${cert.city}${cert.zip ? ` ${cert.zip}` : ""}`
-                      : fallback.subtitle;
+                  formatCertificateLocality(cert.city, cert.state, cert.zip) ?? fallback.subtitle;
 
                 return (
                   <Bezel key={cert.id}>

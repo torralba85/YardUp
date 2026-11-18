@@ -138,6 +138,29 @@ describe("CertificatesClient", () => {
     );
   });
 
+  it("shows a live-lookup locality once when the city already carries state and ZIP", () => {
+    certState.certificates = [
+      {
+        id: "u1_202-c-st-san-diego-ca-92101",
+        certKey: "202-c-st-san-diego-ca-92101",
+        uid: "u1",
+        stripeSessionId: "cs_123",
+        amount: 2900,
+        status: "granted",
+        demo: false,
+        createdAt: new Date("2026-11-17T12:00:00Z"),
+        address: "202 C St",
+        city: "San Diego, CA 92101",
+        state: "CA",
+        zip: "92101",
+      },
+    ];
+
+    render(<CertificatesClient />);
+    expect(screen.getByText("San Diego, CA 92101")).toBeInTheDocument();
+    expect(screen.queryByText(/CA 92101, CA/)).not.toBeInTheDocument();
+  });
+
   it("labels a $0 agent-pass certificate as complimentary instead of a price", () => {
     const listing = "1234-elm-st-san-diego";
     certState.certificates = [
