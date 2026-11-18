@@ -259,7 +259,13 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
             <tbody>
               {shown.map((area) => (
                 <tr key={area.name} className="border-t border-lot-line">
-                  <th scope="row" className={thClass}>{area.approvals >= PERMIT_AREA_MIN_APPROVALS ? <Link href={permitAreaPath(area)} className={linkClass}>{area.name}</Link> : area.name}</th>
+                  <th scope="row" className="pr-4 font-semibold text-lot-ink">
+                    {area.approvals >= PERMIT_AREA_MIN_APPROVALS ? (
+                      <Link href={permitAreaPath(area)} className={`inline-flex min-h-11 items-center ${linkClass}`}>
+                        {area.name}
+                      </Link>
+                    ) : area.name}
+                  </th>
                   <td className={tdClass}>{number(area.units)}</td>
                   <td className={tdClass}>{number(area.approvals)}</td>
                   <td className={tdClass}>{number(area.bonusAduUnits)}</td>
