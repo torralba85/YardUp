@@ -662,8 +662,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    // The default studio preset renders first (coyote-brush, 50 ft wide).
-    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "50");
+    // The demo preset renders first (oak-street, 40 ft wide).
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "40");
 
     await user.click(stepButton(/Your Lot/));
     const search = screen.getByRole("search");
@@ -681,7 +681,6 @@ describe("FeasibilityStudio (guided spine)", () => {
   });
 
   it("keeps the parcel view switch inside the scene and changes views explicitly", async () => {
-    window.history.replaceState(null, "", "/studio?parcel=oak-street");
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -752,7 +751,6 @@ describe("FeasibilityStudio (guided spine)", () => {
     });
 
     it("recovers from a scan failure without losing the ADU pose or hiding the model", async () => {
-      window.history.replaceState(null, "", "/studio?parcel=oak-street");
       const user = userEvent.setup();
       render(<FeasibilityStudio />, { wrapper: TestWrapper });
       const pose = screen.getByTestId("parcel-scene").getAttribute("data-pose");
@@ -769,7 +767,6 @@ describe("FeasibilityStudio (guided spine)", () => {
     });
 
     it("moves view selection by keyboard and restores focus after calibration", async () => {
-      window.history.replaceState(null, "", "/studio?parcel=oak-street");
       const user = userEvent.setup();
       render(<FeasibilityStudio />, { wrapper: TestWrapper });
       screen.getByRole("radio", { name: "3D model" }).focus();
@@ -956,14 +953,14 @@ describe("FeasibilityStudio (guided spine)", () => {
       // User can choose to explore demo lot instead
       await user.click(screen.getByRole("button", { name: "Explore demo lot" }));
       expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
-      expect(screen.getByText("1234 Coyote Brush Court")).toBeInTheDocument();
-      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: San Diego");
+      expect(screen.getByText("1234 Oak Street")).toBeInTheDocument();
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
       expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
 
       // Now Neighborhood view works for the demo lot
       await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
       expect(screen.getByTestId("cesium-neighborhood-view")).toBeInTheDocument();
-      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", "1234 Coyote Brush Court");
+      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", "1234 Oak Street");
 
       fetchSpy.mockRestore();
     });
@@ -1015,7 +1012,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     entitlement.purchased = true; // The complete workspace requires a property grant.
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
-      screen.getByRole("heading", { name: /San Diego ADU Starter Guide/i }),
+      screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
     ).toBeInTheDocument();
   });
 
@@ -1142,7 +1139,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(within(rentGroup).getByRole("radio", { name: "Market" }));
 
     const monthlyRentSection = screen.getByText("Monthly Rent").parentElement;
-    expect(monthlyRentSection).toHaveTextContent("$2,615");
+    expect(monthlyRentSection).toHaveTextContent("$2,350");
   });
 
   it("paywalls the complete certificate behind a purchase (guest sees the checkout CTA)", async () => {

@@ -1,6 +1,5 @@
 import {
   configForFootprint,
-  DEFAULT_STUDIO_PARCEL_ID,
   defaultAduConfig,
   defaultFinancialAssumptions,
   footprintOptions,
@@ -46,14 +45,12 @@ const validRents: RentScenario[] = ["conservative", "market", "optimistic"];
 const validParcelIds = new Set(parcelPresets.map((preset) => preset.id));
 const validFootprints = new Set(footprintOptions.map((option) => option.value));
 
-const defaultStudioParcel = getParcelById(DEFAULT_STUDIO_PARCEL_ID);
-
 /** The baseline scenario state used when no URL params are present. */
 export const defaultScenarioState: ScenarioState = {
   version: SCENARIO_VERSION,
   heightConvention: HEIGHT_CONVENTION,
-  pose: defaultPose(defaultStudioParcel, defaultAduConfig),
-  parcelId: defaultStudioParcel.id,
+  pose: defaultPose(parcelPresets[0], defaultAduConfig),
+  parcelId: parcelPresets[0].id,
   config: defaultAduConfig,
   assumptions: defaultFinancialAssumptions,
 };

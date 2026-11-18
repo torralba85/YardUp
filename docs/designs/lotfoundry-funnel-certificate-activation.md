@@ -15,7 +15,7 @@ The original initiative addressed two issues:
 1. Mobile visitors who typed an address and tapped the bottom button were routed into the Seattle sample preset instead of their own lot.
 2. Marketing pages promised free build cost, rent, and payback estimates with no account required, while the Studio blurred build cost, annual Net Operating Income (NOI), and payback behind the Certificate paywall.
 
-Most of those UI and offer changes are now implemented in `YardUp/`. This document records the updated architecture and specifies the remaining codebase delta: switching the Studio's initial default preset to San Diego (`coyote-brush`) without breaking Seattle fallback tests, guarding non-positive NOI payback formatting at the shared `lib/finance.ts` boundary, consolidating address privacy microcopy in `AddressSearch.tsx`, cleaning up residual legacy checklist strings, and adding missing unit tests.
+Most of those UI and offer changes are now implemented in `YardUp/`. This document records the updated architecture and specifies the remaining codebase delta: guarding non-positive NOI payback formatting at the shared `lib/finance.ts` boundary, consolidating address privacy microcopy in `AddressSearch.tsx`, disabling rapid mobile submit taps while `parcelLoading` is true, aligning `StudioPreview.tsx` soft-cost copy with `lib/finance.ts`, cleaning up residual legacy checklist strings, and adding missing unit tests (while keeping `oak-street` as `parcelPresets[0]` / Studio default so 3DGS scan coverage and `/studio?parcel=coyote-brush` non-default deep links remain intact).
 
 ## The Problem
 
@@ -27,7 +27,7 @@ Homeowners evaluating an ADU need three baseline figures before committing money
 
 ## Goals
 
-*   **Default Studio Entry to San Diego**: Keep `coyote-brush` (San Diego, using Department of Housing and Urban Development [HUD] FY2027 fair market rents) as the default Studio initial preset via `FeasibilityStudio.tsx` and `lib/scenario-url.ts` without breaking `getParcelById("unknown")` Seattle fallback behavior, matching the 82% California user share reported in `concepts_brief.md`.
+*   **Preserve San Diego Funnel Routing & `oak-street` Baseline Contract**: Keep `lib/landing-demo.ts`, `LotMoreLanding.tsx`, `app/page.tsx`, and `FindStep.tsx`'s `"See a San Diego example"` CTA routed to `coyote-brush` (San Diego, using Department of Housing and Urban Development [HUD] FY2027 fair market rents, matching the 82% California user share reported in `concepts_brief.md`), while preserving `parcelPresets[0]` (`"oak-street"`) as the Studio's structural default so 3DGS photoreal scan (`e2e/studio-photoreal-scan.spec.ts`) and `/studio?parcel=coyote-brush` non-default landing links (`isNonDefaultScenario`) stay intact.
 *   **Prevent Repeat Mobile Lookup Taps**: Disable the `FindStep.tsx` submit action while `parcelLoading` is true.
 *   **Unify Address Privacy Copy**: Move the literal privacy notice onto `AddressSearch.tsx` as an optional prop enabled across `FindStep.tsx`, `FeasibilityStudio.tsx` (`LotStep` and the `feasibility` side rail), and `ConstraintsPanel.tsx`.
 *   **Guard Non-Positive Payback Everywhere**: Prevent `Infinity` or negative payback output at the shared `lib/finance.ts` / formatter boundary so `EstimateSummaryPanel.tsx`, `CheckStep.tsx`, and `lib/report.ts` match `StudioPreview.tsx` (`"—"`).
@@ -93,10 +93,10 @@ flowchart TD
     *   Guard `FindStep.tsx` submit button with `disabled={parcelLoading}` to prevent rapid double-taps.
     *   Centralize the literal privacy notice (*"We only use your address to fetch lot geometry and zoning rules. We don't save your address or contact you unless you create an account."*) on `AddressSearch.tsx` via an optional prop (`showPrivacyNote?: boolean`) enabled on `FindStep.tsx`, `FeasibilityStudio.tsx` (`LotStep` and `feasibility` side rail), and `ConstraintsPanel.tsx`.
 
-### 2. San Diego Default Preset and Zero-Network Demo (`lib/feasibility.ts`, `lib/scenario-url.ts`, `lib/splat-registry.ts`)
+### 2. San Diego Funnel Routing and `oak-street` Baseline Contract (`lib/feasibility.ts`, `lib/scenario-url.ts`, `lib/splat-registry.ts`)
 
-*   **Baseline Already Live**: `lib/landing-demo.ts`, `components/landing/lot-more/LotMoreLanding.tsx`, and `app/page.tsx` already default to `"san-diego"` (`coyote-brush`). Preset mode (`parcelMode === "preset"`) bypasses `/api/parcel` and municipal GIS (`gis-public.sandiegocounty.gov`) because `ParcelPreset` stores scalar lot dimensions (`lotArea`, `lotWidth`, `lotLength`, `existingHouseSqft`, `maxLotCoveragePercent`, `setbacks`, `expectedRent`, `marketData`) rendered procedurally in 3D. 3DGS splat visibility (`oak-street-curated.spz`) is already gated by `lib/splat-registry.ts` (`CURATED_SPLAT_SCENES` / `getSplatSceneForParcel`) and `FeasibilityStudio.tsx` (`hasScan={Boolean(splatScene)}`), requiring no changes in `ParcelScene.tsx`.
-*   **Remaining Delta**: Rather than reordering `parcelPresets[0]` (which alters `getParcelById("unknown")` fallback and breaks `lib/landing-demo.test.ts` plus existing Seattle-indexed test fixtures), point `FeasibilityStudio.tsx` (`initialPreset`) and `lib/scenario-url.ts` (`defaultScenarioState`) explicitly to `getParcelById("coyote-brush")` while keeping `parcelPresets[0]` (`"oak-street"`) as the unknown-ID fallback.
+*   **Baseline Contract**: `lib/landing-demo.ts`, `components/landing/lot-more/LotMoreLanding.tsx`, `app/page.tsx`, and `FindStep.tsx` (`"See a San Diego example"`) already route visitors to `"coyote-brush"` (`san-diego`). Preset mode (`parcelMode === "preset"`) bypasses `/api/parcel` and municipal GIS (`gis-public.sandiegocounty.gov`) because `ParcelPreset` stores scalar lot dimensions (`lotArea`, `lotWidth`, `lotLength`, `existingHouseSqft`, `maxLotCoveragePercent`, `setbacks`, `expectedRent`, `marketData`) rendered procedurally in 3D. 3DGS splat visibility (`oak-street-curated.spz`) is already gated by `lib/splat-registry.ts` (`CURATED_SPLAT_SCENES` / `getSplatSceneForParcel`) and `FeasibilityStudio.tsx` (`hasScan={Boolean(splatScene)}`), requiring no changes in `ParcelScene.tsx`.
+*   **No Preset-Default Change**: `parcelPresets[0]` (`"oak-street"`) remains the baseline for `FeasibilityStudio.tsx`, `createScenarioState`, and `defaultScenarioState`: changing `defaultScenarioState.parcelId` to `"coyote-brush"` breaks `studio-photoreal-scan.spec.ts` (which expects `oak-street`'s registered Scan view on `/studio`) and flips `isNonDefaultScenario` so `/studio?parcel=coyote-brush` landing links stop skipping mobile `Find`.
 
 ### 3. Shared Payback Formatting and Preview Boundary (`lib/finance.ts`, `StudioPreview.tsx`, `EstimateSummaryPanel.tsx`, `CheckStep.tsx`, `lib/report.ts`)
 
@@ -126,7 +126,7 @@ sequenceDiagram
 | Subsystem | Components / Modules | Boundary Rule |
 | :--- | :--- | :--- |
 | **Address Entry** | `AddressSearch.tsx`, `FindStep.tsx`, `FeasibilityStudio.tsx`, `ConstraintsPanel.tsx`, `app/api/geocode/route.ts` | Mobile submission works without Places dropdowns; `FindStep.tsx` disables submit while `parcelLoading` is true; `/api/geocode` enforces per-IP `checkRateLimit` (10 req/min for guests), emits `Cache-Control: private, max-age=3600`, and falls back to `geocodeWithCensus(query)`. |
-| **Sample Presets & 3DGS** | `lib/feasibility.ts`, `lib/scenario-url.ts`, `lib/splat-registry.ts`, `lib/landing-demo.ts` | `coyote-brush` loads in `preset` mode with no `/api/parcel` call; `lib/splat-registry.ts` gates 3DGS scan availability (`oak-street` only); `FeasibilityStudio.tsx` and `defaultScenarioState` default to `coyote-brush`. |
+| **Sample Presets & 3DGS** | `lib/feasibility.ts`, `lib/scenario-url.ts`, `lib/splat-registry.ts`, `lib/landing-demo.ts` | `coyote-brush` loads in `preset` mode with no `/api/parcel` call; `lib/splat-registry.ts` gates 3DGS scan availability (`oak-street` only); `parcelPresets[0]` (`oak-street`) remains Studio baseline while landing/`FindStep` route demo clicks to `coyote-brush`. |
 | **Feasibility Math & Preview** | `lib/finance.ts`, `StudioPreview.tsx`, `EstimateSummaryPanel.tsx`, `CheckStep.tsx`, `lib/report.ts` | Deterministic client math with zero `/api/ai/*` calls; shared non-positive NOI payback guard returns `"—"` across all views. |
 | **Certificate & Telemetry** | `CertificatePanel.tsx`, `lib/certificate-bid-checklist.ts`, `ReportPreview.tsx`, `lib/analytics/events.ts` | Best-effort `sessionStorage` + URL state handoff; neutral `"Scope Checklist"` wording; funnel events tracked via existing `lib/analytics/events.ts`. |
 
@@ -177,7 +177,7 @@ sequenceDiagram
 ## Risks & Mitigations
 
 *   **Lookup Failures on Unvalidated Mobile Strings**: Typing free-text addresses without Places autocomplete can yield `/api/geocode` 404s or `/api/parcel` fallback responses (`presetFallbackResponse`). Mitigation: `FindStep.tsx` surfaces `parcelError` inline for retry, disables repeat taps while `parcelLoading` is true, and falls back to `geocodeWithCensus` when Nominatim misses.
-*   **`parcelPresets[0]` Fallback Coupling**: Reordering `parcelPresets` changes `getParcelById("unknown")` and breaks Seattle fallback tests (`lib/landing-demo.test.ts`). Mitigation: Keep `oak-street` at `parcelPresets[0]` and point `FeasibilityStudio.tsx` (`initialPreset`) and `lib/scenario-url.ts` (`defaultScenarioState`) explicitly to `getParcelById("coyote-brush")`.
+*   **`parcelPresets[0]` Baseline Coupling**: Changing `parcelPresets[0]` or `defaultScenarioState.parcelId` alters `getParcelById("unknown")`, breaks 3DGS scan visibility expectations on `/studio` (`studio-photoreal-scan.spec.ts`), and flips `isNonDefaultScenario` for `/studio?parcel=coyote-brush` landing links. Mitigation: Keep `oak-street` as `parcelPresets[0]` and `defaultScenarioState.parcelId` while routing `/` landing and `FindStep.tsx`'s empty CTA to `coyote-brush`.
 *   **Best-Effort `sessionStorage` Handoff Loss**: OAuth redirects across isolated mobile webviews can drop `sessionStorage`. Mitigation: `FeasibilityStudio.tsx` mirrors scenario parameters into the URL via `replaceState`, preserving lot/config state across reloads without adding heavy cross-tab persistence infrastructure.
 *   **Unvalidated Conversion Assumption**: At 26 search visitors and 0 prior sales, post-release Certificate conversion remains unverified. Mitigation: Evaluate `lib/analytics/events.ts` (`trackFeasibilityResultViewed` with `parcel_mode !== "preset"`, `trackCertificateCheckoutStarted`, `trackCertificatePurchase`) after **100 real-address evaluations or 30 calendar days post-release** (whichever comes first); trigger a Certificate offer/pricing review if checkout starts exceed 10 with 0 purchases or lookup-to-purchase stays below 1%.
 *   **Spoofable `Bearer` Header on Metered Providers**: `isGuestRequest()` (`lib/server/guest-request.ts:13–16`) checks only `Authorization: Bearer` header presence, so a forged `Bearer` header bypasses guest gating on `geocodeWithGoogle` and `REGRID_API`. Mitigation: Documented as a separate follow-up security PR adding `requireApiAuth` verification before metered provider calls so this funnel delta avoids cross-cutting server auth changes.
@@ -203,60 +203,52 @@ sequenceDiagram
 
 All paths below are relative to `YardUp/`. Execute in three ordered phases so each phase compiles and passes tests independently.
 
-### Phase 1: Studio San Diego Default & Shared Payback Safety
+### Phase 1: Shared Payback Safety
 
-#### 1. `components/FeasibilityStudio.tsx` and `lib/scenario-url.ts` (Modify)
-*   **Scope**: Studio Initial State & URL Scenario Defaults
-*   **Proposed Changes**:
-    *   Point `initialPreset` in `components/FeasibilityStudio.tsx` (line 172) and `defaultScenarioState` (`parcelId` + `pose`) in `lib/scenario-url.ts` (lines 52–53) to `getParcelById("coyote-brush")` while keeping `parcelPresets[0]` as `"oak-street"`.
-    *   Update `components/FeasibilityStudio.tsx` `[data-testid="demo-mode-banner"]` documentation/tests if `activeStep === "lot"` stays excluded vs. shown on desktop.
-*   **Rationale**: Sets San Diego as the default Studio lot without altering `getParcelById("unknown")` Seattle fallback behavior or breaking unrelated `parcelPresets[0]` fixtures.
-
-#### 2. `lib/finance.ts`, `components/studio/EstimateSummaryPanel.tsx`, `components/studio/mobile/journey/CheckStep.tsx`, and `lib/report.ts` (Modify)
+#### 1. `lib/finance.ts`, `components/studio/StudioPreview.tsx`, `components/studio/EstimateSummaryPanel.tsx`, `components/studio/mobile/journey/CheckStep.tsx`, and `lib/report.ts` (Modify)
 *   **Scope**: Shared Payback Formatting & Calculation Guard
 *   **Proposed Changes**:
-    *   Export a shared formatter (e.g., `formatPaybackYears(paybackYears: number, annualNoi: number)`) or guard `paybackYears` in `lib/finance.ts` (line 90) when `annualNoi <= 0` or `!Number.isFinite(paybackYears)` so non-positive NOI formats consistently as `"—"`.
-    *   Use the shared helper across `components/studio/StudioPreview.tsx` (retaining `" yrs"` for positive values and `" /yr"` on Annual net income), `components/studio/EstimateSummaryPanel.tsx` (line 112), `components/studio/mobile/journey/CheckStep.tsx` (line 72), and `lib/report.ts` (lines 143, 220, 521, 901).
+    *   Export `hasValidPayback(paybackYears: number, annualNoi: number)` and `formatPaybackYears(paybackYears: number, annualNoi: number, unit?: "yrs" | "years" | "none")` in `lib/finance.ts`, returning `"—"` when `annualNoi <= 0` or `!Number.isFinite(paybackYears)`.
+    *   Use the shared helper across `components/studio/StudioPreview.tsx` (retaining `" yrs"` for positive values and `" /yr"` on Annual net income), `components/studio/EstimateSummaryPanel.tsx` (line 115), `components/studio/mobile/journey/CheckStep.tsx` (line 77), and `lib/report.ts` (lines 143, 220, 521, 901).
 *   **Rationale**: Eliminates `Infinity yrs` and negative payback strings across unlocked, mobile, and exported report views.
 
-*Phase 1 Checkpoint*: Run `npx.cmd tsc --noEmit` and `npm.cmd run test -- lib/finance.test.ts lib/scenario-url.test.ts components/studio/EstimateSummaryPanel.test.tsx components/studio/StudioPreview.test.tsx`.
+*Phase 1 Checkpoint*: Run `npx.cmd tsc --noEmit` and `npm.cmd run test -- lib/finance.test.ts components/studio/EstimateSummaryPanel.test.tsx components/studio/StudioPreview.test.tsx lib/report.test.ts`.
 
 ---
 
 ### Phase 2: Shared Privacy Copy, Tap Guard & Legacy Checklist Cleanup
 
-#### 3. `components/studio/AddressSearch.tsx`, `components/studio/mobile/journey/FindStep.tsx`, `components/FeasibilityStudio.tsx`, and `components/studio/ConstraintsPanel.tsx` (Modify)
+#### 2. `components/studio/AddressSearch.tsx`, `components/studio/mobile/journey/FindStep.tsx`, `components/FeasibilityStudio.tsx`, and `components/studio/ConstraintsPanel.tsx` (Modify)
 *   **Scope**: Unified Address Privacy Copy & Mobile Submit Guard
 *   **Proposed Changes**:
     *   Add an optional `showPrivacyNote?: boolean` prop to `AddressSearchProps` (`components/studio/AddressSearch.tsx`) rendering `"We only use your address to fetch lot geometry and zoning rules. We don't save your address or contact you unless you create an account."` below the search input.
-    *   Enable `showPrivacyNote` across `FindStep.tsx` (removing the duplicate inline `<p>`), `FeasibilityStudio.tsx` (`LotStep` at line 2002 and the `feasibility` side rail at line 1650), and `ConstraintsPanel.tsx` (line 114).
-    *   Pass `disabled={parcelLoading}` to the primary submit `<Button>` in `components/studio/mobile/journey/FindStep.tsx` (lines 131–156) while keeping `presetChosen` and `userPickedPreset` behavior unchanged.
+    *   Enable `showPrivacyNote` across `FindStep.tsx` (removing the duplicate inline `<p>`), `FeasibilityStudio.tsx` (`LotStep` and the `feasibility` side rail), and `ConstraintsPanel.tsx`.
+    *   Pass `disabled={hasQuery && parcelLoading}` to the primary submit `<Button>` in `components/studio/mobile/journey/FindStep.tsx` so typed lookups ignore rapid repeat taps while empty-input demo recovery remains enabled.
 *   **Rationale**: Keeps all desktop and mobile `<AddressSearch>` surfaces synchronized on one literal string and prevents double-tap duplicate `/api/geocode` submissions.
 
-#### 4. `components/studio/StudioPreview.tsx`, `components/studio/ReportPreview.tsx`, `components/landing/lot-more/LotMoreLanding.tsx`, `lib/certificate-bid-checklist.ts`, and `lib/report.ts` (Modify)
+#### 3. `components/studio/StudioPreview.tsx`, `components/studio/ReportPreview.tsx`, `components/landing/lot-more/LotMoreLanding.tsx`, `lib/certificate-bid-checklist.ts`, and `lib/report.ts` (Modify)
 *   **Scope**: Soft-Cost Disclosure Alignment & Residual Legacy `"bid-leveling"` Copy Cleanup
 *   **Proposed Changes**:
     *   In `components/studio/StudioPreview.tsx` (line 76), update the exclusions notice to align with `constructionBudgetNote` (`lib/finance.ts:28`): `"Estimated construction range (includes modeled design, engineering, and permit soft-cost allowance). Excludes site grading, utility extensions, soil conditions, and municipal impact fees."`
-    *   In `components/studio/ReportPreview.tsx`, replace `"3-builder bid-leveling checklist"` (line 273) and `"Builder RFQ sheet"` (line 581) with neutral `"Scope Checklist"` copy, and migrate remaining `BID_LEVELING_CHECKLIST` / `BID_LEVELING_BUILDERS` imports (lines 35, 597, 605) to `SCOPE_CHECKLIST` / neutral constants.
-    *   In `components/landing/lot-more/LotMoreLanding.tsx`, replace `"bid-leveling checklist for three builders"` (line 1214) with neutral `"Scope Checklist"` phrasing, and confirm whether the existing Oak Street Studio preview figure (`lines 895, 910, 969–971`) remains as a static screenshot caption or is refreshed.
-    *   Keep `lib/certificate-bid-checklist.ts` filename and `lib/report.ts` CSV `"Bid Item ..."` export keys stable unless an explicit CSV migration is approved; remove unused `BidScopeItem` / `BID_LEVELING_CHECKLIST` aliases once all internal callers migrate.
+    *   Export `SCOPE_CHECKLIST_BUILDERS` alongside `SCOPE_CHECKLIST` in `lib/certificate-bid-checklist.ts`, replace `"3-builder bid-leveling checklist"` and `"Builder RFQ sheet"` in `components/studio/ReportPreview.tsx` with `"3-builder scope checklist"` and `"Scope sheet"`, and migrate `ReportPreview.tsx` and `lib/report.ts` imports to `SCOPE_CHECKLIST` / `SCOPE_CHECKLIST_BUILDERS`.
+    *   In `components/landing/lot-more/LotMoreLanding.tsx` (line 1264), replace `"bid-leveling checklist for three builders"` with `"scope checklist for three builders"`.
+    *   Keep `lib/certificate-bid-checklist.ts` filename, `BID_LEVELING_*` compatibility aliases, and `lib/report.ts` CSV `"Bid Item ..."` export keys stable.
 *   **Rationale**: Aligns Studio cost disclosures with `lib/finance.ts` math (`softCostMultiplier = 1.18`) and completes the neutral checklist rename across UI copy without breaking file paths or CSV exports.
 
 *Phase 2 Checkpoint*: Run `npm.cmd run lint` and `npx.cmd tsc --noEmit`.
 
 ---
 
-### Phase 3: Unit & E2E Test Updates
+### Phase 3: Unit Test Updates
 
-#### 5. Unit and E2E Tests (Modify / Create)
+#### 4. Unit Tests (Modify)
 *   **Scope**: Missing & Updated Test Coverage
 *   **Proposed Changes**:
-    *   `components/studio/AddressSearch.test.tsx` (Modify): Add tests asserting `onQueryChange` fires synchronously on input typing and clearing, and assert `showPrivacyNote` renders the literal privacy string when enabled.
-    *   `components/studio/CertificatePanel.test.tsx` (Modify): Add assertions covering the loan-coverage/scope-completeness offer copy (`CertificatePanel.tsx:490`) and preliminary-estimate checkout disclaimer (`CertificatePanel.tsx:541`).
-    *   `components/studio/mobile/journey/FindStep.test.tsx` (Modify): Assert the submit button is disabled when `parcelLoading` is true.
-    *   `lib/finance.test.ts`, `components/studio/EstimateSummaryPanel.test.tsx`, `components/studio/StudioPreview.test.tsx`, `lib/report.test.ts` (Modify): Assert `annualNoi <= 0` formats payback as `"—"` across shared formatter and sibling views, and assert `StudioPreview.tsx` renders the updated soft-cost disclosure string.
-    *   `lib/scenario-url.test.ts` and `e2e/mobile-studio.spec.ts` (Modify): Update `defaultScenarioState` and `/studio?parcel=...` default-scenario E2E expectations to match `coyote-brush` as the Studio default while preserving `parcelPresets[0]` (`oak-street`) fallback tests.
-    *   `components/studio/ReportPreview.test.tsx` and `components/landing/lot-more/LotMoreLanding.test.tsx` (Modify): Update assertions for renamed `"Scope Checklist"` UI strings.
+    *   `components/studio/AddressSearch.test.tsx`: Assert `onQueryChange` fires synchronously on input typing and clearing, and assert `showPrivacyNote` renders the literal privacy string when enabled.
+    *   `components/studio/CertificatePanel.test.tsx`: Assert the decision-support offer copy and preliminary-estimate checkout disclaimer before purchase.
+    *   `components/studio/mobile/journey/FindStep.test.tsx`: Assert `"Check my address"` is disabled when `parcelLoading` is true while `"See a San Diego example"` stays enabled.
+    *   `lib/finance.test.ts`, `components/studio/EstimateSummaryPanel.test.tsx`, `components/studio/StudioPreview.test.tsx`, `lib/report.test.ts`: Assert `annualNoi <= 0` formats payback as `"—"` across shared formatter and sibling views, and assert `StudioPreview.tsx` renders the updated soft-cost disclosure string.
+    *   `components/studio/ReportPreview.test.tsx`: Assert `"3-builder scope checklist"` and `"Scope sheet"` copy.
 
 ### Verification Plan
 

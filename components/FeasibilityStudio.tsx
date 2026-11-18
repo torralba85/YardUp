@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import {
-  DEFAULT_STUDIO_PARCEL_ID,
   formatCurrency,
   getParcelById,
   parcelPresets,
@@ -170,7 +169,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
  *   starts at the Earn reveal instead of asking them to find a lot again.
  */
 export default function FeasibilityStudio({ demoChosen = false, nativeShell = false, initialScenario }: { demoChosen?: boolean; nativeShell?: boolean; initialScenario?: SavedScenario } = {}) {
-  const initialPreset = getParcelById(DEFAULT_STUDIO_PARCEL_ID);
+  const initialPreset = parcelPresets[0];
   return (
     <ParcelProvider initialPreset={initialPreset}>
       <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} initialScenario={initialScenario} />
@@ -817,7 +816,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   function resetScenario() {
     if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return;
-    resetToPreset(getParcelById(DEFAULT_STUDIO_PARCEL_ID));
+    resetToPreset(parcelPresets[0]);
     dispatchScenario({ type: "reset" });
     setReportOpen(false);
     setBuilderLeadOpen(false);
@@ -1233,7 +1232,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                   <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
                   <Button
                     variant="secondary"
-                    onClick={() => switchToPreset(scenarioState.parcelId)}
+                    onClick={() => switchToPreset(parcelPresets[0].id)}
                   >
                     Explore demo lot
                   </Button>
