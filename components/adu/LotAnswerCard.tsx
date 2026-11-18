@@ -7,7 +7,6 @@ import { ArrowRight, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { StatusChip, type StatusChipStatus } from "@/components/ui/StatusChip";
-import { rentRangeLabel } from "@/components/studio/StudioPreview";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
 import {
@@ -26,26 +25,18 @@ import {
   configForFootprint,
   defaultAduConfig,
   defaultFinancialAssumptions,
-  formatCompactCurrency,
   type ADUConfig,
-  type FeasibilityResult,
 } from "@/lib/feasibility";
 import { summarizeFeasibility, type FeasibilitySummary } from "@/lib/feasibility-verdict";
 import { GeocodeError } from "@/lib/geocode-api";
 import { canGuestLookup, consumeGuestLookup, resetGuestLookups } from "@/lib/guest-lookup";
 import { acquireLiveParcel } from "@/lib/live-parcel-acquisition";
-import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { hasMemberSessionHint } from "@/lib/member-session-hint";
 import { ParcelFetchError } from "@/lib/parcel-api";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import { stashInitialParcel } from "@/lib/parcel-handoff";
 import type { LiveParcelData } from "@/lib/parcel-types";
-import {
-  describePlacement,
-  getDefaultAduPose,
-  getScenePlacement,
-  type PlacementEvidenceStatus,
-} from "@/lib/scene-placement";
+import { describePlacement, getDefaultAduPose, getScenePlacement } from "@/lib/scene-placement";
 
 const LandingAuthGate = dynamic(
   () => import("@/components/landing/LandingAuthGate"),
@@ -103,14 +94,11 @@ interface LotAnswerState {
   submittedQuery: string;
   parcel: LiveParcelData;
   config: ADUConfig;
-  result: FeasibilityResult;
   summary: FeasibilitySummary;
-  placementFeedback: PlacementEvidenceStatus;
   isNonAddressOrPartial: boolean;
   isRangeInterpolated: boolean;
   isFallback: boolean;
   physicalEstimated: boolean;
-  regulationsEstimated: boolean;
   chipStatus: StatusChipStatus;
   chipLabel: string;
 }
@@ -281,14 +269,11 @@ export function LotAnswerCard({
         submittedQuery: trimmed,
         parcel,
         config,
-        result,
         summary,
-        placementFeedback,
         isNonAddressOrPartial,
         isRangeInterpolated,
         isFallback,
         physicalEstimated: confidence.physicalEstimated,
-        regulationsEstimated: confidence.regulationsEstimated,
         chipStatus,
         chipLabel,
       });
@@ -486,7 +471,7 @@ export function LotAnswerCard({
 
           {answer.isFallback || answer.physicalEstimated ? (
             <p className="border border-status-review/35 bg-status-review-soft px-3 py-2 text-xs leading-5 text-status-review">
-              Exact parcel data unavailable — showing estimated dimensions and modeled setbacks. Confirm county records in 3D.
+              Exact parcel data unavailable — the Studio uses estimated dimensions and modeled setbacks. Confirm county records in 3D.
             </p>
           ) : answer.isRangeInterpolated ? (
             <p className="border border-status-review/35 bg-status-review-soft px-3 py-2 text-xs leading-5 text-status-review">
@@ -494,78 +479,12 @@ export function LotAnswerCard({
             </p>
           ) : null}
 
-          <dl className="grid grid-cols-1 gap-3 border-y border-lot-line py-3 sm:grid-cols-3">
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">Lot size</dt>
-              <dd className="mt-1 font-display text-base font-medium tabular-nums text-lot-ink">
-                {answer.parcel.lotArea.toLocaleString("en-US")} sq ft
-              </dd>
-              <dd className="mt-0.5 text-xs text-lot-stone tabular-nums">
-                {answer.parcel.lotWidth}′ × {answer.parcel.lotLength}′
-                {answer.isFallback || answer.physicalEstimated
-                  ? " · Estimated dimensions"
-                  : ""}
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">Zoning</dt>
-              <dd className="mt-1 font-display text-base font-medium text-lot-ink break-words">
-                {answer.parcel.zoning || "Unknown"}
-              </dd>
-              <dd className="mt-0.5 text-xs text-lot-stone">
-                {answer.regulationsEstimated
-                  ? "Assumed rules · confirm locally"
-                  : "Base zoning label"}
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">
-                Modeled fit ({answer.config.footprint} sf)
-              </dt>
-              <dd className="mt-1 font-display text-base font-medium text-lot-ink">
-                {answer.placementFeedback.title}
-              </dd>
-              <dd className="mt-0.5 text-xs leading-4 text-lot-stone">
-                {answer.placementFeedback.detail}
-              </dd>
-            </div>
-          </dl>
-
-          <dl className="grid grid-cols-1 gap-3 border-b border-lot-line pb-3 sm:grid-cols-3">
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">Est. rent range</dt>
-              <dd className="mt-1 whitespace-nowrap lf-money-sm text-lot-ink">
-                {rentRangeLabel(answer.result)}
-                <span className="ml-1 font-sans text-xs font-normal text-lot-stone">
-                  /mo
-                </span>
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">Est. build cost</dt>
-              <dd className="mt-1 whitespace-nowrap lf-money-sm text-lot-ink">
-                {formatCompactCurrency(answer.result.costLow)}–
-                {formatCompactCurrency(answer.result.costHigh)}
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="lf-kicker-dense text-lot-stone">Simple payback</dt>
-              <dd className="mt-1 whitespace-nowrap lf-money-sm text-lot-ink">
-                {answer.result.annualNoi > 0 && Number.isFinite(answer.result.paybackYears)
-                  ? `${answer.result.paybackYears} yrs`
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* A teaser only: lot facts, rent, cost and payback wait for the Studio and the certificate. */}
+          <div className="flex flex-col gap-3 border-t border-lot-line pt-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 space-y-1 text-xs leading-5 text-lot-stone">
-              <p>
-                {answer.result.rentBasis} · {marketProvenanceLine(answer.result.market)}.
+              <p className="text-sm leading-6 text-lot-ink">
+                See how a backyard home fits this lot in the 3D Studio.
               </p>
-              {answer.placementFeedback.missingEvidenceNotice ? (
-                <p>{answer.placementFeedback.missingEvidenceNotice}</p>
-              ) : null}
               <p>
                 Early planning estimates only — not a permit, appraisal, or contractor quote.
               </p>

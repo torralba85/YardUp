@@ -4,6 +4,8 @@
 *   **Status:** Proposed
 *   **Date:** 2026-11-18
 
+> **Amendment (2026-11-18, Andrew):** The unblurred preview is reversed. Before purchase, `StudioPreview.tsx` shows only the rent range and locks `Build cost`, `Annual net income`, `Payback period` and `Financed cash flow`. The pre-Studio `LotAnswerCard.tsx` answer is a teaser: the address, a status chip and "Open in 3D", with no lot size, zoning, fit detail, rent, cost or payback. Reason: showing the figures before purchase gave away the Certificate's value. Where this document describes unblurred cards, the amendment takes precedence.
+
 --------------------------------------------------------------------------------
 
 ## Overview

@@ -11,20 +11,21 @@ import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 const result = calculateFeasibility(getParcelById("coyote-brush"), defaultAduConfig, defaultFinancialAssumptions);
 
 describe("free certificate preview", () => {
-  it("shows rent range, build cost, annual net income, and payback unblurred while locking financed cash flow", () => {
+  it("shows the rent range while locking build cost, annual net income, payback and financed cash flow", () => {
     const onUnlock = vi.fn();
     const { container } = render(<EstimateSummaryPanel parcelName="San Diego demo" result={result}
       feasibilityStatus="review_needed" onGenerateReport={onUnlock} reportCtaLabel="Unlock certificate — $29" />);
     expect(screen.getByText("$2,335–$2,919")).toBeInTheDocument();
-    expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
-    expect(screen.getByText("$19K /yr")).toBeInTheDocument();
-    expect(screen.getByText("13.3 yrs")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Estimated construction range \(includes modeled design, engineering, and permit soft-cost allowance\)\. Excludes site grading, utility extensions, soil conditions, and municipal impact fees\./i,
-      ),
-    ).toBeInTheDocument();
-    expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);
+    expect(screen.queryByText("$231K–$289K")).not.toBeInTheDocument();
+    expect(screen.queryByText("$19K /yr")).not.toBeInTheDocument();
+    expect(screen.queryByText("13.3 yrs")).not.toBeInTheDocument();
+    const locked = container.querySelectorAll('[data-locked-metric="true"]');
+    expect(Array.from(locked, (tile) => tile.textContent)).toEqual([
+      expect.stringContaining("Build cost"),
+      expect.stringContaining("Annual net income"),
+      expect.stringContaining("Payback period"),
+      expect.stringContaining("Financed cash flow"),
+    ]);
     expect(screen.queryByText(/review needed/i)).not.toBeInTheDocument();
     expect(screen.getByText(/not permit approval or guaranteed income/i)).toBeInTheDocument();
     // The sample report sits beside the purchase decision, not only in the page footer.
@@ -33,10 +34,10 @@ describe("free certificate preview", () => {
     expect(onUnlock).toHaveBeenCalledTimes(1);
   });
 
-  it("renders '—' for payback period when annual net income is non-positive or payback is non-finite", () => {
+  it("keeps a non-finite payback out of the free preview", () => {
     const nonPositive = { ...result, annualNoi: 0, paybackYears: Number.POSITIVE_INFINITY };
     render(<StudioPreview result={nonPositive} onUnlock={vi.fn()} />);
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("Payback period locked in the certificate")).toBeInTheDocument();
     expect(screen.queryByText(/Infinity/i)).not.toBeInTheDocument();
   });
 

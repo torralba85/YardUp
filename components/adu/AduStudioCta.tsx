@@ -65,10 +65,10 @@ export function AduStudioCta({
             : "mt-2 max-w-prose text-sm leading-relaxed text-lot-stone-on-dark"
         }
       >
-        Free: lot fit, 3D concept, build cost, rent range, and payback — no
-        account needed for up to 3 addresses. Optional $29 Certificate of
-        Feasibility: financing scenarios, a fee and permit audit, an AI Project
-        Brief, and a 3-builder bid checklist.{" "}
+        Free: lot fit, 3D concept, and rent range — no account needed for up
+        to 3 addresses. Optional $29 Certificate of Feasibility: build cost,
+        net income and payback, financing scenarios, a fee and permit audit, an
+        AI Project Brief, and a 3-builder scope checklist.{" "}
         <Link
           href="/#report"
           className={

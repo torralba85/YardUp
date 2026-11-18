@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Lock } from "lucide-react";
-import { formatCompactCurrency, formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
-import { formatPaybackYears } from "@/lib/finance";
+import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
 
 export function rentRangeLabel(result: FeasibilityResult) {
@@ -40,10 +39,6 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       ? "This concept exceeds the modeled size allowance. Adjust the design and confirm local planning rules."
       : undefined;
 
-  const buildCostLabel = `${formatCompactCurrency(result.costLow)}–${formatCompactCurrency(result.costHigh)}`;
-  const annualNoiLabel = `${formatCompactCurrency(result.annualNoi)} /yr`;
-  const paybackLabel = formatPaybackYears(result.paybackYears, result.annualNoi, "yrs");
-
   return (
     <section aria-label="Free property preview" className="space-y-5 border border-lot-line bg-lot-chalk p-5 sm:p-6">
       <div>
@@ -57,24 +52,18 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       </div>
       <div className="grid grid-cols-2 gap-px border border-lot-line bg-lot-line">
         {[
-          ["Build cost", buildCostLabel],
-          ["Annual net income", annualNoiLabel],
-          ["Payback period", paybackLabel],
-        ].map(([label, value]) => (
-          <div key={label} className="min-w-0 bg-lot-surface p-4">
-            <p className="text-xs text-lot-stone">{label}</p>
-            <p className="mt-3 lf-money-sm leading-tight text-lot-ink">{value}</p>
+          ["Build cost", "$•••–$•••"],
+          ["Annual net income", "$••• /yr"],
+          ["Payback period", "•• yrs"],
+          ["Financed cash flow", "±$••• /mo"],
+        ].map(([label, placeholder]) => (
+          <div key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface p-4">
+            <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />{label}</p>
+            <span aria-hidden="true" className="mt-3 block select-none lf-money-sm leading-tight text-lot-ink blur-xs">{placeholder}</span>
+            <span className="sr-only">{label} locked in the certificate</span>
           </div>
         ))}
-        <div data-locked-metric="true" className="min-w-0 bg-lot-surface p-4">
-          <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />Financed cash flow</p>
-          <span aria-hidden="true" className="mt-3 block select-none lf-money-sm leading-tight text-lot-ink blur-xs">±$••• /mo</span>
-          <span className="sr-only">Financed cash flow locked in the certificate</span>
-        </div>
       </div>
-      <p className="text-xs leading-5 text-lot-stone">
-        Estimated construction range (includes modeled design, engineering, and permit soft-cost allowance). Excludes site grading, utility extensions, soil conditions, and municipal impact fees.
-      </p>
       <p className="text-sm leading-6 text-lot-stone">Answer whether rent covers your loan payment and whether your builder’s scope is complete. Includes cost allowances, financing comparisons, local permit steps, items to verify, a scope checklist, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}

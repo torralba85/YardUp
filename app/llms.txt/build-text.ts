@@ -84,9 +84,10 @@ export function buildLlmsTxt(): string {
   return `# LotFoundry
 
 > ADU (accessory dwelling unit) feasibility tool for homeowners. Enter a US
-> address to see the lot, place a backyard home on it in 3D, and get estimated
-> build cost, rent, and payback. Exploring is free. A Certificate of
-> Feasibility for one property is a one-time ${price} purchase.
+> address to see the lot, place a backyard home on it in 3D, and get an
+> estimated rent range. Exploring is free. A Certificate of Feasibility for one
+> property is a one-time ${price} purchase that adds build cost, net income and
+> payback.
 
 LotFoundry answers "can I build an ADU on my lot, and is it worth it?" before
 you pay for plans or a feasibility study. Up to 3 address lookups require no
@@ -117,11 +118,11 @@ licensed builder.
 
 ## Pricing
 
-- Free: 3D layout exploration, estimated monthly rent range, build cost range,
-  monthly net cash flow, and simple payback. Up to 3 addresses need no
-  account; a free account looks up more.
+- Free: 3D layout exploration and the estimated monthly rent range. Up to 3
+  addresses need no account; a free account looks up more.
 - Certificate of Feasibility: ${price} one-time on the web, for one property.
-  Itemized hard and soft cost allowances, debt-service financing scenarios, a
+  Build cost range, annual net income and simple payback, itemized hard and
+  soft cost allowances, debt-service financing scenarios, a
   fee and permit audit for its size, an AI Project Brief, and a bid-leveling
   checklist for three builders. In the Android app it is bought through Google
   Play.

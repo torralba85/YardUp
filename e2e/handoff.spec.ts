@@ -60,9 +60,9 @@ test.describe("landing → studio handoff", () => {
     await page.getByRole("button", { name: "Explore demo lot" }).click();
     await expect(preview).toBeVisible();
     await expect(preview).toContainText("Estimated monthly rent");
-    // Since the 2026-11-01 funnel change only financed cash flow stays locked;
-    // build cost, net income and payback are free.
-    await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(1);
+    // Build cost, net income, payback and financed cash flow stay locked; the
+    // rent range is free.
+    await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
   });
 
   test("mobile: the journey absorbs the handed-off address", async ({

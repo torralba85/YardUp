@@ -23,6 +23,9 @@ test("guide visitors get an inline answer and reuse the parcel in Studio", async
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await expect(answer).toContainText("Early planning estimates");
+  // A teaser only: no figures or lot facts before the Studio and certificate.
+  await expect(answer).not.toContainText("$");
+  await expect(answer).not.toContainText("sq ft");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("guide-inline-answer.png"), fullPage: true });
   await answer.getByRole("button", { name: "Open in 3D" }).click();
