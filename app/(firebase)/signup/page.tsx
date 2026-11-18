@@ -129,12 +129,14 @@ function SignupForm() {
         });
         const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
         clearSignupFormState();
-        if (credential.profileCreated) trackSignupSucceeded({
-          method: "google",
-          surface: "signup_page",
-          source: "direct_signup",
-          role,
-        });
+        if (credential.profileCreated) {
+          trackSignupSucceeded({
+            method: "google",
+            surface: "signup_page",
+            source: "direct_signup",
+            role,
+          });
+        }
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
@@ -166,12 +168,14 @@ function SignupForm() {
         });
         const credential = await signInWithApple(role, CURRENT_LEGAL_CONSENT);
         clearSignupFormState();
-        if (credential.profileCreated) trackSignupSucceeded({
-          method: "apple",
-          surface: "signup_page",
-          source: "direct_signup",
-          role,
-        });
+        if (credential.profileCreated) {
+          trackSignupSucceeded({
+            method: "apple",
+            surface: "signup_page",
+            source: "direct_signup",
+            role,
+          });
+        }
         router.push(role === "builder" ? "/builder" : "/studio");
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
