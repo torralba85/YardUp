@@ -139,10 +139,11 @@ describe("CertificatesClient", () => {
   });
 
   it("shows a live-lookup locality once when the city already carries state and ZIP", () => {
+    const lot = "202-c-st-san-diego-ca-92101";
     certState.certificates = [
       {
-        id: "u1_202-c-st-san-diego-ca-92101",
-        certKey: "202-c-st-san-diego-ca-92101",
+        id: `u1_${lot}`,
+        certKey: lot,
         uid: "u1",
         stripeSessionId: "cs_123",
         amount: 2900,
