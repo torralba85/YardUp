@@ -151,7 +151,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("a default-scenario URL still begins at the Find reveal", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street&size=600&roof=shed&finish=cedar&rent=conservative&openings=1");
+    await page.goto("/studio?parcel=coyote-brush&size=600&roof=shed&finish=cedar&rent=conservative&openings=1");
 
     await expect(
       page.getByRole("heading", { name: /start with your address/i }),

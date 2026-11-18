@@ -1261,7 +1261,7 @@ export function LotMoreLanding({
                   <dd>
                     A property-specific packet: build costs, net income, payback,
                     financing scenarios, a fee and permit audit for its size, and a
-                    bid-leveling checklist for three builders. Print or save
+                    scope checklist for three builders. Print or save
                     as PDF, export CSV, or share a permanent link.
                   </dd>
                 </div>

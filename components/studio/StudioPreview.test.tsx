@@ -21,7 +21,7 @@ describe("free certificate preview", () => {
     expect(screen.getByText("13.3 yrs")).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Estimated construction range\. Excludes site grading, utility trenching, municipal impact fees, and architectural soft costs\./i,
+        /Estimated construction range \(includes modeled design, engineering, and permit soft-cost allowance\)\. Excludes site grading, utility extensions, soil conditions, and municipal impact fees\./i,
       ),
     ).toBeInTheDocument();
     expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);

@@ -178,14 +178,14 @@ describe("isNonDefaultScenario", () => {
 
   it("is true for the default parcel with a customized config", () => {
     const partial = parseScenarioParams(
-      new URLSearchParams("parcel=oak-street&size=800"),
+      new URLSearchParams("parcel=coyote-brush&size=800"),
     );
     expect(isNonDefaultScenario(partial)).toBe(true);
   });
 
   it("is true for the default parcel with a non-default rent scenario", () => {
     const partial = parseScenarioParams(
-      new URLSearchParams("parcel=oak-street&rent=optimistic"),
+      new URLSearchParams("parcel=coyote-brush&rent=optimistic"),
     );
     expect(isNonDefaultScenario(partial)).toBe(true);
   });

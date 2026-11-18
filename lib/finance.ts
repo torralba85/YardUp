@@ -55,6 +55,26 @@ export const OPENINGS_ALLOWANCE = 9000;
 export const COST_RANGE_FACTORS = { low: 0.92, high: 1.15 } as const;
 
 /**
+ * Whether a modeled payback period is finite and positive (`annualNoi > 0`).
+ */
+export function hasValidPayback(paybackYears: number, annualNoi: number): boolean {
+  return annualNoi > 0 && Number.isFinite(paybackYears) && paybackYears > 0;
+}
+
+/**
+ * Format a modeled payback period consistently across preview, studio, and
+ * certificate outputs, returning `"—"` when annual NOI is non-positive.
+ */
+export function formatPaybackYears(
+  paybackYears: number,
+  annualNoi: number,
+  unit: "yrs" | "years" | "none" = "yrs",
+): string {
+  if (!hasValidPayback(paybackYears, annualNoi)) return "—";
+  return unit === "none" ? String(paybackYears) : `${paybackYears} ${unit}`;
+}
+
+/**
  * Calculates the construction cost range, rental income, and simple payback.
  *
  * @param aduSqft - Floor area in square feet.

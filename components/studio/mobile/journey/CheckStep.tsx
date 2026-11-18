@@ -15,6 +15,7 @@ import {
   type VerdictLevel,
 } from "@/lib/feasibility-verdict";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { formatPaybackYears } from "@/lib/finance";
 import { Button } from "@/components/ui/Button";
 import { FeasibilityBadge } from "@/components/ui/FeasibilityBadge";
 import StudioPreview from "../../StudioPreview";
@@ -73,7 +74,7 @@ export default function CheckStep({
       label: "Build range",
       value: `${formatCompactCurrency(result.costLow)}–${formatCompactCurrency(result.costHigh)}`,
     },
-    { label: "Payback", value: `${result.paybackYears} yrs` },
+    { label: "Payback", value: formatPaybackYears(result.paybackYears, result.annualNoi, "yrs") },
   ];
 
   return (

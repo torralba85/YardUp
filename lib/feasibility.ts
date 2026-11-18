@@ -149,8 +149,14 @@ export interface FeasibilityResult {
 }
 
 /**
+ * Default sample parcel id opened by the Studio when no `?parcel=` query param
+ * or saved/stashed lot overrides it.
+ */
+export const DEFAULT_STUDIO_PARCEL_ID = "coyote-brush";
+
+/**
  * Built-in demo parcels (Seattle, Portland, Austin, San Diego) used when no live parcel
- * API key is configured. The first entry is the default fallback.
+ * API key is configured. The first entry is the unknown-id fallback.
  */
 export const parcelPresets: ParcelPreset[] = [
   {

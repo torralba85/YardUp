@@ -321,4 +321,23 @@ describe("AddressSearch", () => {
       formattedAddress: "555 Elm St, San Diego, CA, USA",
     });
   });
+
+  it("fires onQueryChange on typing and clearing, and renders privacy note when enabled", async () => {
+    const user = userEvent.setup();
+    const onQueryChange = vi.fn();
+    render(<AddressSearch onSelect={vi.fn()} onQueryChange={onQueryChange} showPrivacyNote />);
+
+    expect(
+      screen.getByText(
+        /We only use your address to fetch lot geometry and zoning rules\. We don't save your address or contact you unless you create an account\./i,
+      ),
+    ).toBeInTheDocument();
+
+    const input = screen.getByLabelText("Search property address");
+    await user.type(input, "512");
+    expect(onQueryChange).toHaveBeenLastCalledWith("512");
+
+    await user.clear(input);
+    expect(onQueryChange).toHaveBeenLastCalledWith("");
+  });
 });

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import {
+  DEFAULT_STUDIO_PARCEL_ID,
   formatCurrency,
   getParcelById,
   parcelPresets,
@@ -169,7 +170,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
  *   starts at the Earn reveal instead of asking them to find a lot again.
  */
 export default function FeasibilityStudio({ demoChosen = false, nativeShell = false, initialScenario }: { demoChosen?: boolean; nativeShell?: boolean; initialScenario?: SavedScenario } = {}) {
-  const initialPreset = parcelPresets[0];
+  const initialPreset = getParcelById(DEFAULT_STUDIO_PARCEL_ID);
   return (
     <ParcelProvider initialPreset={initialPreset}>
       <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} initialScenario={initialScenario} />
@@ -816,7 +817,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   function resetScenario() {
     if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return;
-    resetToPreset(parcelPresets[0]);
+    resetToPreset(getParcelById(DEFAULT_STUDIO_PARCEL_ID));
     dispatchScenario({ type: "reset" });
     setReportOpen(false);
     setBuilderLeadOpen(false);
@@ -1232,7 +1233,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                   <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
                   <Button
                     variant="secondary"
-                    onClick={() => switchToPreset(parcelPresets[0].id)}
+                    onClick={() => switchToPreset(scenarioState.parcelId)}
                   >
                     Explore demo lot
                   </Button>
@@ -1655,6 +1656,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
                 onSubmitText={searchByAddress}
                 autoFocusSignal={addressFocusSignal}
+                showPrivacyNote
               />
               {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
@@ -2004,10 +2006,7 @@ function LotStep({
           We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
         </p>
         <div className="mt-5 max-w-xl">
-          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
-          <p className="mt-2 text-xs leading-5 text-lot-stone">
-            We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
-          </p>
+          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} showPrivacyNote />
           {parcelLoading && (
             <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
               <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />

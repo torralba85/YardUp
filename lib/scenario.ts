@@ -2,6 +2,7 @@ import type { AIProjectBriefResponse } from "./ai-types";
 import { createAIProjectBriefKey } from "./ai-project-brief";
 import {
   calculateFeasibility,
+  DEFAULT_STUDIO_PARCEL_ID,
   defaultAduConfig,
   defaultFinancialAssumptions,
   getParcelById,
@@ -313,7 +314,7 @@ export function evaluatePlanSizing(
 }
 
 export function createScenarioState(): StudioScenarioState {
-  const initialParcel = parcelPresets[0];
+  const initialParcel = getParcelById(DEFAULT_STUDIO_PARCEL_ID);
   return {
     sceneKey: initialParcel.id,
     parcelId: initialParcel.id,
