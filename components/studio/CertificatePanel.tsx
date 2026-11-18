@@ -290,7 +290,9 @@ export default function CertificatePanel({
         setClaimNotice(null);
       }
       try {
-        const idToken = await signedInUser.getIdToken();
+        // Forced: a token minted before email verification still says
+        // email_verified=false, and the claim route rejects it.
+        const idToken = await signedInUser.getIdToken(true);
         const outcome = await claimCertificatesByEmail(idToken, certKey);
         if (
           outcome.claimedCertKeys.includes(certKey) ||

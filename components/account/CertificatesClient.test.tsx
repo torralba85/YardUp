@@ -189,6 +189,34 @@ describe("CertificatesClient", () => {
     } finally { fetchSpy.mockRestore(); }
   });
 
+  it("claims with a refreshed ID token so a pre-verification token is never sent", async () => {
+    // Verifying via the email link updates user.emailVerified on reload, but the
+    // cached ID token keeps email_verified=false for up to an hour; the claim
+    // route rejects that with 403 and the buyer is stuck on "Retry".
+    authState.user = {
+      uid: "u1",
+      email: "owner@example.com",
+      emailVerified: true,
+      getIdToken: vi.fn(async (forceRefresh?: boolean) => (forceRefresh ? "fresh-token" : "stale-token")),
+    };
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ claimedCertKeys: ["lot-1"], alreadyOwnedCertKeys: [] }), { status: 200 }),
+    );
+    try {
+      render(<CertificatesClient />);
+      await waitFor(() =>
+        expect(fetchSpy).toHaveBeenCalledWith(
+          "/api/certificates/claim",
+          expect.objectContaining({
+            headers: expect.objectContaining({ Authorization: "Bearer fresh-token" }),
+          }),
+        ),
+      );
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("recovers guest purchases automatically when signed in with a verified email", async () => {
     authState.user = {
       uid: "u1",

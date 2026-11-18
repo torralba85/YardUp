@@ -50,7 +50,9 @@ export function CertificatesClient() {
     let cancelled = false;
     void (async () => {
       try {
-        const idToken = await user.getIdToken();
+        // Forced: a token minted before email verification still says
+        // email_verified=false, and the claim route rejects it.
+        const idToken = await user.getIdToken(true);
         const outcome = await claimCertificatesByEmail(idToken);
         if (!cancelled && (outcome.claimedCertKeys.length > 0 || outcome.alreadyOwnedCertKeys.length > 0)) {
           setRecoveredCount(outcome.claimedCertKeys.length);

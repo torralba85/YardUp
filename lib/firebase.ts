@@ -103,27 +103,13 @@ export function initAppCheck(): AppCheck | undefined {
   return appCheckGlobal.__lotFoundryAppCheck;
 }
 
-// Defers App Check background initialization until after window load / idle so
-// reCAPTCHA Enterprise (355 KB) never blocks critical rendering path or 3D scene mount.
-if (typeof window !== "undefined" && process.env.NODE_ENV !== "test") {
-  const scheduleInit = () => {
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(() => {
-        initAppCheck();
-      }, { timeout: 3500 });
-    } else {
-      setTimeout(() => {
-        initAppCheck();
-      }, 1500);
-    }
-  };
-
-  if (document.readyState === "complete") {
-    scheduleInit();
-  } else {
-    window.addEventListener("load", scheduleInit, { once: true });
-  }
-}
+// Must run before getAuth/getFirestore below, never deferred: Identity Toolkit
+// enforces App Check, so Auth's startup lookup of a persisted user without a
+// token gets a 401 and the SDK deletes that user, signing out members and
+// stranding anonymous certificate buyers on their return from Stripe.
+// reCAPTCHA Enterprise still loads asynchronously, and only on pages that
+// import Firebase.
+initAppCheck();
 
 /** The browser's App Check instance; undefined on the server, in tests, or if init failed. */
 export function getClientAppCheck(): AppCheck | undefined {

@@ -1348,6 +1348,9 @@ describe("CertificatePanel", () => {
           }),
         ),
       );
+      // A token cached from before email verification would carry
+      // email_verified=false and be rejected, so the claim forces a refresh.
+      expect(mocks.getIdToken).toHaveBeenCalledWith(true);
       await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
     } finally {
       fetchSpy.mockRestore();
