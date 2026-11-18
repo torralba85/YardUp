@@ -57,7 +57,8 @@ import { certificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
 import ParcelDataNotice from "./studio/ParcelDataNotice";
-import { certificateGrantSearchQuery, useCertificateRecovery, type CertificateGrant } from "@/lib/certificate-recovery";
+import { useCertificateRecovery, type CertificateGrant } from "@/lib/certificate-recovery";
+import { certificateSearchAddress } from "@/lib/purchased-certificates";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -711,7 +712,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     if (grant.parcelData) {
       restoreLiveParcel(grant.parcelData, expectedSelectionVersion);
     } else {
-      const query = certificateGrantSearchQuery(grant);
+      const query = certificateSearchAddress(grant);
       if (query) await searchByAddress(query, expectedSelectionVersion);
     }
   }, [parcelMode, restoreLiveParcel, searchByAddress]);

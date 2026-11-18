@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { certificateGrantSearchQuery, useCertificateRecovery } from "./certificate-recovery";
+import { useCertificateRecovery } from "./certificate-recovery";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import { certificateKey } from "./certificate-key";
 
@@ -279,35 +279,5 @@ describe("Certificate Recovery", () => {
       state: SAMPLE_LIVE_PARCEL.state,
       zip: SAMPLE_LIVE_PARCEL.zip,
     }), 0);
-  });
-
-  it("composes an unambiguous address query without duplicating state or ZIP in city", () => {
-    expect(certificateGrantSearchQuery({
-      parcelName: "500 Cedar Ave, San Jose, CA 95110",
-      address: "500 Cedar Ave",
-      city: "San Jose",
-    })).toBe("500 Cedar Ave, San Jose, CA 95110");
-    expect(certificateGrantSearchQuery({
-      address: "500 Cedar Ave",
-      city: "San Jose, CA 95110",
-      state: "CA",
-      zip: "95110",
-    })).toBe("500 Cedar Ave, San Jose, CA 95110");
-    expect(certificateGrantSearchQuery({
-      address: "500 Cedar Ave",
-      city: "San Jose, CA",
-      state: "CA",
-      zip: "95110",
-    })).toBe("500 Cedar Ave, San Jose, CA 95110");
-    expect(certificateGrantSearchQuery({
-      address: "500 Cedar Ave",
-      city: "San Jose",
-      state: "CA",
-      zip: "95110",
-    })).toBe("500 Cedar Ave, San Jose, CA 95110");
-    expect(certificateGrantSearchQuery({
-      address: "500 Cedar Ave",
-    })).toBe("500 Cedar Ave");
-    expect(certificateGrantSearchQuery({})).toBeNull();
   });
 });

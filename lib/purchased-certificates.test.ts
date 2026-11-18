@@ -3,9 +3,11 @@ import {
   fetchUserPurchasedCertificates,
   formatCertKeyFallback,
   formatCertificateLocality,
+  certificateSearchAddress,
   buildStudioUrlForCertificate,
   type PurchasedCertificate,
 } from "./purchased-certificates";
+import { consumeAddressQuery } from "./address-handoff";
 import type { LiveParcelData } from "./parcel-types";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 
@@ -141,6 +143,54 @@ describe("purchased-certificates helpers", () => {
 
       const url = buildStudioUrlForCertificate(cert);
       expect(url).toBe("/studio?cert=ca-san-jose-141-n-almaden-blvd&checkout=open");
+    });
+
+    it("stashes the full address, not the bare street line, when the grant has no parcel data", () => {
+      // "202 C St" alone geocoded to Chula Vista, opening a lot the buyer does not own.
+      const lot = "202-c-st-san-diego-ca-92101";
+      const cert: PurchasedCertificate = {
+        id: `user-1_${lot}`,
+        certKey: lot,
+        uid: "user-1",
+        stripeSessionId: "cs_test",
+        amount: 2900,
+        status: "granted",
+        demo: false,
+        createdAt: new Date(),
+        address: "202 C St",
+        city: "San Diego, CA 92101",
+        state: "CA",
+        zip: "92101",
+      };
+
+      buildStudioUrlForCertificate(cert);
+      expect(consumeAddressQuery()).toBe("202 C St, San Diego, CA 92101");
+    });
+  });
+
+  describe("certificateSearchAddress", () => {
+    it("prefers the stored one-line parcel name", () => {
+      expect(certificateSearchAddress({
+        parcelName: "500 Cedar Ave, San Jose, CA 95110",
+        address: "500 Cedar Ave",
+        city: "San Jose",
+      })).toBe("500 Cedar Ave, San Jose, CA 95110");
+    });
+
+    it("composes street and locality without repeating state or ZIP", () => {
+      expect(certificateSearchAddress({ address: "500 Cedar Ave", city: "San Jose, CA 95110", state: "CA", zip: "95110" }))
+        .toBe("500 Cedar Ave, San Jose, CA 95110");
+      expect(certificateSearchAddress({ address: "500 Cedar Ave", city: "San Jose, CA", state: "CA", zip: "95110" }))
+        .toBe("500 Cedar Ave, San Jose, CA 95110");
+      expect(certificateSearchAddress({ address: "500 Cedar Ave", city: "San Jose", state: "CA", zip: "95110" }))
+        .toBe("500 Cedar Ave, San Jose, CA 95110");
+      expect(certificateSearchAddress({ address: "500 Cedar Ave", state: "CA", zip: "95110" }))
+        .toBe("500 Cedar Ave, CA 95110");
+      expect(certificateSearchAddress({ address: "500 Cedar Ave" })).toBe("500 Cedar Ave");
+    });
+
+    it("returns undefined without a street or parcel name", () => {
+      expect(certificateSearchAddress({ city: "San Jose", state: "CA" })).toBeUndefined();
     });
   });
 });

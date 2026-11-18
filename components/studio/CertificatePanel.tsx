@@ -96,6 +96,27 @@ export interface CertificatePanelProps {
 }
 
 /**
+ * Point the current URL's `step` at the certificate, or drop it, without a
+ * navigation, so a sign-in remount reopens this step.
+ *
+ * @returns Whether the URL changed.
+ */
+function setCertificateStepParam(on: boolean): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  if ((params.get("step") === "certificate") === on) return false;
+  if (on) params.set("step", "certificate");
+  else params.delete("step");
+  const query = params.toString();
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+  );
+  return true;
+}
+
+/**
  * The Certificate step: the free estimate snapshot plus the paywall for the
  * complete, downloadable Certificate of Feasibility (the user-revenue moment).
  *
@@ -166,31 +187,18 @@ export default function CertificatePanel({
     if (isLive) {
       stashedParcel = stashInitialParcel(parcel as unknown as LiveParcelData);
     } else {
+      // The grant stores this same one-line name; a bare street line is ambiguous.
       const addressQuery =
+        parcelName.trim() ||
         [parcel.address, parcel.city]
           .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
-          .join(", ") || parcelName;
-      if (addressQuery.trim()) {
+          .join(", ");
+      if (addressQuery) {
         stashAddressQuery(addressQuery);
         stashedAddress = true;
       }
     }
-
-    let addedStepParam = false;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("step") !== "certificate") {
-        params.set("step", "certificate");
-        const query = params.toString();
-        window.history.replaceState(
-          window.history.state,
-          "",
-          `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
-        );
-        addedStepParam = true;
-      }
-    }
-
+    const addedStepParam = setCertificateStepParam(true);
     linkHandoffRef.current = { stashedParcel, stashedAddress, addedStepParam };
   }, [parcel, parcelName]);
 
@@ -200,18 +208,7 @@ export default function CertificatePanel({
     if (!handoff) return;
     if (handoff.stashedParcel) clearInitialParcel();
     if (handoff.stashedAddress) consumeAddressQuery();
-    if (handoff.addedStepParam && typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("step") === "certificate") {
-        params.delete("step");
-        const query = params.toString();
-        window.history.replaceState(
-          window.history.state,
-          "",
-          `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
-        );
-      }
-    }
+    if (handoff.addedStepParam) setCertificateStepParam(false);
   }, []);
 
   // The agent's code was captured from the link when the Studio opened.
