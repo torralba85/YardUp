@@ -13,6 +13,7 @@ import {
 import {
   grantCertificate,
   hasCertificate,
+  wasCertificateTransferredFrom,
 } from "@/lib/server/certificate-purchases";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURNED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
@@ -149,6 +150,14 @@ export async function POST(request: NextRequest) {
   // Already purchased — idempotent success, never a second charge.
   if (await hasCertificate(uid, certKey)) {
     return NextResponse.json({ status: "granted", alreadyPurchased: true });
+  }
+
+  // Recovered to another account — block a second payment from the original session.
+  if (await wasCertificateTransferredFrom(uid, certKey)) {
+    return NextResponse.json(
+      { error: "This certificate was recovered to another account. Sign in to that account to open it." },
+      { status: 409 },
+    );
   }
 
   const stripe = await getStripe();

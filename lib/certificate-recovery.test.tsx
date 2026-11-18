@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useCertificateRecovery } from "./certificate-recovery";
+import { certificateGrantSearchQuery, useCertificateRecovery } from "./certificate-recovery";
 import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import { certificateKey } from "./certificate-key";
 
@@ -250,5 +250,64 @@ describe("Certificate Recovery", () => {
     });
     expect(result.current.intent).toBeNull();
     expect(onRestore).not.toHaveBeenCalled();
+  });
+
+  it("maps full address fields onto the restored grant when parcelData is absent", async () => {
+    window.history.replaceState(null, "", "/studio?cert=lot-a&checkout=returned");
+    mocks.getDoc.mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        uid: "owner",
+        parcelName: "500 Cedar Ave, San Jose, CA 95110",
+        address: SAMPLE_LIVE_PARCEL.address,
+        city: SAMPLE_LIVE_PARCEL.city,
+        state: SAMPLE_LIVE_PARCEL.state,
+        zip: SAMPLE_LIVE_PARCEL.zip,
+        analyticsOrderId: "opaque-order",
+      }),
+    });
+    const onRestore = vi.fn();
+    renderHook(
+      ({ activeKey }) => useCertificateRecovery({ uid: "owner", certKey: activeKey, ready: true, onRestore }),
+      { initialProps: { activeKey: "preset" } },
+    );
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(onRestore).toHaveBeenCalledWith(expect.objectContaining({
+      parcelName: "500 Cedar Ave, San Jose, CA 95110",
+      address: SAMPLE_LIVE_PARCEL.address,
+      city: SAMPLE_LIVE_PARCEL.city,
+      state: SAMPLE_LIVE_PARCEL.state,
+      zip: SAMPLE_LIVE_PARCEL.zip,
+    }), 0);
+  });
+
+  it("composes an unambiguous address query without duplicating state or ZIP in city", () => {
+    expect(certificateGrantSearchQuery({
+      parcelName: "500 Cedar Ave, San Jose, CA 95110",
+      address: "500 Cedar Ave",
+      city: "San Jose",
+    })).toBe("500 Cedar Ave, San Jose, CA 95110");
+    expect(certificateGrantSearchQuery({
+      address: "500 Cedar Ave",
+      city: "San Jose, CA 95110",
+      state: "CA",
+      zip: "95110",
+    })).toBe("500 Cedar Ave, San Jose, CA 95110");
+    expect(certificateGrantSearchQuery({
+      address: "500 Cedar Ave",
+      city: "San Jose, CA",
+      state: "CA",
+      zip: "95110",
+    })).toBe("500 Cedar Ave, San Jose, CA 95110");
+    expect(certificateGrantSearchQuery({
+      address: "500 Cedar Ave",
+      city: "San Jose",
+      state: "CA",
+      zip: "95110",
+    })).toBe("500 Cedar Ave, San Jose, CA 95110");
+    expect(certificateGrantSearchQuery({
+      address: "500 Cedar Ave",
+    })).toBe("500 Cedar Ave");
+    expect(certificateGrantSearchQuery({})).toBeNull();
   });
 });

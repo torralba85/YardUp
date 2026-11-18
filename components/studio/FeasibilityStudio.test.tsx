@@ -1187,6 +1187,73 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(purchase).not.toHaveBeenCalled();
   });
 
+  it("restores a grant without parcelData using parcelName or deduplicated address/city/state/zip", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    const fullLot = { ...SAMPLE_LIVE_PARCEL, city: "San Jose, CA 95110" };
+    const key = certificateKey(fullLot);
+    window.history.replaceState(null, "", `/studio?cert=${key}&checkout=returned`);
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        uid: "owner-1",
+        role: "homeowner",
+        parcelName: "500 Cedar Ave, San Jose, CA 95110",
+        address: fullLot.address,
+        city: fullLot.city,
+        state: fullLot.state,
+        zip: fullLot.zip,
+        analyticsOrderId: "old-order",
+      }),
+    } as never);
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = String(input);
+      const body = request.includes("/api/geocode")
+        ? { lat: fullLot.lat, lng: fullLot.lng, formattedAddress: "500 Cedar Ave, San Jose, CA 95110" }
+        : request.includes("/api/parcel") ? fullLot : { tier: "full", brief: briefFixture };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await waitFor(() => expect(fetchSpy.mock.calls.some(([input]) => String(input).includes("/api/geocode"))).toBe(true));
+    const geocodeCall = fetchSpy.mock.calls.find(([input]) => String(input).includes("/api/geocode"));
+    const geocodeUrl = new URL(String(geocodeCall![0]), "http://localhost");
+    expect(geocodeUrl.searchParams.get("q")).toBe("500 Cedar Ave, San Jose, CA 95110");
+  });
+
+  it("restores a grant without parcelData or parcelName by composing city/state/zip without duplicating state or ZIP", async () => {
+    authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
+    const fullLot = { ...SAMPLE_LIVE_PARCEL, city: "San Jose, CA 95110" };
+    const key = certificateKey(fullLot);
+    window.history.replaceState(null, "", `/studio?cert=${key}&checkout=returned`);
+    vi.mocked(getDoc).mockResolvedValue({
+      exists: () => true,
+      data: () => ({
+        uid: "owner-1",
+        role: "homeowner",
+        address: fullLot.address,
+        city: fullLot.city,
+        state: fullLot.state,
+        zip: fullLot.zip,
+        analyticsOrderId: "old-order",
+      }),
+    } as never);
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = String(input);
+      const body = request.includes("/api/geocode")
+        ? { lat: fullLot.lat, lng: fullLot.lng, formattedAddress: "500 Cedar Ave, San Jose, CA 95110" }
+        : request.includes("/api/parcel") ? fullLot : { tier: "full", brief: briefFixture };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+
+    render(<FeasibilityStudio />, { wrapper: TestWrapper });
+
+    await waitFor(() => expect(fetchSpy.mock.calls.some(([input]) => String(input).includes("/api/geocode"))).toBe(true));
+    const geocodeCall = fetchSpy.mock.calls.find(([input]) => String(input).includes("/api/geocode"));
+    const geocodeUrl = new URL(String(geocodeCall![0]), "http://localhost");
+    expect(geocodeUrl.searchParams.get("q")).toBe("500 Cedar Ave, San Jose, CA 95110");
+  });
+
   it("returns a cancelled Stripe checkout to the certificate step without a payment error", async () => {
     window.history.replaceState(
       null,

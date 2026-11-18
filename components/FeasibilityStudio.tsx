@@ -57,7 +57,7 @@ import { certificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
 import ParcelDataNotice from "./studio/ParcelDataNotice";
-import { useCertificateRecovery, type CertificateGrant } from "@/lib/certificate-recovery";
+import { certificateGrantSearchQuery, useCertificateRecovery, type CertificateGrant } from "@/lib/certificate-recovery";
 import StudioShell from "./studio/StudioShell";
 import AerialView from "./studio/AerialView";
 import AddressSearch, { type AddressSearchResult } from "./studio/AddressSearch";
@@ -708,8 +708,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const restoreCertificateParcel = useCallback(async (grant: CertificateGrant, expectedSelectionVersion: number) => {
     if (parcelMode !== "preset") return;
-    if (grant.parcelData) restoreLiveParcel(grant.parcelData, expectedSelectionVersion);
-    else if (grant.address) await searchByAddress(grant.address, expectedSelectionVersion);
+    if (grant.parcelData) {
+      restoreLiveParcel(grant.parcelData, expectedSelectionVersion);
+    } else {
+      const query = certificateGrantSearchQuery(grant);
+      if (query) await searchByAddress(query, expectedSelectionVersion);
+    }
   }, [parcelMode, restoreLiveParcel, searchByAddress]);
   const certificateRecovery = useCertificateRecovery({
     uid: activeCheckoutUser?.uid,

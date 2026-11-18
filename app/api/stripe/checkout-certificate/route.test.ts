@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     isAnonymous?: boolean;
   },
   purchased: false,
+  transferred: false,
   stripe: null as null | {
     checkout: {
       sessions: {
@@ -42,6 +43,7 @@ vi.mock("@/lib/server/api-auth", () => ({
 vi.mock("@/lib/server/certificate-purchases", () => ({
   grantCertificate: (...args: unknown[]) => mocks.grant(...args),
   hasCertificate: async () => mocks.purchased,
+  wasCertificateTransferredFrom: async () => mocks.transferred,
 }));
 
 type FakeReservation = {
@@ -139,6 +141,7 @@ beforeEach(() => {
   resetRateLimitBuckets();
   mocks.auth = { uid: "user-1" };
   mocks.purchased = false;
+  mocks.transferred = false;
   mocks.stripe = null;
   mocks.grant.mockClear();
   mocks.reservations.clear();
@@ -193,6 +196,21 @@ describe("POST /api/stripe/checkout-certificate", () => {
       status: "granted",
       alreadyPurchased: true,
     });
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when the certificate was recovered to another account", async () => {
+    mocks.transferred = true;
+    const create = vi.fn();
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({ certKey: "parcel-1", checkoutAttemptId: "attempt-1" }));
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      error: "This certificate was recovered to another account. Sign in to that account to open it.",
+    });
+    expect(create).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 

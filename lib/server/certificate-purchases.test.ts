@@ -86,6 +86,7 @@ import {
   grantCertificate,
   hasCertificate,
   purchaseId,
+  wasCertificateTransferredFrom,
 } from "./certificate-purchases";
 
 beforeEach(() => {
@@ -144,6 +145,20 @@ describe("hasCertificate", () => {
     expect(await hasCertificate("u1", "k")).toBe(false);
     await grantCertificate({ uid: "u1", certKey: "k", stripeSessionId: "sess_1", amount: 2900 });
     expect(await hasCertificate("u1", "k")).toBe(true);
+  });
+});
+
+describe("wasCertificateTransferredFrom", () => {
+  it("reports whether a certificate grant was recovered from a source uid for that lot", async () => {
+    expect(await wasCertificateTransferredFrom("anon-1", "lot-1")).toBe(false);
+    store.docs.set("member-2_lot-1", {
+      uid: "member-2",
+      certKey: "lot-1",
+      transferredFromUid: "anon-1",
+    });
+    expect(await wasCertificateTransferredFrom("anon-1", "lot-1")).toBe(true);
+    expect(await wasCertificateTransferredFrom("anon-1", "lot-2")).toBe(false);
+    expect(await wasCertificateTransferredFrom("anon-2", "lot-1")).toBe(false);
   });
 });
 

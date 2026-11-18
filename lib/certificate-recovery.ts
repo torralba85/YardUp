@@ -10,9 +10,55 @@ import { CHECKOUT_CANCELLED, CHECKOUT_RETURNED, CHECKOUT_RETURN_PARAM, CERTIFICA
 
 export interface CertificateGrant {
   parcelData?: LiveParcelData;
+  parcelName?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  lat?: number;
+  lng?: number;
   analyticsOrderId?: string;
   amount?: number;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Build an unambiguous address query when restoring a grant without `parcelData`.
+ * Prefers `parcelName`, else composes address, city, state, and ZIP without
+ * duplicating a state or ZIP already embedded in `city`.
+ */
+export function certificateGrantSearchQuery(grant: CertificateGrant): string | null {
+  const parcelName = grant.parcelName?.trim();
+  if (parcelName) return parcelName;
+  const address = grant.address?.trim();
+  if (!address) return null;
+
+  const city = grant.city?.trim() || "";
+  const state = grant.state?.trim() || "";
+  const zip = grant.zip?.trim() || "";
+
+  if (!city) {
+    const tail = [state, zip].filter(Boolean).join(" ");
+    return tail ? `${address}, ${tail}` : address;
+  }
+
+  const zipMatch = city.match(/\b(\d{5}(?:-\d{4})?)\s*$/);
+  const hasZip = Boolean(zipMatch);
+  const cityWithoutZip = zipMatch ? city.slice(0, zipMatch.index).replace(/[,\s]+$/, "") : city;
+  const hasState =
+    /,\s*(?:[A-Za-z]{2}|California)$/i.test(cityWithoutZip) ||
+    Boolean(state && new RegExp(`(?:^|,|\\s)${escapeRegExp(state)}$`, "i").test(cityWithoutZip));
+
+  const statePart = !hasState && state ? state : "";
+  const zipPart = !hasZip && zip ? zip : "";
+
+  if (!statePart && !zipPart) return `${address}, ${city}`;
+  if (hasZip && statePart) return `${address}, ${cityWithoutZip}, ${statePart} ${zipMatch![1]}`;
+  if (hasState) return `${address}, ${city} ${zipPart}`;
+  return `${address}, ${city}, ${[statePart, zipPart].filter(Boolean).join(" ")}`;
 }
 
 export interface CertificateAccess {
@@ -140,7 +186,13 @@ export function useCertificateRecovery({
           const parcelData = normalizeLiveParcel(data.parcelData);
           const grant: CertificateGrant = {
             ...(parcelData ? { parcelData } : {}),
+            ...(typeof data.parcelName === "string" ? { parcelName: data.parcelName } : {}),
             ...(typeof data.address === "string" ? { address: data.address } : {}),
+            ...(typeof data.city === "string" ? { city: data.city } : {}),
+            ...(typeof data.state === "string" ? { state: data.state } : {}),
+            ...(typeof data.zip === "string" ? { zip: data.zip } : {}),
+            ...(typeof data.lat === "number" && Number.isFinite(data.lat) ? { lat: data.lat } : {}),
+            ...(typeof data.lng === "number" && Number.isFinite(data.lng) ? { lng: data.lng } : {}),
             ...(typeof data.analyticsOrderId === "string" ? { analyticsOrderId: data.analyticsOrderId } : {}),
             ...(typeof data.amount === "number" && Number.isFinite(data.amount) && data.amount >= 0 ? { amount: data.amount } : {}),
           };

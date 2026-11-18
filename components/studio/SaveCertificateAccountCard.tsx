@@ -11,6 +11,10 @@ import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
 export interface SaveCertificateAccountCardProps {
   /** Called when linking hits an existing account so the buyer can sign in and claim by verified email. */
   onSignInExisting: () => void;
+  /** Called right before linking begins so the parent can stash lot/step state across remounts or redirects. */
+  onBeforeLink?: () => void;
+  /** Called when linking fails in-place so temporary handoff state can be rolled back. */
+  onLinkError?: () => void;
 }
 
 /**
@@ -24,6 +28,8 @@ export interface SaveCertificateAccountCardProps {
  */
 export default function SaveCertificateAccountCard({
   onSignInExisting,
+  onBeforeLink,
+  onLinkError,
 }: SaveCertificateAccountCardProps) {
   const { linkCheckoutWithEmail, linkCheckoutWithGoogle } = useAuth();
   const [legalAccepted, setLegalAccepted] = useState(false);
@@ -42,10 +48,12 @@ export default function SaveCertificateAccountCard({
       setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
       return;
     }
+    onBeforeLink?.();
     setBusy(true);
     try {
       await linkCheckoutWithGoogle(CURRENT_LEGAL_CONSENT);
     } catch (err: unknown) {
+      onLinkError?.();
       const code = getAuthErrorCode(err);
       if (
         code === "auth/credential-already-in-use" ||
@@ -77,10 +85,12 @@ export default function SaveCertificateAccountCard({
       setError("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
       return;
     }
+    onBeforeLink?.();
     setBusy(true);
     try {
       await linkCheckoutWithEmail(email, password, displayName, CURRENT_LEGAL_CONSENT);
     } catch (err: unknown) {
+      onLinkError?.();
       const code = getAuthErrorCode(err);
       if (
         code === "auth/email-already-in-use" ||
