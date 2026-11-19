@@ -12,6 +12,7 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   await page.goto("/adu/ca/san-diego/permits");
   const link = page.locator('table a[href*="/permits/"]').first();
   const name = await link.textContent();
+  expect(await link.evaluate((anchor) => anchor.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   await link.click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${name} ADU Permits`);
   await expect(page.getByText("These are issued permits", { exact: false })).toBeVisible();

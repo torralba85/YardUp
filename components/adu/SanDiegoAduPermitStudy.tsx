@@ -276,7 +276,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
                 >
                   <th scope="row" className="py-0 pr-0 font-semibold text-lot-ink sm:py-3 sm:pr-4">
                     {area.approvals >= PERMIT_AREA_MIN_APPROVALS ? (
-                      <Link href={permitAreaPath(area)} className={linkClass}>
+                      <Link href={permitAreaPath(area)} className={`inline-flex min-h-11 items-center ${linkClass}`}>
                         {area.name}
                       </Link>
                     ) : (
