@@ -64,6 +64,7 @@ import {
   feeJurisdiction as resolveFeeJurisdiction,
 } from "@/lib/certificate-permit-audit";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import PropertyRecords from "./PropertyRecords";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 import AgentPassOffer from "./AgentPassOffer";
 import SaveCertificateAccountCard from "./SaveCertificateAccountCard";
@@ -910,6 +911,10 @@ export default function CertificatePanel({
       )}
 
       {/* Methodology stays one tap away, below the purchase decision rather than above it. */}
+      {purchased && activeCheckoutUser && "source" in parcel && (parcel.source === "regrid" || parcel.source === "county-gis") && (
+        <PropertyRecords key={activeCheckoutUser.uid + ":" + certKey} user={activeCheckoutUser} address={parcel.address} city={parcel.city} />
+      )}
+
       {purchased && <details className="rounded-none border border-lot-line bg-lot-chalk px-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
           Methodology &amp; data sources

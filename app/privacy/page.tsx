@@ -27,14 +27,14 @@ function SupportEmail() {
 
 /**
  * Privacy Policy — canonical `/privacy` disclosure matching deployed
- * infrastructure (Firebase, Regrid, ATTOM, Census, OpenStreetMap, Esri, USGS 3DEP, CAL FIRE, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4, Cloudflare).
+ * infrastructure (Firebase, Realie, RentCast, Cesium, Google Fonts, Regrid, ATTOM, Census, OpenStreetMap, Esri, USGS 3DEP, CAL FIRE, USA Structures, OpenAI, TypeSafe, Resend, Stripe, GA4, Cloudflare).
  * The version in the kicker must match `CURRENT_LEGAL_CONSENT` in `lib/legal-consent.ts`.
  */
 export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 19, 2026 · Version 2026-11-19"
     >
       <LegalSection title="Who We Are &amp; Scope">
         <p>
@@ -128,8 +128,8 @@ export default function PrivacyPage() {
 
       <LegalSection title="3. Third-Party Subprocessors &amp; Infrastructure">
         <p>
-          To operate the Service, we share data with trusted third-party service providers bound by
-          contractual confidentiality and data protection standards:
+          The following services help operate LotFoundry. The information each receives depends on
+          the feature you use.
         </p>
         <ul className="list-disc pl-6 space-y-2">
           <li>
@@ -151,6 +151,25 @@ export default function PrivacyPage() {
             we send the searched street address, city, state, and ZIP code to <em>ATTOM</em> to
             cross-check the property address and location. These requests do not include your
             name, email, or account details.
+          </li>
+          <li>
+            <strong>Paid property records.</strong> When you view a paid certificate for a matched property, our server sends Realie (Realie.ai) the street address,
+            state, and unit number when available. We check the returned address against your property
+            before showing available assessment, tax, transfer, building, and permit records. If you
+            request nearby comparable sales, we also send Realie the matched property coordinates.
+            Requests to Realie exclude your account, contact, and payment details.
+          </li>
+          <li>
+            <strong>Rental estimates.</strong> When live rental estimates are enabled, our server
+            sends the property coordinates to RentCast. We also use published U.S. Department of
+            Housing and Urban Development (HUD) Fair Market Rents tables that we look up within
+            LotFoundry.
+          </li>
+          <li>
+            <strong>3D views and certificate fonts.</strong> The 3D neighborhood view loads
+            mapping software from Cesium and can request tiles for the area in view from Cesium ion
+            when configured. Opening a certificate can load typefaces from Google Fonts. These
+            browser requests expose your IP address and the requested resource to the host.
           </li>
           <li>
             <strong>Transactional Email (Resend):</strong> When you ask us to email a 3D lot link, we

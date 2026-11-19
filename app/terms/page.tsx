@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="Terms & Conditions"
-      kicker="Effective November 6, 2026 · Version 2026-11-06"
+      kicker="Effective November 19, 2026 · Version 2026-11-19"
     >
       <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
@@ -338,11 +338,26 @@ export default function TermsPage() {
           Parcel lot boundaries, zoning overlays, satellite imagery, terrain elevation, building
           footprints, fire hazard layers, and rental benchmarks are aggregated from third parties
           (including Regrid, ATTOM, Google Maps Platform, OpenStreetMap, Esri World Imagery, US Census
-          Bureau, USGS 3DEP, USA Structures, and state and municipal GIS services such as CAL FIRE).
+          Bureau, USGS 3DEP, USA Structures, Cesium and Cesium ion, and state and municipal GIS services
+          such as CAL FIRE). Rental benchmarks use HUD Fair Market Rents and may include RentCast
+          estimates when live rental data is available.
           Third-party data may be outdated, inaccurate, or misaligned. Algorithmic address candidate
           matching and zoning classification heuristics (including TypeSafe) are automated software
           interpretations. LotFoundry assumes no responsibility for spatial inaccuracies, unrecorded
           easements, private covenants, HOA restrictions, or utility access limitations.
+        </p>
+        <p>
+          Paid certificates may display county records supplied by Realie (Realie.ai) for your
+          certificate’s property. You can also request nearby recorded sales. Coverage and
+          reporting dates vary by county. An assessment reflects the county’s valuation for tax
+          purposes. One recorded price can cover several parcels. Verify figures with the assessor
+          or recorder before relying on them, and obtain a qualified appraisal if you need a
+          market valuation.
+        </p>
+        <p>
+          Use Realie records for property planning only. You may not use them to determine a
+          person’s eligibility for credit, insurance, employment, housing, or tenant screening,
+          or to compile a database for resale or redistribution.
         </p>
       </LegalSection>
 
