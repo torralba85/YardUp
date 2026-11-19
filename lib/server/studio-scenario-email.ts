@@ -25,7 +25,7 @@ export function renderScenarioEmail(scenario: SavedScenario, scenarioUrl: string
   const address = scenario.liveParcel!.address;
   const certificateUrl = new URL(scenarioUrl);
   certificateUrl.searchParams.set("step", "certificate");
-  const offer = "Ready to review the numbers? Your $29 Certificate of Feasibility includes build-cost allowances, financing comparisons, planning steps and a builder bid checklist. One-time purchase for this property. No subscription.";
+  const offer = "Ready to review the numbers? Your $29 Certificate of Feasibility includes build-cost allowances, financing comparisons, planning steps and a builder scope checklist. One-time purchase for this property. No subscription.";
   const disclosure = "This free link restores your layout; it does not unlock the paid analysis. Anyone with the link can view the layout and property address. The Certificate provides early planning estimates, not permit approval or guaranteed income.";
   const footer = marketingOptIn
     ? "You requested this layout email and opted in to San Diego / California ADU permit and fee updates. To withdraw that opt-in, contact support@lotfoundry.net."

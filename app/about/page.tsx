@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners">
+    <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners" layout="editorial">
       <LegalSection title="What we do">
         <p>
           LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent

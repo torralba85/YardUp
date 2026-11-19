@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateFinance, constructionBudgetRows } from "./finance";
+import { calculateFinance, constructionBudgetRows, formatPaybackYears, hasValidPayback } from "./finance";
 import { defaultAduConfig, defaultFinancialAssumptions, getParcelById } from "./feasibility";
 
 describe("calculateFinance", () => {
@@ -48,5 +48,15 @@ describe("calculateFinance", () => {
 
     expect(board.costLow).toBeGreaterThan(cedar.costLow);
     expect(board.costHigh).toBeGreaterThan(cedar.costHigh);
+  });
+
+  it("formats non-positive or non-finite payback as '—'", () => {
+    expect(hasValidPayback(13.3, 18914)).toBe(true);
+    expect(hasValidPayback(Number.POSITIVE_INFINITY, 0)).toBe(false);
+    expect(hasValidPayback(-10, -500)).toBe(false);
+    expect(formatPaybackYears(13.3, 18914, "yrs")).toBe("13.3 yrs");
+    expect(formatPaybackYears(Number.POSITIVE_INFINITY, 0, "yrs")).toBe("—");
+    expect(formatPaybackYears(-5, -100, "years")).toBe("—");
+    expect(formatPaybackYears(0, 0, "none")).toBe("—");
   });
 });

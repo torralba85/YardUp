@@ -1356,4 +1356,19 @@ describe("CertificatePanel", () => {
       fetchSpy.mockRestore();
     }
   });
+
+  it("shows decision-support offer copy and preliminary-estimate disclaimer before purchase", () => {
+    mocks.access.purchased = false;
+    mocks.access.loading = false;
+    render(<CertificatePanel {...createProps()} />);
+
+    expect(
+      screen.getByText(/Answer whether rent covers your loan payment and whether your builder/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Preliminary algorithmic planning estimate; does not constitute a municipal building permit, zoning warranty, or architectural certification\./i,
+      ),
+    ).toBeInTheDocument();
+  });
 });

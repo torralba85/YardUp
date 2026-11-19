@@ -78,7 +78,7 @@ export default function AIProjectBriefPanel({
     <section aria-label="Property notes and timeline" aria-busy={loading} className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-sans text-[9.5px] font-bold uppercase tracking-[0.08em] text-lot-orange-ink">
+          <p className="lf-kicker font-bold text-lot-orange-ink">
             Property notes
           </p>
           <h3 className="mt-0.5 text-sm font-semibold text-lot-ink">
@@ -108,9 +108,9 @@ export default function AIProjectBriefPanel({
             your Certificate of Feasibility.
           </p>
           <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lot-line pt-3">
-            <span className="font-sans text-[9px] text-lot-stone">01</span>
+            <span className="font-sans text-[11px] text-lot-stone">01</span>
             <span className="text-[11px] leading-4 text-lot-ink">Parcel fit and open questions</span>
-            <span className="font-sans text-[9px] text-lot-stone">02</span>
+            <span className="font-sans text-[11px] text-lot-stone">02</span>
             <span className="text-[11px] leading-4 text-lot-ink">Permit track and stage ranges</span>
           </div>
         </div>
@@ -186,14 +186,14 @@ export function ProjectBriefPreviewContent({
             <span className="font-display text-[25px] font-bold leading-none text-lot-ink">
               {preview.totalEstWeeksLow}&ndash;{preview.totalEstWeeksHigh}
             </span>
-            <span className="ml-1 font-sans text-[9px] uppercase text-lot-stone">weeks</span>
+            <span className="ml-1 font-sans text-[11px] uppercase text-lot-stone">weeks</span>
           </div>
         </div>
         <div className="mt-3 border-t border-lot-line pt-2.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-semibold text-lot-ink">{preview.firstRisk.label}</span>
             <span
-              className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[preview.firstRisk.level]}`}
+              className={`rounded-none border px-1.5 py-0.5 lf-kicker ${RISK_TONE[preview.firstRisk.level]}`}
             >
               {preview.firstRisk.level}
             </span>
@@ -261,7 +261,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-lot-ink">{risk.label}</span>
                   <span
-                    className={`rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${RISK_TONE[risk.level]}`}
+                    className={`rounded-none border px-1.5 py-0.5 lf-kicker ${RISK_TONE[risk.level]}`}
                   >
                     {risk.level}
                   </span>
@@ -285,7 +285,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
             <span className="font-display text-[25px] font-bold leading-none text-lot-ink">
               {brief.totalEstWeeksLow}&ndash;{brief.totalEstWeeksHigh}
             </span>
-            <span className="ml-1 font-sans text-[9px] uppercase text-lot-stone">weeks</span>
+            <span className="ml-1 font-sans text-[11px] uppercase text-lot-stone">weeks</span>
           </div>
         </div>
         <p className="mt-1.5 text-[11px] leading-4 text-lot-stone">{brief.permitTrack.basis}</p>
@@ -302,19 +302,19 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
                       className="absolute bottom-0 left-[10px] top-5 w-px bg-lot-line"
                     />
                   )}
-                  <span className="relative flex h-[22px] w-[22px] items-center justify-center rounded-none border border-lot-line bg-lot-chalk font-sans text-[9px] text-lot-stone">
+                  <span className="relative flex h-[22px] w-[22px] items-center justify-center rounded-none border border-lot-line bg-lot-chalk font-sans text-[11px] text-lot-stone">
                     {index + 1}
                   </span>
                   <div className="min-w-0 border-b border-lot-line pb-2.5 last:border-b-0">
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-xs font-semibold leading-4 text-lot-ink">{stage.name}</span>
-                      <span className="shrink-0 font-sans text-[9px] text-lot-stone">
+                      <span className="shrink-0 font-sans text-[11px] text-lot-stone">
                         {stage.estWeeksLow}&ndash;{stage.estWeeksHigh} WK
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lot-stone">{stage.description}</p>
                     <span
-                      className={`mt-1.5 inline-flex rounded-none border px-1.5 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
+                      className={`mt-1.5 inline-flex rounded-none border px-1.5 py-0.5 lf-kicker ${tone.className}`}
                     >
                       {tone.label}
                     </span>
@@ -334,7 +334,7 @@ export function ProjectBriefContent({ brief }: { brief: AIProjectBrief }) {
           <ol className="mt-2 space-y-2">
             {nextSteps.map((step, index) => (
               <li key={`${index}-${step}`} className="grid grid-cols-[18px_1fr] gap-2 text-[11px] leading-4 text-lot-stone">
-                <span className="font-sans text-[9px] text-lot-stone">{String(index + 1).padStart(2, "0")}</span>
+                <span className="font-sans text-[11px] text-lot-stone">{String(index + 1).padStart(2, "0")}</span>
                 <span>{step}</span>
               </li>
             ))}

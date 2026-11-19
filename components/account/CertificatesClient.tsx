@@ -96,18 +96,21 @@ export function CertificatesClient() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <div className="mx-auto max-w-md px-4 py-16 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
             <Award className="h-6 w-6 text-lot-orange-ink" />
           </div>
-          <h1 className="lf-section-heading mt-6">Certificates of Feasibility</h1>
-          <p className="lf-body-sm mt-3 text-lot-stone">
-            Sign in to view, download, and open unlocked certificates for your properties.
+          <h1 className="lf-panel-heading mt-6 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
+          <p className="lf-body-sm mt-3 text-lot-ink">
+            Sign in to view, download, and reopen unlocked certificates for your properties.
           </p>
-          <div className="mt-8">
+          <p className="mt-3 border border-lot-line bg-lot-surface px-4 py-3 text-left text-xs leading-5 text-lot-ink">
+            Purchased a certificate as a guest? Sign in or create a free account using the same email address from checkout and verify it to claim your certificate.
+          </p>
+          <div className="mt-6">
             <Link
               href="/login?next=/certificates"
-              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover"
             >
               Sign in
             </Link>
@@ -115,7 +118,7 @@ export function CertificatesClient() {
           <div className="mt-4">
             <Link
               href="/signup?next=/certificates"
-              className="text-sm font-medium text-lot-orange-ink"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-lot-orange-ink underline underline-offset-4 hover:text-lot-ink"
             >
               Create free account
             </Link>
@@ -152,7 +155,7 @@ export function CertificatesClient() {
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <div className="border-b border-lot-line pb-6">
           <p className="lf-kicker-dense text-lot-stone">RECORDS · UNLOCKED PROPERTIES</p>
-          <h1 className="lf-section-heading mt-2">Certificates of Feasibility</h1>
+          <h1 className="lf-panel-heading mt-2 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
           <p className="lf-body-sm mt-2 max-w-2xl text-lot-stone">
             Official feasibility records and verified property analyses unlocked for your lots.
             Every certificate remains unlocked permanently and can be reopened in the 3D Studio anytime.

@@ -72,7 +72,7 @@ export default function SplatCalibrationPanel({
       {/* Header */}
       <div className="flex items-center justify-between border-b border-lot-line px-4 py-3">
         <div>
-          <span className="inline-block bg-lot-ink px-1.5 py-0.5 text-[10px] tabular-nums uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="inline-block bg-lot-ink px-1.5 py-0.5 lf-kicker tabular-nums text-lot-chalk">
             BETA · INTERNAL
           </span>
           <h2 className="font-display text-base font-semibold tracking-tight text-lot-ink">

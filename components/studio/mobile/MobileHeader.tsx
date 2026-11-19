@@ -46,7 +46,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       </Link>
       <span className="min-w-0 flex-1 truncate rounded-none border border-lot-line-dark bg-lot-surface-dark px-2.5 py-1.5 text-xs text-lot-chalk">
         {address}
-        {estimated && <span className="ml-1.5 lf-dataprint text-status-review-on-dark">est.</span>}
+        {estimated && <span className="ml-1.5 lf-kicker text-status-review-on-dark">est.</span>}
       </span>
       <button
         type="button"

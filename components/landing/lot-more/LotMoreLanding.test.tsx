@@ -6,6 +6,7 @@ import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
 import { clearInitialParcel, peekInitialParcel } from "@/lib/parcel-handoff";
 import {
   calculateFeasibility,
+  configForFootprint,
   defaultAduConfig,
   defaultFinancialAssumptions,
   getParcelById,
@@ -125,7 +126,7 @@ describe("landing address handoff", () => {
     input.scrollIntoView = scroll;
     const focus = vi.spyOn(input, "focus");
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: motionAllowed }));
-    for (const name of ["Start with my lot", "Explore your own numbers", "Explore my lot"]) {
+    for (const name of ["Start with my lot", "Explore your own numbers", "Check address"]) {
       const link = screen.getByRole("link", { name });
       expect(link).toHaveAttribute("href", "#start");
       fireEvent.click(link);
@@ -135,13 +136,13 @@ describe("landing address handoff", () => {
     }
   });
 
-  it.each(["seattle", "portland", "austin", "san-diego"] as const)("names the %s demo consistently and keeps the Seattle capture label", (city) => {
+  it.each(["seattle", "portland", "austin", "san-diego"] as const)("names the %s demo consistently across hero, preview label, and footer", (city) => {
     render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
     const demo = landingDemos[city];
     const sample = screen.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${demo.city}`, "i") });
     expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · market rent · open it in 3D`);
     expect(screen.getByText(`${demo.name.toUpperCase()} DEMO, ${demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT`)).toBeVisible();
-    expect(screen.getByText("Oak Street demo, Seattle", { selector: "span" })).toBeVisible();
+    expect(screen.getByText(`${demo.name} demo, ${demo.city}`, { selector: "span" })).toBeVisible();
     const footer = screen.getByRole("contentinfo");
     for (const item of Object.values(landingDemos)) {
       expect(within(footer).getByRole("link", { name: `${item.name} demo, ${item.city}` })).toHaveAttribute("href", `/${item.city.toLowerCase().replaceAll(" ", "-")}`);
@@ -563,10 +564,20 @@ describe("landing address handoff", () => {
     fireEvent.click(screen.getByRole("radio", { name: /The possibility/ }));
     expect(screen.getByText(/5′ rear · 5′ side clearance/)).toBeVisible();
 
+    const expected600 = Math.round(
+      calculateFeasibility(parcelPresets[0], defaultAduConfig, defaultFinancialAssumptions).coveragePercent,
+    );
+    const expected800 = Math.round(
+      calculateFeasibility(
+        parcelPresets[0],
+        configForFootprint(800, defaultAduConfig),
+        defaultFinancialAssumptions,
+      ).coveragePercent,
+    );
     const sandbox = screen.getByLabelText("Interactive massing preview");
-    expect(within(sandbox).getByText("32% of lot")).toBeVisible();
+    expect(within(sandbox).getByText(`${expected600}% of lot`)).toBeVisible();
     fireEvent.click(within(sandbox).getByRole("radio", { name: "800 sq ft" }));
-    expect(within(sandbox).getByText("36% of lot")).toBeVisible();
+    expect(within(sandbox).getByText(`${expected800}% of lot`)).toBeVisible();
     fireEvent.click(within(sandbox).getByRole("radio", { name: "Gable" }));
     expect(within(sandbox).getByRole("radio", { name: "Gable" })).toHaveAttribute(
       "aria-checked",

@@ -91,3 +91,6 @@ export const BID_LEVELING_CHECKLIST: readonly BidScopeItem[] = [
 
 /** Neutral alias for {@link BID_LEVELING_CHECKLIST}. */
 export const SCOPE_CHECKLIST: readonly ScopeChecklistItem[] = BID_LEVELING_CHECKLIST;
+
+/** Neutral alias for {@link BID_LEVELING_BUILDERS}. */
+export const SCOPE_CHECKLIST_BUILDERS = BID_LEVELING_BUILDERS;
