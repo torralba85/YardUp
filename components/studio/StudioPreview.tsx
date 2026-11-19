@@ -40,15 +40,15 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       : undefined;
 
   return (
-    <section aria-label="Free property preview" className="space-y-5 border border-lot-line bg-lot-chalk p-5 sm:p-6">
+    <section aria-label="Free property preview" className="space-y-4 border border-lot-line bg-lot-chalk p-5 sm:p-6">
       <div>
         <p className="lf-kicker text-lot-stone">Estimated monthly rent</p>
-        <p className="mt-2 lf-money-lg text-lot-ink">{rentRangeLabel(result)}</p>
-        <p className="mt-2 text-xs leading-5 text-lot-stone">Conservative to optimistic rent scenarios · {result.rentBasis}</p>
+        <p className="mt-1.5 lf-money-lg text-lot-ink">{rentRangeLabel(result)}</p>
+        <p className="mt-1.5 text-xs leading-5 text-lot-stone">Conservative to optimistic rent scenarios · {result.rentBasis}</p>
       </div>
       <div>
         <h2 className="font-display text-xl font-medium text-lot-ink">What’s behind your rental potential?</h2>
-        <p className="mt-2 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. Unlock this property’s financial model and planning breakdown in your Certificate of Feasibility.</p>
+        <p className="mt-1.5 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. Unlock this property’s financial model and planning breakdown in your Certificate of Feasibility.</p>
       </div>
       <div className="grid grid-cols-2 gap-px border border-lot-line bg-lot-line">
         {[
@@ -57,9 +57,9 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
           ["Payback period", "•• yrs"],
           ["Financed cash flow", "±$••• /mo"],
         ].map(([label, placeholder]) => (
-          <div key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface p-4">
+          <div key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface p-3.5">
             <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />{label}</p>
-            <span aria-hidden="true" className="mt-3 block select-none lf-money-sm leading-tight text-lot-ink blur-xs">{placeholder}</span>
+            <span aria-hidden="true" className="mt-2.5 block select-none whitespace-nowrap lf-money-sm leading-tight text-lot-ink blur-xs">{placeholder}</span>
             <span className="sr-only">{label} locked in the certificate</span>
           </div>
         ))}
@@ -67,7 +67,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       <p className="text-sm leading-6 text-lot-stone">Answer whether rent covers your loan payment and whether your builder’s scope is complete. Includes cost allowances, financing comparisons, local permit steps, items to verify, a scope checklist, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
-      <p className="text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
+      <p className="pb-1 text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
       {consentControl}
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
       <div className={stickyCta ? "sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t border-lot-line bg-lot-chalk px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6" : undefined}>

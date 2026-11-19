@@ -232,7 +232,7 @@ export default function AerialView({
         </div>
         {/* Required attribution for the keyless Esri imagery provider. */}
         {attribution && (
-          <div className="pointer-events-none text-[10px] leading-4 text-lot-stone-on-dark" role="note">
+          <div className="pointer-events-none text-[11px] leading-4 text-lot-stone-on-dark" role="note">
             {attribution}
           </div>
         )}

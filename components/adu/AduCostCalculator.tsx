@@ -492,7 +492,7 @@ export function AduCostCalculator({
                 id="calculator-address-input"
                 type="text"
                 autoComplete="street-address"
-                placeholder="123 Main St, San Diego, CA"
+                placeholder={countyName ? `Enter a ${countyName} street address` : "Enter a California street address"}
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
                 className="bg-lot-surface"

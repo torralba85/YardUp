@@ -9,7 +9,7 @@ import { SITE_NAME } from "@/lib/site-identity";
 
 const TITLE = "ADU Cost in California (2026): $231K–$289K for 600 Sq Ft";
 const DESCRIPTION =
-  "California ADU build cost runs $231K–$289K for 600 sq ft ($157K–$566K for 400–1,200 sq ft), with permit-fee rules, cost breakdown, and bid checklist.";
+  "California ADU build cost runs $231K–$289K for 600 sq ft ($157K–$566K for 400–1,200 sq ft), with permit-fee rules, cost breakdown, and scope checklist.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -33,6 +33,7 @@ export default function CaliforniaAduCostPage() {
     <LegalPageShell
       title="ADU Cost in California (2026)"
       kicker={`Build cost · Permit fees · Quote checklist · Reviewed ${CALIFORNIA_COST_GUIDE_AS_OF}`}
+      layout="editorial"
     >
       <CaliforniaAduCostGuide />
     </LegalPageShell>

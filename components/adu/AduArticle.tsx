@@ -176,15 +176,15 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
                     >
                       {row.label}
                     </th>
-                    <td className="py-3 text-lot-stone">
+                    <td className="py-3 text-lot-ink">
                       {row.value}
                       {row.confidence === "secondary" ? (
-                        <span className="mt-1 block text-xs font-semibold uppercase tracking-wide">
+                        <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.08em] text-lot-stone">
                           estimate
                         </span>
                       ) : null}
                       {row.note ? (
-                        <span className="mt-1 block text-xs leading-relaxed">
+                        <span className="mt-1 block text-xs leading-relaxed text-lot-stone">
                           {row.note}
                         </span>
                       ) : null}
@@ -204,7 +204,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           <h2 className="font-semibold text-lot-ink">
             Coastal Zone owners, read this
           </h2>
-          <p className="lf-body mt-2 text-lot-stone">{content.coastalCallout}</p>
+          <p className="lf-body mt-2 text-lot-ink">{content.coastalCallout}</p>
         </aside>
       ) : null}
 
@@ -216,7 +216,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <h2 id="adu-state-law" className="lf-card-heading text-lot-ink">
           What does California state law guarantee?
         </h2>
-        <div className="lf-body mt-3 space-y-3 text-lot-stone">
+        <div className="lf-body mt-3 space-y-3 text-lot-ink">
           {STATE_BASELINE_PARAGRAPHS.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}

@@ -17,6 +17,10 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Changed
 
+- Production deploys now ping IndexNow only for sitemap URLs the deploy added,
+  re-dated or removed, instead of all 54 on every deploy. CI snapshots the live
+  sitemaps before deploying and diffs them afterwards; a deploy that changed no
+  `lastmod` sends nothing. `npm run seo:indexnow` by hand still sends every URL.
 - Login, signup and the auth modal no longer offer Apple sign-in. The
   `apple.com` provider was never configured in Firebase Auth (it needs a paid
   Apple Developer membership), so the button could only fail. It returns when a

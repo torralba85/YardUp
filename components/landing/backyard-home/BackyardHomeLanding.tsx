@@ -6,9 +6,9 @@ import {
   PARCEL_AFTER,
   PARCEL_BEFORE,
 } from "@/components/landing/lot-more/landing-images";
+import { PublicHeader } from "@/components/legal/PublicHeader";
 import { SiteFooter } from "@/components/legal/SiteFooter";
 import { Bezel } from "@/components/ui/Bezel";
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import { sanDiego } from "@/content/adu/ca/san-diego";
 import { ADU_CITIES } from "@/lib/adu/content";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
@@ -154,71 +154,26 @@ export function BackyardHomeLanding() {
   const paybackText = `${marketScenario.payback.toFixed(1)} yrs`;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-lot-chalk text-lot-ink">
-      <header className="border-b border-lot-line bg-lot-chalk">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Link
-            href="/"
-            aria-label="LotFoundry home"
-            className="inline-flex min-h-11 items-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-          >
-            <BrandLockup className="h-8 w-auto" />
-          </Link>
-
-          <nav
-            aria-label="Page sections"
-            className="flex flex-wrap items-center gap-3 sm:gap-5"
-          >
-            <a
-              href="#quiz"
-              className="inline-flex min-h-11 items-center rounded-control px-1.5 lf-body-sm font-medium text-lot-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              Lot quiz
-            </a>
-            <a
-              href="#san-diego-rules"
-              className="inline-flex min-h-11 items-center rounded-control px-1.5 lf-body-sm font-medium text-lot-stone hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              San Diego rules
-            </a>
-            <a
-              href="#california-cost"
-              className="inline-flex min-h-11 items-center rounded-control px-1.5 lf-body-sm font-medium text-lot-stone hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              California cost
-            </a>
-            <a
-              href="#faq"
-              className="inline-flex min-h-11 items-center rounded-control px-1.5 lf-body-sm font-medium text-lot-stone hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              FAQ
-            </a>
-            <Link
-              href="/studio?parcel=coyote-brush&size=600"
-              prefetch={false}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-lot-ink bg-lot-ink px-4 py-2 lf-body-sm font-semibold text-lot-chalk hover:bg-lot-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              <span>Open 3D studio</span>
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-dvh overflow-x-hidden bg-lot-chalk text-lot-ink">
+      <PublicHeader
+        studioHref="/studio?parcel=coyote-brush&size=600"
+        studioLabel="Open 3D studio"
+      />
 
       <main id="main-content">
         <section
           id="quiz"
-          className="mx-auto max-w-6xl px-5 pb-14 pt-10 sm:px-8 sm:pb-16 sm:pt-14"
+          className="mx-auto max-w-6xl px-5 pb-14 pt-8 sm:px-8 sm:pb-16 sm:pt-12"
         >
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12">
             <div className="min-w-0 space-y-5">
               <p className="lf-kicker text-lot-orange-ink">
                 California &amp; San Diego · 60-Second Lot Quiz
               </p>
-              <h1 className="lf-display-hero text-lot-ink">
+              <h1 className="font-display text-[clamp(2rem,4vw,3.1rem)] font-semibold leading-[1.04] tracking-[-0.04em] text-lot-ink">
                 Can I build a backyard home?
               </h1>
-              <p className="lf-body-lg text-lot-stone">
+              <p className="lf-body max-w-prose text-lot-ink">
                 For most residential lots in California—including San Diego—the
                 short answer is yes. State law protects your right to add an{" "}
                 <strong className="font-semibold text-lot-ink">
@@ -244,7 +199,7 @@ export function BackyardHomeLanding() {
                   <dt className="lf-kicker-dense text-lot-stone">
                     Est. 600 sf cost
                   </dt>
-                  <dd className="lf-card-heading mt-1 text-lot-ink tabular-nums">
+                  <dd className="lf-card-heading mt-1 whitespace-nowrap text-lot-ink tabular-nums">
                     {costRange600}
                   </dd>
                 </div>
@@ -265,12 +220,12 @@ export function BackyardHomeLanding() {
             <div className="grid items-end gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
               <div className="space-y-3">
                 <p className="lf-kicker text-lot-stone">
-                  01 · City-Specific ADU Rules (Verified {sanDiego.asOf})
+                  City-Specific ADU Rules (Verified {sanDiego.asOf})
                 </p>
-                <h2 className="lf-section-heading text-lot-ink">
+                <h2 className="font-display text-[clamp(1.65rem,2.7vw,2.35rem)] font-medium leading-[1.1] tracking-[-0.035em] text-lot-ink">
                   What are the ADU rules in San Diego?
                 </h2>
-                <p className="lf-body text-lot-stone">
+                <p className="lf-body max-w-prose text-lot-ink">
                   {sanDiego.introAnswer[1]} Under San Diego Municipal Code
                   (SDMC §141.0302) and California Government Code §66323, a
                   single-family lot can combine up to three units total: one
@@ -338,24 +293,24 @@ export function BackyardHomeLanding() {
               </aside>
             ) : null}
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <dl className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {sanDiegoRules.map((item) => (
-                <article
+                <div
                   key={item.label}
                   className="border border-lot-line bg-lot-chalk p-5 shadow-paper-sm"
                 >
-                  <p className="lf-kicker-dense text-lot-stone">{item.label}</p>
-                  <h3 className="lf-card-heading mt-2 text-lot-ink">
+                  <dt className="lf-kicker-dense text-lot-stone">{item.label}</dt>
+                  <dd className="mt-2 font-sans text-base font-semibold leading-snug text-lot-ink">
                     {item.value}
-                  </h3>
+                  </dd>
                   {item.note ? (
                     <p className="lf-body-sm mt-2 text-lot-stone">
                       {item.note}
                     </p>
                   ) : null}
-                </article>
+                </div>
               ))}
-            </div>
+            </dl>
 
             <div className="flex flex-wrap items-center justify-between gap-4 border-t border-lot-line pt-6">
               <div className="space-y-2">
@@ -394,12 +349,12 @@ export function BackyardHomeLanding() {
             <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
               <div className="space-y-3">
                 <p className="lf-kicker text-lot-stone-on-dark">
-                  02 · California ADU Cost &amp; Rent Math
+                  California ADU Cost &amp; Rent Math
                 </p>
-                <h2 className="lf-section-heading text-lot-chalk">
+                <h2 className="font-display text-[clamp(1.65rem,2.7vw,2.35rem)] font-medium leading-[1.1] tracking-[-0.035em] text-lot-chalk">
                   How much does an ADU cost in California?
                 </h2>
-                <p className="lf-body text-lot-stone-on-dark">
+                <p className="lf-body max-w-prose text-lot-chalk">
                   Across 400 to 1,200 sq ft builds, estimated construction runs{" "}
                   <strong className="font-semibold text-lot-chalk">
                     {allSizeRange}
@@ -429,20 +384,46 @@ export function BackyardHomeLanding() {
               </div>
             </div>
 
-            <div className="overflow-x-auto border-y border-lot-line-dark">
-              <table className="w-full min-w-[34rem] border-collapse text-left">
+            <div className="divide-y divide-lot-line-dark border-y border-lot-line-dark sm:hidden">
+              {sizeRows.map((row) => (
+                <div key={row.size} className="space-y-2 py-4">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="lf-body font-semibold text-lot-chalk tabular-nums">
+                      {row.size.toLocaleString()} sq ft{" "}
+                      <span className="font-normal text-lot-stone-on-dark">
+                        ({row.bedroom})
+                      </span>
+                    </span>
+                    <span className="lf-body-sm tabular-nums text-lot-stone-on-dark">
+                      ~{row.paybackYears.toFixed(1)} yrs
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-4 text-sm tabular-nums">
+                    <span className="text-lot-chalk">
+                      {formatCurrency(row.costLow)} – {formatCurrency(row.costHigh)}
+                    </span>
+                    <span className="text-lot-chalk">
+                      {formatCurrency(row.monthlyRent)}/mo
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto border-y border-lot-line-dark sm:block">
+              <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b border-lot-line-dark">
                     <th className="py-3.5 pr-4 lf-kicker-dense text-lot-stone-on-dark">
                       Footprint
                     </th>
-                    <th className="py-3.5 pr-4 lf-kicker-dense text-lot-stone-on-dark">
+                    <th className="py-3.5 px-4 text-right lf-kicker-dense text-lot-stone-on-dark">
                       Est. build cost range
                     </th>
-                    <th className="py-3.5 pr-4 lf-kicker-dense text-lot-stone-on-dark">
+                    <th className="py-3.5 px-4 text-right lf-kicker-dense text-lot-stone-on-dark">
                       HUD San Diego Co. rent
                     </th>
-                    <th className="py-3.5 lf-kicker-dense text-lot-stone-on-dark">
+                    <th className="py-3.5 pl-4 text-right lf-kicker-dense text-lot-stone-on-dark">
                       Simple payback est.
                     </th>
                   </tr>
@@ -456,14 +437,14 @@ export function BackyardHomeLanding() {
                           ({row.bedroom})
                         </span>
                       </td>
-                      <td className="py-3.5 pr-4 lf-money-sm text-lot-chalk">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap lf-money-sm text-lot-chalk">
                         {formatCurrency(row.costLow)} –{" "}
                         {formatCurrency(row.costHigh)}
                       </td>
-                      <td className="py-3.5 pr-4 lf-body-sm text-lot-chalk tabular-nums">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap lf-body-sm text-lot-chalk tabular-nums">
                         {formatCurrency(row.monthlyRent)}/mo
                       </td>
-                      <td className="py-3.5 lf-body-sm text-lot-stone-on-dark tabular-nums">
+                      <td className="py-3.5 pl-4 text-right whitespace-nowrap lf-body-sm text-lot-stone-on-dark tabular-nums">
                         ~{row.paybackYears.toFixed(1)} yrs
                       </td>
                     </tr>
@@ -525,15 +506,14 @@ export function BackyardHomeLanding() {
           className="border-b border-lot-line bg-lot-surface py-14 sm:py-16"
         >
           <div className="mx-auto max-w-6xl space-y-10 px-5 sm:px-8">
-            <div className="max-w-3xl space-y-3">
+            <div className="max-w-prose space-y-3">
               <p className="lf-kicker text-lot-stone">
-                03 · Property-Specific Eligibility
+                Property-Specific Eligibility
               </p>
-              <h2 className="lf-section-heading text-lot-ink">
-                Which backyard home fits your lot—and what actually blocks a
-                build?
+              <h2 className="font-display text-[clamp(1.65rem,2.7vw,2.35rem)] font-medium leading-[1.1] tracking-[-0.035em] text-lot-ink">
+                Which backyard home fits your lot?
               </h2>
-              <p className="lf-body text-lot-stone">
+              <p className="lf-body max-w-prose text-lot-ink">
                 Homeowners often worry about HOA bans or minimum lot sizes that
                 California law already overrides. Real blockers are usually
                 physical—easements, fire access, or septic capacity—or choosing
@@ -547,18 +527,13 @@ export function BackyardHomeLanding() {
                   key={item.number}
                   className="border border-lot-line bg-lot-chalk p-5 shadow-paper-sm"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="lf-kicker-dense text-lot-orange-ink">
-                      {item.number}
-                    </span>
-                    <span className="lf-caption text-lot-stone">
-                      {item.tag}
-                    </span>
-                  </div>
-                  <h3 className="lf-card-heading mt-3 text-lot-ink">
+                  <span className="lf-caption text-lot-stone">
+                    {item.tag}
+                  </span>
+                  <h3 className="lf-card-heading mt-2 text-lot-ink">
                     {item.title}
                   </h3>
-                  <p className="lf-body-sm mt-2 text-lot-stone">{item.body}</p>
+                  <p className="lf-body mt-2 text-lot-ink">{item.body}</p>
                 </article>
               ))}
             </div>
@@ -569,13 +544,10 @@ export function BackyardHomeLanding() {
                   key={blocker.number}
                   className="border border-lot-line bg-lot-chalk p-5"
                 >
-                  <span className="lf-kicker-dense text-lot-stone">
-                    Rule {blocker.number}
-                  </span>
-                  <h3 className="lf-card-heading mt-2 text-lot-ink">
+                  <h3 className="lf-card-heading text-lot-ink">
                     {blocker.title}
                   </h3>
-                  <p className="lf-body-sm mt-2 text-lot-stone">
+                  <p className="lf-body mt-2 text-lot-ink">
                     {blocker.body}
                   </p>
                 </article>
@@ -617,9 +589,9 @@ export function BackyardHomeLanding() {
         >
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-4">
-              <p className="lf-kicker text-lot-stone">04 · Common Questions</p>
-              <h2 className="lf-section-heading text-lot-ink">
-                Backyard home, San Diego rules &amp; California ADU cost FAQ
+              <p className="lf-kicker text-lot-stone">Common Questions</p>
+              <h2 className="font-display text-[clamp(1.65rem,2.7vw,2.35rem)] font-medium leading-[1.1] tracking-[-0.035em] text-lot-ink">
+                San Diego &amp; California ADU FAQ
               </h2>
               <div className="divide-y divide-lot-line border-y border-lot-line">
                 {BACKYARD_HOME_FAQS.map((item) => (
@@ -639,7 +611,7 @@ export function BackyardHomeLanding() {
                         −
                       </span>
                     </summary>
-                    <p className="lf-body-sm mt-2 pr-6 text-lot-stone">
+                    <p className="lf-body mt-2 max-w-prose pr-6 text-lot-ink">
                       {item.answer}
                     </p>
                   </details>

@@ -28,8 +28,8 @@ export function AuthLayout({
         </Link>
 
         {/* Card */}
-        <Bezel>
-          <div className="p-8">
+        <Bezel className="shadow-none">
+          <div className="p-6 sm:p-8">
             <h1 className="lf-panel-heading text-lot-ink">
               {title}
             </h1>

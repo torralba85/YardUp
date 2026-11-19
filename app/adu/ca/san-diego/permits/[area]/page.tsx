@@ -45,9 +45,9 @@ export default async function PermitAreaPage({ params }: Props) {
     ],
   };
   return (
-    <LegalPageShell title={`${area.name} ADU Permits`} kicker={`San Diego community planning area · ${study.coverage.from} to ${study.coverage.to}`}>
+    <LegalPageShell title={`${area.name} ADU Permits`} kicker={`San Diego community planning area · ${study.coverage.from} to ${study.coverage.to}`} layout="editorial">
       {[article, breadcrumbs].map((json) => <script key={json["@type"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json).replace(/</g, "\\u003c") }} />)}
-      <p className="lf-body text-lg leading-relaxed">
+      <p className="lf-body text-lg leading-relaxed text-lot-ink">
         {area.name} recorded {number(area.approvals)} building permits adding {number(area.units)} backyard homes during this period: {number(area.aduUnits)} ADUs and {number(area.jaduUnits)} junior ADUs.
         It ranks {rank} of {study.byArea.length} community planning areas by permitted units, accounting for {percent(area.units / study.totals.units)} of San Diego&apos;s {number(study.totals.units)} units.
       </p>
@@ -55,16 +55,16 @@ export default async function PermitAreaPage({ params }: Props) {
       <div className="mt-8"><AduStudioCta city={area.name} slug="san-diego" placement="top" /></div>
       <section aria-labelledby="area-years" className="mt-12">
         <h2 id="area-years" className="lf-card-heading">{area.name} permitted units by year</h2>
-        <table className="mt-4 w-full border-collapse text-left text-sm">
+        <table className="mt-4 w-full max-w-sm border-collapse text-left text-sm">
           <caption className="sr-only">ADU and junior ADU units permitted in {area.name}</caption>
-          <thead><tr className="border-b border-lot-line"><th scope="col" className="py-3 pr-4">Year</th><th scope="col" className="py-3">Units</th></tr></thead>
-          <tbody>{study.byYear.map(({ year }) => <tr key={year} className="border-b border-lot-line"><th scope="row" className="py-3 pr-4 font-medium">{year}{String(year) === latestYear ? ` (through ${study.coverage.to})` : ""}</th><td className="py-3 tabular-nums">{number(area.unitsByYear[String(year)] ?? 0)}</td></tr>)}</tbody>
+          <thead><tr className="border-b border-lot-line"><th scope="col" className="py-3 pr-4 font-semibold text-lot-ink">Year</th><th scope="col" className="py-3 pl-4 text-right font-semibold text-lot-ink">Units</th></tr></thead>
+          <tbody>{study.byYear.map(({ year }) => <tr key={year} className="border-b border-lot-line"><th scope="row" className="py-3 pr-4 font-medium text-lot-ink">{year}{String(year) === latestYear ? ` (through ${study.coverage.to})` : ""}</th><td className="py-3 pl-4 text-right tabular-nums text-lot-ink">{number(area.unitsByYear[String(year)] ?? 0)}</td></tr>)}</tbody>
         </table>
         <p className="mt-3 text-sm text-lot-stone">The final year is partial; compare it with full years cautiously. Units are homes authorized, while one permit can authorize several homes.</p>
       </section>
       <section aria-labelledby="area-mix" className="mt-12">
         <h2 id="area-mix" className="lf-card-heading">What those permits include</h2>
-        <ul className="lf-body mt-4 list-disc space-y-3 pl-6 text-lot-stone">
+        <ul className="lf-body mt-4 list-disc space-y-3 pl-6 text-lot-ink">
           <li>{number(area.multiUnitApprovals)} permits add two or more units{area.multiUnitShare == null ? "" : ` (${percent(area.multiUnitShare)} of this area's permits)`}. Citywide, the share is {percent(study.totals.multiUnitApprovals / study.totals.approvals)}.</li>
           <li>{number(area.bonusAduUnits)} ADUs are flagged as bonus-program units in the City data.</li>
           <li>{number(area.affordableAduUnits)} ADUs carry income restrictions: {number(area.affordableByTier.extremelyLow)} extremely low, {number(area.affordableByTier.veryLow)} very low, {number(area.affordableByTier.low)} low and {number(area.affordableByTier.moderate)} moderate income.</li>

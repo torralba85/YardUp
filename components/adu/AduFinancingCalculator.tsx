@@ -37,11 +37,18 @@ export function AduFinancingCalculator({
         inputs, not a current lender quote. Change them to match your offer.
       </p>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <label className="space-y-2 text-sm text-lot-ink">
-          <span>Loan amount ($)</span>
-          <Input type="number" min="0" max={projectCost} step="1" value={loan}
-            onChange={(event) => setCustomLoan(event.target.value)} aria-describedby="adu-financing-note" />
-        </label>
+        <div>
+          <label className="block space-y-2 text-sm text-lot-ink">
+            <span>Loan amount ($)</span>
+            <Input type="number" min="0" max={projectCost} step="1" value={loan}
+              onChange={(event) => setCustomLoan(event.target.value)} aria-describedby="adu-financing-note" />
+          </label>
+          {valid ? (
+            <p className="mt-1 text-xs tabular-nums text-lot-stone">
+              {formatCurrency(principal)} principal
+            </p>
+          ) : null}
+        </div>
         <label className="space-y-2 text-sm text-lot-ink">
           <span>Annual interest rate (%)</span>
           <Input type="number" min="0" max="100" step="0.01" value={rate}
@@ -62,8 +69,8 @@ export function AduFinancingCalculator({
         ) : (
           <dl className="grid gap-4 border-y border-lot-line py-4 sm:grid-cols-3">
             {[
-              ["Monthly loan payment", payment],
               ["Monthly rent after operating expenses", monthlyNoi],
+              ["Monthly loan payment", payment],
               ["Monthly cash after loan payment", monthlyNoi - payment],
             ].map(([label, value]) => (
               <div key={label}>

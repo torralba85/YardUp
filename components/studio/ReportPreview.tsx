@@ -226,7 +226,7 @@ export default function ReportPreview({
             <div className="mx-auto mt-2 h-px w-10 bg-lot-line" />
             <div className="lf-caption mt-2 truncate text-lot-stone">{parcelName}</div>
             {/* Decorative facsimile thumbnail only — not primary body copy. */}
-            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.08em] text-status-blocked">
+            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 lf-kicker text-status-blocked">
               Concept
             </div>
           </div>
@@ -378,7 +378,7 @@ function CertificateStyleMatchSection({
       <div className={`mt-5 grid gap-4 ${concept.photoUrl ? "sm:grid-cols-2" : "grid-cols-1"}`}>
         {concept.photoUrl && (
           <div className="border border-lot-line bg-lot-surface p-2">
-            <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lot-stone">
+            <span className="mb-2 block lf-kicker text-lot-stone">
               Reference Home Exterior
             </span>
             <div className="relative aspect-[3/2] w-full overflow-hidden bg-lot-chalk">
@@ -392,7 +392,7 @@ function CertificateStyleMatchSection({
           </div>
         )}
         <div className="border border-lot-line bg-lot-surface p-2">
-          <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lot-stone">
+          <span className="mb-2 block lf-kicker text-lot-stone">
             Style-Matched ADU Concept
           </span>
           <div className="relative aspect-[3/2] w-full overflow-hidden bg-lot-chalk">
@@ -415,7 +415,7 @@ function CertificateStyleMatchSection({
             {concept.traits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium text-lot-ink"
+                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-xs font-medium text-lot-ink"
               >
                 {trait}
               </span>
@@ -763,7 +763,7 @@ function CertificateBriefSection({
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-lot-ink">{risk.label}</span>
                       <span
-                        className={`rounded-none border px-2 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${REPORT_RISK_TONE[risk.level]}`}
+                        className={`rounded-none border px-2 py-0.5 lf-kicker ${REPORT_RISK_TONE[risk.level]}`}
                       >
                         {risk.level}
                       </span>
@@ -806,7 +806,7 @@ function CertificateBriefSection({
                       className="absolute bottom-0 left-[11px] top-6 w-px bg-lot-line"
                     />
                   )}
-                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lot-line bg-lot-chalk font-sans text-[9px] text-lot-stone">
+                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lot-line bg-lot-chalk font-sans text-[11px] text-lot-stone">
                     {index + 1}
                   </span>
                   <div className="min-w-0 border-b border-lot-line pb-3 last:border-b-0">
@@ -814,13 +814,13 @@ function CertificateBriefSection({
                       <span className="text-xs font-semibold leading-5 text-lot-ink">
                         {stage.name}
                       </span>
-                      <span className="shrink-0 font-sans text-[9px] text-lot-stone">
+                      <span className="shrink-0 font-sans text-[11px] text-lot-stone">
                         {stage.estWeeksLow}&ndash;{stage.estWeeksHigh} WK
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lot-stone">{stage.description}</p>
                     <span
-                      className={`mt-1.5 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
+                      className={`mt-1.5 block lf-kicker ${tone.className}`}
                     >
                       {tone.label}
                     </span>
@@ -840,7 +840,7 @@ function CertificateBriefSection({
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {nextSteps.map((step, index) => (
               <li key={`${index}-${step}`} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5 text-lot-stone">
-                <span className="font-sans text-[9px] text-lot-stone">
+                <span className="font-sans text-xs text-lot-stone">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <span>{step}</span>

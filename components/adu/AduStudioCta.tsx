@@ -86,7 +86,7 @@ export function AduStudioCta({
         tone={isCompactTop ? "light" : "dark"}
         inputId={`adu-studio-address-${placement}`}
         inputLabel={`Your ${city} street address`}
-        placeholder="123 Main St, San Diego, CA"
+        placeholder={`Enter a ${city} street address`}
         submitLabel="Check my address"
         onLookupStart={() => trackEvent(aduCtaEvent(placement), { city_slug: slug })}
         className="mt-4"

@@ -154,7 +154,7 @@ test("actual Studio preview loads and the example opens without an account promp
 }) => {
   await page.goto("/");
   const capture = page.getByRole("img", {
-    name: /Oak Street demo in the LotFoundry 3D studio/,
+    name: /Coyote Brush Court demo in the LotFoundry 3D studio/,
   });
   await capture.scrollIntoViewIfNeeded();
   await expect
