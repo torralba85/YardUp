@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-// Since the 2026-11-01 funnel change the free preview shows build cost, annual
-// net income (rounded to $1K) and payback; financed cash flow stays in the
-// certificate.
-test("free Studio shows rent, cost and payback while financed cash flow stays paid", async ({ page }, testInfo) => {
+// The free preview shows only the rent range; build cost, annual net income,
+// payback and financed cash flow stay in the certificate (2026-11-18 reversal
+// of the 2026-11-01 unblur).
+test("free Studio shows the rent range while cost, income and payback stay paid", async ({ page }, testInfo) => {
   await page.goto("/studio?parcel=coyote-brush");
   const mobile = testInfo.project.name.includes("mobile");
   if (mobile) {
@@ -15,14 +15,16 @@ test("free Studio shows rent, cost and payback while financed cash flow stays pa
   const preview = page.getByRole("region", { name: "Free property preview" });
   await expect(preview.getByText("$2,335–$2,919")).toBeVisible();
   const locked = preview.locator('[data-locked-metric="true"]');
-  await expect(locked).toHaveCount(1);
-  await expect(locked).toContainText("Financed cash flow");
+  await expect(locked).toHaveCount(4);
+  for (const label of ["Build cost", "Annual net income", "Payback period", "Financed cash flow"]) {
+    await expect(locked.filter({ hasText: label })).toHaveCount(1);
+  }
   await expect(page.getByRole("button", { name: "Numbers & readiness" })).toHaveCount(0);
   for (const figure of ["$231K–$289K", "$19K /yr", "13.3 yrs"]) {
-    await expect(preview.getByText(figure, { exact: true })).toBeVisible();
+    await expect(preview.getByText(figure, { exact: true })).toHaveCount(0);
   }
   await preview.getByRole("button", { name: "See what’s behind the numbers" }).click();
   await expect(page.getByRole("button", { name: "Continue to secure checkout — $29" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Free property preview" }).locator('[data-locked-metric="true"]')).toHaveCount(1);
+  await expect(page.getByRole("region", { name: "Free property preview" }).locator('[data-locked-metric="true"]')).toHaveCount(4);
   await page.screenshot({ path: testInfo.outputPath("studio-paid-preview.png"), fullPage: true });
 });

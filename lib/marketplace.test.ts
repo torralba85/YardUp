@@ -243,6 +243,13 @@ describe("lead preview redaction (1A paywall split)", () => {
     expect(extractZip("123 Maple St, Seattle, WA")).toBe("");
   });
 
+  it("never reads a five-digit house number as the ZIP", () => {
+    expect(extractZip("18585 Del Monte Ave, Morgan Hill, CA 95037")).toBe("95037");
+    expect(extractZip("18585 del monte ave")).toBe("");
+    expect(extractZip("18585 Del Monte Ave, Morgan Hill, CA 95037-1234")).toBe("95037");
+    expect(extractZip("92101")).toBe("92101");
+  });
+
   it("produces a preview with no contact or street fields", () => {
     const preview = buildLeadPreview({ snapshot, previewSerial: "LF-abc123" });
 

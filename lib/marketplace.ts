@@ -208,10 +208,13 @@ export function bucketRentBand(rent: number): number {
 }
 
 /** Pull a 5-digit ZIP out of a street address — coarse location that is safe
- * to show on the redacted preview (the street itself is not). */
+ * to show on the redacted preview (the street itself is not). The ZIP ends
+ * the address, and a leading house number ("18585 Del Monte Ave") is never
+ * one, so the house number is dropped and the last five-digit group wins. */
 export function extractZip(address: string): string {
-  const match = address.match(/\b(\d{5})(?:-\d{4})?\b/);
-  return match ? match[1] : "";
+  const withoutHouseNumber = address.replace(/^\s*\d+\s+(?=[A-Za-z])/, "");
+  const zips = withoutHouseNumber.match(/\b\d{5}(?=(?:-\d{4})?\b)/g);
+  return zips?.at(-1) ?? "";
 }
 
 function defaultMatchReasons(snapshot: ConnectionSnapshot): string[] {

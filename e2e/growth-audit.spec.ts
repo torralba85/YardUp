@@ -4,9 +4,9 @@ test("Studio previews locked detail while keeping the free rent range available"
   await page.goto("/studio?parcel=oak-street&step=certificate", { waitUntil: "domcontentloaded" });
   const preview = page.getByRole("region", { name: "Free property preview" });
   await expect(preview).toBeVisible();
-  // Since the 2026-11-01 funnel change only financed cash flow stays locked;
-  // build cost, net income and payback are free.
-  await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(1);
+  // Build cost, net income, payback and financed cash flow stay locked; the
+  // rent range is free.
+  await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
   await expect(preview).toContainText("Estimated monthly rent");
   await expect(page.getByRole("button", { name: "Continue to secure checkout — $29" })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("studio-cost-preview.png") });

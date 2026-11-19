@@ -510,11 +510,11 @@ describe("CertificatePanel", () => {
   describe("paywall offer", () => {
     beforeEach(() => { mocks.access.purchased = false; });
 
-    it("shows unblurred baseline metrics while keeping financed cash flow locked", () => {
+    it("locks build cost, net income, payback and financed cash flow before purchase", () => {
       const { container } = render(<CertificatePanel {...createProps()} />);
-      expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(1);
-      expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
-      expect(screen.getByText(`${result.paybackYears} yrs`)).toBeInTheDocument();
+      expect(container.querySelectorAll('[data-locked-metric="true"]')).toHaveLength(4);
+      expect(screen.queryByText("$231K–$289K")).not.toBeInTheDocument();
+      expect(screen.queryByText(`${result.paybackYears} yrs`)).not.toBeInTheDocument();
       expect(screen.queryByText("Methodology & data sources")).not.toBeInTheDocument();
     });
 

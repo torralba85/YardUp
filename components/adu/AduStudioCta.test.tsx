@@ -33,7 +33,7 @@ describe("AduStudioCta", () => {
     acquireMock.mockResolvedValue({ ...SAMPLE_LIVE_PARCEL });
   });
 
-  it("advertises free build cost & payback and up to 3 guest addresses, then resolves inline", async () => {
+  it("advertises the free rent range, the paid cost & payback and up to 3 guest addresses, then resolves inline", async () => {
     render(
       <AduStudioCta
         city="San Diego"
@@ -44,7 +44,8 @@ describe("AduStudioCta", () => {
     );
 
     expect(screen.getByRole("heading", { level: 2, name: "Test your San Diego lot" })).toBeVisible();
-    expect(screen.getByText(/Free: lot fit, 3D concept, build cost, rent range, and payback/)).toBeVisible();
+    expect(screen.getByText(/Free: lot fit, 3D concept, and rent range/)).toBeVisible();
+    expect(screen.getByText(/Certificate of\s+Feasibility: build cost,\s+net income and payback/)).toBeVisible();
     expect(screen.getByText(/up to 3 addresses/i)).toBeVisible();
 
     fireEvent.change(screen.getByLabelText("Your San Diego street address"), {

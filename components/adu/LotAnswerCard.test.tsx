@@ -87,7 +87,7 @@ describe("LotAnswerCard", () => {
     expect(source).toMatch(/ssr:\s*false/);
   });
 
-  it("renders inline feasibility with lot size, zoning, evidence-aware placement, rent, cost, and payback", async () => {
+  it("answers with a status teaser and keeps lot facts and figures for the Studio and certificate", async () => {
     render(<LotAnswerCard surface="guide" />);
 
     fireEvent.change(screen.getByLabelText("Your street address"), {
@@ -97,17 +97,13 @@ describe("LotAnswerCard", () => {
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(region).toHaveTextContent("500 Cedar Ave, San Jose, CA");
-    expect(region).toHaveTextContent("5,600 sq ft");
-    expect(region).toHaveTextContent("44′ × 127′");
-    expect(region).toHaveTextContent("R-1");
-    // Must use evidence-aware scene placement (`describePlacement`) — not raw zoningStatus as geometry proof.
-    expect(region).toHaveTextContent("Fits the estimated model");
     expect(region).toHaveTextContent("Needs Review");
-    expect(region).toHaveTextContent("$2,500–$3,125/mo");
-    expect(region).toHaveTextContent("$266K–$332K");
-    expect(region).toHaveTextContent("14.2 yrs");
-    expect(region).toHaveTextContent(/HUD FMR · San Jose, CA/);
+    expect(region).toHaveTextContent(/backyard home fits this lot/);
     expect(region).toHaveTextContent(/Early planning estimates only/);
+    expect(screen.getByRole("button", { name: "Open in 3D" })).toBeInTheDocument();
+    for (const detail of ["5,600 sq ft", "44′ × 127′", "R-1", "Fits the estimated model", "$2,500", "$266K", "14.2 yrs", "HUD FMR"]) {
+      expect(region).not.toHaveTextContent(detail);
+    }
     expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT - 1);
   });
 
@@ -132,8 +128,8 @@ describe("LotAnswerCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
+    // The chip reads evidence-aware scene placement (`describePlacement`), not raw zoningStatus.
     expect(region).toHaveTextContent("Unlikely");
-    expect(region).toHaveTextContent(/Outside setback envelope|doesn't fit/i);
   });
 
   it("visibly marks estimated dimensions when source is fallback", async () => {
