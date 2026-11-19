@@ -45,6 +45,7 @@ export default function SanDiegoAduPermitsPage() {
     <LegalPageShell
       title="San Diego ADU Permits by Neighborhood"
       kicker={`City of San Diego permit data · ${shortDate(coverage.from)} to ${shortDate(coverage.to)} · Updated ${generatedAt}`}
+      layout="editorial"
     >
       <SanDiegoAduPermitStudy />
     </LegalPageShell>

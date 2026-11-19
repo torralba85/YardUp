@@ -269,7 +269,9 @@ describe("A LOT MORE shared design contract", () => {
     // 24 → 23). rawButtons counts <button> outside components/ui: new UI uses Button.
     // Re-pinned 2026-11-04 after the builder dashboard pass (type sizes 151 → 111,
     // kickers 23 → 10, raw buttons 75 → 71).
-    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 111, inlineKickers: 10, rawButtons: 71 };
+    // Re-pinned 2026-11-18 after retiring sub-11px text & auth/shell buttons (type sizes 111 → 87,
+    // kickers 10 → 7, raw buttons 71 → 62).
+    const ceilings = { lfAliases: 0, rawHex: 0, arbitraryTextSizes: 87, inlineKickers: 7, rawButtons: 62 };
     const patterns = {
       lfAliases:
         /(?<![\w-])(?:[\w-]+:)*(?:text|bg|border(?:-[xytrblse])?|ring(?:-offset)?|outline|fill|stroke|decoration|divide|placeholder|caret|accent|from|via|to|shadow)-lf-[a-z0-9-]+|var\(--color-lf-[a-z0-9-]+\)/g,

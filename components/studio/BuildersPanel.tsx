@@ -151,7 +151,7 @@ export default function BuildersPanel({
                   {(b.serviceAreas || []).slice(0, 3).map((area) => (
                     <span
                       key={area.key}
-                      className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-1.5 py-0.5 font-sans text-[10px] text-lot-stone"
+                      className="inline-flex items-center gap-1 rounded-none border border-lot-line bg-lot-surface px-1.5 py-0.5 font-sans text-[11px] text-lot-stone"
                     >
                       <MapPin size={10} aria-hidden />
                       {area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, {area.state}

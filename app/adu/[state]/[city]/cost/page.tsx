@@ -42,7 +42,7 @@ export default async function AduCityCostPage({
   const cost = getCostPage(state, city);
   if (!cost) notFound();
   return (
-    <LegalPageShell title={cost.h1} kicker="Build cost · Rental income · Payback">
+    <LegalPageShell title={cost.h1} kicker="Build cost · Rental income · Payback" layout="editorial">
       <AduCostArticle cost={cost} />
     </LegalPageShell>
   );

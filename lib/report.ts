@@ -298,7 +298,8 @@ export function buildReportHtml({
     .hero-money .figure {
       font-family: "Space Grotesk", Arial, sans-serif;
       font-size: 60px;
-      font-weight: 700;
+      font-weight: 600;
+      letter-spacing: -0.03em;
       line-height: 1;
       color: var(--ink);
     }
@@ -350,6 +351,7 @@ export function buildReportHtml({
       color: var(--muted);
     }
     .snapshot tr:last-child th, .snapshot tr:last-child td { border-bottom: 0; }
+    .snapshot.allowances td { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .status {
       display: inline-block;
       border: 1px solid ${result.zoningStatus === "Compliant" ? "var(--forest)" : "var(--amber)"};
@@ -418,7 +420,8 @@ export function buildReportHtml({
     .checklists h3 { margin: 0 0 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
     .boxes { list-style: none; margin: 0; padding: 0; color: var(--ink); font-size: 12px; }
     .boxes li { margin: 0; padding: 3px 0 3px 20px; position: relative; }
-    .boxes li::before { content: "\\2610"; position: absolute; left: 0; color: var(--muted); }
+    .boxes li::before { content: ""; position: absolute; left: 0; top: 0.45em; width: 10px; height: 10px; border: 1px solid var(--muted); }
+    .check-box { display: inline-block; width: 10px; height: 10px; border: 1px solid var(--muted); vertical-align: -1px; margin-right: 4px; }
     .sources a { color: var(--clay); }
     .rfq { margin-top: 32px; padding-top: 4px; border-top: 1px solid var(--ink); break-before: page; page-break-before: always; }
     .rfq th, .rfq td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 12px; }
@@ -461,9 +464,17 @@ export function buildReportHtml({
       .frame-inner { padding: 28px 18px 84px; }
       h1 { font-size: 30px; }
       .hero-money .figure { font-size: 46px; }
+      .ledger thead { display: none; }
+      .ledger, .ledger tbody { display: block; width: 100%; }
+      .ledger tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .ledger td { padding: 2px 0; border-bottom: 0; }
+      .ledger tr.balance { border-top: 1.5px solid var(--ink); border-bottom: 4px double var(--ink); }
+      .ledger tr.balance td { border-top: 0; border-bottom: 0; }
       .snapshot th, .snapshot td { display: block; width: 100%; }
       .snapshot th { border-bottom: 0; padding-bottom: 2px; }
       .snapshot td { padding-top: 2px; }
+      .snapshot.allowances tr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+      .snapshot.allowances th, .snapshot.allowances td { width: auto; border-bottom: 0; padding: 8px 0; }
       .brief-heading { align-items: flex-start; flex-direction: column; }
       .brief-total { text-align: left; }
       .brief-grid { grid-template-columns: 1fr; }
@@ -524,7 +535,7 @@ export function buildReportHtml({
         </table>
 
         ${result.costBreakdown ? `<h2>Hard &amp; Soft Cost Allowances</h2>
-        <table class="snapshot"><tbody>
+        <table class="snapshot allowances"><tbody>
           ${constructionBudgetRows(result.costBreakdown).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(formatCurrency(value))}</td></tr>`).join("")}
           <tr><th scope="row">Central project estimate</th><td>${escapeHtml(formatCurrency(result.costBreakdown.total))}</td></tr>
         </tbody></table><p>${escapeHtml(constructionBudgetNote)}</p>` : ""}
@@ -646,7 +657,7 @@ function buildBidChecklistHtml(parcel: Parcel): string {
               <tbody>
                 ${SCOPE_CHECKLIST.map(
                   (item, index) =>
-                    `<tr><td>${String(index + 1).padStart(2, "0")}</td><th scope="row"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.ask)}</span></th>${SCOPE_CHECKLIST_BUILDERS.map(() => `<td class="mark">☐ Incl.<br />$______</td>`).join("")}</tr>`,
+                    `<tr><td>${String(index + 1).padStart(2, "0")}</td><th scope="row"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.ask)}</span></th>${SCOPE_CHECKLIST_BUILDERS.map(() => `<td class="mark"><span class="check-box" aria-hidden="true"></span>Incl.<br />$______</td>`).join("")}</tr>`,
                 ).join("")}
               </tbody>
             </table>

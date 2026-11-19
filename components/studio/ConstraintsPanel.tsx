@@ -137,7 +137,7 @@ export default function ConstraintsPanel({
             if (rows.length === 0) return null;
             return (
               <div key={group}>
-                <p className="pb-0.5 pt-[18px] font-sans text-[10px] font-bold uppercase tracking-[0.08em] text-lot-stone">
+                <p className="pb-0.5 pt-[18px] lf-kicker font-bold text-lot-stone">
                   {group}
                   {group === "Economics" ? (
                     <span className="font-medium text-lot-stone"> · if built</span>
@@ -235,7 +235,7 @@ function RowTrailing({ item }: { item: ConstraintItem }) {
     return (
       <span className="lf-money-sm tabular-nums text-lot-ink">
         {item.value?.replace("/mo", "")}
-        <span className="ml-0.5 font-sans text-[10px] tabular-nums text-lot-stone">/mo</span>
+        <span className="ml-0.5 font-sans text-xs tabular-nums text-lot-stone">/mo</span>
       </span>
     );
   }

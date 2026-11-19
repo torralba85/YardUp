@@ -20,6 +20,8 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 beforeEach(() => {
+  mocks.google.mockResolvedValue({ profileCreated: true });
+  mocks.apple.mockResolvedValue({ profileCreated: true });
   window.sessionStorage.clear();
   mocks.user = null; mocks.profile = null;
   mocks.params = new URLSearchParams("role=builder");
@@ -135,5 +137,26 @@ describe("builder auth in store shells", () => {
     mocks.user = { uid: "builder" }; mocks.profile = { role: "builder" };
     render(<LoginForm />);
     expect(mocks.replace).toHaveBeenCalledWith("/builder");
+  });
+
+  it.each([
+    ["signup", SignupPage],
+    ["login", LoginForm],
+  ])("preserves ?next=/certificates across %s", async (_surface, Surface) => {
+    mocks.params = new URLSearchParams("next=/certificates");
+    if (Surface === SignupPage) {
+      render(<SignupPage />);
+      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Guest Buyer" } });
+      fireEvent.change(screen.getByLabelText("Email"), { target: { value: "buyer@example.com" } });
+      fireEvent.change(screen.getByLabelText("Password"), { target: { value: "buyer-password" } });
+      fireEvent.submit(screen.getByLabelText("Email").closest("form")!);
+      await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/certificates"));
+    } else {
+      mocks.user = { uid: "buyer" };
+      mocks.profile = { role: "user" };
+      render(<LoginForm />);
+      expect(mocks.replace).toHaveBeenCalledWith("/certificates");
+    }
   });
 });

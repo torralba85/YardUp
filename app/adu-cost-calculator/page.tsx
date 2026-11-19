@@ -96,7 +96,8 @@ const appJsonLd = {
 
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
-const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
+const thNumClass = "py-3 pl-4 text-right font-semibold text-lot-ink";
+const tdNumClass = "py-3 pl-4 text-right tabular-nums text-lot-ink";
 
 /**
  * California ADU cost calculator (`/adu-cost-calculator`): an interactive
@@ -109,6 +110,7 @@ export default function AduCostCalculatorPage() {
     <LegalPageShell
       title="ADU Cost Calculator for California"
       kicker="Build cost · Rental income · Payback"
+      layout="editorial"
     >
       <script
         type="application/ld+json"
@@ -138,14 +140,14 @@ export default function AduCostCalculatorPage() {
         <h2 id="adu-compare-scenarios" className="lf-card-heading text-lot-ink">
           How should you compare two ADU sizes before committing?
         </h2>
-        <p className="lf-body mt-3 text-lot-stone">
+        <p className="lf-body mt-3 text-lot-ink">
           Start with 600 sq ft and Conservative (HUD rent), then try 800 sq ft
           in the same county. Both use a one-bedroom rent anchor, so a larger
           footprint can raise cost without raising the modeled rent. Next,
           change the rent assumption to see how much your payback depends on it.
           Check current comparable rentals before relying on the higher scenarios.
         </p>
-        <p className="lf-body mt-3 text-lot-stone">
+        <p className="lf-body mt-3 text-lot-ink">
           Simple payback divides the modeled construction midpoint by annual
           rent after operating expenses. It is not a mortgage cash-flow forecast:
           use the <Link href="#financing" className="underline underline-offset-2 hover:text-lot-ink">loan and cash-flow calculator</Link>{" "}
@@ -178,8 +180,8 @@ export default function AduCostCalculatorPage() {
               <thead>
                 <tr className="border-b border-lot-line">
                   <th scope="col" className={thClass}>Unit size</th>
-                  <th scope="col" className={thClass}>Estimated build cost</th>
-                  <th scope="col" className={thClass}>Per sq ft</th>
+                  <th scope="col" className={thNumClass}>Estimated build cost</th>
+                  <th scope="col" className={thNumClass}>Per sq ft</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,10 +190,10 @@ export default function AduCostCalculatorPage() {
                     <th scope="row" className={thClass}>
                       {row.size.toLocaleString("en-US")} sq ft
                     </th>
-                    <td className={tdClass}>
+                    <td className={tdNumClass}>
                       {k(row.costLow)}–{k(row.costHigh)}
                     </td>
-                    <td className={tdClass}>
+                    <td className={tdNumClass}>
                       ${Math.round(row.costLow / row.size)}–${Math.round(row.costHigh / row.size)}
                     </td>
                   </tr>
@@ -218,7 +220,7 @@ export default function AduCostCalculatorPage() {
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
-                  <th key={size} scope="col" className={thClass}>
+                  <th key={size} scope="col" className={thNumClass}>
                     {size.toLocaleString("en-US")} sq ft
                   </th>
                 ))}
@@ -229,7 +231,7 @@ export default function AduCostCalculatorPage() {
                 <tr key={county.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
-                    <td key={row.size} className={tdClass}>
+                    <td key={row.size} className={tdNumClass}>
                       {formatCurrency(row.monthlyRent)}
                     </td>
                   ))}
@@ -244,7 +246,7 @@ export default function AduCostCalculatorPage() {
         <h2 id="adu-payback" className="lf-card-heading text-lot-ink">
           What is modeled ADU payback and ROI?
         </h2>
-        <p className="lf-body mt-3 text-lot-stone">
+        <p className="lf-body mt-3 text-lot-ink">
           Simple payback is the midpoint build cost divided by a year of rent
           after operating costs. It ignores financing, appreciation, and tax
           effects, so treat it as a comparison between options, not a forecast.
@@ -256,7 +258,7 @@ export default function AduCostCalculatorPage() {
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
-                  <th key={size} scope="col" className={thClass}>
+                  <th key={size} scope="col" className={thNumClass}>
                     {size.toLocaleString("en-US")} sq ft
                   </th>
                 ))}
@@ -267,7 +269,7 @@ export default function AduCostCalculatorPage() {
                 <tr key={county.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
-                    <td key={row.size} className={tdClass}>
+                    <td key={row.size} className={tdNumClass}>
                       {row.paybackYears.toFixed(1)} yrs
                     </td>
                   ))}

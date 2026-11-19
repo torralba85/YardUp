@@ -64,7 +64,7 @@ function RevenueMark({ tone = "light" }: { tone?: "light" | "dark" }) {
     <span
       aria-hidden
       className={cn(
-        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-sans text-[10px] font-bold tabular-nums",
+        "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-sans text-[11px] font-bold tabular-nums",
         tone === "dark"
           ? "bg-lot-surface-dark text-lot-chalk"
           : "bg-lot-surface text-lot-ink",

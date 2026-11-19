@@ -117,7 +117,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
           they are, and whether they trace to a verified local source. */}
       <div
         data-testid="market-provenance"
-        className={`flex items-start gap-1.5 border-t border-lot-line px-4 py-2 font-sans text-[10px] uppercase tracking-[0.08em] sm:px-5 lg:px-6 ${
+        className={`flex items-start gap-1.5 border-t border-lot-line px-4 py-2 font-sans text-[11px] uppercase tracking-[0.08em] sm:px-5 lg:px-6 ${
           unverifiedMarket ? "bg-status-review-soft text-status-review" : "bg-lot-surface text-lot-stone"
         }`}
       >

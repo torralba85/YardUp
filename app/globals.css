@@ -392,11 +392,25 @@ html[data-lf-consent="unset"] [data-consent-banner][data-pending] {
   display: block;
 }
 
-/* When cookie consent is unset on mobile, reserve bottom clearance so the fixed
-   banner does not occlude the primary actions at the bottom of the Studio journey. */
-@media (max-width: 639px) {
+/* When cookie consent is unset, reserve bottom clearance across mobile,
+   tablet, and desktop so the fixed banner does not occlude primary actions,
+   auth forms, editorial copy, or the Studio planning guide bar. */
+html[data-lf-consent="unset"] body {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+  html[data-lf-consent="unset"] {
+    --studio-consent-bar: 4.75rem;
+  }
+  html[data-lf-consent="unset"] body:has([data-testid="studio-overview"]) {
+    padding-bottom: 4.75rem;
+  }
+}
+
+@media (max-width: 1023px) {
   html[data-lf-consent="unset"] [data-testid="mobile-journey"] main {
-    padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

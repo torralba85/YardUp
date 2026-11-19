@@ -8,15 +8,16 @@
  */
 
 import { useRef } from "react";
+import { AlertTriangle, Check, Circle, CircleDot, X, type LucideIcon } from "lucide-react";
 import { PLATES, type PlateTick, type StudioPlate } from "@/lib/studio-plates";
 
-const TICK_META: Record<PlateTick, { glyph: string; label: string; className: string }> = {
-  eligible: { glyph: "✓", label: "eligible", className: "text-lot-chalk" },
-  review: { glyph: "△", label: "review", className: "text-status-review-on-dark" },
+const TICK_META: Record<PlateTick, { icon: LucideIcon; label: string; className: string }> = {
+  eligible: { icon: Check, label: "eligible", className: "text-lot-chalk" },
+  review: { icon: AlertTriangle, label: "review", className: "text-status-review-on-dark" },
   // On mahogany sidebar — use on-dark brick for AA contrast.
-  unlikely: { glyph: "✕", label: "unlikely", className: "text-status-blocked-on-dark" },
-  pending: { glyph: "·", label: "not started", className: "text-lot-stone-on-dark" },
-  ready: { glyph: "◦", label: "ready to record", className: "text-lot-chalk" },
+  unlikely: { icon: X, label: "unlikely", className: "text-status-blocked-on-dark" },
+  pending: { icon: Circle, label: "not started", className: "text-lot-stone-on-dark" },
+  ready: { icon: CircleDot, label: "ready to record", className: "text-lot-chalk" },
 };
 
 /** Arrow-key roving focus across the four surveyor plates. */
@@ -53,15 +54,15 @@ export default function FieldBookIndex({
   return (
     <div>
       <div className="px-2 pb-4">
-        <p className="lf-dataprint text-lot-stone-on-dark">
+        <p className="lf-kicker text-lot-stone-on-dark">
           Survey of
         </p>
         <p className="mt-1 truncate font-display text-base font-semibold text-lot-chalk">
           {subject.address}
         </p>
         {(subject.apn || subject.zone) && (
-          <p className="mt-0.5 font-sans text-[10px] text-lot-stone-on-dark">
-            {subject.apn ? `⌖ APN ${subject.apn}` : ""}
+          <p className="mt-0.5 font-sans text-xs text-lot-stone-on-dark">
+            {subject.apn ? `APN ${subject.apn}` : ""}
             {subject.apn && subject.zone ? " · " : ""}
             {subject.zone ?? ""}
           </p>
@@ -72,6 +73,7 @@ export default function FieldBookIndex({
         {PLATES.map((plate, index) => {
           const isActive = active === plate.id;
           const tick = TICK_META[statuses[plate.id]];
+          const TickIcon = tick.icon;
           return (
             <button
               key={plate.id}
@@ -106,14 +108,14 @@ export default function FieldBookIndex({
                 >
                   {plate.title}
                   {plate.optional && (
-                    <span className="lf-dataprint ml-1.5 text-lot-stone-on-dark">
+                    <span className="lf-kicker ml-1.5 text-lot-stone-on-dark">
                       optional
                     </span>
                   )}
                 </span>
               </span>
-              <span className={`shrink-0 font-sans text-xs ${tick.className}`} title={tick.label}>
-                {tick.glyph}
+              <span className={`inline-flex shrink-0 items-center ${tick.className}`} title={tick.label}>
+                <TickIcon size={13} aria-hidden="true" />
                 <span className="sr-only"> {tick.label}</span>
               </span>
             </button>
