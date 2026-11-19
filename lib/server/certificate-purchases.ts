@@ -156,6 +156,24 @@ export async function hasCertificate(uid: string, certKey: string): Promise<bool
   return snap.exists;
 }
 
+/**
+ * Check whether a user's certificate grant for a lot was recovered to another account.
+ *
+ * @param uid - The former owner's user id.
+ * @param certKey - The stable per-lot certificate key.
+ * @returns `true` if a grant document exists with `transferredFromUid === uid` for `certKey`.
+ */
+export async function wasCertificateTransferredFrom(
+  uid: string,
+  certKey: string,
+): Promise<boolean> {
+  const snap = await getAdminDb()
+    .collection(CERTIFICATE_PURCHASES)
+    .where("transferredFromUid", "==", uid)
+    .get();
+  return snap.docs.some((docSnap) => docSnap.data()?.certKey === certKey);
+}
+
 function normalizeEmail(raw: string | null | undefined): string | undefined {
   if (typeof raw !== "string") return undefined;
   const trimmed = raw.trim().toLowerCase();

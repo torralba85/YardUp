@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { useEffect, useState } from "react";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/lib/auth-context";
+import { GUEST_LOOKUP_LIMIT } from "@/lib/guest-lookup";
 import { rememberCapturedEmail } from "@/lib/certificate-purchase-intent";
 
 const mocks = vi.hoisted(() => ({
@@ -96,7 +97,7 @@ describe("AuthModal focus restore", () => {
   });
 
   it.each([
-    ["guest_limit", /That was your free address lookup/],
+    ["guest_limit", new RegExp(`You've used your ${GUEST_LOOKUP_LIMIT} free address lookups`)],
     ["post_result", /save this lot and come back/],
     ["save_scenario", /save this lot and come back/],
     ["certificate_purchase", /continue to checkout/],

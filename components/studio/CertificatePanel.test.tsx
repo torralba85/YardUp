@@ -15,6 +15,10 @@ import { CertificateCheckoutError } from "@/lib/certificate-checkout";
 import type { CertificateReturnIntent, CertificateRecovery } from "@/lib/certificate-recovery";
 import type { AuthModalProps } from "@/components/auth/AuthModal";
 import CertificatePanel, { type CertificatePanelProps } from "./CertificatePanel";
+import { clearInitialParcel, peekInitialParcel } from "@/lib/parcel-handoff";
+import { consumeAddressQuery, peekAddressQuery } from "@/lib/address-handoff";
+import { SAMPLE_LIVE_PARCEL } from "@/test/fixtures/live-parcel";
+import type { EstimatedParcel } from "@/lib/estimated-parcel";
 import {
   clearCertificatePurchaseIntent,
   hasCertificatePurchaseIntent,
@@ -281,6 +285,8 @@ function stubLocationAssign() {
 
 describe("CertificatePanel", () => {
   beforeEach(() => {
+    clearInitialParcel();
+    consumeAddressQuery();
     clearCertificatePurchaseIntent();
     clearAgentPass();
     clearAgentPassRedeemIntent();
@@ -1355,6 +1361,101 @@ describe("CertificatePanel", () => {
     } finally {
       fetchSpy.mockRestore();
     }
+  });
+
+  it("stashes a live parcel and certificate step before email or Google linking, and rolls back on failure", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.access.purchased = true;
+    mocks.auth.linkCheckoutWithEmail.mockResolvedValueOnce({ user: { uid: "anon-buyer-1" } });
+    mocks.auth.linkCheckoutWithGoogle.mockRejectedValueOnce({ code: "auth/credential-already-in-use" });
+
+    render(<CertificatePanel {...createProps({ parcel: SAMPLE_LIVE_PARCEL, parcelName: "500 Cedar Ave, San Jose, CA" })} />);
+
+    const saveSection = screen
+      .getByRole("heading", { name: "Save this certificate to an account" })
+      .closest("section")!;
+    fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Save with email" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Alma Reyes" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "owner@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save certificate to account" }));
+
+    await waitFor(() => expect(mocks.auth.linkCheckoutWithEmail).toHaveBeenCalledTimes(1));
+    expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
+    expect(new URLSearchParams(window.location.search).get("step")).toBe("certificate");
+
+    // A failed link attempt cleans up the handoff so stale state does not linger.
+    clearInitialParcel();
+    window.history.replaceState(null, "", "/");
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/An account with this email already exists/);
+    expect(peekInitialParcel()).toBeNull();
+    expect(new URLSearchParams(window.location.search).has("step")).toBe(false);
+  });
+
+  it("preserves a demo preset in the scenario URL without queuing an address lookup when linking", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.access.purchased = true;
+    mocks.auth.linkCheckoutWithGoogle.mockResolvedValueOnce({ user: { uid: "anon-buyer-1" } });
+    const preset = parcelPresets[0];
+    window.history.replaceState(null, "", `/studio?parcel=${preset.id}`);
+
+    render(<CertificatePanel {...createProps({ parcel: preset, parcelName: `${preset.address}, ${preset.city}` })} />);
+
+    const saveSection = screen
+      .getByRole("heading", { name: "Save this certificate to an account" })
+      .closest("section")!;
+    fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => expect(mocks.auth.linkCheckoutWithGoogle).toHaveBeenCalledTimes(1));
+    expect(peekInitialParcel()).toBeNull();
+    expect(peekAddressQuery()).toBeNull();
+    const params = new URLSearchParams(window.location.search);
+    expect(params.get("parcel")).toBe(preset.id);
+    expect(params.get("step")).toBe("certificate");
+  });
+
+  it("stashes an estimated parcel address query and certificate step before Google linking", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.access.purchased = true;
+    mocks.auth.linkCheckoutWithGoogle.mockResolvedValueOnce({ user: { uid: "anon-buyer-1" } });
+    const estimated: EstimatedParcel = {
+      ...parcelPresets[0],
+      lat: 47.65,
+      lng: -122.35,
+      basePresetId: parcelPresets[0].id,
+      source: "estimated",
+    };
+
+    render(<CertificatePanel {...createProps({ parcel: estimated, parcelName: `${estimated.address}, ${estimated.city}` })} />);
+
+    const saveSection = screen
+      .getByRole("heading", { name: "Save this certificate to an account" })
+      .closest("section")!;
+    fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() => expect(mocks.auth.linkCheckoutWithGoogle).toHaveBeenCalledTimes(1));
+    expect(peekInitialParcel()).toBeNull();
+    expect(peekAddressQuery()).toBe(`${estimated.address}, ${estimated.city}`);
+    expect(new URLSearchParams(window.location.search).get("step")).toBe("certificate");
   });
 
   it("shows decision-support offer copy and preliminary-estimate disclaimer before purchase", () => {

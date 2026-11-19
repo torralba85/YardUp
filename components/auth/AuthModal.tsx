@@ -17,6 +17,7 @@ import type { User as FirebaseUser } from "firebase/auth";
 import { Dialog } from "@/components/ui/Dialog";
 import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
+import { GUEST_LOOKUP_LIMIT } from "@/lib/guest-lookup";
 
 /**
  * Why the modal closed.
@@ -65,7 +66,7 @@ const FOCUSABLE_SELECTOR =
 function signUpBlurb(source: AuthPromptSource): string {
   switch (source) {
     case "guest_limit":
-      return "That was your free address lookup. A free account lets you look up more lots and keep your 3D design. No card needed.";
+      return `You've used your ${GUEST_LOOKUP_LIMIT} free address lookups. A free account lets you look up more lots and keep your 3D design. No card needed.`;
     case "post_result":
     case "save_scenario":
       return "Create a free account to save this lot and come back to your numbers and 3D design any time. No card needed.";

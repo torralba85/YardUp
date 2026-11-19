@@ -10,7 +10,11 @@ import { CHECKOUT_CANCELLED, CHECKOUT_RETURNED, CHECKOUT_RETURN_PARAM, CERTIFICA
 
 export interface CertificateGrant {
   parcelData?: LiveParcelData;
+  parcelName?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   analyticsOrderId?: string;
   amount?: number;
 }
@@ -140,7 +144,11 @@ export function useCertificateRecovery({
           const parcelData = normalizeLiveParcel(data.parcelData);
           const grant: CertificateGrant = {
             ...(parcelData ? { parcelData } : {}),
+            ...(typeof data.parcelName === "string" ? { parcelName: data.parcelName } : {}),
             ...(typeof data.address === "string" ? { address: data.address } : {}),
+            ...(typeof data.city === "string" ? { city: data.city } : {}),
+            ...(typeof data.state === "string" ? { state: data.state } : {}),
+            ...(typeof data.zip === "string" ? { zip: data.zip } : {}),
             ...(typeof data.analyticsOrderId === "string" ? { analyticsOrderId: data.analyticsOrderId } : {}),
             ...(typeof data.amount === "number" && Number.isFinite(data.amount) && data.amount >= 0 ? { amount: data.amount } : {}),
           };

@@ -119,6 +119,28 @@ export function formatCertificateLocality(
 }
 
 /**
+ * One-line address that re-finds a grant's lot when it has no stored parcel
+ * data. The street line alone is ambiguous ("202 C St" geocoded to Chula
+ * Vista, not San Diego), so the saved parcel name or the full locality is used.
+ */
+export function certificateSearchAddress(grant: {
+  parcelName?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}): string | undefined {
+  const parcelName = grant.parcelName?.trim();
+  if (parcelName) return parcelName;
+  const street = grant.address?.trim();
+  if (!street) return undefined;
+  const locality =
+    formatCertificateLocality(grant.city, grant.state, grant.zip) ||
+    [grant.state?.trim(), grant.zip?.trim()].filter(Boolean).join(" ");
+  return locality ? `${street}, ${locality}` : street;
+}
+
+/**
  * Fetch all certificate purchase grants held by an authenticated user.
  * Sorted client-side by purchase date descending (no composite index required).
  */
@@ -172,8 +194,9 @@ export async function fetchUserPurchasedCertificates(
 export function buildStudioUrlForCertificate(cert: PurchasedCertificate): string {
   if (cert.parcelData) {
     stashInitialParcel(cert.parcelData);
-  } else if (cert.address) {
-    stashAddressQuery(cert.address);
+  } else {
+    const query = certificateSearchAddress(cert);
+    if (query) stashAddressQuery(query);
   }
   return `/studio?cert=${encodeURIComponent(cert.certKey)}&${CHECKOUT_RETURN_PARAM}=${CERTIFICATE_OPEN}`;
 }

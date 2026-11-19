@@ -39,6 +39,7 @@ import {
   startCertificateCheckout,
 } from "@/lib/certificate-checkout";
 import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
+import { consumeAddressQuery, stashAddressQuery } from "@/lib/address-handoff";
 import {
   clearCertificatePurchaseIntent,
   hasCertificatePurchaseIntent,
@@ -95,6 +96,27 @@ export interface CertificatePanelProps {
 }
 
 /**
+ * Point the current URL's `step` at the certificate, or drop it, without a
+ * navigation, so a sign-in remount reopens this step.
+ *
+ * @returns Whether the URL changed.
+ */
+function setCertificateStepParam(on: boolean): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  if ((params.get("step") === "certificate") === on) return false;
+  if (on) params.set("step", "certificate");
+  else params.delete("step");
+  const query = params.toString();
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+  );
+  return true;
+}
+
+/**
  * The Certificate step: the free estimate snapshot plus the paywall for the
  * complete, downloadable Certificate of Feasibility (the user-revenue moment).
  *
@@ -148,6 +170,46 @@ export default function CertificatePanel({
   const [passBusy, setPassBusy] = useState(false);
   const [passError, setPassError] = useState<string | null>(null);
   const purchaseOperation = useRef(false);
+  const linkHandoffRef = useRef<{
+    stashedParcel: boolean;
+    stashedAddress: boolean;
+    addedStepParam: boolean;
+  } | null>(null);
+
+  const prepareLinkHandoff = useCallback(() => {
+    const isLive =
+      "source" in parcel &&
+      (parcel.source === "regrid" ||
+        parcel.source === "county-gis" ||
+        parcel.source === "fallback");
+    let stashedParcel = false;
+    let stashedAddress = false;
+    if (isLive) {
+      stashedParcel = stashInitialParcel(parcel as unknown as LiveParcelData);
+    } else if ("source" in parcel && parcel.source === "estimated") {
+      // Demo presets restore from the scenario URL. Estimated parcels need a full address.
+      const addressQuery =
+        parcelName.trim() ||
+        [parcel.address, parcel.city]
+          .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+          .join(", ");
+      if (addressQuery) {
+        stashAddressQuery(addressQuery);
+        stashedAddress = true;
+      }
+    }
+    const addedStepParam = setCertificateStepParam(true);
+    linkHandoffRef.current = { stashedParcel, stashedAddress, addedStepParam };
+  }, [parcel, parcelName]);
+
+  const rollbackLinkHandoff = useCallback(() => {
+    const handoff = linkHandoffRef.current;
+    linkHandoffRef.current = null;
+    if (!handoff) return;
+    if (handoff.stashedParcel) clearInitialParcel();
+    if (handoff.stashedAddress) consumeAddressQuery();
+    if (handoff.addedStepParam) setCertificateStepParam(false);
+  }, []);
 
   // The agent's code was captured from the link when the Studio opened.
   useEffect(() => {
@@ -550,6 +612,7 @@ export default function CertificatePanel({
     setAuthModeOverride(null);
     if (reason === "signed-in") return;
     pendingClaimAfterSignIn.current = false;
+    rollbackLinkHandoff();
     // Dismissed without an account: never start this purchase or claim on a later sign-in.
     clearCertificatePurchaseIntent();
     clearAgentPassRedeemIntent();
@@ -835,7 +898,10 @@ export default function CertificatePanel({
       {/* Anonymous web buyers can permanently link Google or email/password keeping the same UID. */}
       {purchased && !user && activeCheckoutUser?.isAnonymous && (
         <SaveCertificateAccountCard
+          onBeforeLink={prepareLinkHandoff}
+          onLinkError={rollbackLinkHandoff}
           onSignInExisting={() => {
+            prepareLinkHandoff();
             pendingClaimAfterSignIn.current = true;
             setAuthModeOverride("sign-in");
             setAuthOpen(true);
