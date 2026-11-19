@@ -279,6 +279,12 @@ jobs:
         run: node scripts/ci/deployment.mjs start
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      # Record live sitemap URLs and lastmod dates so the IndexNow step after
+      # the deploy pings only what changed. A failed snapshot never blocks a deploy.
+      - name: Snapshot live sitemaps for IndexNow
+        continue-on-error: true
+        timeout-minutes: 1
+        run: node scripts/indexnow-submit.mjs --snapshot "$RUNNER_TEMP/indexnow-before.json"
       - name: Deploy Firebase safely
         id: firebase
         run: |
@@ -420,10 +426,12 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
           DEPLOYMENT_OUTCOME: ${{ steps.firebase.outcome }}
-      # Tell Bing (and the other IndexNow engines) to recrawl every sitemap URL.
-      # An IndexNow outage or rate limit must never turn a good deploy red.
-      - name: Submit sitemap URLs to IndexNow
+      # Tell Bing (and the other IndexNow engines) to recrawl only the sitemap
+      # URLs this deploy added, re-dated or removed; without a snapshot it
+      # falls back to every URL. An IndexNow outage or rate limit must never
+      # turn a good deploy red.
+      - name: Submit changed sitemap URLs to IndexNow
         if: steps.firebase.outcome == 'success'
         continue-on-error: true
         timeout-minutes: 2
-        run: npm run seo:indexnow
+        run: node scripts/indexnow-submit.mjs --since "$RUNNER_TEMP/indexnow-before.json"
