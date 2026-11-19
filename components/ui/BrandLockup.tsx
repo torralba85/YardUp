@@ -19,9 +19,9 @@ export function ParcelMark({ className, strokeWidth = 4 }: { className?: string;
 /** Shared landing-aligned identity for product, account, and legal shells. */
 export function BrandLockup({ inverse = false, className }: { inverse?: boolean; className?: string }) {
   return (
-    <span role="img" aria-label="LotFoundry" className={cn("inline-flex items-center gap-2.5 whitespace-nowrap", inverse ? "text-lot-chalk" : "text-lot-ink", className)}>
+    <span role="img" aria-label="LotFoundry" className={cn("inline-flex items-center gap-1.5 whitespace-nowrap min-[360px]:gap-2.5", inverse ? "text-lot-chalk" : "text-lot-ink", className)}>
       <ParcelMark className="h-full max-h-10 w-auto shrink-0" />
-      <span aria-hidden="true" className="font-display text-2xl font-semibold tracking-[-0.055em]">LotFoundry.</span>
+      <span aria-hidden="true" className="font-display text-lg font-semibold tracking-[-0.055em] min-[360px]:text-2xl">LotFoundry.</span>
     </span>
   );
 }
