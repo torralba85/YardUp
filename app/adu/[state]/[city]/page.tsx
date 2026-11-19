@@ -42,7 +42,7 @@ export default async function AduCityPage({
   const content = getCity(state, city);
   if (!content) notFound();
   return (
-    <LegalPageShell title={content.h1 ?? `ADU Rules in ${content.city} (2026)`}>
+    <LegalPageShell title={content.h1 ?? `ADU Rules in ${content.city} (2026)`} layout="editorial">
       <AduArticle content={content} />
     </LegalPageShell>
   );

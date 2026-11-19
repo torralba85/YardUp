@@ -25,7 +25,8 @@ import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
-const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
+const thNumClass = "py-3 pl-4 text-right font-semibold text-lot-ink";
+const tdNumClass = "py-3 pl-4 text-right tabular-nums text-lot-ink";
 
 
 const number = (value: number) => value.toLocaleString("en-US");
@@ -159,7 +160,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <h2 id="sd-permit-findings" className="lf-card-heading text-lot-ink">
           What the permits show
         </h2>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-ink">
           <li>
             Permitted units rose from {number(firstYear.units)} in {firstYear.year} to{" "}
             {number(latestFull.units)} in {latestFull.year}. {lastYear.year} had{" "}
@@ -192,32 +193,45 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <h2 id="sd-permits-by-year" className="lf-card-heading text-lot-ink">
           San Diego ADU permits by year
         </h2>
-        <div className="mt-4 overflow-x-auto">
+        <ul className="mt-4 divide-y divide-lot-line border-y border-lot-line sm:hidden">
+          {byYear.map((row) => (
+            <li key={row.year} className="py-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="font-semibold text-lot-ink">{yearLabel(row.year)}</span>
+                <span className="font-semibold tabular-nums text-lot-ink">{number(row.units)} units</span>
+              </div>
+              <p className="mt-1 text-xs leading-5 tabular-nums text-lot-stone">
+                {number(row.approvals)} permits · {number(row.aduUnits)} ADUs · {number(row.jaduUnits)} JADUs · {number(row.bonusAduUnits)} bonus · {number(row.affordableAduUnits)} income-restricted · {percent(row.multiUnitShare)} 2+
+              </p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 hidden overflow-x-auto sm:block">
           <table className={tableClass}>
             <caption className="sr-only">City of San Diego ADU and JADU building permits by year</caption>
             <thead>
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>Year</th>
-                <th scope="col" className={thClass}>Permits</th>
-                <th scope="col" className={thClass}>Units</th>
-                <th scope="col" className={thClass}>ADUs</th>
-                <th scope="col" className={thClass}>JADUs</th>
-                <th scope="col" className={thClass}>Bonus ADUs</th>
-                <th scope="col" className={thClass}>Income-restricted</th>
-                <th scope="col" className={thClass}>Permits adding 2+</th>
+                <th scope="col" className={thNumClass}>Permits</th>
+                <th scope="col" className={thNumClass}>Units</th>
+                <th scope="col" className={thNumClass}>ADUs</th>
+                <th scope="col" className={thNumClass}>JADUs</th>
+                <th scope="col" className={thNumClass}>Bonus ADUs</th>
+                <th scope="col" className={thNumClass}>Income-restricted</th>
+                <th scope="col" className={thNumClass}>Permits adding 2+</th>
               </tr>
             </thead>
             <tbody>
               {byYear.map((row) => (
                 <tr key={row.year} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{yearLabel(row.year)}</th>
-                  <td className={tdClass}>{number(row.approvals)}</td>
-                  <td className={tdClass}>{number(row.units)}</td>
-                  <td className={tdClass}>{number(row.aduUnits)}</td>
-                  <td className={tdClass}>{number(row.jaduUnits)}</td>
-                  <td className={tdClass}>{number(row.bonusAduUnits)}</td>
-                  <td className={tdClass}>{number(row.affordableAduUnits)}</td>
-                  <td className={tdClass}>{percent(row.multiUnitShare)}</td>
+                  <td className={tdNumClass}>{number(row.approvals)}</td>
+                  <td className={tdNumClass}>{number(row.units)}</td>
+                  <td className={tdNumClass}>{number(row.aduUnits)}</td>
+                  <td className={tdNumClass}>{number(row.jaduUnits)}</td>
+                  <td className={tdNumClass}>{number(row.bonusAduUnits)}</td>
+                  <td className={tdNumClass}>{number(row.affordableAduUnits)}</td>
+                  <td className={tdNumClass}>{percent(row.multiUnitShare)}</td>
                 </tr>
               ))}
             </tbody>
@@ -229,7 +243,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <h2 id="sd-permits-by-area" className="lf-card-heading text-lot-ink">
           ADU permits by community planning area
         </h2>
-        <p className="lf-body mt-3 text-lot-stone">
+        <p className="lf-body mt-3 text-lot-ink">
           All {byArea.length} planning areas, ordered by permitted units and placed by
           each permit&apos;s mapped location.
           {multiUnitAreas.length > 0 ? (
@@ -240,7 +254,30 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
             </>
           ) : null}
         </p>
-        <div className="mt-4 overflow-x-auto">
+        <ul className="mt-4 divide-y divide-lot-line border-y border-lot-line sm:hidden">
+          {shown.map((area) => (
+            <li key={area.name} className="py-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="font-semibold text-lot-ink">
+                  {area.approvals >= PERMIT_AREA_MIN_APPROVALS ? (
+                    <Link href={permitAreaPath(area)} className={linkClass}>
+                      {area.name}
+                    </Link>
+                  ) : (
+                    area.name
+                  )}
+                </span>
+                <span className="shrink-0 font-semibold tabular-nums text-lot-ink">
+                  {number(area.units)} units
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 tabular-nums text-lot-stone">
+                {number(area.approvals)} permits · {number(area.bonusAduUnits)} bonus · {number(area.affordableAduUnits)} income-restricted · {percent(area.multiUnitShare)} 2+ · {number(area.unitsByYear[String(latestFull.year)] ?? 0)} in {latestFull.year}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 hidden overflow-x-auto sm:block">
           <table className={tableClass}>
             <caption className="sr-only">
               City of San Diego ADU and JADU permits by community planning area
@@ -248,24 +285,24 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
             <thead>
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>Planning area</th>
-                <th scope="col" className={thClass}>Units</th>
-                <th scope="col" className={thClass}>Permits</th>
-                <th scope="col" className={thClass}>Bonus ADUs</th>
-                <th scope="col" className={thClass}>Income-restricted</th>
-                <th scope="col" className={thClass}>Permits adding 2+</th>
-                <th scope="col" className={thClass}>Units in {latestFull.year}</th>
+                <th scope="col" className={thNumClass}>Units</th>
+                <th scope="col" className={thNumClass}>Permits</th>
+                <th scope="col" className={thNumClass}>Bonus ADUs</th>
+                <th scope="col" className={thNumClass}>Income-restricted</th>
+                <th scope="col" className={thNumClass}>Permits adding 2+</th>
+                <th scope="col" className={thNumClass}>Units in {latestFull.year}</th>
               </tr>
             </thead>
             <tbody>
               {shown.map((area) => (
                 <tr key={area.name} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>{area.approvals >= PERMIT_AREA_MIN_APPROVALS ? <Link href={permitAreaPath(area)} className={linkClass}>{area.name}</Link> : area.name}</th>
-                  <td className={tdClass}>{number(area.units)}</td>
-                  <td className={tdClass}>{number(area.approvals)}</td>
-                  <td className={tdClass}>{number(area.bonusAduUnits)}</td>
-                  <td className={tdClass}>{number(area.affordableAduUnits)}</td>
-                  <td className={tdClass}>{percent(area.multiUnitShare)}</td>
-                  <td className={tdClass}>{number(area.unitsByYear[String(latestFull.year)] ?? 0)}</td>
+                  <td className={tdNumClass}>{number(area.units)}</td>
+                  <td className={tdNumClass}>{number(area.approvals)}</td>
+                  <td className={tdNumClass}>{number(area.bonusAduUnits)}</td>
+                  <td className={tdNumClass}>{number(area.affordableAduUnits)}</td>
+                  <td className={tdNumClass}>{percent(area.multiUnitShare)}</td>
+                  <td className={tdNumClass}>{number(area.unitsByYear[String(latestFull.year)] ?? 0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -325,7 +362,7 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <h2 id="sd-permit-method" className="lf-card-heading text-lot-ink">
           How this study counts permits
         </h2>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-ink">
           <li>
             Source: the City of San Diego&apos;s{" "}
             <a href={PERMIT_DATASET_URL} rel="noopener" className={linkClass}>

@@ -6,6 +6,7 @@ import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
+import { safeRedirectPath } from "@/lib/auth-redirect";
 import { isAppleSignInEnabled } from "@/lib/auth-providers";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import {
@@ -15,6 +16,7 @@ import {
   trackSignupSucceeded,
 } from "@/lib/analytics/events";
 import { AuthLayout } from "@/components/auth/AuthLayout";
+import { Button } from "@/components/ui/Button";
 import { Checkbox, Input } from "@/components/ui/Field";
 import { useRadioGroup, type RadioItemProps } from "@/components/ui/useRadioGroup";
 import { useSignupFormState } from "@/hooks/useSignupFormState";
@@ -28,6 +30,7 @@ function SignupForm() {
   const [isPending, startTransition] = useTransition();
 
   const initialRole = searchParams.get("role") === "builder" ? "builder" : "user";
+  const nextParam = searchParams.get("next");
   const {
     displayName,
     email,
@@ -44,6 +47,14 @@ function SignupForm() {
   const role = buildersAllowed ? selectedRole : "user";
   const [error, setError] = useState<string | null>(null);
 
+  const destinationAfterAuth = (resolvedRole: string) => {
+    const allowBuilder = !isNativeAppShell();
+    if (nextParam) {
+      return safeRedirectPath(nextParam, allowBuilder);
+    }
+    return allowBuilder && resolvedRole === "builder" ? "/builder" : "/studio";
+  };
+
   useEffect(() => {
     trackAuthPromptShown({
       surface: "signup_page",
@@ -55,9 +66,13 @@ function SignupForm() {
   useEffect(() => {
     if (user && profile) {
       const allowBuilder = !isNativeAppShell();
-      router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
+      if (nextParam) {
+        router.replace(safeRedirectPath(nextParam, allowBuilder));
+      } else {
+        router.replace(allowBuilder && profile.role === "builder" ? "/builder" : "/studio");
+      }
     }
-  }, [profile, router, user]);
+  }, [nextParam, profile, router, user]);
 
   // Called before the signed-in early return so the hook order never changes.
   const { groupProps: roleGroupProps, getRadioProps: getRoleRadioProps } = useRadioGroup({
@@ -98,7 +113,7 @@ function SignupForm() {
           source: "direct_signup",
           role,
         });
-        router.push(role === "builder" ? "/builder" : "/studio");
+        router.push(destinationAfterAuth(role));
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         trackSignupFailed({
@@ -135,7 +150,7 @@ function SignupForm() {
           source: "direct_signup",
           role,
         });
-        router.push(role === "builder" ? "/builder" : "/studio");
+        router.push(destinationAfterAuth(role));
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         trackSignupFailed({
@@ -172,7 +187,7 @@ function SignupForm() {
           source: "direct_signup",
           role,
         });
-        router.push(role === "builder" ? "/builder" : "/studio");
+        router.push(destinationAfterAuth(role));
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         trackSignupFailed({
@@ -246,12 +261,15 @@ function SignupForm() {
             ? "Google account creation is ready."
             : "Check the age, Terms and Privacy confirmation above to enable Google account creation."}
       </p>
-      <button
+      <Button
         type="button"
+        variant="commit"
+        size="md"
+        fullWidth
         onClick={handleGoogle}
         aria-describedby="signup-social-consent-help"
         disabled={isPending || !legalAccepted}
-        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:opacity-50"
+        className="mt-4 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path
@@ -272,20 +290,23 @@ function SignupForm() {
           />
         </svg>
         {isPending ? "Connecting..." : "Google"}
-      </button>
+      </Button>
       {appleEnabled && (
-        <button
+        <Button
           type="button"
+          variant="commit"
+          size="md"
+          fullWidth
           onClick={handleApple}
           aria-describedby="signup-social-consent-help"
           disabled={isPending || !legalAccepted}
-          className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:opacity-50"
+          className="mt-2 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
           </svg>
           {isPending ? "Connecting..." : "Apple"}
-        </button>
+        </Button>
       )}
 
       <div className="relative mt-6">
@@ -352,18 +373,24 @@ function SignupForm() {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="md"
+          fullWidth
           disabled={isPending || !legalAccepted}
-          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-(--duration-settle) ease-settle hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
+          loading={isPending}
         >
           {isPending ? "Creating account..." : "Create account"}
-        </button>
+        </Button>
       </form>
 
       <p className="lf-body-sm mt-6 text-center text-lot-stone">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-lot-orange-ink hover:text-lot-ink">
+        <Link
+          href={nextParam ? `/login?next=${encodeURIComponent(nextParam)}` : "/login"}
+          className="font-medium text-lot-orange-ink hover:text-lot-ink"
+        >
           Sign in
         </Link>
       </p>

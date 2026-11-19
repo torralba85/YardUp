@@ -32,6 +32,7 @@ export default function AduMethodologyPage() {
     <LegalPageShell
       title="How LotFoundry Estimates ADU Cost, Rent and Payback"
       kicker={`Methodology · Reviewed ${METHODOLOGY_AS_OF}`}
+      layout="editorial"
     >
       <AduMethodology />
     </LegalPageShell>

@@ -396,28 +396,28 @@ export default function StyleMatchPanel({
 
             {showDeveloperTestControls && (
               <div className="mt-4 border border-dashed border-lot-line p-2 flex flex-col gap-1.5 bg-lot-surface">
-                <div className="font-sans text-[9px] uppercase text-lot-orange-ink text-center font-bold">
+                <div className="font-sans text-[11px] uppercase text-lot-orange-ink text-center font-bold">
                   Dev Test Controls
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <button
                     type="button"
                     onClick={triggerSuccess}
-                    className="inline-flex min-h-11 items-center rounded-control bg-status-eligible px-3 py-1 font-sans text-[10px] font-semibold text-lot-chalk motion-safe:transition hover:bg-status-eligible-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-status-eligible px-3 py-1 font-sans text-xs font-semibold text-lot-chalk motion-safe:transition hover:bg-status-eligible-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Success]
                   </button>
                   <button
                     type="button"
                     onClick={triggerError}
-                    className="inline-flex min-h-11 items-center rounded-control bg-status-blocked px-3 py-1 font-sans text-[10px] font-semibold text-lot-chalk motion-safe:transition hover:bg-status-blocked-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control bg-status-blocked px-3 py-1 font-sans text-xs font-semibold text-lot-chalk motion-safe:transition hover:bg-status-blocked-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Error]
                   </button>
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-control border border-status-review/40 bg-status-review-soft px-3 py-1 font-sans text-[10px] font-semibold text-status-review motion-safe:transition hover:bg-status-review-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control border border-status-review/40 bg-status-review-soft px-3 py-1 font-sans text-xs font-semibold text-status-review motion-safe:transition hover:bg-status-review-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>

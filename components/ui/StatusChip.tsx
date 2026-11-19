@@ -64,7 +64,7 @@ export function StatusChip({ status, label, size = "sm", className }: StatusChip
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-none border font-sans font-semibold uppercase tracking-[0.08em]",
-        size === "sm" ? "h-[22px] px-2 text-[9.5px]" : "h-6 px-2.5 text-[11px]",
+        size === "sm" ? "h-6 px-2 text-[11px]" : "h-7 px-2.5 text-xs",
         config.className,
         className,
       )}

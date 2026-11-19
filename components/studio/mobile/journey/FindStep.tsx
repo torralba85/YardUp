@@ -125,7 +125,7 @@ export default function FindStep({
         })}
       </div>
 
-      <div className="mt-auto pt-8">
+      <div className="mt-8">
         <Button
           type="button"
           variant="primary"

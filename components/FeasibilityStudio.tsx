@@ -543,6 +543,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
+  const [mobilePresetPicked, setMobilePresetPicked] = useState(false);
   // The URL named a demo lot (a landing or shared link), so the mobile Find
   // CTA keeps that lot rather than switching to the San Diego example.
   const [presetFromLink, setPresetFromLink] = useState(false);
@@ -824,6 +825,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setJourneyStep("find");
     journeyHistory.reset();
     setDemoCommitted(false);
+    setMobilePresetPicked(false);
     setFineTuneOpen(false);
     setReportAutoFocus(false);
     setProjectBriefState(null);
@@ -843,6 +845,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   function handleMobilePresetSelect(presetId: string) {
+    setMobilePresetPicked(true);
     switchToPreset(presetId);
   }
 
@@ -1331,7 +1334,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onSubmitText={(query) => searchByAddress(query)}
           parcelLoading={parcelLoading}
           parcelError={parcelError}
-          selectedPresetId={parcelMode === "preset" ? parcelId : null}
+          selectedPresetId={parcelMode === "preset" && (presetFromLink || demoCommitted || mobilePresetPicked) ? parcelId : null}
           presetChosen={presetFromLink}
           onPresetSelect={handleMobilePresetSelect}
           onReveal={() => {
@@ -1450,7 +1453,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           pageScroll={!nativeShell}
           header={
             <MobileHeader
-              address={isRealAddressActive ? shellAddress.address : activeParcel.address}
+              address={
+                isRealAddressActive
+                  ? shellAddress.address
+                  : found || presetFromLink || mobilePresetPicked
+                    ? activeParcel.address
+                    : "Choose a lot or demo"
+              }
               estimated={parcelMode === "estimated"}
               onReset={resetScenario}
             />
@@ -1584,13 +1593,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             <span className="font-semibold">
               Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
             </span>
-            <button
-              type="button"
-              onClick={handleChangeAddress}
-              className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              Evaluate My Lot
-            </button>
+            {(activeStep !== "feasibility" || certificateUnlocked) && (
+              <button
+                type="button"
+                onClick={handleChangeAddress}
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              >
+                Evaluate My Lot
+              </button>
+            )}
           </div>
         )}
         {showsVerdictBand && certificateUnlocked && !isRealAddressActive && (
@@ -1921,7 +1932,7 @@ function SceneViewToggle({
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>

@@ -31,6 +31,7 @@ export default function CaliforniaJaduPage() {
     <LegalPageShell
       title="Junior ADU (JADU) Rules in California"
       kicker={`State law · Gov. Code §§66333–66339 · Checked ${JADU_AS_OF}`}
+      layout="editorial"
     >
       <CaliforniaJaduGuide />
     </LegalPageShell>
