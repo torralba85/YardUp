@@ -938,6 +938,9 @@ Do not require external GA network delivery to make product E2E pass. Mock or in
   and sessions carrying the bounded `lf:analytics-internal=1` sessionStorage marker
   (set the marker, then reload: event wrappers re-read it on every call, but an
   already-loaded tag is only switched off on the next mount)
+- [x] load the Cloudflare Web Analytics beacon only on `lotfoundry.net` / `www.lotfoundry.net`,
+  and never in WebDriver or internally marked sessions (`lib/analytics/cloudflare-beacon.ts`),
+  so localhost dev and Playwright runs stop counting as production visits
 - [x] tests prove no address/coordinate/contact fields are sent
 - [x] update analytics documentation with the no-PII contract
 - [x] verify consent withdrawal and regrant satisfy the corrected contract
