@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Award, ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { claimCertificatesByEmail } from "@/lib/certificate-checkout";
 import { Button } from "@/components/ui/Button";
 import { Bezel } from "@/components/ui/Bezel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -13,6 +15,7 @@ import { SiteHeader } from "@/components/legal/SiteHeader";
 import {
   useUserPurchasedCertificates,
   formatCertKeyFallback,
+  formatCertificateLocality,
   buildStudioUrlForCertificate,
 } from "@/lib/purchased-certificates";
 
@@ -31,9 +34,39 @@ function formatPrice(cents: number): string {
 
 export function CertificatesClient() {
   const router = useRouter();
-  const { user, profile, loading: authLoading, logout } = useAuth();
+  const { user, profile, loading: authLoading, logout, refreshProfile, sendVerification } = useAuth();
   const { certificates, loading: certsLoading, error, refresh } =
     useUserPurchasedCertificates(user?.uid);
+  const [recoveredCount, setRecoveredCount] = useState(0);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [checkingRecovery, setCheckingRecovery] = useState(false);
+  const [recoveryError, setRecoveryError] = useState(false);
+  const [recoveryAttempt, setRecoveryAttempt] = useState(0);
+  const claimedUidRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading || !user || !user.emailVerified) return;
+    if (claimedUidRef.current === user.uid) return;
+    claimedUidRef.current = user.uid;
+    let cancelled = false;
+    void (async () => {
+      try {
+        // Forced: a token minted before email verification still says
+        // email_verified=false, and the claim route rejects it.
+        const idToken = await user.getIdToken(true);
+        const outcome = await claimCertificatesByEmail(idToken);
+        if (!cancelled && (outcome.claimedCertKeys.length > 0 || outcome.alreadyOwnedCertKeys.length > 0)) {
+          setRecoveredCount(outcome.claimedCertKeys.length);
+          refresh();
+        }
+      } catch {
+        if (!cancelled) setRecoveryError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, refresh, user, user?.emailVerified, recoveryAttempt]);
 
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "Member";
   const roleLabel = profile?.role === "builder" ? "Builder" : "Lot owner";
@@ -63,18 +96,21 @@ export function CertificatesClient() {
           }
         />
 
-        <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <div className="mx-auto max-w-md px-4 py-16 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
             <Award className="h-6 w-6 text-lot-orange-ink" />
           </div>
-          <h1 className="lf-section-heading mt-6">Certificates of Feasibility</h1>
-          <p className="lf-body-sm mt-3 text-lot-stone">
-            Sign in to view, download, and open unlocked certificates for your properties.
+          <h1 className="lf-panel-heading mt-6 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
+          <p className="lf-body-sm mt-3 text-lot-ink">
+            Sign in to view, download, and reopen unlocked certificates for your properties.
           </p>
-          <div className="mt-8">
+          <p className="mt-3 border border-lot-line bg-lot-surface px-4 py-3 text-left text-xs leading-5 text-lot-ink">
+            Purchased a certificate as a guest? Sign in or create a free account using the same email address from checkout and verify it to claim your certificate.
+          </p>
+          <div className="mt-6">
             <Link
               href="/login?next=/certificates"
-              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
+              className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover"
             >
               Sign in
             </Link>
@@ -82,7 +118,7 @@ export function CertificatesClient() {
           <div className="mt-4">
             <Link
               href="/signup?next=/certificates"
-              className="text-sm font-medium text-lot-orange-ink"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-lot-orange-ink underline underline-offset-4 hover:text-lot-ink"
             >
               Create free account
             </Link>
@@ -116,12 +152,71 @@ export function CertificatesClient() {
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <div className="border-b border-lot-line pb-6">
           <p className="lf-kicker-dense text-lot-stone">RECORDS · UNLOCKED PROPERTIES</p>
-          <h1 className="lf-section-heading mt-2">Certificates of Feasibility</h1>
+          <h1 className="lf-panel-heading mt-2 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
           <p className="lf-body-sm mt-2 max-w-2xl text-lot-stone">
             Official feasibility records and verified property analyses unlocked for your lots.
             Every certificate remains unlocked permanently and can be reopened in the 3D Studio anytime.
           </p>
         </div>
+
+        {recoveryError && (
+          <div className="mt-6 border border-lot-line p-4">
+            <p role="alert" className="text-sm text-lot-ink">Could not check for guest purchases. Your existing certificates are still available.</p>
+            <Button type="button" variant="secondary" size="xs" className="mt-2" onClick={() => {
+              claimedUidRef.current = null;
+              setRecoveryError(false);
+              setRecoveryAttempt((attempt) => attempt + 1);
+            }}>Retry guest purchase recovery</Button>
+          </div>
+        )}
+
+        {recoveredCount > 0 && (
+          <p
+            role="status"
+            className="mt-6 rounded-none border border-status-eligible/30 bg-status-eligible-soft px-4 py-3 text-sm text-status-eligible"
+          >
+            Recovered {recoveredCount} guest {recoveredCount === 1 ? "certificate" : "certificates"} linked to your verified email.
+          </p>
+        )}
+
+        {!certsLoading && !user.emailVerified && (
+          <div className="mt-6 rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-xs leading-5 text-lot-ink">
+            <p>
+              Purchased as a guest? Verify your email address ({user.email}) to recover any certificates bought with the same email.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {typeof sendVerification === "function" && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => {
+                    void sendVerification()
+                      .then(() => setVerificationSent(true))
+                      .catch(() => undefined);
+                  }}
+                >
+                  {verificationSent ? "Verification email sent" : "Resend verification email"}
+                </Button>
+              )}
+              {typeof refreshProfile === "function" && (
+                <Button
+                  type="button"
+                  variant="commit"
+                  size="xs"
+                  loading={checkingRecovery}
+                  onClick={() => {
+                    setCheckingRecovery(true);
+                    claimedUidRef.current = null;
+                    void refreshProfile().finally(() => setCheckingRecovery(false));
+                  }}
+                >
+                  I&apos;ve verified — check again
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {certsLoading ? (
           <div className="space-y-4 py-12" role="status" aria-busy="true">
@@ -177,11 +272,7 @@ export function CertificatesClient() {
                 const fallback = formatCertKeyFallback(cert.certKey);
                 const title = cert.parcelName || cert.address || fallback.title;
                 const subtitle =
-                  cert.city && cert.state
-                    ? `${cert.city}, ${cert.state}${cert.zip ? ` ${cert.zip}` : ""}`
-                    : cert.city
-                      ? `${cert.city}${cert.zip ? ` ${cert.zip}` : ""}`
-                      : fallback.subtitle;
+                  formatCertificateLocality(cert.city, cert.state, cert.zip) ?? fallback.subtitle;
 
                 return (
                   <Bezel key={cert.id}>

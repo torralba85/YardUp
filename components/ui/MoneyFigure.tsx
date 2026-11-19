@@ -24,8 +24,8 @@ const SIZE_CLASS: Record<MoneyFigureSize, string> = {
 const UNIT_SIZE_CLASS: Record<MoneyFigureSize, string> = {
   hero: "text-base",
   band: "text-sm",
-  inline: "text-[10px]",
-  sm: "text-[10px]",
+  inline: "text-xs",
+  sm: "text-xs",
 };
 
 const TONE_CLASS: Record<MoneyFigureTone, string> = {

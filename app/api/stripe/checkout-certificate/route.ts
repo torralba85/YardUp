@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  CURRENT_LEGAL_CONSENT,
+  isValidCurrentLegalConsent,
+} from "@/lib/legal-consent";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import {
   replaceExpiredActiveCheckout,
   reserveActiveCheckout,
@@ -58,23 +63,55 @@ function cancelReturnQuery(returnQuery: string): string {
   return params.toString();
 }
 
+function normalizeEmail(raw: string | null | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 /**
  * POST /api/stripe/checkout-certificate  { certKey, parcelName, checkoutAttemptId? }
  *
- * Starts a certificate purchase for the authenticated user. With a Stripe key:
+ * Starts a certificate purchase for the authenticated user (including silent
+ * Firebase anonymous sessions on web after legal consent). With a Stripe key:
  * creates a Checkout session and returns its URL. Without one (demo): grants
  * immediately and stamps the purchase `demo` — gated so a production deploy
  * (which always carries a key) can never reach the demo branch.
  */
 export async function POST(request: NextRequest) {
-  const auth = await requireApiAuth(request);
+  const auth = await requireApiAuth(request, { allowAnonymous: true });
   if (auth instanceof NextResponse) return auth;
   const uid = auth.uid;
+  if (auth.isAnonymous) {
+    const limited = checkRateLimit(request, {
+      limit: 20,
+      namespace: "checkout-certificate-guest",
+      windowMs: 60_000,
+    });
+    if (limited) return limited;
+  }
   // Checkout locks a customer_email prefill, so only a verified address from
   // the ID token is used; the request body can never supply one.
   const verifiedEmail = auth.emailVerified && auth.email ? auth.email : undefined;
 
   const body = await request.json().catch(() => null);
+  const hasValidConsent = isValidCurrentLegalConsent(body?.legalConsent);
+  if (auth.isAnonymous && !hasValidConsent) {
+    return NextResponse.json(
+      {
+        error:
+          "Confirm that you are 18 or older and accept the Terms and Privacy Policy before continuing to checkout.",
+      },
+      { status: 400 },
+    );
+  }
+  const consentFields = hasValidConsent
+    ? {
+        consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
+        privacyVersion: CURRENT_LEGAL_CONSENT.privacyVersion,
+        consentAcceptedAt: new Date().toISOString(),
+      }
+    : undefined;
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
   const parcelName =
     typeof body?.parcelName === "string" ? body.parcelName.trim() : "";
@@ -142,6 +179,9 @@ export async function POST(request: NextRequest) {
       lat,
       lng,
       parcelData,
+      ...(verifiedEmail ? { buyerEmail: verifiedEmail } : {}),
+      ...(auth.isAnonymous ? { anonymousCheckout: true } : {}),
+      ...(consentFields ?? {}),
     });
     return NextResponse.json({ status: "granted", demo: true });
   }
@@ -183,6 +223,14 @@ export async function POST(request: NextRequest) {
       zip: zip ?? "",
       ...(lat !== undefined ? { lat: String(lat) } : {}),
       ...(lng !== undefined ? { lng: String(lng) } : {}),
+      ...(auth.isAnonymous ? { anonymousCheckout: "true" } : {}),
+      ...(consentFields
+        ? {
+            consentVersion: consentFields.consentVersion,
+            privacyVersion: consentFields.privacyVersion,
+            consentAcceptedAt: consentFields.consentAcceptedAt,
+          }
+        : {}),
     },
   };
 
@@ -214,7 +262,11 @@ export async function POST(request: NextRequest) {
               "stripe/checkout-certificate",
             )
           ) {
-            await grantCertificate({
+            const sessionBuyerEmail = normalizeEmail(
+              existing.customer_details?.email ?? existing.customer_email,
+            );
+            const existingMeta = existing.metadata ?? {};
+            const created = await grantCertificate({
               uid,
               certKey,
               stripeSessionId: existing.id,
@@ -226,7 +278,24 @@ export async function POST(request: NextRequest) {
               zip: reservation.parameters.zip || undefined,
               lat: reservation.parameters.lat ? Number(reservation.parameters.lat) : undefined,
               lng: reservation.parameters.lng ? Number(reservation.parameters.lng) : undefined,
+              ...(sessionBuyerEmail ? { buyerEmail: sessionBuyerEmail } : {}),
+              ...(existingMeta.anonymousCheckout === "true" || auth.isAnonymous
+                ? { anonymousCheckout: true }
+                : {}),
+              ...(existingMeta.consentVersion
+                ? {
+                    consentVersion: existingMeta.consentVersion,
+                    privacyVersion: existingMeta.privacyVersion,
+                    consentAcceptedAt: existingMeta.consentAcceptedAt,
+                  }
+                : consentFields ?? {}),
             });
+            if (created === false && !(await hasCertificate(uid, certKey))) {
+              return NextResponse.json(
+                { error: "This certificate was recovered to another account. Sign in to that account to open it." },
+                { status: 409 },
+              );
+            }
             return NextResponse.json({ status: "granted", reconciled: true });
           }
 
@@ -325,6 +394,16 @@ export async function POST(request: NextRequest) {
             ...(reservedZip ? { zip: reservedZip.slice(0, 20) } : {}),
             ...(reservedLat ? { lat: reservedLat } : {}),
             ...(reservedLng ? { lng: reservedLng } : {}),
+            ...(reservation.parameters.anonymousCheckout === "true" || auth.isAnonymous
+              ? { anonymousCheckout: "true" }
+              : {}),
+            ...(reservation.parameters.consentVersion
+              ? {
+                  consentVersion: reservation.parameters.consentVersion,
+                  privacyVersion: reservation.parameters.privacyVersion,
+                  consentAcceptedAt: reservation.parameters.consentAcceptedAt,
+                }
+              : {}),
           },
           // Stamp which certificate was bought so the return only unlocks the
           // panel whose key matches (the studio may rehydrate a different parcel).

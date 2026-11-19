@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const resources = [
+  { href: "/can-i-build-a-backyard-home", label: "Can I build a backyard home? (60-second ADU quiz)", detail: "Answer 5 yes/no questions to check ADU eligibility and jump into your lot in 3D." },
   { href: "/adu/ca/can-i-build-an-adu", label: "Can I build an ADU on my property?", detail: "California eligibility rules and a 5-point parcel checklist." },
   { href: "/adu/ca", label: "California ADU rules by city", detail: "Find the right jurisdiction and its source documents." },
   { href: "/adu/ca/cost", label: "California ADU cost guide", detail: "Budget by unit size, understand fees, and compare complete quotes." },

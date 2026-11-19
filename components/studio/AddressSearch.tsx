@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
-import { AlertTriangle, CheckCircle2, MapPin, Search } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Circle, MapPin, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { recordAddressSearchSubmission } from "@/lib/analytics/events";
 import {
@@ -49,6 +49,8 @@ export interface AddressSearchProps {
    * steals focus on first paint.
    */
   autoFocusSignal?: number;
+  /** Render the ephemeral-address privacy reassurance line beneath the input. */
+  showPrivacyNote?: boolean;
 }
 
 /**
@@ -119,6 +121,7 @@ export default function AddressSearch({
   placeholder = "Search property address…",
   disabled = false,
   autoFocusSignal,
+  showPrivacyNote = false,
 }: AddressSearchProps) {
   const hasPlacesKey = looksLikeBrowserKey(process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY);
   const { user } = useAuth();
@@ -534,7 +537,7 @@ export default function AddressSearch({
       <button
         type="submit"
         disabled={isDisabled || !inputValue.trim()}
-        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-control px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:bg-lot-stone-soft disabled:text-lot-stone enabled:bg-lot-orange enabled:text-lot-ink enabled:hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-1"
+        className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-control px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone enabled:bg-lot-orange enabled:text-lot-ink enabled:hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />
         Search
@@ -581,7 +584,7 @@ export default function AddressSearch({
           })}
           <li
             role="presentation"
-            className="flex items-center justify-between border-t border-lot-line px-3 py-1.5 text-xs uppercase tracking-wide text-lot-stone"
+            className="flex items-center justify-between border-t border-lot-line px-3 py-1.5 text-xs uppercase tracking-[0.08em] text-lot-stone"
           >
             <span>↑↓ to select · Tab/Enter to choose</span>
             {googleEnabled && <span>Google Maps</span>}
@@ -635,7 +638,7 @@ export default function AddressSearch({
                       });
                     }
                   }}
-                  className="shrink-0 rounded-control border border-lot-stone px-2 py-0.5 text-xs font-semibold text-lot-ink hover:bg-lot-chalk focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-control border border-lot-stone px-3 text-xs font-semibold text-lot-ink hover:bg-lot-chalk focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
                 >
                   Use standardized
                 </button>
@@ -668,38 +671,53 @@ export default function AddressSearch({
           </span>
           <span className="inline-flex items-center gap-2">
             <span
-              className={
+              className={`inline-flex items-center gap-1 ${
                 clientReadiness.hasStreetNumber
                   ? "font-medium text-status-eligible"
                   : "text-lot-stone"
-              }
+              }`}
             >
-              {clientReadiness.hasStreetNumber ? "✓ Street #" : "○ Street #"}
+              {clientReadiness.hasStreetNumber ? (
+                <Check size={12} aria-hidden="true" />
+              ) : (
+                <Circle size={10} aria-hidden="true" />
+              )}
+              <span>Street #</span>
             </span>
             <span
-              className={
+              className={`inline-flex items-center gap-1 ${
                 clientReadiness.hasStreetName
                   ? "font-medium text-status-eligible"
                   : "text-lot-stone"
-              }
+              }`}
             >
-              {clientReadiness.hasStreetName ? "✓ Street" : "○ Street"}
+              {clientReadiness.hasStreetName ? (
+                <Check size={12} aria-hidden="true" />
+              ) : (
+                <Circle size={10} aria-hidden="true" />
+              )}
+              <span>Street</span>
             </span>
             <span
-              className={
+              className={`inline-flex items-center gap-1 ${
                 clientReadiness.hasLocalityOrState
                   ? "font-medium text-status-eligible"
                   : "text-lot-stone"
-              }
+              }`}
             >
-              {clientReadiness.hasLocalityOrState ? "✓ City/State" : "○ City/State"}
+              {clientReadiness.hasLocalityOrState ? (
+                <Check size={12} aria-hidden="true" />
+              ) : (
+                <Circle size={10} aria-hidden="true" />
+              )}
+              <span>City/State</span>
             </span>
             {signedIn && clientReadiness.isCompleteCandidate && (
               <button
                 type="button"
                 disabled={validatingServer}
                 onClick={() => void handleVerifyAddress()}
-                className="rounded-control border border-lot-stone bg-lot-chalk px-2 py-0.5 text-xs font-semibold text-lot-ink hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink disabled:opacity-60"
+                className="inline-flex min-h-11 shrink-0 items-center rounded-control border border-lot-stone bg-lot-chalk px-3 text-xs font-semibold text-lot-ink hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink disabled:opacity-60"
               >
                 {validatingServer ? "Verifying…" : "Verify"}
               </button>
@@ -713,6 +731,12 @@ export default function AddressSearch({
           Type a full address (street, city, state) and press Search.
         </p>
       ) : null}
+
+      {showPrivacyNote && (
+        <p className="mt-2 text-xs leading-5 text-lot-stone">
+          We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
+        </p>
+      )}
     </form>
   );
 }

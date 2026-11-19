@@ -55,7 +55,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/builder");
 
     await expect(page).toHaveURL(/\/login\?next=\/builder$/);
-    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Builder sign in" })).toBeVisible();
   });
 
   test("guest sees a locked planning preview instead of the permit breakdown", async ({ page, viewport }) => {

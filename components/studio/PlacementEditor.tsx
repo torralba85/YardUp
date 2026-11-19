@@ -5,18 +5,16 @@ import { Button } from "@/components/ui/Button";
 import { NumericField } from "./NumericField";
 import type { Pose2D } from "@/lib/scene-model";
 import { buildAduHeightModel } from "@/lib/scene-model";
-import type { ADUConfig } from "@/lib/feasibility";
-import {
-  getStudioEnhancementsSnapshot,
-  updateStudioDesign,
-} from "@/lib/studio-enhancements-store";
-import { snapPoseToSetbackEnvelope } from "@/hooks/useSetbackCollision";
+import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import { snapPoseToSetbackEnvelope } from "@/lib/scene-placement";
 
 export function PlacementEditor({
+  parcel,
   config,
   pose,
   onChange,
 }: {
+  parcel: Parcel;
   config: ADUConfig;
   pose: Pose2D;
   onChange(pose: Pose2D): void;
@@ -24,27 +22,20 @@ export function PlacementEditor({
   const total = buildAduHeightModel(config)?.totalHeight;
   const [snapEnabled, setSnapEnabled] = useState(false);
 
-  useEffect(() => {
-    updateStudioDesign(config, pose);
-  }, [config, pose]);
-
   // Optional magnetic snap also catches drag commits, because this editor sees
   // the shared committed pose after the R3F gesture completes.
   useEffect(() => {
     if (!snapEnabled) return;
-    const parcel = getStudioEnhancementsSnapshot().parcel;
-    if (!parcel) return;
     const snapped = snapPoseToSetbackEnvelope(parcel, config, pose, 0.5);
     if (snapped && (snapped.x !== pose.x || snapped.z !== pose.z)) onChange(snapped);
-  }, [config, onChange, pose, snapEnabled]);
+  }, [config, onChange, parcel, pose, snapEnabled]);
 
   function commit(next: Pose2D) {
     if (!snapEnabled) {
       onChange(next);
       return;
     }
-    const parcel = getStudioEnhancementsSnapshot().parcel;
-    onChange(parcel ? snapPoseToSetbackEnvelope(parcel, config, next, 0.5) ?? next : next);
+    onChange(snapPoseToSetbackEnvelope(parcel, config, next, 0.5) ?? next);
   }
 
   return (

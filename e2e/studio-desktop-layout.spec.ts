@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
+import { buildScenarioShareUrl } from "../lib/scenario-url";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 // A common laptop viewport. At this height the 2026-10-18 shell clipped every
@@ -103,7 +103,7 @@ test("a signed-in real lot leaves no blank page below the Studio", async ({ page
       await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toBeVisible();
     } else {
       await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
-      await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+      await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
     }
     const geometry = await stepGeometry(page);
     expect(geometry.documentHeight, `${step} page scroll`).toBeLessThanOrEqual(geometry.viewportHeight);

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { dispatchScenarioEmail, renderScenarioEmail, scenarioHeadlineNumbers } from "./studio-scenario-email";
-import { buildScenarioShareUrl } from "../scenario-share-url";
+import { buildScenarioShareUrl } from "../scenario-url";
 
 const resendMocks = vi.hoisted(() => ({ construct: vi.fn(), send: vi.fn() }));
 vi.mock("resend", () => ({

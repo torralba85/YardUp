@@ -5,8 +5,7 @@ import { CheckCircle2, Copy, Mail, TriangleAlert } from "lucide-react";
 import { Checkbox, Input, FieldLabel } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import type { SavedScenario } from "@/lib/saved-scenarios";
-import { serializeScenarioParams } from "@/lib/scenario-url";
-import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-share-url";
+import { buildScenarioShareUrl, isAllowedScenarioUrl, serializeScenarioParams } from "@/lib/scenario-url";
 import { readCapturedEmail, rememberCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { trackEvent } from "@/lib/analytics/gtag";
 
@@ -77,7 +76,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
   }
 
   return (
-    <section aria-labelledby={`${id}-heading`} className="@container min-w-0 rounded-none border border-lot-line bg-lot-surface p-4 text-lot-ink">
+    <section aria-labelledby={`${id}-heading`} className="relative @container min-w-0 rounded-none border border-lot-line bg-lot-surface p-4 text-lot-ink">
       <div className="flex items-start gap-3">
         <Mail size={19} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
         <div className="min-w-0">

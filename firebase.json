@@ -22,6 +22,10 @@
         "function": "apiStripe"
       },
       {
+        "source": "/api/certificates/claim",
+        "function": "apiStripe"
+      },
+      {
         "source": "/api/store/**",
         "function": "apiStore"
       },

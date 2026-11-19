@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { calculateZoning } from "./zoning";
+import { calculateZoning, getZoningCapacityStatus } from "./zoning";
 import {
   calculateFeasibility,
   configForFootprint,
   defaultAduConfig,
   defaultFinancialAssumptions,
   getParcelById,
+  parcelPresets,
 } from "./feasibility";
-import { getSiteFitCapacityStatus } from "./site-fit";
 import { summarizeFeasibility } from "./feasibility-verdict";
 
 describe("calculateZoning", () => {
@@ -108,16 +108,44 @@ describe("California's 800 sq ft ADU protection (Gov. Code § 66321(b)(3))", () 
   it("explains the protection in the site-fit status and the verdict rows", () => {
     const config = configForFootprint(600, defaultAduConfig);
     const result = calculateFeasibility(lot, config, defaultFinancialAssumptions);
-    expect(getSiteFitCapacityStatus(result.remainingCapacity, lot, result.capacityBasis)).toMatchObject({
+    expect(getZoningCapacityStatus(result.remainingCapacity, lot, result.capacityBasis)).toMatchObject({
       title: "200 sf of room under California's 800 sf ADU protection",
       tone: "ok",
     });
-    expect(getSiteFitCapacityStatus(-200, lot, "california-800").title).toBe("200 sf over California's 800 sf ADU protection");
+    expect(getZoningCapacityStatus(-200, lot, "california-800").title).toBe("200 sf over California's 800 sf ADU protection");
     const rows = summarizeFeasibility(lot, result, config).constraints;
     expect(rows.find((row) => row.id === "coverage")).toMatchObject({
       status: "clear",
       detail: "Over the limit, but California doesn't let coverage block an ADU up to 800 sf (Gov. Code § 66321(b)(3))",
     });
     expect(rows.find((row) => row.id === "capacity")?.detail).toBe("Room up to the 800 sf California protects from lot-coverage limits");
+  });
+
+  describe("getZoningCapacityStatus", () => {
+    it("treats zero remaining capacity as within the modeled allowance", () => {
+      expect(getZoningCapacityStatus(0)).toMatchObject({
+        title: "0 sf of modeled coverage remains",
+        tone: "ok",
+      });
+    });
+
+    it("preserves over-capacity wording when county GIS rules are estimated", () => {
+      const parcel = {
+        ...parcelPresets[0],
+        source: "county-gis",
+        zoning: "Unknown",
+        existingHouseSqft: 1000,
+      };
+      expect(getZoningCapacityStatus(-380, parcel)).toMatchObject({
+        title: "380 sf over assumed coverage allowance",
+        tone: "warn",
+      });
+    });
+
+    it("does not label unknown or assumed county GIS capacity as clear", () => {
+      const parcel = { ...parcelPresets[0], source: "county-gis", zoning: "Unknown", existingHouseSqft: 0 };
+      expect(getZoningCapacityStatus(1800, parcel)).toMatchObject({ title: "Coverage capacity unknown", tone: "warn" });
+      expect(getZoningCapacityStatus(800, { ...parcel, existingHouseSqft: 1000 })).toMatchObject({ tone: "warn" });
+    });
   });
 });

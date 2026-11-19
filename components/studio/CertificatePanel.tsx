@@ -9,8 +9,11 @@ import type {
   AIProjectBriefPreview,
   AIProjectBriefResponse,
 } from "@/lib/ai-types";
-import { useAuth } from "@/lib/auth-context";
+import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
+import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
 import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { trackPurchase } from "@/lib/analytics/adsConversion";
@@ -32,6 +35,7 @@ import type { CertificateRecovery } from "@/lib/certificate-recovery";
 import Link from "next/link";
 import {
   CertificateCheckoutError,
+  claimCertificatesByEmail,
   startCertificateCheckout,
 } from "@/lib/certificate-checkout";
 import { clearInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
@@ -61,6 +65,7 @@ import {
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
 import AgentPassOffer from "./AgentPassOffer";
+import SaveCertificateAccountCard from "./SaveCertificateAccountCard";
 
 /** Props for {@link CertificatePanel}. */
 export interface CertificatePanelProps {
@@ -112,18 +117,33 @@ export default function CertificatePanel({
   projectBriefError,
   onGenerateProjectBrief,
 }: CertificatePanelProps) {
-  const { user, profile, loading: authLoading } = useAuth();
+  const {
+    user,
+    checkoutUser,
+    profile,
+    loading: authLoading,
+    ensureCheckoutUser,
+    refreshProfile,
+    sendVerification,
+  } = useAuth();
+  const activeCheckoutUser = checkoutUser ?? user;
   const certKey = certificateKey(parcel);
   const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guestLegalAccepted, setGuestLegalAccepted] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [authModeOverride, setAuthModeOverride] = useState<"sign-in" | "sign-up" | null>(null);
   const [preparingBrief, setPreparingBrief] = useState(false);
+  const [claimNotice, setClaimNotice] = useState<string | null>(null);
+  const [claimBusy, setClaimBusy] = useState(false);
   const checkoutCancelled = recovery.intent?.kind === "cancel";
   const openedOnUnlock = useRef(false);
   const sawSettledUnpurchased = useRef(false);
   const adsConversionFiredFor = useRef<string | null>(null);
   const paywallViewedFor = useRef<string | null>(null);
+  const autoClaimedFor = useRef<string | null>(null);
+  const pendingClaimAfterSignIn = useRef(false);
   const [linkedPassCode, setLinkedPassCode] = useState<string | null>(null);
   const [passBusy, setPassBusy] = useState(false);
   const [passError, setPassError] = useState<string | null>(null);
@@ -143,6 +163,9 @@ export default function CertificatePanel({
     sawSettledUnpurchased.current = false;
     adsConversionFiredFor.current = null;
     paywallViewedFor.current = null;
+    autoClaimedFor.current = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setClaimNotice(null);
   }, [certKey]);
 
   // Track certificate paywall view once per lot context for unpurchased visitors.
@@ -160,7 +183,7 @@ export default function CertificatePanel({
   }, [loading, purchased, certKey, user, feasibilityStatus, recovery]);
 
   const prepareAndOpenCertificate = useCallback(async () => {
-    if (!user) {
+    if (!activeCheckoutUser) {
       setAuthOpen(true);
       return;
     }
@@ -171,7 +194,7 @@ export default function CertificatePanel({
       if (!projectBrief) {
         let idToken: string;
         try {
-          idToken = await user.getIdToken();
+          idToken = await activeCheckoutUser.getIdToken();
         } catch {
           const message = "We could not verify your session. Please try again.";
           setError(message);
@@ -189,7 +212,7 @@ export default function CertificatePanel({
     } finally {
       setPreparingBrief(false);
     }
-  }, [onGenerateProjectBrief, onOpenCertificate, projectBrief, user]);
+  }, [activeCheckoutUser, onGenerateProjectBrief, onOpenCertificate, projectBrief]);
 
   // Return recovery owns marker consumption and acknowledgement across panel remounts.
   useEffect(() => {
@@ -208,28 +231,29 @@ export default function CertificatePanel({
   useEffect(() => {
     const unlockedThisSession =
       sawSettledUnpurchased.current || (recovery.status === "granted" && recovery.intent?.kind !== "cancel" && Boolean(recovery.intent));
-    if (purchased && user && unlockedThisSession && !openedOnUnlock.current) {
+    if (purchased && activeCheckoutUser && unlockedThisSession && !openedOnUnlock.current) {
       if (recovery.intent && recovery.intent.kind !== "cancel" && !recovery.consumeOpen()) return;
       openedOnUnlock.current = true;
       // Preparing the Report follows an externally verified Grant transition.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void prepareAndOpenCertificate();
     }
-    // Only a signed-in read counts as "settled unpurchased": before Firebase
-    // auth resolves, the access hook reports not-loading/not-purchased for
-    // the guest uid, and treating that as settled would make a returning
-    // purchaser's grant look like an in-session unlock on every fresh load.
-    if (user && !loading && !purchased) {
+    // Only an authenticated read (registered or anonymous checkout session)
+    // counts as "settled unpurchased": before Firebase auth resolves, the
+    // access hook reports not-loading/not-purchased for the guest uid, and
+    // treating that as settled would make a returning purchaser's grant look
+    // like an in-session unlock on every fresh load.
+    if (activeCheckoutUser && !loading && !purchased) {
       sawSettledUnpurchased.current = true;
       openedOnUnlock.current = false;
     }
-  }, [loading, prepareAndOpenCertificate, purchased, user, recovery]);
+  }, [activeCheckoutUser, loading, prepareAndOpenCertificate, purchased, recovery]);
 
   // Report the GA4 purchase event and Google Ads conversion exactly once per Stripe
   // checkout return using the safe, opaque analyticsOrderId.
   // Suppresses emission if analyticsOrderId is absent to guarantee zero PII transmission.
   useEffect(() => {
-    if (!purchased || !user) return;
+    if (!purchased || !activeCheckoutUser) return;
     if (recovery.intent?.kind !== "checkout") return;
     if (adsConversionFiredFor.current === certKey) return;
     if (!analyticsOrderId || !recovery.consumePurchase()) return;
@@ -249,9 +273,78 @@ export default function CertificatePanel({
       value: valueDollars,
       transactionId: analyticsOrderId,
     });
-  }, [purchased, user, certKey, analyticsOrderId, amount, recovery]);
+  }, [activeCheckoutUser, purchased, certKey, analyticsOrderId, amount, recovery]);
 
-  const beginCheckout = useCallback(async (authenticatedUser: FirebaseUser) => {
+  const attemptClaimForUser = useCallback(
+    async (signedInUser: FirebaseUser, explicit: boolean) => {
+      if (!signedInUser.emailVerified) {
+        if (explicit) {
+          setClaimNotice(
+            "Verify your email address before recovering a guest purchase made with that email.",
+          );
+        }
+        return;
+      }
+      if (explicit) {
+        setClaimBusy(true);
+        setClaimNotice(null);
+      }
+      try {
+        // Forced: a token minted before email verification still says
+        // email_verified=false, and the claim route rejects it.
+        const idToken = await signedInUser.getIdToken(true);
+        const outcome = await claimCertificatesByEmail(idToken, certKey);
+        if (
+          outcome.claimedCertKeys.includes(certKey) ||
+          outcome.alreadyOwnedCertKeys.includes(certKey)
+        ) {
+          setClaimNotice(null);
+          refresh();
+        } else if (explicit) {
+          setClaimNotice(
+            "No paid guest purchase matching your verified email was found for this property.",
+          );
+        }
+      } catch (err) {
+        if (explicit) {
+          setClaimNotice(
+            err instanceof CertificateCheckoutError
+              ? err.message
+              : "Could not check for guest purchases right now.",
+          );
+        }
+      } finally {
+        if (explicit) setClaimBusy(false);
+      }
+    },
+    [certKey, refresh],
+  );
+
+  // When a verified member lands on a lot they don't own yet (or just signed in
+  // after an account-exists linking collision / cleared-storage return),
+  // automatically check for a matching paid guest purchase once per uid:certKey.
+  useEffect(() => {
+    if (!user || authLoading || loading || purchased) return;
+    const claimKey = `${user.uid}:${certKey}`;
+    const explicit = pendingClaimAfterSignIn.current;
+    if (!explicit && autoClaimedFor.current === claimKey) return;
+    if (explicit && !user.emailVerified) {
+      pendingClaimAfterSignIn.current = false;
+      setClaimNotice(
+        "Verify your email address before recovering a guest purchase made with that email.",
+      );
+      return;
+    }
+    if (!user.emailVerified) return;
+    autoClaimedFor.current = claimKey;
+    pendingClaimAfterSignIn.current = false;
+    void attemptClaimForUser(user, explicit);
+  }, [attemptClaimForUser, authLoading, certKey, loading, purchased, user]);
+
+  const beginCheckout = useCallback(async (
+    authenticatedUser: FirebaseUser,
+    legalConsent?: typeof CURRENT_LEGAL_CONSENT,
+  ) => {
     if (purchaseOperation.current) return;
     purchaseOperation.current = true;
     setBusy(true);
@@ -284,6 +377,7 @@ export default function CertificatePanel({
         lat: "lat" in parcel && typeof parcel.lat === "number" ? parcel.lat : undefined,
         lng: "lng" in parcel && typeof parcel.lng === "number" ? parcel.lng : undefined,
         parcelData: isLive ? (parcel as unknown as Record<string, unknown>) : undefined,
+        legalConsent,
       });
       if (outcome.kind === "redirect") {
         // Record the successful URL handoff, immediately before navigation.
@@ -390,16 +484,52 @@ export default function CertificatePanel({
     await redeemPass(user, code);
   }
 
+  const certPrice = useStorePrice("certificate");
+  const price = certPrice.amountCompact;
+  const isWebChannel = certPrice.channel === "web";
+
   async function handleCta() {
     if (purchaseOperation.current) return;
     clearAgentPassRedeemIntent();
     const recoveryActive = Boolean(recovery.intent && recovery.intent.kind !== "cancel");
-    if (recoveryActive && !purchased && user) return;
+    if (recoveryActive && !purchased && activeCheckoutUser) return;
     if (purchased) {
       await prepareAndOpenCertificate();
       return;
     }
     if (!user) {
+      if (!recoveryActive && isWebChannel) {
+        if (!guestLegalAccepted) {
+          setError(
+            "Confirm that you are 18 or older and accept the Terms and Privacy Policy before continuing to checkout.",
+          );
+          return;
+        }
+        if (typeof ensureCheckoutUser === "function") {
+          let targetUser = activeCheckoutUser;
+          if (!targetUser) {
+            setBusy(true);
+            setError(null);
+            try {
+              targetUser = await ensureCheckoutUser();
+            } catch (err: unknown) {
+              const code = getAuthErrorCode(err);
+              setBusy(false);
+              setError(
+                code === "auth/operation-not-allowed" ||
+                  code === "auth/admin-restricted-operation"
+                  ? "Guest checkout is not enabled yet. Please create a free account or sign in to continue."
+                  : code
+                    ? getAuthErrorMessage(code)
+                    : "Could not start checkout. Please try again.",
+              );
+              return;
+            }
+          }
+          await beginCheckout(targetUser, CURRENT_LEGAL_CONSENT);
+          return;
+        }
+      }
       if (!recoveryActive) {
         // Signing in remounts the Studio for a real address, so keep the lot
         // and the purchase click where the next mount can find them.
@@ -408,6 +538,7 @@ export default function CertificatePanel({
         }
         rememberCertificatePurchaseIntent(certKey);
       }
+      setAuthModeOverride(recoveryActive ? "sign-in" : null);
       setAuthOpen(true);
       return;
     }
@@ -416,7 +547,9 @@ export default function CertificatePanel({
 
   function handleAuthClose(reason: AuthModalCloseReason) {
     setAuthOpen(false);
+    setAuthModeOverride(null);
     if (reason === "signed-in") return;
+    pendingClaimAfterSignIn.current = false;
     // Dismissed without an account: never start this purchase or claim on a later sign-in.
     clearCertificatePurchaseIntent();
     clearAgentPassRedeemIntent();
@@ -426,26 +559,22 @@ export default function CertificatePanel({
     }
   }
 
-  // A store shell is charged the store's own localized amount, so the paywall
-  // names a price only when it is the one that will actually be billed.
-  const certPrice = useStorePrice("certificate");
-  const price = certPrice.amountCompact;
-  const guestPurchaseAction = certPrice.channel === "web"
+  const guestPurchaseAction = isWebChannel
     ? "Continue to secure checkout"
     : "Continue to purchase";
   const feeJurisdiction = resolveFeeJurisdiction(parcel);
   const recoveryPending = !purchased && Boolean(recovery.intent && recovery.intent.kind !== "cancel");
-  const reportBusy = busy || passBusy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(user));
+  const reportBusy = busy || passBusy || loading || preparingBrief || projectBriefLoading || (recoveryPending && Boolean(activeCheckoutUser));
 
   const ctaLabel = recoveryPending
-    ? user
+    ? activeCheckoutUser
       ? recovery.status === "unverified" ? "Certificate access unverified" : "Checking certificate access"
       : "Sign in to verify certificate access"
     : reportBusy
     ? purchased
       ? "Preparing complete certificate"
       : busy
-        ? certPrice.channel === "web" ? "Opening secure checkout" : "Opening purchase"
+        ? isWebChannel ? "Opening secure checkout" : "Opening purchase"
         : "Preparing certificate"
     : purchased
     ? "View complete certificate"
@@ -480,6 +609,40 @@ export default function CertificatePanel({
     />
   );
 
+  const guestConsentControl = !purchased && !recoveryPending && !user && isWebChannel ? (
+    <label className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
+      <Checkbox
+        checked={guestLegalAccepted}
+        onChange={(event) => {
+          setGuestLegalAccepted(event.target.checked);
+          if (error) setError(null);
+        }}
+        className="mt-0.5"
+      />
+      <span>
+        I confirm I am 18 or older and agree to the{" "}
+        <Link
+          href="/terms"
+          target="_blank"
+          rel="noopener"
+          className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+        >
+          Terms &amp; Conditions
+        </Link>{" "}
+        (including the arbitration agreement, class action waiver and release of claims) and{" "}
+        <Link
+          href="/privacy"
+          target="_blank"
+          rel="noopener"
+          className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </span>
+    </label>
+  ) : undefined;
+
   return (
     // Centered artifact layout; the estimate and the unlock offer are its content.
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-6 py-10">
@@ -502,19 +665,77 @@ export default function CertificatePanel({
 
       {recoveryPending && (
         <div className="rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-sm leading-5 text-lot-ink" role="status">
-          <p>{!user ? "Sign in to verify your Certificate access." : recovery.status === "checking"
+          <p>{!activeCheckoutUser ? "Sign in to verify your Certificate access." : recovery.status === "checking"
             ? "Checking certificate access. Your access record may still be arriving."
             : "We could not verify Certificate access yet. This does not mean your payment failed."}</p>
           <div className="mt-2 flex flex-wrap items-center gap-4">
-            {user && recovery.status === "unverified" && (
+            {activeCheckoutUser && recovery.status === "unverified" && (
               <button type="button" className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" onClick={recovery.retry}>
                 Check again
               </button>
+            )}
+            {user && !user.emailVerified && typeof refreshProfile === "function" && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="xs"
+                loading={claimBusy}
+                onClick={async () => {
+                  await refreshProfile();
+                }}
+              >
+                I&apos;ve verified my email
+              </Button>
+            )}
+            {user && user.emailVerified && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="xs"
+                loading={claimBusy}
+                onClick={() => void attemptClaimForUser(user, true)}
+              >
+                Check for guest purchase
+              </Button>
             )}
             <Link className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href="/certificates">
               My Certificates
             </Link>
           </div>
+        </div>
+      )}
+
+      {claimNotice && !purchased && (
+        <div role="status" className="rounded-none border border-lot-line bg-lot-surface px-4 py-3 text-xs leading-5 text-lot-ink">
+          <p>{claimNotice}</p>
+          {user && !user.emailVerified && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {typeof sendVerification === "function" && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => void sendVerification().catch(() => undefined)}
+                >
+                  Resend verification email
+                </Button>
+              )}
+              {typeof refreshProfile === "function" && (
+                <Button
+                  type="button"
+                  variant="commit"
+                  size="xs"
+                  loading={claimBusy}
+                  onClick={async () => {
+                    pendingClaimAfterSignIn.current = true;
+                    await refreshProfile();
+                  }}
+                >
+                  I&apos;ve verified — check again
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -525,10 +746,11 @@ export default function CertificatePanel({
         parcelName={parcelName}
         result={result}
         feasibilityStatus={feasibilityStatus}
-        onGenerateReport={handleCta}
+        onGenerateReport={() => void handleCta()}
         reportCtaLabel={ctaLabel}
         reportCtaBusy={reportBusy}
         reportCtaNote={ctaNote}
+        consentControl={guestConsentControl}
         error={!purchased ? error : null}
         certificateUnlocked={purchased}
         feeJurisdiction={feeJurisdiction}
@@ -610,6 +832,17 @@ export default function CertificatePanel({
         </div>
       )}
 
+      {/* Anonymous web buyers can permanently link Google or email/password keeping the same UID. */}
+      {purchased && !user && activeCheckoutUser?.isAnonymous && (
+        <SaveCertificateAccountCard
+          onSignInExisting={() => {
+            pendingClaimAfterSignIn.current = true;
+            setAuthModeOverride("sign-in");
+            setAuthOpen(true);
+          }}
+        />
+      )}
+
       {/* Methodology stays one tap away, below the purchase decision rather than above it. */}
       {purchased && <details className="rounded-none border border-lot-line bg-lot-chalk px-4">
         <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
@@ -679,7 +912,7 @@ export default function CertificatePanel({
 
       <AuthModal
         isOpen={authOpen}
-        initialMode={recoveryPending ? "sign-in" : "sign-up"}
+        initialMode={authModeOverride ?? (recoveryPending ? "sign-in" : "sign-up")}
         analyticsSurface="studio"
         analyticsSource="certificate_purchase"
         onClose={handleAuthClose}

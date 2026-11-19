@@ -68,7 +68,7 @@ function cityLabel(city: string) {
 /**
  * Native-app entry to the Studio (Android TWA and iOS shell only; the web keeps
  * its direct Studio). Welcome → quick guide → address-first workspace uses
- * the same one-lookup guest allowance as the web. Demo cities need no account.
+ * the same three-lookup guest allowance as the web. Demo cities need no account.
  * Each screen gets a history entry so the Android back
  * gesture steps back through onboarding instead of leaving the app.
  */
@@ -191,7 +191,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
           Explore my property <ArrowRight size={20} strokeWidth={1.5} aria-hidden="true" />
         </button>
         <p className="mt-2 text-xs leading-relaxed text-lot-stone">
-          {user ? "Signed in. Your studies save to your account." : "Your first address lookup is free. Create an account to save studies or explore another address."}
+          {user ? "Signed in. Your studies save to your account." : "Up to 3 address lookups are free. Create an account to save studies or explore more addresses."}
         </p>
 
         <section aria-labelledby="app-demo-heading" className="mt-8 border-t border-lot-line pt-6">
@@ -227,7 +227,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
         <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-lot-stone">Your property</p>
         <Heading headingRef={headingRef}>Keep exploring your property.</Heading>
         <p className="mt-3 text-[15px] leading-relaxed text-lot-stone">
-          Your first address lookup is free. Sign in to save studies and explore more addresses.
+          Up to 3 address lookups are free. Sign in to save studies and explore more addresses.
         </p>
         <ul className="mt-6 space-y-3 text-sm leading-relaxed">
           <li className="border-l-2 border-lot-ink pl-3">Explore another address with available parcel and market data.</li>

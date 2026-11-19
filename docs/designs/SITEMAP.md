@@ -2,4 +2,4 @@
 
 | Design Document | Date | Author | Components | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| [LotFoundry Funnel & Certificate Activation](./lotfoundry-funnel-certificate-activation.md) | 2026-11-01 | Andrew Torralba | `AddressSearch`, `FindStep`, `StudioPreview`, `CertificatePanel`, `feasibility.ts` | Mobile entry state machine fixes, San Diego demo defaults, unblurred feasibility preview with math safety guards, and certificate debt-service/scope checklist repositioning. |
+| [LotFoundry Funnel & Certificate Activation](./lotfoundry-funnel-certificate-activation.md) | 2026-11-18 | Andrew Torralba | `finance.ts`, `AddressSearch`, `FindStep`, `StudioPreview`, `ReportPreview`, `LotMoreLanding` | Rebased funnel-activation spec separating shipped baseline from remaining delta (shared `finance.ts` payback guard, unified `AddressSearch` privacy copy, `FindStep` loading guard, `StudioPreview` soft-cost disclosure alignment, and residual `"bid-leveling"` cleanup). |

@@ -5,7 +5,7 @@ import {
   defaultFinancialAssumptions,
   getParcelById,
 } from "./feasibility";
-import { defaultPose, isValidAduConfig } from "./scenario-design";
+import { defaultPose, isValidAduConfig } from "./scenario";
 import { serializeScenarioParams } from "./scenario-url";
 
 describe("inspiration data layer", () => {

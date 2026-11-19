@@ -8,6 +8,7 @@ describe("sitemap", () => {
 
     expect(entries.map((entry) => entry.url)).toEqual([
       "https://lotfoundry.net/",
+      "https://lotfoundry.net/can-i-build-a-backyard-home",
       "https://lotfoundry.net/studio",
       "https://lotfoundry.net/about",
       "https://lotfoundry.net/help",
@@ -23,6 +24,6 @@ describe("sitemap", () => {
     // Never older than the published version; later when the page was edited in place.
     expect(byUrl.get("https://lotfoundry.net/privacy")! >= CURRENT_LEGAL_CONSENT.privacyVersion).toBe(true);
     expect(byUrl.get("https://lotfoundry.net/terms")! >= CURRENT_LEGAL_CONSENT.termsVersion).toBe(true);
-    expect(byUrl.get("https://lotfoundry.net/terms")).toBe("2026-11-06");
+    expect(byUrl.get("https://lotfoundry.net/terms")).toBe("2026-11-16");
   });
 });

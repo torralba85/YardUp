@@ -1,5 +1,5 @@
 import { COLOR } from "@/lib/design-tokens";
-import { constructionBudgetNote, constructionBudgetRows } from "./finance";
+import { constructionBudgetNote, constructionBudgetRows, formatPaybackYears } from "./finance";
 import {
   finishLabels,
   formatCurrency,
@@ -11,7 +11,7 @@ import { marketProvenanceLine } from "./market/market-basis";
 import type { Parcel } from "./parcel-types";
 import type { AIProjectBrief } from "./ai-types";
 import { buildableArea } from "./feasibility-verdict";
-import { getSiteFitCapacityStatus } from "./site-fit";
+import { getZoningCapacityStatus } from "./zoning";
 import { parcelConfidence, parcelDataNotice } from "./parcel-confidence";
 import {
   buildCashFlowProForma,
@@ -21,7 +21,7 @@ import {
   proFormaTableRows,
 } from "./certificate-pro-forma";
 import { buildPermitFeeAudit, type AuditTone, type PermitFeeAudit } from "./certificate-permit-audit";
-import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "./certificate-bid-checklist";
+import { SCOPE_CHECKLIST, SCOPE_CHECKLIST_BUILDERS } from "./certificate-bid-checklist";
 import { buildAduHeightModel } from "./scene-model";
 import { aduSetbackNote, aduSetbacks } from "./adu-setbacks";
 
@@ -130,7 +130,7 @@ export function buildReportText({
     `Lot coverage: ${coverageLabel(parcel, result)}`,
     `Setbacks${parcelConfidence(parcel).regulationsEstimated ? " (assumed)" : ""}: ${setbacksLabel(parcel, config)}`,
     `Estimated area after modeled setbacks: ${buildableArea(parcel, config).toLocaleString()} sf`,
-    `Remaining coverage capacity: ${getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title}`,
+    `Remaining coverage capacity: ${getZoningCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title}`,
     `Zoning status: ${result.zoningStatus}`,
     ...(result.warnings.length > 0
       ? result.warnings.map((warning, index) => `Review note ${index + 1}: ${warning}`)
@@ -140,7 +140,7 @@ export function buildReportText({
     `Estimated build cost: ${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`,
     `Monthly rent estimate: ${formatCurrency(result.monthlyRent)}`,
     `Annual net income estimate: ${formatCurrency(result.annualNoi)}`,
-    `Payback: ${result.paybackYears} years`,
+    `Payback: ${formatPaybackYears(result.paybackYears, result.annualNoi, "years")}`,
     `Rent basis: ${result.rentBasis}`,
     `Market source: ${marketProvenanceLine(result.market)}`,
     `Operating expense ratio: ${(result.operatingExpenseRatio * 100).toFixed(1)}%`,
@@ -212,12 +212,12 @@ export function buildReportHtml({
       setbacksLabel(parcel, config),
     ],
     ["Estimated area after modeled setbacks", `${buildableArea(parcel, config).toLocaleString()} sf`],
-    ["Remaining coverage capacity", getSiteFitCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title],
+    ["Remaining coverage capacity", getZoningCapacityStatus(result.remainingCapacity, parcel, result.capacityBasis).title],
     ["Zoning status", result.zoningStatus],
     ["Build cost range", `${formatCurrency(result.costLow)} - ${formatCurrency(result.costHigh)}`],
     ["Monthly rent estimate", formatCurrency(result.monthlyRent)],
     ["Annual net income estimate", formatCurrency(result.annualNoi)],
-    ["Payback", `${result.paybackYears} years`],
+    ["Payback", formatPaybackYears(result.paybackYears, result.annualNoi, "years")],
     ["Market basis", marketProvenanceLine(result.market)],
   ];
 
@@ -298,7 +298,8 @@ export function buildReportHtml({
     .hero-money .figure {
       font-family: "Space Grotesk", Arial, sans-serif;
       font-size: 60px;
-      font-weight: 700;
+      font-weight: 600;
+      letter-spacing: -0.03em;
       line-height: 1;
       color: var(--ink);
     }
@@ -350,6 +351,7 @@ export function buildReportHtml({
       color: var(--muted);
     }
     .snapshot tr:last-child th, .snapshot tr:last-child td { border-bottom: 0; }
+    .snapshot.allowances td { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .status {
       display: inline-block;
       border: 1px solid ${result.zoningStatus === "Compliant" ? "var(--forest)" : "var(--amber)"};
@@ -418,7 +420,8 @@ export function buildReportHtml({
     .checklists h3 { margin: 0 0 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); }
     .boxes { list-style: none; margin: 0; padding: 0; color: var(--ink); font-size: 12px; }
     .boxes li { margin: 0; padding: 3px 0 3px 20px; position: relative; }
-    .boxes li::before { content: "\\2610"; position: absolute; left: 0; color: var(--muted); }
+    .boxes li::before { content: ""; position: absolute; left: 0; top: 0.45em; width: 10px; height: 10px; border: 1px solid var(--muted); }
+    .check-box { display: inline-block; width: 10px; height: 10px; border: 1px solid var(--muted); vertical-align: -1px; margin-right: 4px; }
     .sources a { color: var(--clay); }
     .rfq { margin-top: 32px; padding-top: 4px; border-top: 1px solid var(--ink); break-before: page; page-break-before: always; }
     .rfq th, .rfq td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 12px; }
@@ -461,9 +464,17 @@ export function buildReportHtml({
       .frame-inner { padding: 28px 18px 84px; }
       h1 { font-size: 30px; }
       .hero-money .figure { font-size: 46px; }
+      .ledger thead { display: none; }
+      .ledger, .ledger tbody { display: block; width: 100%; }
+      .ledger tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .ledger td { padding: 2px 0; border-bottom: 0; }
+      .ledger tr.balance { border-top: 1.5px solid var(--ink); border-bottom: 4px double var(--ink); }
+      .ledger tr.balance td { border-top: 0; border-bottom: 0; }
       .snapshot th, .snapshot td { display: block; width: 100%; }
       .snapshot th { border-bottom: 0; padding-bottom: 2px; }
       .snapshot td { padding-top: 2px; }
+      .snapshot.allowances tr { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+      .snapshot.allowances th, .snapshot.allowances td { width: auto; border-bottom: 0; padding: 8px 0; }
       .brief-heading { align-items: flex-start; flex-direction: column; }
       .brief-total { text-align: left; }
       .brief-grid { grid-template-columns: 1fr; }
@@ -518,13 +529,13 @@ export function buildReportHtml({
               <td>Yearly net income</td>
               <td class="amt">${escapeHtml(formatCurrency(result.annualNoi))}</td>
               <td>Payback estimate</td>
-              <td class="amt">${result.paybackYears} yrs</td>
+              <td class="amt">${escapeHtml(formatPaybackYears(result.paybackYears, result.annualNoi, "yrs"))}</td>
             </tr>
           </tbody>
         </table>
 
         ${result.costBreakdown ? `<h2>Hard &amp; Soft Cost Allowances</h2>
-        <table class="snapshot"><tbody>
+        <table class="snapshot allowances"><tbody>
           ${constructionBudgetRows(result.costBreakdown).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(formatCurrency(value))}</td></tr>`).join("")}
           <tr><th scope="row">Central project estimate</th><td>${escapeHtml(formatCurrency(result.costBreakdown.total))}</td></tr>
         </tbody></table><p>${escapeHtml(constructionBudgetNote)}</p>` : ""}
@@ -641,12 +652,12 @@ function buildBidChecklistHtml(parcel: Parcel): string {
           <div class="table-scroll">
             <table aria-label="Scope items to compare across three builders">
               <thead>
-                <tr><th scope="col">#</th><th scope="col">Scope item</th>${BID_LEVELING_BUILDERS.map((builder) => `<th scope="col">${escapeHtml(builder)}</th>`).join("")}</tr>
+                <tr><th scope="col">#</th><th scope="col">Scope item</th>${SCOPE_CHECKLIST_BUILDERS.map((builder) => `<th scope="col">${escapeHtml(builder)}</th>`).join("")}</tr>
               </thead>
               <tbody>
-                ${BID_LEVELING_CHECKLIST.map(
+                ${SCOPE_CHECKLIST.map(
                   (item, index) =>
-                    `<tr><td>${String(index + 1).padStart(2, "0")}</td><th scope="row"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.ask)}</span></th>${BID_LEVELING_BUILDERS.map(() => `<td class="mark">☐ Incl.<br />$______</td>`).join("")}</tr>`,
+                    `<tr><td>${String(index + 1).padStart(2, "0")}</td><th scope="row"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.ask)}</span></th>${SCOPE_CHECKLIST_BUILDERS.map(() => `<td class="mark"><span class="check-box" aria-hidden="true"></span>Incl.<br />$______</td>`).join("")}</tr>`,
                 ).join("")}
               </tbody>
             </table>
@@ -898,7 +909,7 @@ export function buildReportCsv({
     ["Build Cost High ($)", String(result.costHigh)],
     ["Monthly Rent ($)", String(result.monthlyRent)],
     ["Annual Net Income ($)", String(result.annualNoi)],
-    ["Simple Payback (years)", String(result.paybackYears)],
+    ["Simple Payback (years)", formatPaybackYears(result.paybackYears, result.annualNoi, "none")],
     ["Rent Basis", result.rentBasis],
     ["Market Source", marketProvenanceLine(result.market)],
     ["Operating Expense Ratio (%)", (result.operatingExpenseRatio * 100).toFixed(1)],
@@ -962,7 +973,7 @@ function certificatePacketCsvRows(
     ...audit.feeLines.map((line): [string, string] => [`Fee Audit - ${line.title}`, line.detail]),
     ...audit.submittalChecklist.map((item, index): [string, string] => [`Submittal Item ${index + 1}`, item]),
     ...audit.zoningChecklist.map((item, index): [string, string] => [`Zoning Check ${index + 1}`, item]),
-    ...BID_LEVELING_CHECKLIST.map((item, index): [string, string] => [
+    ...SCOPE_CHECKLIST.map((item, index): [string, string] => [
       `Bid Item ${index + 1} - ${item.title}`,
       item.ask,
     ]),

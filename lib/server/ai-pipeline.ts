@@ -62,6 +62,13 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   deadlineMs?: number;
   /** Ordered tool names that must run before a final answer can be accepted. */
   requiredToolSequence?: string[];
+  /** Allow anonymous checkout tokens when `authorize` approves them. */
+  allowAnonymous?: boolean;
+  /** Optional authorization gate executed after input validation and rate limiting. */
+  authorize?: (
+    input: Input,
+    meta: { uid: string; isAnonymous: boolean },
+  ) => Promise<NextResponse | null> | NextResponse | null;
   /**
    * Shape the structured output into the response payload for this caller —
    * e.g. redact paid content when the authenticated user holds no purchase.
@@ -260,7 +267,9 @@ export function createAIPanelRoute<Input, Output, Ctx>(
   deps: AIPipelineDeps<Ctx> = defaultDeps<Ctx>(),
 ): (request: NextRequest) => Promise<NextResponse> {
   return async function POST(request: NextRequest): Promise<NextResponse> {
-    const auth = await requireApiAuth(request);
+    const auth = await requireApiAuth(request, {
+      allowAnonymous: def.allowAnonymous,
+    });
     if (auth instanceof NextResponse) return auth;
 
     const limited = await checkAIRateLimit(request, {
@@ -282,6 +291,14 @@ export function createAIPanelRoute<Input, Output, Ctx>(
     const validated = def.validateInput(raw);
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
+    }
+
+    if (def.authorize) {
+      const denied = await def.authorize(validated.value, {
+        uid: auth.uid,
+        isAnonymous: Boolean(auth.isAnonymous),
+      });
+      if (denied) return denied;
     }
 
     try {

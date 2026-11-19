@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "About LotFoundry: Free ADU Feasibility Check";
+const title = "About LotFoundry: Free California ADU Feasibility Check";
 const description =
   "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners check ADU rent, build cost and payback estimates for a lot they already own.";
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners">
+    <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners" layout="editorial">
       <LegalSection title="What we do">
         <p>
           LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent

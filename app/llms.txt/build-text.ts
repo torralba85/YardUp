@@ -1,3 +1,4 @@
+import { PERMIT_AREAS, permitAreaUrl } from "@/lib/adu/permit-areas";
 import {
   ADU_CITIES,
   ADU_COST_PAGES,
@@ -88,7 +89,7 @@ export function buildLlmsTxt(): string {
 > Feasibility for one property is a one-time ${price} purchase.
 
 LotFoundry answers "can I build an ADU on my lot, and is it worth it?" before
-you pay for plans or a feasibility study. The first address lookup requires no
+you pay for plans or a feasibility study. Up to 3 address lookups require no
 account.
 
 It is a planning aid, not a permit, a quote, or an appraisal. Ordinance facts on
@@ -117,7 +118,7 @@ licensed builder.
 ## Pricing
 
 - Free: 3D layout exploration, estimated monthly rent range, build cost range,
-  monthly net cash flow, and simple payback. The first address needs no
+  monthly net cash flow, and simple payback. Up to 3 addresses need no
   account; a free account looks up more.
 - Certificate of Feasibility: ${price} one-time on the web, for one property.
   Itemized hard and soft cost allowances, debt-service financing scenarios, a
@@ -136,10 +137,12 @@ State law baseline verified ${STATE_BASELINE_AS_OF}.
 - [California ADU cost guide](${stateCostUrl()}): modeled build cost by unit size, cost-per-square-foot context, permit-fee rules, scope exclusions, and contractor quote guidance.
 - [California ADU rent by county](${rentUrl()}): HUD ${HUD_FMR_YEAR} Fair Market Rents for 12 counties by bedroom count, the change from FY2026, and a planning rent range (figures verified ${CA_RENT_VERIFIED}; CSV at ${rentCsvUrl()}, free to reuse under CC BY 4.0 with a link).
 - [San Diego ADU permits by neighborhood](${permitStudyUrl()}): City of San Diego building permits that add ADUs and junior ADUs, ${SAN_DIEGO_PERMIT_STUDY.coverage.from} to ${SAN_DIEGO_PERMIT_STUDY.coverage.to}, by year and community planning area (CSV at ${permitStudyCsvUrl()}, free to reuse under CC BY 4.0 with a link).
+${PERMIT_AREAS.map((area) => `  - [${area.name} ADU permits](${permitAreaUrl(area)}): ${area.approvals} permits, ${area.units} ADU/JADU units in the study period; not completed homes.`).join("\n")}
 ${cities}
 
 ## Tools
 
+- [Can I build a backyard home? (CA & San Diego ADU quiz)](${baseUrl}/can-i-build-a-backyard-home): 5-question yes/no eligibility check plus San Diego ADU rules (SDMC §141.0302) and California ADU build cost ranges, feeding straight into the 3D studio.
 - [Feasibility studio](${baseUrl}/studio): place an ADU against modeled setbacks in 3D and see cost, rent, and payback.
 - [California ADU cost calculator](${calculatorUrl()}): estimated build cost, monthly rent, and payback by unit size for Los Angeles, San Diego, and Santa Clara counties.
 - Demo lots (illustrative sample parcels), open with no address and no account:

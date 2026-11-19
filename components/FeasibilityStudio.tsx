@@ -1,10 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import {
-  defaultAduConfig,
-  defaultFinancialAssumptions,
   formatCurrency,
   getParcelById,
   parcelPresets,
@@ -26,13 +24,20 @@ import {
 } from "@/lib/scenario-url";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import {
-  defaultPose,
+  calculateScenarioFeasibility,
+  createScenarioState,
+  describePlanControls,
+  evaluatePlanSizing,
+  hydrationPose,
   isValidAduConfig,
   isValidFinancialAssumptions,
   isValidPose,
-} from "@/lib/scenario-design";
+  resolveScenarioForLot,
+  restoreScenario,
+  scenarioReducer,
+  type ProjectBriefState,
+} from "@/lib/scenario";
 import type { Pose2D } from "@/lib/scene-model";
-import { calculateScenarioFeasibility, restoreScenario, type ProjectBriefState } from "@/lib/scenario-restoration";
 import type { SavedScenario } from "@/lib/saved-scenarios";
 import { useAuth } from "@/lib/auth-context";
 import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
@@ -69,17 +74,10 @@ import PermitGuidePanel from "./studio/PermitGuidePanel";
 import InspirationGalleryPanel from "./studio/InspirationGalleryPanel";
 import { PreapprovedPlansSection } from "./studio/PreapprovedPlansPanel";
 import {
-  configForPlan,
-  findPreapprovedPlan,
-  type PreapprovedPlan,
-  modelMatchesPlan,
-  planOutline,
   normalizePlanReference,
   planScopeForLot,
-  type PreapprovedPlanReference,
 } from "@/lib/preapproved-plans";
-import { describePlacementWithEvidence } from "@/lib/placement-evidence";
-import { getScenePlacement, getSnapToFitPose } from "@/lib/site-fit";
+import { describePlacement } from "@/lib/scene-placement";
 import BeforeAfterBoard from "./studio/BeforeAfterBoard";
 import {
   configForInspirationItem,
@@ -180,7 +178,8 @@ export default function FeasibilityStudio({ demoChosen = false, nativeShell = fa
 }
 
 function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { demoChosen: boolean; nativeShell: boolean; initialScenario?: SavedScenario }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, checkoutUser, loading: authLoading } = useAuth();
+  const activeCheckoutUser = checkoutUser ?? user;
   const {
     parcel: liveParcel,
     parcelMode,
@@ -197,18 +196,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     resetToPreset,
     restoreLiveParcel,
   } = useParcel();
-  const [parcelId, setParcelId] = useState(parcelPresets[0].id);
-  const [config, setConfig] = useState<ADUConfig>(defaultAduConfig);
-  const [poseState,setPoseState] = useState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
-  const [assumptions, setAssumptions] = useState<FinancialAssumptions>(
-    defaultFinancialAssumptions,
-  );
-  const [planState, setPlanState] = useState<{ key: string; reference: PreapprovedPlanReference | null }>({ key: parcelPresets[0].id, reference: null });
-  // The size the model had before a plan resized it, offered back as an undo
-  // only while the model still holds exactly the size the plan gave it.
-  const [planSizing, setPlanSizing] = useState<{ key: string; previous: ADUConfig; previousPose: Pose2D; applied: ADUConfig; appliedPose: Pose2D } | null>(null);
-  // Where using a plan left the model: moved to a spot that fits, or no fit found.
-  const [planPlacement, setPlanPlacement] = useState<{ key: string; outcome: "moved" | "none"; pose: Pose2D; config: ADUConfig } | null>(null);
+  const [scenarioState, dispatchScenario] = useReducer(scenarioReducer, undefined, createScenarioState);
   const [hydratedFromUrl, setHydratedFromUrl] = useState(false);
   const [pendingAddressQuery, setPendingAddressQuery] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -352,7 +340,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     return () => { cancelled = true; };
   }, [user]);
 
-  const presetParcel = getParcelById(parcelId);
+  const presetParcel = getParcelById(scenarioState.parcelId);
   // Context parcel covers both live (Regrid) and estimated (wizard) modes.
   const activeParcel = parcelMode === "preset" ? presetParcel : liveParcel;
   // The 3D scene renders the active parcel's rectangle, so a live address
@@ -360,13 +348,37 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // (Estimated wizard parcels borrow their base preset's dimensions, so they
   // render identically to before.)
   const sceneParcel = activeParcel;
-  const sceneKey = parcelMode === "preset" ? parcelId : `${activeParcel.address}|${activeParcel.city}`;
-  // Scope the reference to the lot, using the same synchronous reset as placement.
-  const preapprovedPlan = planState.key === sceneKey ? planState.reference : null;
-  if (planState.key !== sceneKey) setPlanState({ key: sceneKey, reference: null });
-  const pose = poseState.key===sceneKey ? poseState.pose : defaultPose(activeParcel,config);
-  if(poseState.key!==sceneKey) setPoseState({key:sceneKey,pose});
-  const commitPose=useCallback((next:Pose2D)=>{ if(isValidPose(next)) setPoseState({key:sceneKey,pose:next}); },[sceneKey]);
+  const sceneKey = parcelMode === "preset" ? scenarioState.parcelId : `${activeParcel.address}|${activeParcel.city}`;
+  const activeScenario = useMemo(
+    () => resolveScenarioForLot(scenarioState, sceneKey, activeParcel),
+    [scenarioState, sceneKey, activeParcel],
+  );
+  const { parcelId, config, pose, assumptions, preapprovedPlan } = activeScenario;
+
+  // Every preset pick goes through ParcelContext too: `select-preset` rewrites
+  // the scenario's sceneKey, so dispatching it while the context still holds an
+  // estimated or live lot would reset the pose and plan without switching lots.
+  const switchToPreset = useCallback(
+    (id: string) => {
+      const preset = getParcelById(id);
+      resetToPreset(preset);
+      dispatchScenario({ type: "select-preset", parcel: preset });
+    },
+    [resetToPreset],
+  );
+  const setConfig = useCallback(
+    (next: ADUConfig) =>
+      dispatchScenario({ type: "set-config", config: next }),
+    [],
+  );
+  const setAssumptions = useCallback(
+    (next: FinancialAssumptions) =>
+      dispatchScenario({ type: "set-assumptions", assumptions: next }),
+    [],
+  );
+  const commitPose = useCallback((next: Pose2D) => {
+    dispatchScenario({ type: "commit-pose", pose: next });
+  }, []);
   // Only a geocoded (Regrid/fallback) parcel has real lat/lng for AerialView's
   // satellite imagery — demo presets and wizard estimates never do.
   const aerialAvailable = parcelMode === "live" && "lat" in activeParcel;
@@ -466,59 +478,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
 
-  // A plan in use drives the model: its recorded footprint (or, without one, its
-  // floor area) sizes the ADU while roof and finish stay, so the scene, fit check
-  // and estimates answer "does this plan fit my lot?". The reference itself
-  // stays a separate saved field.
-  const samePose = (a: Pose2D, b: Pose2D) => a.x === b.x && a.z === b.z && a.rotationDeg === b.rotationDeg;
-  const sameSize = (a: ADUConfig, b: ADUConfig) => a.width === b.width && a.length === b.length;
-  // A plan replaces the model's size, so its old spot may no longer work. Keep a
-  // spot that still fits; otherwise search the lot as Snap to fit does. A plan that
-  // isn't rectangular is searched with its full outline first, so the real plan fits.
-  const placeForPlan = (plan: PreapprovedPlan, next: ADUConfig, from: Pose2D) => {
-    const outline = plan.footprint?.shape === "irregular" ? planOutline(plan, next) : undefined;
-    for (const candidate of outline ? [outline, next] : [next]) {
-      if (getScenePlacement(activeParcel, candidate, from).status === "fits") return { pose: from, outcome: "kept" as const };
-      const snapped = getSnapToFitPose(activeParcel, candidate, from);
-      if (snapped) return { pose: snapped, outcome: "moved" as const };
-    }
-    const status = getScenePlacement(activeParcel, next, from).status;
-    return { pose: from, outcome: status === "blocked" || status === "invalid" ? "none" as const : "kept" as const };
-  };
-  // A plan in use drives the model: its recorded footprint (or the usable
-  // rectangle of a plan that isn't one) sizes the ADU while roof and finish stay,
-  // and the ADU moves to a spot where it fits, so the scene, fit check and
-  // estimates answer "does this plan fit my lot?". The reference itself stays a
-  // separate saved field.
-  const sizeModelToPlan = (reference: PreapprovedPlanReference) => {
-    const plan = findPreapprovedPlan(reference);
-    if (!plan) return undefined;
-    const applied = configForPlan(plan, config);
-    const placed = placeForPlan(plan, applied, pose);
-    if (sameSize(applied, config) && placed.outcome === "kept") return placed.outcome;
-    setConfig(applied);
-    if (!samePose(placed.pose, pose)) commitPose(placed.pose);
-    setPlanSizing({ key: sceneKey, previous: config, previousPose: pose, applied, appliedPose: placed.pose });
-    setPlanPlacement(placed.outcome === "kept" ? null : { key: sceneKey, outcome: placed.outcome, pose: placed.pose, config: applied });
-    return placed.outcome;
-  };
-  // The Studio models rectangles. A plan that isn't one keeps its depth and floor
-  // area in the model, and its full outer rectangle is checked at the same pose,
-  // so "fits" there means the real plan fits too.
-  const planInUse = preapprovedPlan ? findPreapprovedPlan(preapprovedPlan) : undefined;
-  const planOutlineFit = useMemo(() => {
-    if (!planInUse || planInUse.footprint?.shape !== "irregular" || !modelMatchesPlan(planInUse, config)) return undefined;
-    const outline = planOutline(planInUse, config);
-    return outline && describePlacementWithEvidence(getScenePlacement(activeParcel, outline, pose), activeParcel);
-  }, [planInUse, config, activeParcel, pose]);
-  const planSizeUndo = planSizing && preapprovedPlan && planSizing.key === sceneKey
-    && sameSize(planSizing.applied, config) && samePose(planSizing.appliedPose, pose) ? planSizing : null;
-  const planPlacementNote = planPlacement && preapprovedPlan && planPlacement.key === sceneKey
-    && sameSize(planPlacement.config, config) && samePose(planPlacement.pose, pose)
-    ? planPlacement.outcome === "moved"
-      ? { tone: "info" as const, text: "Moved to a spot on this lot where it fits the modeled setbacks." }
-      : { tone: "review" as const, text: "It doesn't fit within the modeled setbacks anywhere we searched on this lot. Before ruling it out, confirm your property lines and setbacks with your local planning office: a survey, a corrected boundary or a setback exception can change the answer." }
-    : undefined;
+  const { planInUse, planOutlineFit, planSizeUndo, planPlacementNote } = useMemo(
+    () => describePlanControls(activeScenario, activeParcel),
+    [activeScenario, activeParcel],
+  );
   const planBrowser = (
     <PreapprovedPlansSection
       key={sceneKey}
@@ -526,34 +489,29 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       layout={isDesktop ? "panel" : "inline"}
       selected={preapprovedPlan}
       onSelect={(reference) => {
-        setPlanState({ key: sceneKey, reference });
-        const outcome = sizeModelToPlan(reference);
+        // One placement search: evaluate on the resolved lot view, then apply
+        // that exact result, so analytics and state cannot disagree.
+        const { nextState, placementOutcome } = evaluatePlanSizing(activeParcel, activeScenario, reference);
+        dispatchScenario({ type: "apply-plan", nextState });
         trackPreapprovedPlanSelected({
           jurisdiction_id: reference.jurisdictionId,
           plan_id: reference.planId,
           parcel_mode: parcelMode,
-          placement_outcome: outcome ?? "unknown",
+          placement_outcome: placementOutcome,
           auth_state: user ? "signed_in" : "guest",
         });
       }}
-      onRemove={() => setPlanState({ key: sceneKey, reference: null })}
+      onRemove={() => dispatchScenario({ type: "remove-plan" })}
       model={{
         config,
-        fit: describePlacementWithEvidence(result.placement, activeParcel),
+        fit: describePlacement(result.placement, activeParcel),
         outlineFit: planOutlineFit,
         placementNote: planPlacementNote,
-        onSizeToPlan: () => { if (preapprovedPlan) sizeModelToPlan(preapprovedPlan); },
-        onSnapToFit: planInUse && result.placement.status !== "fits" && !planPlacementNote ? () => {
-          const placed = placeForPlan(planInUse, config, pose);
-          if (!samePose(placed.pose, pose)) commitPose(placed.pose);
-          setPlanPlacement(placed.outcome === "kept" ? null : { key: sceneKey, outcome: placed.outcome, pose: placed.pose, config });
-        } : undefined,
-        onUndoSize: planSizeUndo ? () => {
-          setConfig({ ...config, width: planSizeUndo.previous.width, length: planSizeUndo.previous.length, footprint: planSizeUndo.previous.footprint });
-          commitPose(planSizeUndo.previousPose);
-          setPlanSizing(null);
-          setPlanPlacement(null);
-        } : undefined,
+        onSizeToPlan: () => dispatchScenario({ type: "size-to-plan", parcel: activeParcel }),
+        onSnapToFit: planInUse && result.placement.status !== "fits" && !planPlacementNote
+          ? () => dispatchScenario({ type: "snap-plan-to-fit", parcel: activeParcel })
+          : undefined,
+        onUndoSize: planSizeUndo ? () => dispatchScenario({ type: "undo-plan-size" }) : undefined,
         onViewModel: () => document.getElementById(MODEL_STAGE_ID)?.scrollIntoView?.({
           block: "start",
           behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
@@ -585,6 +543,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
+  const [mobilePresetPicked, setMobilePresetPicked] = useState(false);
   // The URL named a demo lot (a landing or shared link), so the mobile Find
   // CTA keeps that lot rather than switching to the San Diego example.
   const [presetFromLink, setPresetFromLink] = useState(false);
@@ -630,11 +589,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
-  // immediately after address resolution, so a parcel-mode change while on
-  // Find advances the journey to Earn in the same pass.
-  const [prevParcelMode, setPrevParcelMode] = useState(parcelMode);
-  if (parcelMode !== prevParcelMode) {
-    setPrevParcelMode(parcelMode);
+  // immediately after address resolution, so a newly resolved non-demo parcel
+  // while on Find advances the journey to Earn in the same pass. Keyed on the
+  // parcel itself, not parcelMode: a second lookup after Back stays "live", and
+  // keying on the mode left the guest on Find with the new lot already loaded.
+  const [prevParcel, setPrevParcel] = useState(liveParcel);
+  if (liveParcel !== prevParcel) {
+    setPrevParcel(liveParcel);
     if (parcelMode !== "preset" && journeyStep === "find") {
       setJourneyStep("earn");
     }
@@ -653,29 +614,41 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       pose: parsed.pose ?? initialScenario.pose,
       assumptions: parsed.assumptions ?? initialScenario.assumptions,
     } : mergeScenarioPartial(parsed);
-    setParcelId(merged.parcelId);
     if (parsed.parcelId) setPresetFromLink(true);
-    setConfig(merged.config);
     const hydrationParcel = parcelMode === "preset" ? getParcelById(merged.parcelId) : activeParcel;
     const queryPlanMatchesLot = parsed.preapprovedPlanScope
       ? parsed.preapprovedPlanScope === planScopeForLot(hydrationParcel, parcelMode)
       : parcelMode === "preset" && !initialScenario?.liveParcel;
     const restoredPlan = parsed.clearPreapprovedPlan ? undefined
       : queryPlanMatchesLot && parsed.preapprovedPlan ? parsed.preapprovedPlan : initialScenario?.preapprovedPlan;
-    setPlanState({ key: parcelMode === "preset" ? merged.parcelId : sceneKey, reference: normalizePlanReference(restoredPlan) ?? null });
     // Explicit placement from the URL or a restored layout takes precedence;
     // otherwise calculate placement from the active parcel (preset or live).
     const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
-    const initialPose =
-      explicitPose ??
-      (parcelMode === "preset"
-        ? defaultPose(getParcelById(merged.parcelId), merged.config)
-        : defaultPose(activeParcel, merged.config));
-    setPoseState({
-      key: parcelMode === "preset" ? merged.parcelId : sceneKey,
-      pose: initialPose,
+    const certParam = incomingCertRef.current ?? params.get("cert");
+    const stepParam = params.get("step");
+    const certMatchingPreset = certParam
+      ? parcelPresets.find((p) => certificateKey(p) === certParam || p.id === certParam)
+      : undefined;
+    const targetParcelId = certMatchingPreset?.id ?? merged.parcelId;
+    const targetParcel = certMatchingPreset ?? hydrationParcel;
+    const targetSceneKey = certMatchingPreset
+      ? certMatchingPreset.id
+      : parcelMode === "preset"
+        ? merged.parcelId
+        : sceneKey;
+    // Checkout can return to the same preset; only discard its plan and placement when recovery switches lots.
+    const recoveryChangesLot = Boolean(certMatchingPreset)
+      && planScopeForLot(certMatchingPreset!, "preset") !== planScopeForLot(hydrationParcel, parcelMode);
+    const targetPose = hydrationPose(explicitPose, recoveryChangesLot, targetParcel, merged.config);
+    dispatchScenario({
+      type: "hydrate",
+      sceneKey: targetSceneKey,
+      parcelId: targetParcelId,
+      config: merged.config,
+      pose: targetPose,
+      assumptions: merged.assumptions,
+      preapprovedPlan: recoveryChangesLot ? null : (normalizePlanReference(restoredPlan) ?? null),
     });
-    setAssumptions(merged.assumptions);
     // Landing-hero handoff: the hero stashes the typed address in session
     // storage (never the URL, to keep a guest's address out of history, the
     // Referer header, and analytics). Consume it once here; fall back to a
@@ -695,34 +668,33 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // A restored or shared non-default scenario proves the find decision was
     // already made — start the mobile journey at the Earn reveal instead of
     // the onboarding plate. A pending address handoff owns its own advance
-    // (the parcel-mode render adjustment fires when the search resolves).
+    // (the parcel render adjustment fires when the search resolves).
     if (!incomingAddress && isNonDefaultScenario(parsed)) {
       setDemoCommitted(true);
       setJourneyStep((step) => (step === "find" ? "earn" : step));
     }
 
-    const certParam = incomingCertRef.current ?? params.get("cert");
-    const stepParam = params.get("step");
     // A purchase or agent-code claim that went through sign-in reopens the
     // Certificate step, where the panel resumes it.
     if (certParam || stepParam === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) {
       setActiveStep("certificate");
       setDemoCommitted(true);
       setJourneyStep("act");
-      if (certParam) {
-        const matchingPreset = parcelPresets.find(
-          (p) => certificateKey(p) === certParam || p.id === certParam,
-        );
-        if (matchingPreset) {
-          setParcelId(matchingPreset.id);
-          resetToPreset(matchingPreset);
-        }
+      if (certMatchingPreset) {
+        resetToPreset(certMatchingPreset);
       }
     }
     setHydratedFromUrl(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Persist external ParcelContext changes into Scenario state once initial URL hydration finishes.
+  useEffect(() => {
+    if (hydratedFromUrl && scenarioState.sceneKey !== sceneKey) {
+      dispatchScenario({ type: "sync-lot", sceneKey, parcel: activeParcel });
+    }
+  }, [hydratedFromUrl, scenarioState.sceneKey, sceneKey, activeParcel]);
 
   // Run the handed-off address search only after Firebase auth resolves —
   // at mount `user` is still null even for signed-in users, so searching
@@ -741,7 +713,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     else if (grant.address) await searchByAddress(grant.address, expectedSelectionVersion);
   }, [parcelMode, restoreLiveParcel, searchByAddress]);
   const certificateRecovery = useCertificateRecovery({
-    uid: user?.uid,
+    uid: activeCheckoutUser?.uid,
     certKey: certificateKey(activeParcel),
     ready: hydratedFromUrl && !authLoading,
     hydrated: hydratedFromUrl,
@@ -846,19 +818,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   function resetScenario() {
     if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return;
     resetToPreset(parcelPresets[0]);
-    setParcelId(parcelPresets[0].id);
-    setConfig(defaultAduConfig);
-    setPlanState({ key: parcelPresets[0].id, reference: null });
-    setPlanSizing(null);
-    setPlanPlacement(null);
-    setPoseState({key:parcelPresets[0].id,pose:defaultPose(parcelPresets[0],defaultAduConfig)});
-    setAssumptions(defaultFinancialAssumptions);
+    dispatchScenario({ type: "reset" });
     setReportOpen(false);
     setBuilderLeadOpen(false);
     setActiveStep("lot");
     setJourneyStep("find");
     journeyHistory.reset();
     setDemoCommitted(false);
+    setMobilePresetPicked(false);
     setFineTuneOpen(false);
     setReportAutoFocus(false);
     setProjectBriefState(null);
@@ -878,9 +845,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   function handleMobilePresetSelect(presetId: string) {
-    const preset = getParcelById(presetId);
-    resetToPreset(preset);
-    setParcelId(preset.id);
+    setMobilePresetPicked(true);
+    switchToPreset(presetId);
   }
 
   // Route to the address search from anywhere: land on the "Your Lot" step
@@ -958,14 +924,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   );
 
   const handleRetryProjectBrief = useCallback(async () => {
-    if (!user) return;
+    if (!activeCheckoutUser) return;
     try {
-      const idToken = await user.getIdToken();
+      const idToken = await activeCheckoutUser.getIdToken();
       await handleGenerateProjectBrief(idToken);
     } catch {
       // Error state is captured inside handleGenerateProjectBrief
     }
-  }, [handleGenerateProjectBrief, user]);
+  }, [activeCheckoutUser, handleGenerateProjectBrief]);
 
   const openSignup = useCallback(
     (source: AuthPromptSource, resumeSave = false) => {
@@ -1061,13 +1027,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     projectBriefRequestRef.current = null;
     if (restored.liveParcel) restoreLiveParcel(restored.liveParcel);
     else resetToPreset(restored.preset);
-    setParcelId(restored.parcelId);
-    setConfig(restored.config);
-    setPlanState({ key: restored.poseKey, reference: restored.preapprovedPlan });
-    setPlanSizing(null);
-    setPlanPlacement(null);
-    setPoseState({ key: restored.poseKey, pose: restored.pose });
-    setAssumptions(restored.assumptions);
+    dispatchScenario({ type: "restore", restored });
     setProjectBriefState(restored.briefState);
     setGeneratedConcepts(restored.concept ? [restored.concept] : []);
     setActiveConcept(restored.concept);
@@ -1275,10 +1235,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                   <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
                   <Button
                     variant="secondary"
-                    onClick={() => {
-                      resetToPreset(parcelPresets[0]);
-                      setParcelId(parcelPresets[0].id);
-                    }}
+                    onClick={() => switchToPreset(parcelPresets[0].id)}
                   >
                     Explore demo lot
                   </Button>
@@ -1377,7 +1334,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onSubmitText={(query) => searchByAddress(query)}
           parcelLoading={parcelLoading}
           parcelError={parcelError}
-          selectedPresetId={parcelMode === "preset" ? parcelId : null}
+          selectedPresetId={parcelMode === "preset" && (presetFromLink || demoCommitted || mobilePresetPicked) ? parcelId : null}
           presetChosen={presetFromLink}
           onPresetSelect={handleMobilePresetSelect}
           onReveal={() => {
@@ -1436,6 +1393,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onFineTune={() => setFineTuneOpen(true)}
           onContinue={() => setJourneyStep("act")}
           onCreateAccount={!user ? () => openSignup("post_result") : undefined}
+          emailLinkCard={emailLinkCard}
         />
       );
     } else {
@@ -1495,7 +1453,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           pageScroll={!nativeShell}
           header={
             <MobileHeader
-              address={isRealAddressActive ? shellAddress.address : activeParcel.address}
+              address={
+                isRealAddressActive
+                  ? shellAddress.address
+                  : found || presetFromLink || mobilePresetPicked
+                    ? activeParcel.address
+                    : "Choose a lot or demo"
+              }
               estimated={parcelMode === "estimated"}
               onReset={resetScenario}
             />
@@ -1532,7 +1496,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             config={config}
             assumptions={assumptions}
             result={result}
-            onParcelChange={setParcelId}
+            onParcelChange={switchToPreset}
             onConfigChange={setConfig}
             onAssumptionsChange={setAssumptions}
             onReset={resetScenario}
@@ -1557,7 +1521,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             projectBriefLoading={projectBriefLoading}
             projectBriefError={projectBriefError}
             styleMatchConcept={activeStyleMatchConcept}
-            onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
+            onRetryProjectBrief={activeCheckoutUser ? handleRetryProjectBrief : undefined}
             onClose={() => setReportOpen(false)}
             onDownload={downloadReport}
             onExportCsv={exportCsv}
@@ -1629,13 +1593,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             <span className="font-semibold">
               Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
             </span>
-            <button
-              type="button"
-              onClick={handleChangeAddress}
-              className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              Evaluate My Lot
-            </button>
+            {(activeStep !== "feasibility" || certificateUnlocked) && (
+              <button
+                type="button"
+                onClick={handleChangeAddress}
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              >
+                Evaluate My Lot
+              </button>
+            )}
           </div>
         )}
         {showsVerdictBand && certificateUnlocked && !isRealAddressActive && (
@@ -1658,10 +1624,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           <LotStep
             parcelNotice={!isRealAddressActive && <ParcelDataNotice parcel={activeParcel} />}
             parcelId={parcelId}
-            onPresetChange={(id) => {
-              setParcelId(id);
-              resetToPreset(parcelPresets.find((preset) => preset.id === id) ?? parcelPresets[0]);
-            }}
+            onPresetChange={switchToPreset}
             sceneNode={sceneNode}
             viewMode={effectiveViewMode}
             onViewModeChange={changeViewMode}
@@ -1703,6 +1666,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
                 onSubmitText={searchByAddress}
                 autoFocusSignal={addressFocusSignal}
+                showPrivacyNote
               />
               {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
@@ -1710,6 +1674,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
               <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
+              {emailLinkCard}
             </div>}
           </div>
         ) : activeStep === "design" ? (
@@ -1745,7 +1710,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               config={config}
               assumptions={assumptions}
               result={result}
-              onParcelChange={setParcelId}
+              onParcelChange={switchToPreset}
               onConfigChange={setConfig}
               onAssumptionsChange={setAssumptions}
               onReset={resetScenario}
@@ -1820,7 +1785,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           projectBriefLoading={projectBriefLoading}
           projectBriefError={projectBriefError}
           styleMatchConcept={activeStyleMatchConcept}
-          onRetryProjectBrief={user ? handleRetryProjectBrief : undefined}
+          onRetryProjectBrief={activeCheckoutUser ? handleRetryProjectBrief : undefined}
           onClose={() => setReportOpen(false)}
           onDownload={downloadReport}
           onExportCsv={exportCsv}
@@ -1967,7 +1932,7 @@ function SceneViewToggle({
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>
@@ -2051,10 +2016,7 @@ function LotStep({
           We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
         </p>
         <div className="mt-5 max-w-xl">
-          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
-          <p className="mt-2 text-xs leading-5 text-lot-stone">
-            We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
-          </p>
+          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} showPrivacyNote />
           {parcelLoading && (
             <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
               <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />

@@ -273,7 +273,6 @@
   grid-template-areas: "copy aside";
   align-items: end;
   column-gap: 6%;
-  min-height: 100vh;
   min-height: 100svh;
   max-height: 1180px;
   padding: 128px 6% 144px;
@@ -283,6 +282,9 @@
      note and sample captions measured below 4.5:1 over the bright half of the
      photo (design-system §2.3 rule 6). */
   --hero-text-muted: color-mix(in srgb, var(--chalk) 86%, transparent);
+}
+.hero:has([aria-label="Inline lot feasibility answer"]) {
+  max-height: none;
 }
 .heroMedia {
   position: absolute;
@@ -1332,13 +1334,10 @@
     animation: settle-in 1000ms 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .reveal {
-    transition:
-      opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .reveal:not(.revealIn):not(:focus-within) {
-    opacity: 0;
-    transform: translateY(32px);
+    transform: translateY(18px);
   }
   @keyframes camera-settle {
     from {
@@ -1995,9 +1994,7 @@
   padding: 0;
 }
 .demoSteps li {
-  display: flex;
-  align-items: baseline;
-  gap: 15px;
+  display: block;
   padding: 0 0 24px;
 }
 .demoSteps li > span {
@@ -2456,8 +2453,8 @@
   max-width: 420px;
   margin-top: 0;
   padding: 16px 18px 8px;
-  border: 1px solid color-mix(in srgb, var(--chalk) 22%, transparent);
-  background: color-mix(in srgb, var(--ink) 46%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chalk) 26%, transparent);
+  background: color-mix(in srgb, var(--ink) 64%, transparent);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   backdrop-filter: blur(18px) saturate(140%);
   box-shadow: 0 18px 50px color-mix(in srgb, var(--ink) 32%, transparent);
@@ -2473,7 +2470,7 @@
 }
 .hero .sampleFigures dt,
 .hero .sampleFigures dd small {
-  color: var(--hero-text-muted);
+  color: color-mix(in srgb, var(--chalk) 92%, transparent);
 }
 .hero .sampleFigures {
   flex-wrap: nowrap;
@@ -2507,13 +2504,11 @@
   padding: 112px 0 96px;
 }
 .story[data-pinned="true"] {
-  height: 340vh;
-  height: 340svh;
+  height: 190svh;
 }
 .story[data-pinned="true"] .storyStage {
   position: sticky;
   top: 0;
-  height: 100vh;
   height: 100svh;
   padding: 64px 0 28px;
 }
@@ -2528,9 +2523,7 @@
   border-top: 1px solid var(--line);
 }
 .storyChapters li {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 10px;
+  display: block;
   padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -2605,7 +2598,6 @@
   mask-composite: intersect;
 }
 .story[data-pinned="true"] .parcelCanvas {
-  width: min(100%, calc((100vh - 330px) * 1.6));
   width: min(100%, calc((100svh - 330px) * 1.6));
   margin-inline: auto;
   transform: scale(calc(0.94 + var(--story-progress, 1) * 0.08));
@@ -2743,4 +2735,9 @@
     font-size: clamp(76px, 8vw, 110px);
     margin: 12px 0 18px;
   }
+}
+
+:global(html[data-lf-consent="unset"]) .hero,
+:global(html[data-lf-consent="unset"]) .closing {
+  padding-bottom: 124px;
 }

@@ -28,6 +28,7 @@ import { metadata as aduCaJaduMetadata } from "./adu/ca/jadu/page";
 import { metadata as sanDiegoPermitsMetadata } from "./adu/ca/san-diego/permits/page";
 import { metadata as methodologyMetadata } from "./adu/how-we-estimate/page";
 import { metadata as aduEligibilityMetadata } from "./adu/ca/can-i-build-an-adu/page";
+import { metadata as backyardHomeMetadata } from "./can-i-build-a-backyard-home/page";
 import { chulaVista } from "@/content/adu/ca/chula-vista";
 import { sanDiegoCost } from "@/content/adu/ca/san-diego-cost";
 import { buildCityMetadata, buildCostMetadata } from "@/lib/adu/content";
@@ -40,6 +41,7 @@ describe("canonical metadata", () => {
     expect(rootMetadata.alternates?.canonical).toBe("./");
   });
   const routes = [
+    { name: "/can-i-build-a-backyard-home", metadata: backyardHomeMetadata, expectedCanonical: "/can-i-build-a-backyard-home" },
     { name: "/studio", metadata: studioMetadata, expectedCanonical: "/studio" },
     { name: "/about", metadata: aboutMetadata, expectedCanonical: "/about" },
     { name: "/help", metadata: helpMetadata, expectedCanonical: "/help" },
@@ -150,6 +152,7 @@ describe("site JSON-LD", () => {
   // Each of these sets its own openGraph block, which replaces the layout's
   // instead of merging, so each has to name the site again.
   for (const { name, metadata } of [
+    { name: "/can-i-build-a-backyard-home", metadata: backyardHomeMetadata },
     { name: "/studio", metadata: studioMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu/ca/can-i-build-an-adu", metadata: aduEligibilityMetadata },
@@ -171,6 +174,7 @@ describe("site JSON-LD", () => {
 
 describe("SEO audit metadata constraints", () => {
   const descriptions = [
+    { name: "/can-i-build-a-backyard-home", metadata: backyardHomeMetadata },
     { name: "/feedback", metadata: feedbackMetadata },
     { name: "/privacy", metadata: privacyMetadata },
     { name: "/terms", metadata: termsMetadata },
@@ -192,6 +196,7 @@ describe("SEO audit metadata constraints", () => {
   });
 
   for (const { name, metadata } of [
+    { name: "/can-i-build-a-backyard-home", metadata: backyardHomeMetadata },
     { name: "/studio", metadata: studioMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu/ca/can-i-build-an-adu", metadata: aduEligibilityMetadata },
@@ -213,6 +218,7 @@ describe("SEO audit metadata constraints", () => {
 
 describe("share previews", () => {
   for (const { name, metadata } of [
+    { name: "/can-i-build-a-backyard-home", metadata: backyardHomeMetadata },
     { name: "/adu/ca", metadata: aduCaMetadata },
     { name: "/adu-cost-calculator", metadata: aduCostCalculatorMetadata },
     { name: "/adu/how-we-estimate", metadata: methodologyMetadata },

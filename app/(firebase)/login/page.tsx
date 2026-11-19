@@ -16,11 +16,22 @@ export const metadata: Metadata = {
  * Login route (`/login`). Renders the {@link LoginForm} inside the shared
  * {@link AuthLayout}, with a Suspense boundary for the search-params hook.
  */
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string }>;
+}) {
+  const params = searchParams ? await searchParams : undefined;
+  const isBuilderRedirect = params?.next?.startsWith("/builder") ?? false;
+
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Open your saved ADU estimates and reports."
+      title={isBuilderRedirect ? "Builder sign in" : "Sign in to LotFoundry"}
+      subtitle={
+        isBuilderRedirect
+          ? "Open your builder dashboard and unlocked homeowner leads."
+          : "Open your saved ADU estimates and reports."
+      }
     >
       <Suspense
         fallback={

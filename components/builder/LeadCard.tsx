@@ -217,7 +217,7 @@ export default function LeadCard({
           {access === "confirming" && (
             <div className="border-l-2 border-status-review pl-3">
               <div className="lf-kicker-dense flex items-center gap-2 text-status-review">
-                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-status-review motion-safe:animate-pulse" />
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-status-review" />
                 Payment received · recording unlock…
               </div>
               <p className="mt-1 text-sm text-lot-ink">

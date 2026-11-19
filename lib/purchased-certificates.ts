@@ -99,6 +99,26 @@ export function formatCertKeyFallback(certKey: string): { title: string; subtitl
 }
 
 /**
+ * "City, ST ZIP" for a grant. Live lookups store `city` as "San Diego, CA 92101"
+ * beside separate `state` and `zip`, so each is appended only when missing.
+ */
+export function formatCertificateLocality(
+  city?: string,
+  state?: string,
+  zip?: string,
+): string | undefined {
+  let locality = city?.trim();
+  if (!locality) return undefined;
+  const stateCode = state?.trim();
+  if (stateCode && !new RegExp(`(^|[\\s,])${stateCode.replace(/[^A-Za-z]/g, "")}(?=$|[\\s,])`, "i").test(locality)) {
+    locality = `${locality}, ${stateCode}`;
+  }
+  const postal = zip?.trim();
+  if (postal && !locality.includes(postal)) locality = `${locality} ${postal}`;
+  return locality;
+}
+
+/**
  * Fetch all certificate purchase grants held by an authenticated user.
  * Sorted client-side by purchase date descending (no composite index required).
  */

@@ -1,20 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { stashAddressQuery } from "@/lib/address-handoff";
+import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { aduCtaEvent, type AduCtaPlacement } from "@/lib/adu/types";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { playStoreCityUrl } from "@/lib/app-store-links";
 
 /**
- * Address-entry call to action for ADU jurisdiction pages.
+ * Address-entry call to action for ADU jurisdiction and cost pages.
  *
- * A tiny Firebase-free client island: typing an address stashes it in
- * session storage (never the URL, per the project privacy rule) and routes
- * to the Studio, where a guest's first lookup is free. Rendered at top,
- * mid-page, and end-of-page — never as a sticky banner, and never gated
+ * Firebase-free client island: runs an inline lot lookup directly on the page
+ * (geocode -> parcel -> feasibility + modeled fit) and hands the resolved parcel
+ * into `/studio` via session storage when the visitor clicks "Open in 3D".
+ * Never puts addresses in URLs or GA4, and never gates the first 3 lookups
  * behind email capture or signup.
  *
  * Only `placement === "mid"` emits an `<h2>` so the document outline never
@@ -32,16 +30,9 @@ export function AduStudioCta({
   /** Overrides the rules-page heading, e.g. on a cost page. */
   heading?: string;
 }) {
-  const router = useRouter();
-  const [address, setAddress] = useState("");
   const isCompactTop = placement === "top";
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    trackEvent(aduCtaEvent(placement), { city_slug: slug });
-    stashAddressQuery(address);
-    router.push("/studio");
-  }
+  const surface =
+    slug.includes("cost") || slug === "adu-cost-calculator" ? "cost" : "guide";
 
   return (
     <section
@@ -74,9 +65,10 @@ export function AduStudioCta({
             : "mt-2 max-w-prose text-sm leading-relaxed text-lot-stone-on-dark"
         }
       >
-        Free: 3D fit and rent range — no account needed for your first address.
-        Optional $29 Certificate of Feasibility: build cost, payback, financing,
-        a fee audit and a 3-builder bid checklist.{" "}
+        Free: lot fit, 3D concept, build cost, rent range, and payback — no
+        account needed for up to 3 addresses. Optional $29 Certificate of
+        Feasibility: financing scenarios, a fee and permit audit, an AI Project
+        Brief, and a 3-builder scope checklist.{" "}
         <Link
           href="/#report"
           className={
@@ -89,34 +81,16 @@ export function AduStudioCta({
         </Link>
         .
       </p>
-      <form onSubmit={submit} className="mt-4 flex flex-col gap-3 sm:flex-row">
-        <label htmlFor={`adu-studio-address-${placement}`} className="sr-only">
-          Your {city} street address
-        </label>
-        <input
-          id={`adu-studio-address-${placement}`}
-          type="text"
-          autoComplete="street-address"
-          placeholder="123 Main St, San Diego, CA"
-          value={address}
-          onChange={(event) => setAddress(event.target.value)}
-          className={
-            isCompactTop
-              ? "min-h-11 flex-1 rounded-control border border-lot-line bg-lot-chalk px-4 text-base text-lot-ink placeholder:text-lot-stone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink sm:text-sm"
-              : "min-h-11 flex-1 rounded-control border border-lot-stone-on-dark bg-lot-surface-dark px-4 text-base text-lot-chalk placeholder:text-lot-stone-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk sm:text-sm"
-          }
-        />
-        <button
-          type="submit"
-          className={
-            isCompactTop
-              ? "inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-bold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-surface"
-              : "inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-bold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink"
-          }
-        >
-          Check my address
-        </button>
-      </form>
+      <LotAnswerCard
+        surface={surface}
+        tone={isCompactTop ? "light" : "dark"}
+        inputId={`adu-studio-address-${placement}`}
+        inputLabel={`Your ${city} street address`}
+        placeholder={`Enter a ${city} street address`}
+        submitLabel="Check my address"
+        onLookupStart={() => trackEvent(aduCtaEvent(placement), { city_slug: slug })}
+        className="mt-4"
+      />
       {placement === "end" ? (
         <p className="mt-4 text-sm leading-relaxed text-lot-stone-on-dark">
           Prefer the app?{" "}

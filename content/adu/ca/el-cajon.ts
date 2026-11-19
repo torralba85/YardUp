@@ -202,7 +202,7 @@ export const elCajon: JurisdictionContent = {
         "Permit reviews are administrative and legally required to be decided within 60 calendar days of receiving a complete application. Average initial plan check takes approximately 3 to 4 weeks.",
     },
   ],
-  neighbors: ["la-mesa", "san-diego-county"],
+  neighbors: ["la-mesa", "san-diego", "san-diego-county"],
   sources: [
     {
       label: "El Cajon Municipal Code Title 17, Chapter 17.140: Accessory Dwelling Units (§17.140.180)",

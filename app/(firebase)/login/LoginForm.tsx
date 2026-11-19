@@ -6,8 +6,10 @@ import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CURRENT_LEGAL_CONSENT, useAuth } from "@/lib/auth-context";
+import { safeRedirectPath } from "@/lib/auth-redirect";
 import { isAppleSignInEnabled } from "@/lib/auth-providers";
 import { getAuthErrorCode, getAuthErrorMessage } from "@/lib/auth-errors";
+import { Button } from "@/components/ui/Button";
 import { Checkbox, Input } from "@/components/ui/Field";
 
 /** Email/password, Google, and (when enabled) Apple sign-in with a validated redirect. */
@@ -151,16 +153,28 @@ export default function LoginForm() {
           />
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="md"
+          fullWidth
           disabled={isPending}
-          className="w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition duration-(--duration-settle) ease-settle hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] disabled:opacity-50"
+          loading={isPending}
         >
           {isPending ? "Signing in..." : "Sign in"}
-        </button>
+        </Button>
       </form>
 
-      <label className="mt-6 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
+      <div className="relative mt-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-lot-line" />
+        </div>
+        <div className="lf-caption relative flex justify-center">
+          <span className="bg-lot-chalk px-2 text-lot-stone">or continue with</span>
+        </div>
+      </div>
+
+      <label className="mt-5 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
         <Checkbox
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
@@ -179,21 +193,15 @@ export default function LoginForm() {
         </span>
       </label>
 
-      <div className="relative mt-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-lot-line" />
-        </div>
-        <div className="lf-caption relative flex justify-center">
-          <span className="bg-lot-chalk px-2 text-lot-stone">or continue with</span>
-        </div>
-      </div>
-
-      <button
+      <Button
         type="button"
+        variant="commit"
+        size="md"
+        fullWidth
         onClick={handleGoogle}
         aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
-        className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
           <path
@@ -214,20 +222,23 @@ export default function LoginForm() {
           />
         </svg>
         Google
-      </button>
+      </Button>
       {appleEnabled && (
-        <button
+        <Button
           type="button"
+          variant="commit"
+          size="md"
+          fullWidth
           onClick={handleApple}
           aria-describedby="login-social-consent-help"
           disabled={isPending || !socialConsent}
-          className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-ink bg-lot-ink py-3 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
           </svg>
           Apple
-        </button>
+        </Button>
       )}
 
       <p id="login-social-consent-help" className="mt-3 text-xs leading-5 text-lot-stone" aria-live="polite">
@@ -242,7 +253,10 @@ export default function LoginForm() {
       <div className="mt-6 flex flex-col space-y-2">
         <p className="lf-body-sm text-center text-lot-stone">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-lot-orange-ink hover:text-lot-ink">
+          <Link
+            href={searchParams.get("next") ? `/signup?next=${encodeURIComponent(searchParams.get("next")!)}` : "/signup"}
+            className="font-medium text-lot-orange-ink hover:text-lot-ink"
+          >
             Sign up
           </Link>
         </p>
@@ -258,24 +272,4 @@ export default function LoginForm() {
       </div>
     </>
   );
-}
-
-function safeRedirectPath(value: string | null, buildersAllowed: boolean): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/studio";
-  }
-
-  try {
-    const parsed = new URL(value, "https://lotfoundry.local");
-    if (parsed.origin !== "https://lotfoundry.local") {
-      return "/studio";
-    }
-    const allowed = ["/studio", "/builder", "/settings", "/delete-account", "/feedback"];
-    if (!allowed.includes(parsed.pathname) || (!buildersAllowed && parsed.pathname === "/builder")) {
-      return "/studio";
-    }
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-  } catch {
-    return "/studio";
-  }
 }

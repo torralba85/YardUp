@@ -1,10 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { isPlainPlaceText, parseEmailScenario } from "@/lib/scenario-email";
-import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-share-url";
+import { isPlainPlaceText, isRecord, parseEmailScenario } from "@/lib/scenario";
+import { buildScenarioShareUrl, isAllowedScenarioUrl } from "@/lib/scenario-url";
 import { validateEmail } from "@/lib/account-settings";
-import { isRecord } from "@/lib/scenario-design";
 import { verifyLimitedUseAppCheck } from "@/lib/server/app-check";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { checkScenarioEmailRateLimit } from "@/lib/server/scenario-email-rate-limit";

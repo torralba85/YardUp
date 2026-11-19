@@ -32,7 +32,7 @@ import {
   type AuditTone,
   type PermitFeeAudit,
 } from "@/lib/certificate-permit-audit";
-import { BID_LEVELING_BUILDERS, BID_LEVELING_CHECKLIST } from "@/lib/certificate-bid-checklist";
+import { SCOPE_CHECKLIST, SCOPE_CHECKLIST_BUILDERS } from "@/lib/certificate-bid-checklist";
 import { buildAduHeightModel } from "@/lib/scene-model";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -226,7 +226,7 @@ export default function ReportPreview({
             <div className="mx-auto mt-2 h-px w-10 bg-lot-line" />
             <div className="lf-caption mt-2 truncate text-lot-stone">{parcelName}</div>
             {/* Decorative facsimile thumbnail only — not primary body copy. */}
-            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 font-sans text-[9px] uppercase tracking-[0.08em] text-status-blocked">
+            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 lf-kicker text-status-blocked">
               Concept
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function ReportPreview({
                 "Cost estimate range",
                 "Leveraged cash-flow pro forma",
                 ...(permitAudit ? [permitAudit.jurisdiction === "other" ? "Permit fee & submittal audit" : "750 sq ft fee & permit audit"] : []),
-                "3-builder bid-leveling checklist",
+                "3-builder scope checklist",
                 "Modeled site-fit flags",
                 "Rental analysis",
                 "Assumptions",
@@ -378,7 +378,7 @@ function CertificateStyleMatchSection({
       <div className={`mt-5 grid gap-4 ${concept.photoUrl ? "sm:grid-cols-2" : "grid-cols-1"}`}>
         {concept.photoUrl && (
           <div className="border border-lot-line bg-lot-surface p-2">
-            <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lot-stone">
+            <span className="mb-2 block lf-kicker text-lot-stone">
               Reference Home Exterior
             </span>
             <div className="relative aspect-[3/2] w-full overflow-hidden bg-lot-chalk">
@@ -392,7 +392,7 @@ function CertificateStyleMatchSection({
           </div>
         )}
         <div className="border border-lot-line bg-lot-surface p-2">
-          <span className="mb-2 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-lot-stone">
+          <span className="mb-2 block lf-kicker text-lot-stone">
             Style-Matched ADU Concept
           </span>
           <div className="relative aspect-[3/2] w-full overflow-hidden bg-lot-chalk">
@@ -415,7 +415,7 @@ function CertificateStyleMatchSection({
             {concept.traits.map((trait) => (
               <span
                 key={trait}
-                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-[10px] font-medium text-lot-ink"
+                className="rounded-none border border-lot-line bg-lot-chalk px-2.5 py-1 font-sans text-xs font-medium text-lot-ink"
               >
                 {trait}
               </span>
@@ -578,7 +578,7 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
       aria-labelledby="certificate-bid-checklist-heading"
       className="mt-6 border-t border-lot-ink pt-5 print:break-before-page"
     >
-      <p className="lf-dataprint text-lot-orange-ink">Builder RFQ sheet · {parcelName}</p>
+      <p className="lf-dataprint text-lot-orange-ink">Scope sheet · {parcelName}</p>
       <h3 id="certificate-bid-checklist-heading" className="mt-1 font-display text-xl font-medium leading-tight text-lot-ink">
         Scope Checklist
       </h3>
@@ -594,7 +594,7 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
                 <span className="sr-only">Item number</span>
               </th>
               <th scope="col" className="lf-dataprint py-2 pr-3 text-left text-lot-stone">Scope item</th>
-              {BID_LEVELING_BUILDERS.map((builder) => (
+              {SCOPE_CHECKLIST_BUILDERS.map((builder) => (
                 <th key={builder} scope="col" className="lf-dataprint w-24 px-1 py-2 text-center text-lot-stone">
                   {builder}
                 </th>
@@ -602,14 +602,14 @@ function CertificateBidChecklistSection({ parcelName }: { parcelName: string }) 
             </tr>
           </thead>
           <tbody>
-            {BID_LEVELING_CHECKLIST.map((item, index) => (
+            {SCOPE_CHECKLIST.map((item, index) => (
               <tr key={item.id} className="border-b border-lot-line align-top">
                 <td className="py-2 pr-2 tabular-nums text-lot-stone">{String(index + 1).padStart(2, "0")}</td>
                 <th scope="row" className="py-2 pr-3 text-left font-normal">
                   <span className="block text-sm font-semibold leading-5 text-lot-ink">{item.title}</span>
                   <span className="mt-0.5 block leading-5 text-lot-stone">{item.ask}</span>
                 </th>
-                {BID_LEVELING_BUILDERS.map((builder) => (
+                {SCOPE_CHECKLIST_BUILDERS.map((builder) => (
                   <td key={builder} className="px-1 py-1 text-center">
                     <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
                       <Checkbox
@@ -763,7 +763,7 @@ function CertificateBriefSection({
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-lot-ink">{risk.label}</span>
                       <span
-                        className={`rounded-none border px-2 py-0.5 font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${REPORT_RISK_TONE[risk.level]}`}
+                        className={`rounded-none border px-2 py-0.5 lf-kicker ${REPORT_RISK_TONE[risk.level]}`}
                       >
                         {risk.level}
                       </span>
@@ -806,7 +806,7 @@ function CertificateBriefSection({
                       className="absolute bottom-0 left-[11px] top-6 w-px bg-lot-line"
                     />
                   )}
-                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lot-line bg-lot-chalk font-sans text-[9px] text-lot-stone">
+                  <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-lot-line bg-lot-chalk font-sans text-[11px] text-lot-stone">
                     {index + 1}
                   </span>
                   <div className="min-w-0 border-b border-lot-line pb-3 last:border-b-0">
@@ -814,13 +814,13 @@ function CertificateBriefSection({
                       <span className="text-xs font-semibold leading-5 text-lot-ink">
                         {stage.name}
                       </span>
-                      <span className="shrink-0 font-sans text-[9px] text-lot-stone">
+                      <span className="shrink-0 font-sans text-[11px] text-lot-stone">
                         {stage.estWeeksLow}&ndash;{stage.estWeeksHigh} WK
                       </span>
                     </div>
                     <p className="mt-1 text-[11px] leading-4 text-lot-stone">{stage.description}</p>
                     <span
-                      className={`mt-1.5 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] ${tone.className}`}
+                      className={`mt-1.5 block lf-kicker ${tone.className}`}
                     >
                       {tone.label}
                     </span>
@@ -840,7 +840,7 @@ function CertificateBriefSection({
           <ol className="mt-3 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {nextSteps.map((step, index) => (
               <li key={`${index}-${step}`} className="grid grid-cols-[20px_1fr] gap-2 text-xs leading-5 text-lot-stone">
-                <span className="font-sans text-[9px] text-lot-stone">
+                <span className="font-sans text-xs text-lot-stone">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <span>{step}</span>

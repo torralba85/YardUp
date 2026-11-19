@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
-import { buildScenarioShareUrl } from "../lib/scenario-share-url";
+import { buildScenarioShareUrl } from "../lib/scenario-url";
 import { mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 test.setTimeout(90_000);
 
-test("email capture stays out of the first result and design flow", async ({ page, isMobile }) => {
+test("email capture appears on results and stays out of the design flow", async ({ page, isMobile }) => {
   await mockTestOwnerAuth(page);
   await page.route("**/api/studio/scenario-link/*", (route) => route.fulfill({ json: { scenario: EMAIL_SCENARIO } }));
   const url = new URL(buildScenarioShareUrl(EMAIL_SCENARIO, "d".repeat(48)));
@@ -13,22 +13,22 @@ test("email capture stays out of the first result and design flow", async ({ pag
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
   if (isMobile) {
     await expect(page.getByRole("button", { name: "Shape your ADU" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Shape your ADU" }).click();
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Check feasibility" }).click();
+    await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & Fit/ }).click();
     await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
-  }
-  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
-  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
-  if (isMobile) {
-    await page.getByRole("button", { name: "Shape your ADU" }).click();
-  } else {
+    await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+    await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
   }
-  await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toHaveCount(0);
-  await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
 });
 
-test("free lot link queues a real design and carries email into certificate signup", async ({ page }, testInfo) => {
+test("free lot link queues a real design and carries email into the account dialog", async ({ page }, testInfo) => {
   await mockTestOwnerAuth(page);
   const parcel = EMAIL_SCENARIO.liveParcel!;
   await page.route("**/api/geocode?**", (route) => route.fulfill({ json: { lat: parcel.lat, lng: parcel.lng, formattedAddress: parcel.address } }));
@@ -66,7 +66,8 @@ test("free lot link queues a real design and carries email into certificate sign
   expect(new URL(captured!.scenarioUrl as string).origin).toBe("https://lotfoundry.net");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("email-link-queued.png"), fullPage: true });
-  await page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first().click();
+  // Web guests now check out anonymously, so the account dialog opens from the header (or after purchase).
+  await page.getByRole("button", { name: /^Sign in$/i }).filter({ visible: true }).first().click();
   await expect(page.getByRole("dialog").getByLabel("Email", { exact: true })).toHaveValue("layout-owner@example.test");
 });
 
@@ -96,9 +97,9 @@ test("emailed layout restores the real parcel without a guest lookup and survive
   expect(parcelLookups).toBe(0);
   await expect.poll(() => new URL(page.url()).searchParams.get("layout")).toBe("a".repeat(48));
   await card.screenshot({ path: testInfo.outputPath("email-link-restored.png") });
-  await page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first().click();
+  // Web guests now check out anonymously; an existing member signs in from the header.
+  await page.getByRole("button", { name: /^Sign in$/i }).filter({ visible: true }).first().click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("button", { name: "Already have an account? Sign in" }).click();
   await dialog.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
   await dialog.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
   await dialog.locator('button[type="submit"]').click();

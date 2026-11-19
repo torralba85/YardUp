@@ -22,7 +22,7 @@ import {
   type Parcel,
 } from "./feasibility";
 import { type PlacementResult } from "./placement-validation";
-import { describePlacementWithEvidence } from "./placement-evidence";
+import { describePlacement } from "./scene-placement";
 import { parcelConfidence } from "./parcel-confidence";
 import { modeledSetbackAreaSqft } from "./parcel-geometry";
 import type { GeoJsonPolygon } from "./parcel-types";
@@ -254,7 +254,7 @@ export function summarizeFeasibility(
     },
   ];
 
-  const feedback = placement ? describePlacementWithEvidence(placement, parcel) : undefined;
+  const feedback = placement ? describePlacement(placement, parcel) : undefined;
   // Model geometry can fit while its real-world alignment remains unverified.
   // Count the same evidence-aware status shown in the row in the aggregate.
   const placementReview = feedback !== undefined && feedback.tone !== "clear";

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchUserPurchasedCertificates,
   formatCertKeyFallback,
+  formatCertificateLocality,
   buildStudioUrlForCertificate,
   type PurchasedCertificate,
 } from "./purchased-certificates";
@@ -52,6 +53,30 @@ describe("purchased-certificates helpers", () => {
       const near = formatCertKeyFallback("12-oak-streetview-portland-or");
       expect(near.title).not.toBe("1234 Oak Street");
       expect(near.title).toBe("12 Oak Streetview Portland Or");
+    });
+  });
+
+  describe("formatCertificateLocality", () => {
+    it("joins separate city, state and ZIP fields", () => {
+      expect(formatCertificateLocality("San Jose", "CA", "95110")).toBe("San Jose, CA 95110");
+      expect(formatCertificateLocality("San Jose", undefined, "95110")).toBe("San Jose 95110");
+      expect(formatCertificateLocality("San Jose", "CA")).toBe("San Jose, CA");
+    });
+
+    it("does not repeat a state or ZIP the city field already carries", () => {
+      // Live lookups store city as "San Diego, CA 92101" beside state and zip.
+      expect(formatCertificateLocality("San Diego, CA 92101", "CA", "92101")).toBe("San Diego, CA 92101");
+      expect(formatCertificateLocality("morgan hill, CA 95037", "CA", "95037")).toBe("morgan hill, CA 95037");
+      expect(formatCertificateLocality("San Diego, CA", "CA", "92101")).toBe("San Diego, CA 92101");
+    });
+
+    it("keeps a state code that only appears inside a city name", () => {
+      expect(formatCertificateLocality("Carlsbad", "CA", "92008")).toBe("Carlsbad, CA 92008");
+    });
+
+    it("returns undefined without a city", () => {
+      expect(formatCertificateLocality(undefined, "CA", "92101")).toBeUndefined();
+      expect(formatCertificateLocality("  ", "CA")).toBeUndefined();
     });
   });
 

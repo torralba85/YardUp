@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFocusTrap } from "./useFocusTrap";
@@ -169,7 +169,10 @@ export function Dialog({
     setClosing(true);
     exitTimer.current = window.setTimeout(() => {
       exitTimer.current = null;
-      onClose();
+      // Commit the caller's unmount before this returns, as when `onClose` ran
+      // inside the key or click event. Left to the scheduler, the page can still
+      // be inert when a caller restores focus on the next frame.
+      flushSync(onClose);
     }, EXIT_MS);
   }, [onClose]);
 

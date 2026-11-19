@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdminDb } from "@/lib/server/firebase-admin";
-import { parseEmailScenario } from "@/lib/scenario-email";
-import { validLayoutToken } from "@/lib/scenario-share-url";
+import { parseEmailScenario } from "@/lib/scenario";
+import { validLayoutToken } from "@/lib/scenario-url";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
 export const runtime = "nodejs";

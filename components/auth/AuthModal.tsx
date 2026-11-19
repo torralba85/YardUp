@@ -98,7 +98,16 @@ export function AuthModal({
   analyticsSource = "account_control",
   onAuthenticated,
 }: AuthModalProps) {
-  const { signIn, signUp, signInWithGoogle, signInWithApple, user } = useAuth();
+  const {
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signInWithApple,
+    user,
+    checkoutUser,
+    linkCheckoutWithEmail,
+    linkCheckoutWithGoogle,
+  } = useAuth();
   const appleEnabled = isAppleSignInEnabled();
   const [isSignUp, setIsSignUp] = useState(initialMode === "sign-up");
   const [role, setRole] = useState<"user" | "builder">("user");
@@ -286,13 +295,23 @@ export function AuthModal({
           source: analyticsSource,
           role,
         });
-        const credential = await signUp(
-          email,
-          password,
-          displayName,
-          role,
-          CURRENT_LEGAL_CONSENT,
-        );
+        const credential =
+          checkoutUser?.isAnonymous &&
+          role === "user" &&
+          typeof linkCheckoutWithEmail === "function"
+            ? await linkCheckoutWithEmail(
+                email,
+                password,
+                displayName,
+                CURRENT_LEGAL_CONSENT,
+              )
+            : await signUp(
+                email,
+                password,
+                displayName,
+                role,
+                CURRENT_LEGAL_CONSENT,
+              );
         trackSignupSucceeded({
           method: "password",
           surface: analyticsSurface,
@@ -345,7 +364,18 @@ export function AuthModal({
           role,
         });
       }
-      const credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+      let credential: { user: FirebaseUser; profileCreated?: boolean };
+      if (
+        isSignUp &&
+        checkoutUser?.isAnonymous &&
+        role === "user" &&
+        typeof linkCheckoutWithGoogle === "function"
+      ) {
+        const linked = await linkCheckoutWithGoogle(CURRENT_LEGAL_CONSENT);
+        credential = { user: linked.user, profileCreated: true };
+      } else {
+        credential = await signInWithGoogle(role, CURRENT_LEGAL_CONSENT);
+      }
       // A popup sign-in to an already-registered account is a login, not a sign-up.
       if (isSignUp && credential.profileCreated) {
         trackSignupSucceeded({

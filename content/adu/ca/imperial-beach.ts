@@ -160,7 +160,7 @@ export const imperialBeach: JurisdictionContent = {
         "Four feet from the side and rear property lines. Building that close has consequences: the City's pre-approved plan notes require a one-hour fire-rated wall within 5 feet of the line without sprinklers, limit openings to 25% of that wall, and allow none within 3 feet.",
     },
   ],
-  neighbors: ["san-diego", "chula-vista"],
+  neighbors: ["san-diego", "chula-vista", "san-diego-county"],
   sources: [
     {
       label: "City of Imperial Beach — Accessory Dwelling Units (Planning Division)",

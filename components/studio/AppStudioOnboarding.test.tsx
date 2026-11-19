@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import type { User } from "firebase/auth";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LiveParcelData } from "@/lib/parcel-types";
+import { consumeGuestLookup, GUEST_LOOKUP_LIMIT } from "@/lib/guest-lookup";
 import AppStudioOnboarding, { APP_GUIDE_SEEN_KEY } from "./AppStudioOnboarding";
 
 const mocks = vi.hoisted(() => ({
@@ -259,6 +260,7 @@ describe("AppStudioOnboarding", () => {
     await clicker.click(screen.getByRole("button", { name: /Open the Studio/ }));
     await clicker.click(screen.getByRole("button", { name: "First lookup" }));
     expect(await screen.findByText("100 Main St")).toBeInTheDocument();
+    for (let i = 1; i < GUEST_LOOKUP_LIMIT; i += 1) consumeGuestLookup();
     const study = screen.getByRole("textbox", { name: "Unsaved study" });
     await clicker.type(study, "400 sf flat roof");
     mocks.geocodeAddress.mockClear().mockResolvedValue({ lat: 34.06, lng: -118.26, formattedAddress: "200 Oak St" });

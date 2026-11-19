@@ -218,7 +218,7 @@ export const sanDiego: JurisdictionContent = {
         "It depends almost entirely on your lot and your build size, which is what the Studio is for. The inputs that decide it are buildable area after setbacks, build cost at your chosen size, and achievable rent for that size in your neighborhood.",
     },
   ],
-  neighbors: ["chula-vista", "escondido", "imperial-beach", "san-diego-county", "la-mesa"],
+  neighbors: ["chula-vista", "escondido", "imperial-beach", "san-diego-county", "la-mesa", "el-cajon"],
   sources: [
     {
       label: "City of San Diego Development Services — ADU / JADU Program",

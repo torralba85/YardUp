@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Move } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { getSnapToFitPose } from "@/lib/site-fit";
+import { getSnapToFitPose } from "@/lib/scene-placement";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
 import type { Pose2D } from "@/lib/scene-model";
 

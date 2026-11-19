@@ -94,8 +94,11 @@ export async function GET(request: NextRequest) {
   const query = q.slice(0, MAX_QUERY_LEN);
 
   // Held to the keyless provider by construction rather than by a branch at
-  // the call site, so no future edit can reintroduce a paid call for guests.
-  const googleKey = guest
+  // the call site, so no future edit can reintroduce a paid call for guests
+  // or anonymous checkout sessions.
+  const auth = !guest ? await requireApiAuth(request) : null;
+  const effectiveGuest = guest || !auth || auth instanceof NextResponse;
+  const googleKey = effectiveGuest
     ? undefined
     : process.env.GOOGLE_GEOCODING_KEY || process.env.GOOGLE_MAPS_API_KEY;
   let result: GeocodeResult | null = null;
@@ -103,14 +106,11 @@ export async function GET(request: NextRequest) {
   if (googleKey) {
     result = await geocodeWithGoogle(query, googleKey);
   }
-  if (!result && !guest && process.env.ATTOM_API_KEY && canLookUpAttomAddress(query)) {
-    const auth = await requireApiAuth(request);
-    if (!(auth instanceof NextResponse)) {
-      const attom = (await fetchAttomAddress(query)).result;
-      // A street point may sit in the roadway or beside another lot. Keep
-      // ATTOM's address evidence in /api/parcel, but use a geocoder to locate it.
-      if (attom && attom.match.precision !== "street") result = attom;
-    }
+  if (!result && !effectiveGuest && process.env.ATTOM_API_KEY && canLookUpAttomAddress(query)) {
+    const attom = (await fetchAttomAddress(query)).result;
+    // A street point may sit in the roadway or beside another lot. Keep
+    // ATTOM's address evidence in /api/parcel, but use a geocoder to locate it.
+    if (attom && attom.match.precision !== "street") result = attom;
   }
   if (!result) {
     result = await geocodeWithNominatim(query);

@@ -26,8 +26,8 @@ export function AuthLayout({
       <main id="main-content" tabIndex={-1} className="lf-backdrop lf-grain flex flex-1 items-center justify-center px-4 py-12">
         <div className="lf-entrance w-full max-w-md">
           {/* Card */}
-          <Bezel>
-            <div className="p-8">
+          <Bezel className="shadow-none">
+            <div className="p-6 sm:p-8">
               <h1 className="lf-panel-heading text-lot-ink">
                 {title}
               </h1>

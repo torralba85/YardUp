@@ -746,3 +746,56 @@ export function trackBuilderLeadUnlocked(params: {
     triage_status: params.triage_status,
   });
 }
+
+export type LotAnswerSurface = "landing" | "guide" | "cost" | "quiz";
+export type LotAnswerQuality =
+  | "parcel_record"
+  | "estimated_lot"
+  | "approximate_geocode";
+
+/**
+ * 17. lot_answer_viewed — inline lot feasibility answer rendered on a public
+ * entry surface (landing hero, guide CTA, cost page, or eligibility quiz).
+ * Bounded categories and buckets only; never carries address, coordinates, or APN.
+ */
+export function trackLotAnswerViewed(params: {
+  surface: LotAnswerSurface;
+  parcel_source: ParcelSource;
+  feasibility_status: FeasibilityStatus;
+  lot_size_bucket?: LotSizeBucket;
+  adu_sqft_bucket?: AduSqftBucket;
+  lot_quality: LotAnswerQuality;
+  state_code?: string;
+}): void {
+  const p: Record<string, unknown> = {
+    surface: params.surface,
+    parcel_source: params.parcel_source,
+    feasibility_status: params.feasibility_status,
+    lot_quality: params.lot_quality,
+  };
+  if (params.lot_size_bucket) p.lot_size_bucket = params.lot_size_bucket;
+  if (params.adu_sqft_bucket) p.adu_sqft_bucket = params.adu_sqft_bucket;
+  if (params.state_code && /^[A-Z]{2}$/i.test(params.state_code)) {
+    p.state_code = params.state_code.toUpperCase();
+  }
+  trackEvent("lot_answer_viewed", p);
+}
+
+/**
+ * 18. lot_answer_open_studio — visitor clicked "Open in 3D" from an inline
+ * lot answer card, handing the resolved parcel into /studio via sessionStorage.
+ */
+export function trackLotAnswerOpenStudio(params: {
+  surface: LotAnswerSurface;
+  parcel_source: ParcelSource;
+  feasibility_status: FeasibilityStatus;
+  adu_sqft_bucket?: AduSqftBucket;
+}): void {
+  const p: Record<string, unknown> = {
+    surface: params.surface,
+    parcel_source: params.parcel_source,
+    feasibility_status: params.feasibility_status,
+  };
+  if (params.adu_sqft_bucket) p.adu_sqft_bucket = params.adu_sqft_bucket;
+  trackEvent("lot_answer_open_studio", p);
+}

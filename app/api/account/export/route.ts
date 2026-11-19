@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
-import { parseEmailScenario } from "@/lib/scenario-email";
+import { parseEmailScenario } from "@/lib/scenario";
 
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
 export const runtime = "nodejs";

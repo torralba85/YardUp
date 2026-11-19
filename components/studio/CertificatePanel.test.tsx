@@ -46,9 +46,30 @@ const mocks = vi.hoisted(() => ({
     analyticsOrderId: "order-safe-12345",
   },
   auth: {
-    user: null as { uid: string; getIdToken: () => Promise<string> } | null,
+    user: null as {
+      uid: string;
+      email?: string;
+      emailVerified?: boolean;
+      isAnonymous?: boolean;
+      getIdToken: () => Promise<string>;
+    } | null,
+    checkoutUser: undefined as
+      | {
+          uid: string;
+          email?: string;
+          emailVerified?: boolean;
+          isAnonymous?: boolean;
+          getIdToken: () => Promise<string>;
+        }
+      | null
+      | undefined,
     profile: null as { role: "user" | "builder" } | null,
     loading: false,
+    ensureCheckoutUser: vi.fn(),
+    linkCheckoutWithEmail: vi.fn(),
+    linkCheckoutWithGoogle: vi.fn(),
+    refreshProfile: vi.fn(),
+    sendVerification: vi.fn(),
   },
 }));
 
@@ -83,13 +104,24 @@ vi.mock("@/lib/commerce/store-price", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({
-    user: mocks.auth.user,
-    profile: mocks.auth.profile,
-    loading: mocks.auth.loading,
-  }),
-}));
+vi.mock("@/lib/auth-context", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/auth-context")>();
+  return {
+    ...actual,
+    useAuth: () => ({
+      user: mocks.auth.user,
+      checkoutUser:
+        mocks.auth.checkoutUser === undefined ? mocks.auth.user : mocks.auth.checkoutUser,
+      profile: mocks.auth.profile,
+      loading: mocks.auth.loading,
+      ensureCheckoutUser: mocks.auth.ensureCheckoutUser,
+      linkCheckoutWithEmail: mocks.auth.linkCheckoutWithEmail,
+      linkCheckoutWithGoogle: mocks.auth.linkCheckoutWithGoogle,
+      refreshProfile: mocks.auth.refreshProfile,
+      sendVerification: mocks.auth.sendVerification,
+    }),
+  };
+});
 
 vi.mock("@/lib/analytics/adsConversion", () => ({
   trackPurchase: mocks.trackPurchase,
@@ -267,8 +299,18 @@ describe("CertificatePanel", () => {
     mocks.access.purchased = true;
     mocks.access.loading = false;
     mocks.auth.user = { uid: "owner-1", getIdToken: mocks.getIdToken };
+    mocks.auth.checkoutUser = undefined;
     mocks.auth.profile = null;
     mocks.auth.loading = false;
+    mocks.auth.ensureCheckoutUser.mockReset().mockResolvedValue({
+      uid: "anon-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    });
+    mocks.auth.linkCheckoutWithEmail.mockReset();
+    mocks.auth.linkCheckoutWithGoogle.mockReset();
+    mocks.auth.refreshProfile.mockReset();
+    mocks.auth.sendVerification.mockReset();
     authModal.props = null;
     storePrice.override = null;
     for (const fn of Object.values(analyticsEvents)) fn.mockClear();
@@ -511,12 +553,67 @@ describe("CertificatePanel", () => {
       );
     });
 
-    it("makes the guest transaction explicit and opens certificate sign-up first", () => {
+    it("requires legal consent before web guest checkout and proceeds directly via anonymous session without AuthModal", async () => {
       mocks.auth.user = null;
+      const assign = stubLocationAssign();
+      mocks.startCertificateCheckout.mockResolvedValueOnce({
+        kind: "redirect",
+        url: "https://checkout.stripe.com/c/pay/cs_guest_direct",
+      });
       render(<CertificatePanel {...createProps()} />);
 
+      // Clicking before checking Terms/Privacy/18+ blocks checkout.
       fireEvent.click(
         screen.getByRole("button", { name: "Continue to secure checkout — $29" }),
+      );
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /18 or older and accept the Terms and Privacy Policy/,
+      );
+      expect(mocks.auth.ensureCheckoutUser).not.toHaveBeenCalled();
+      expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+      // Checking consent starts anonymous checkout directly without creating an account.
+      fireEvent.click(screen.getByRole("checkbox"));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to secure checkout — $29" }),
+      );
+
+      await waitFor(() =>
+        expect(assign).toHaveBeenCalledWith(
+          "https://checkout.stripe.com/c/pay/cs_guest_direct",
+        ),
+      );
+      expect(mocks.auth.ensureCheckoutUser).toHaveBeenCalledTimes(1);
+      expect(mocks.startCertificateCheckout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          certKey: certificateKey(parcel),
+          legalConsent: expect.objectContaining({
+            termsVersion: "2026-11-06",
+            privacyVersion: "2026-11-06",
+            adultConfirmed: true,
+          }),
+        }),
+      );
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("still requires account sign-up before native Play Billing purchase (native exclusion)", () => {
+      mocks.auth.user = null;
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
+      render(<CertificatePanel {...createProps()} />);
+
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to purchase — $28.99" }),
       );
 
       expect(screen.getByRole("dialog")).toHaveAttribute("data-mode", "sign-up");
@@ -524,6 +621,7 @@ describe("CertificatePanel", () => {
         "data-source",
         "certificate_purchase",
       );
+      expect(mocks.auth.ensureCheckoutUser).not.toHaveBeenCalled();
     });
 
     it("quotes the Play-billed amount instead of the Stripe price in the Android app", () => {
@@ -619,39 +717,51 @@ describe("CertificatePanel", () => {
       );
     });
 
-    it("continues the pending guest purchase after authentication", async () => {
+    it("continues the pending native guest purchase after authentication", async () => {
       mocks.auth.user = null;
-      const assign = stubLocationAssign();
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
       mocks.startCertificateCheckout.mockResolvedValueOnce({
-        kind: "redirect",
-        url: "https://checkout.stripe.com/c/pay/cs_live_after_auth",
+        kind: "granted",
+        demo: false,
       });
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: /continue to purchase/i }));
       fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
 
       await waitFor(() =>
-        expect(assign).toHaveBeenCalledWith(
-          "https://checkout.stripe.com/c/pay/cs_live_after_auth",
-        ),
+        expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1),
       );
       expect(mocks.getIdToken).toHaveBeenCalledTimes(1);
-      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
       expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
-      expect(analyticsEvents.trackCertificateCheckoutRedirected).toHaveBeenCalledTimes(1);
     });
 
-    it("resumes the purchase when sign-in remounts the Studio for a real address", async () => {
+    it("resumes the native purchase when sign-in remounts the Studio for a real address", async () => {
       mocks.auth.user = null;
-      const assign = stubLocationAssign();
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
       mocks.startCertificateCheckout.mockResolvedValueOnce({
-        kind: "redirect",
-        url: "https://checkout.stripe.com/c/pay/cs_live_after_remount",
+        kind: "granted",
+        demo: false,
       });
       const livePanel = render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: /continue to purchase/i }));
       // Signing in swaps the Studio for SignedInStudioGate: this panel unmounts
       // before the session publishes, and a fresh one mounts afterwards.
       livePanel.unmount();
@@ -663,19 +773,25 @@ describe("CertificatePanel", () => {
       render(<CertificatePanel {...createProps()} />);
 
       await waitFor(() =>
-        expect(assign).toHaveBeenCalledWith(
-          "https://checkout.stripe.com/c/pay/cs_live_after_remount",
-        ),
+        expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1),
       );
-      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
       expect(hasCertificatePurchaseIntent()).toBe(false);
     });
 
-    it("forgets the purchase when the account step is dismissed", async () => {
+    it("forgets the native purchase when the account step is dismissed", async () => {
       mocks.auth.user = null;
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
       const { rerender } = render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: /continue to purchase/i }));
       fireEvent.click(screen.getByRole("button", { name: "Dismiss authentication" }));
       expect(hasCertificatePurchaseIntent()).toBe(false);
 
@@ -689,9 +805,18 @@ describe("CertificatePanel", () => {
     it("never routes a builder account from the purchase prompt into homeowner checkout", async () => {
       mocks.auth.user = null;
       mocks.auth.profile = { role: "builder" };
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: /continue to purchase/i }));
       fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
 
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -702,16 +827,24 @@ describe("CertificatePanel", () => {
       expect(analyticsEvents.trackCertificateCheckoutStarted).not.toHaveBeenCalled();
     });
 
-    it("waits for the new session's profile before resuming checkout", async () => {
+    it("waits for the new session's profile before resuming native checkout", async () => {
       mocks.auth.user = null;
-      const assign = stubLocationAssign();
+      storePrice.override = {
+        channel: "google-play",
+        amount: "$28.99",
+        amountCompact: "$28.99",
+        unitAmount: "$28.99",
+        exact: true,
+        loading: false,
+        error: null,
+      };
       mocks.startCertificateCheckout.mockResolvedValueOnce({
-        kind: "redirect",
-        url: "https://checkout.stripe.com/c/pay/cs_live_after_profile",
+        kind: "granted",
+        demo: false,
       });
       const { rerender } = render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /continue to secure checkout/i }));
+      fireEvent.click(screen.getByRole("button", { name: /continue to purchase/i }));
       mocks.auth.loading = true;
       fireEvent.click(screen.getByRole("button", { name: "Complete authentication" }));
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -722,11 +855,8 @@ describe("CertificatePanel", () => {
       rerender(<CertificatePanel {...createProps()} />);
 
       await waitFor(() =>
-        expect(assign).toHaveBeenCalledWith(
-          "https://checkout.stripe.com/c/pay/cs_live_after_profile",
-        ),
+        expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1),
       );
-      expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
     });
 
     it("does not start a duplicate checkout after auth for a recovery intent", async () => {
@@ -1106,5 +1236,139 @@ describe("CertificatePanel", () => {
 
     finishCheckout({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_test_1" });
     await waitFor(() => expect(window.location.assign).toHaveBeenCalledTimes(1));
+  });
+
+  it("unlocks for an anonymous checkout return, runs project brief with checkoutUser, and offers account linking", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
+    const onGenerateProjectBrief = vi.fn().mockResolvedValue(brief);
+    const onOpenCertificate = vi.fn();
+
+    render(
+      <CertificatePanel
+        {...createProps({ onGenerateProjectBrief, onOpenCertificate })}
+      />,
+    );
+
+    await waitFor(() => expect(onOpenCertificate).toHaveBeenCalledTimes(1));
+    expect(onGenerateProjectBrief).toHaveBeenCalledWith("test-token");
+    expect(mocks.trackPurchase).toHaveBeenCalledWith({
+      value: CERTIFICATE_PRICE_CENTS / 100,
+      transactionId: "order-safe-12345",
+    });
+
+    // Offers Save this certificate to an account for the anonymous buyer.
+    expect(
+      screen.getByRole("heading", { name: "Save this certificate to an account" }),
+    ).toBeInTheDocument();
+
+    // Linking Google requires checking legal consent first.
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/18 or older/);
+    expect(mocks.auth.linkCheckoutWithGoogle).not.toHaveBeenCalled();
+
+    const saveSection = screen
+      .getByRole("heading", { name: "Save this certificate to an account" })
+      .closest("section")!;
+    fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    await waitFor(() =>
+      expect(mocks.auth.linkCheckoutWithGoogle).toHaveBeenCalledWith(
+        expect.objectContaining({
+          termsVersion: "2026-11-06",
+          privacyVersion: "2026-11-06",
+          adultConfirmed: true,
+        }),
+      ),
+    );
+  });
+
+  it("recovers a certificate by verified email after account-exists linking collision and sign-in", async () => {
+    mocks.auth.user = null;
+    mocks.auth.checkoutUser = {
+      uid: "anon-buyer-1",
+      isAnonymous: true,
+      getIdToken: mocks.getIdToken,
+    };
+    mocks.auth.linkCheckoutWithGoogle.mockRejectedValueOnce({
+      code: "auth/credential-already-in-use",
+    });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          claimedCertKeys: [certificateKey(parcel)],
+          alreadyOwnedCertKeys: [],
+        }),
+        { status: 200 },
+      ),
+    );
+
+    try {
+      const props = createProps({ projectBrief: brief });
+      const { rerender } = render(<CertificatePanel {...props} />);
+      const saveSection = screen
+        .getByRole("heading", { name: "Save this certificate to an account" })
+        .closest("section")!;
+      fireEvent.click(saveSection.querySelector('input[type="checkbox"]')!);
+      fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        /An account with this email already exists/,
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: "Sign in to existing account" }),
+      );
+      expect(screen.getByRole("dialog")).toHaveAttribute("data-mode", "sign-in");
+
+      // Simulate signing into the existing verified account where the cert isn't yet unlocked.
+      mocks.access.purchased = false;
+      mocks.auth.user = {
+        uid: "existing-owner",
+        email: "owner@example.com",
+        emailVerified: true,
+        getIdToken: mocks.getIdToken,
+      };
+      mocks.auth.checkoutUser = mocks.auth.user;
+      rerender(<CertificatePanel {...props} />);
+
+      await waitFor(() =>
+        expect(fetchSpy).toHaveBeenCalledWith(
+          "/api/certificates/claim",
+          expect.objectContaining({
+            method: "POST",
+            headers: expect.objectContaining({
+              Authorization: "Bearer test-token",
+            }),
+          }),
+        ),
+      );
+      // A token cached from before email verification would carry
+      // email_verified=false and be rejected, so the claim forces a refresh.
+      expect(mocks.getIdToken).toHaveBeenCalledWith(true);
+      await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("shows decision-support offer copy and preliminary-estimate disclaimer before purchase", () => {
+    mocks.access.purchased = false;
+    mocks.access.loading = false;
+    render(<CertificatePanel {...createProps()} />);
+
+    expect(
+      screen.getByText(/Answer whether rent covers your loan payment and whether your builder/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Preliminary algorithmic planning estimate; does not constitute a municipal building permit, zoning warranty, or architectural certification\./i,
+      ),
+    ).toBeInTheDocument();
   });
 });

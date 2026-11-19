@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { defaultAduConfig, defaultFinancialAssumptions } from "./feasibility";
 import { createSavedScenarioStore, migrateSavedScenario, isValidSavedScenario } from "./saved-scenarios";
 import { mergeScenarioPartial, parseScenarioParams, serializeScenarioParams } from "./scenario-url";
-import { restoreScenario } from "./scenario-restoration";
+import { restoreScenario } from "./scenario";
 const ref = { planId: "sacramento-studio-367", jurisdictionId: "ca-sacramento" };
 const scenario = { id: "test", name: "Plan reference", createdAt: "2026-11-06T00:00:00Z", parcelId: "oak-street", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, preapprovedPlan: ref };
 

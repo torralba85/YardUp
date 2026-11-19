@@ -118,7 +118,7 @@ export async function saveBuilderProfile(
  */
 export async function fetchActiveBuilders(): Promise<BuilderDirectoryProfile[]> {
   const user = auth.currentUser;
-  if (!user) throw new Error("Sign in to browse the builder network.");
+  if (!user || user.isAnonymous) throw new Error("Sign in to browse the builder network.");
 
   const response = await fetch("/api/builders/active", {
     headers: { Authorization: `Bearer ${await user.getIdToken()}` },

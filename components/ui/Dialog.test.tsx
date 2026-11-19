@@ -142,6 +142,52 @@ describe("Dialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("commits the caller's unmount before the deferred close returns, so focus can go back to the page", () => {
+    // `onClose` runs from a timer after the settle. A caller that unmounts the
+    // dialog and then restores focus on the next frame needs the page to be
+    // un-inerted by then, exactly as when `onClose` ran inside the key event.
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      matches: query === "(prefers-reduced-motion: no-preference)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(() => true),
+    }));
+    vi.useFakeTimers();
+    let inertWhenCloseReturned: boolean | null = null;
+    function Host() {
+      const [open, setOpen] = useState(true);
+      return (
+        <>
+          <main data-testid="page">page</main>
+          {open && (
+            <Dialog title="Save your property" onClose={() => setOpen(false)}>
+              body
+            </Dialog>
+          )}
+        </>
+      );
+    }
+    render(<Host />);
+    const page = screen.getByTestId("page").parentElement as HTMLElement;
+    expect(page).toHaveAttribute("inert");
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    // Read the DOM in the same task as the timer, before React's scheduler
+    // could run a deferred render.
+    window.setTimeout(() => {
+      inertWhenCloseReturned = page.hasAttribute("inert");
+    }, 150);
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(inertWhenCloseReturned).toBe(false);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("only the topmost of two stacked dialogs answers Escape", async () => {
     const outerClose = vi.fn();
     const innerClose = vi.fn();
