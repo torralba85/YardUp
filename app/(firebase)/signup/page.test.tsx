@@ -20,6 +20,8 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 beforeEach(() => {
+  mocks.google.mockResolvedValue({ profileCreated: true });
+  mocks.apple.mockResolvedValue({ profileCreated: true });
   window.sessionStorage.clear();
   mocks.user = null; mocks.profile = null;
   mocks.params = new URLSearchParams("role=builder");
