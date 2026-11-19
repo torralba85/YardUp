@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Award, ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
@@ -12,6 +11,7 @@ import { Bezel } from "@/components/ui/Bezel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 import {
   useUserPurchasedCertificates,
   formatCertKeyFallback,
@@ -73,8 +73,11 @@ export function CertificatesClient() {
 
   if (authLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center" aria-busy="true">
-        <p className="lf-body-sm text-lot-stone">Loading your certificates…</p>
+      <div className="min-h-dvh bg-lot-chalk text-lot-ink">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-4 py-20 text-center" aria-busy="true">
+          <p className="lf-body-sm text-lot-stone">Loading your certificates…</p>
+        </div>
       </div>
     );
   }
@@ -82,19 +85,16 @@ export function CertificatesClient() {
   if (!user) {
     return (
       <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-        <header className="border-b border-lot-line bg-lot-chalk">
-          <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-4 px-4 sm:px-6">
-            <Link href="/" className="shrink-0" aria-label="LotFoundry home">
-              <BrandLockup className="h-7 w-auto" />
-            </Link>
+        <SiteHeader
+          actions={
             <Link
               href="/studio"
               className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
             >
               Open studio
             </Link>
-          </div>
-        </header>
+          }
+        />
 
         <div className="mx-auto max-w-md px-4 py-16 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
@@ -130,15 +130,12 @@ export function CertificatesClient() {
 
   return (
     <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-      <header className="border-b border-lot-line bg-lot-chalk">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="shrink-0" aria-label="LotFoundry home">
-            <BrandLockup className="h-7 w-auto" />
-          </Link>
-          <div className="flex items-center gap-4">
+      <SiteHeader
+        actions={
+          <>
             <Link
               href="/studio"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink hover:underline"
+              className="hidden min-h-11 items-center text-sm font-semibold text-lot-orange-ink hover:underline sm:inline-flex"
             >
               Open 3D Studio
             </Link>
@@ -148,9 +145,9 @@ export function CertificatesClient() {
               onSignOut={() => void logout()}
               tone="light"
             />
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <div className="border-b border-lot-line pb-6">

@@ -7,6 +7,7 @@ import {
   Award,
   FileText,
   HelpCircle,
+  Home,
   LogOut,
   MessageSquare,
   Settings,
@@ -29,6 +30,7 @@ export interface AccountMenuProps {
 }
 
 const MENU_LINKS = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/certificates", label: "Certificates", icon: Award },
   { href: "/help", label: "Get help", icon: HelpCircle },
