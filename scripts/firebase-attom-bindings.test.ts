@@ -5,7 +5,7 @@ import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
 describe("Firebase ATTOM runtime binding", () => {
-  it("binds the existing secret only to api and makes it available to Next", async () => {
+  it.each(["ATTOM_API_KEY", "REALIE_API_KEY"])("binds %s only to api and makes it available to Next", async (key) => {
     const handler = vi.fn();
     const runtimeEnv: Record<string, string> = {};
     const functions: Record<string, {
@@ -28,13 +28,13 @@ describe("Firebase ATTOM runtime binding", () => {
       },
       exports: functions, process: { env: runtimeEnv }, __dirname: path.resolve("functions"),
     });
-    expect(functions.api.options.secrets?.filter((secret) => secret.name === "ATTOM_API_KEY")).toHaveLength(1);
+    expect(functions.api.options.secrets?.filter((secret) => secret.name === key)).toHaveLength(1);
     for (const name of ["app", "apiAi", "apiStripe", "apiStore"]) {
-      expect(functions[name].options.secrets?.some((secret) => secret.name === "ATTOM_API_KEY") ?? false).toBe(false);
+      expect(functions[name].options.secrets?.some((secret) => secret.name === key) ?? false).toBe(false);
     }
-    expect(runtimeEnv.ATTOM_API_KEY).toBeUndefined();
+    expect(runtimeEnv[key]).toBeUndefined();
     await functions.api.handle({}, {});
-    expect(runtimeEnv.ATTOM_API_KEY).toBe("ATTOM_API_KEY-runtime-value");
+    expect(runtimeEnv[key]).toBe(`${key}-runtime-value`);
     expect(handler).toHaveBeenCalledOnce();
   });
 });

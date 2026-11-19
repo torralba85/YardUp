@@ -352,3 +352,16 @@ dependency to `^0.7.5`, resolving the advisories previously tracked in this
 guide. Continue running `npm audit --audit-level=moderate` against both dependency
 trees after updates, reconcile the result with [SECURITY.md](../SECURITY.md), and
 do not use `npm audit fix --force`.
+
+### Paid certificate property records
+
+Bind the existing Secret Manager secret `REALIE_API_KEY` to the general
+`api` function. Local development uses the same name in `.env.local`.
+The GitHub Actions build does not need the value. Redeploy the general API
+function after rotating its Realie or Regrid secret so the new revision uses
+the latest enabled version. Regrid uses the secret ID `REGRID_API_KEY_SECRET`.
+
+The certificate panel fetches Realie history for the purchased property.
+Comparable sales use Realie's premium endpoint on demand. Both operations
+check the current server-side grant before contacting Realie and exclude demo
+and complimentary pass grants. Provider outages do not block the certificate.

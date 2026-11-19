@@ -21,6 +21,7 @@ const regridApiKey = defineSecret("REGRID_API_KEY_SECRET");
 // Already provisioned in Secret Manager under this exact name. Runtime only:
 // do not copy the GitHub Actions secret into a build or functions/.env.
 const attomApiKey = defineSecret("ATTOM_API_KEY");
+const realieApiKey = defineSecret("REALIE_API_KEY");
 const openAiApiKey = defineSecret("OPENAI_API_KEY_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
@@ -70,6 +71,7 @@ const apiSecrets = [
   googlePlacesServerKey,
   regridApiKey,
   attomApiKey,
+  realieApiKey,
   resendApiKey,
   ...(typeSafeApiKey ? [typeSafeApiKey] : []),
 ];
@@ -144,6 +146,7 @@ exports.api = onRequest(
     process.env.GOOGLE_PLACES_SERVER_KEY = googlePlacesServerKey.value();
     process.env.REGRID_API_KEY = regridApiKey.value();
     process.env.ATTOM_API_KEY = attomApiKey.value();
+    process.env.REALIE_API_KEY = realieApiKey.value();
     process.env.RESEND_API_KEY = resendApiKey.value();
     if (typeSafeApiKey) process.env.TYPESAFE_API_KEY = typeSafeApiKey.value();
     const handle = await ready();
