@@ -112,9 +112,17 @@ Notes for the form:
   geocoded server-side to latitude/longitude and sent to `/api/parcel`
   (`lib/parcel-api.ts`) for the feasibility lookup — declare this under
   Location → Precise location in addition to Personal info → Address. Signed-in
-  address searches also query ATTOM (`/api/address-validate`, `lib/server/attom.ts`)
+  address searches also query ATTOM (`/api/geocode and /api/parcel`, `lib/server/attom.ts`)
   with the searched street address, city, state, and ZIP code (without user name,
   email, or account ID) to cross-check property location.
+- For paid certificate records, the server sends Realie the property street
+  address, state, and optional unit. A buyer requesting nearby comparable sales
+  also triggers a lookup using the matched coordinates. Optional live rent
+  lookups send RentCast parcel coordinates. Review both flows under Address and
+  Precise location against the applicable provider agreements.
+- The 3D viewer fetches Cesium assets and may fetch tiles through Cesium ion.
+  Certificate pages may fetch Google Fonts. These browser requests convey the
+  IP address and resource requested. HUD rent tables are read within the app.
 - The optional AI style-match feature uploads an EXIF-stripped home photo and
   non-identifying parcel/config context (without street address or coordinates) to
   `/api/ai/adu-concept`, which forwards it to OpenAI for analysis and image
@@ -146,7 +154,7 @@ Notes for the form:
   `ad_storage` and `ad_user_data` are granted only after affirmative user opt-in
   via the cookie banner to measure purchase conversion values, while
   `ad_personalization` remains permanently `denied`.
-- Nothing user-identifying is sent to Google — no address, email, saved
+- Nothing user-identifying is sent to Google Ads in the conversion event — no address, email, saved
   scenario, or feasibility result — so this adds no PII category.
 
 For every collected data type: `Encrypted in transit: Yes`. Do not declare ads
@@ -154,8 +162,9 @@ or third-party advertising. Firebase, Google Maps/Places/Geocoding,
 OpenStreetMap (Nominatim/OSM tiles), Esri World Imagery, Regrid, ATTOM, the US
 Census geocoder, USGS 3DEP, public county/state parcel GIS services (including
 CAL FIRE), USA Structures, OpenAI, TypeSafe, Resend, Cloudflare Web Analytics,
-Stripe, and store billing process data for LotFoundry; the builder marketplace
-disclosure above is the only third-party sharing claim.
+Stripe, and store billing support the flows described above. Also review Realie,
+RentCast, Cesium (including ion), and Google Fonts for the release build. Check
+provider agreements before applying a service-provider exception to store disclosures.
 
 ## Content rating
 

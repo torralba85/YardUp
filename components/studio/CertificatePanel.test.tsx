@@ -595,8 +595,8 @@ describe("CertificatePanel", () => {
         expect.objectContaining({
           certKey: certificateKey(parcel),
           legalConsent: expect.objectContaining({
-            termsVersion: "2026-11-06",
-            privacyVersion: "2026-11-06",
+            termsVersion: "2026-11-19",
+            privacyVersion: "2026-11-19",
             adultConfirmed: true,
           }),
         }),
@@ -1287,8 +1287,8 @@ describe("CertificatePanel", () => {
     await waitFor(() =>
       expect(mocks.auth.linkCheckoutWithGoogle).toHaveBeenCalledWith(
         expect.objectContaining({
-          termsVersion: "2026-11-06",
-          privacyVersion: "2026-11-06",
+          termsVersion: "2026-11-19",
+          privacyVersion: "2026-11-19",
           adultConfirmed: true,
         }),
       ),

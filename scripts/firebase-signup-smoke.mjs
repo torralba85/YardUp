@@ -24,7 +24,7 @@ const appId =
 const appCheckDebugToken = process.env.FIREBASE_SMOKE_APPCHECK_DEBUG_TOKEN;
 const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
 // Must match CURRENT_LEGAL_CONSENT in lib/legal-consent.ts and firestore.rules.
-const legalConsentVersion = "2026-11-06";
+const legalConsentVersion = "2026-11-19";
 
 if (!appCheckDebugToken) {
   console.error(

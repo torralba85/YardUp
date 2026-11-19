@@ -82,10 +82,11 @@ export function LegalReacceptGate() {
     >
       <p className="lf-body-sm mb-6 text-lot-stone">
         Please review and accept the updated Terms &amp; Conditions and Privacy Policy (effective
-        November 6, 2026) to keep using your account. They include an arbitration agreement with a 30-day
+        November 19, 2026) to keep using your account. They include an arbitration agreement with a 30-day
         opt-out, a class action waiver, limits on our liability, and a release of claims for disputes with
-        builders and other third parties. This update adds terms for pre-approved plans and names more of
-        the providers that process your data.
+        builders and other third parties. This update explains how Realie uses the property address and coordinates
+        for paid certificate records and comparable sales. It also identifies providers used for rental
+        estimates, 3D maps, and certificate fonts.
       </p>
 
       <div className="mb-6">

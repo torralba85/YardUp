@@ -1,6 +1,6 @@
 # Store Listing Copy — App Store + Google Play
 
-**Updated:** 2026-10-22
+**Updated:** 2026-11-19
 
 **App:** LotFoundry — ADU Feasibility Studio (`com.lotfoundry.app`)
 
@@ -14,6 +14,8 @@ native build, provider contracts, and store guidance before submission.
 |---|---|---|---|
 | Email, name, avatar, Firebase UID | Firebase Auth, including email/password, Google, and Apple sign-in | Account management | Confirm final provider scopes and account-linking behavior |
 | Property address or coordinates | User input sent to Regrid, Google Maps/Geocoding/Places, ATTOM (signed-in street address, city, state and ZIP only), the US Census geocoder, public county/state parcel GIS services, and USA Structures | Feasibility, parcel lookup, address verification, market geography, and existing-building footprint estimates | Required only to use address-based estimates; public providers vary by parcel coverage |
+| Paid certificate property records | The server sends Realie the street address, state and optional unit for the purchased certificate. A request for comparable sales also sends the matched property coordinates. | Display county property records and nearby sales | Per-property paid grant required. Provider requests exclude buyer and payment identifiers. |
+| Rental and map context | RentCast receives parcel coordinates when live rent estimates are enabled. Browser tile requests identify the area in view to the selected map host. | Estimate rent and render the neighborhood | HUD rent tables are bundled data. |
 | Home photo | Client removes EXIF/GPS, then sends an in-memory upload to OpenAI for style matching | AI concept generation | The app does not persist the original upload to Firestore or Storage; confirm processor terms and disclosure wording |
 | Saved scenarios | Firestore under the authenticated user | Save, share, and restore estimates | Account deletion removes account-associated scenario data |
 | Purchase and lead-unlock history | Stripe and Firestore ledger on the web; platform purchase proof for native stores | Purchases and entitlement grants | The application never accepts raw card numbers |
@@ -33,6 +35,14 @@ each processor's current policy before completing either form.
 
 - Google: Firebase Auth/Firestore, Maps, Geocoding, Places, and Analytics 4
   (web, opt-in only).
+- Realie (Realie.ai) supplies paid certificate property history and on-demand comparable sales.
+- RentCast supplies optional live rent estimates.
+- Cesium serves 3D viewer assets and, when configured, Cesium ion tiles. OpenStreetMap
+  (Nominatim and map tiles), Esri World Imagery, USGS 3DEP, and CAL FIRE supply map context.
+- Google Fonts serves certificate fonts. Google Ads conversion measurement and GA4
+  follow the web consent choice. Cloudflare Web Analytics measures aggregate traffic.
+- Resend delivers requested Studio links. TypeSafe helps select address candidates and
+  classify zoning designations when those integrations are enabled.
 - Regrid: parcel lookup.
 - ATTOM: supplemental property-address verification for signed-in searches;
   requests contain the searched address, not account identifiers.

@@ -300,7 +300,7 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
     );
   });
 
-  it("accepts the 2026-10-30 versions on a new profile while stale pages roll over", async () => {
+  it.each(["2026-11-06", "2026-10-30"])("accepts the %s versions on a new profile while stale pages roll over", async version => {
     const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
 
     await assertSucceeds(
@@ -309,8 +309,8 @@ describe.skipIf(!hasFirestoreEmulator)("users/{uid} legal consent receipts", () 
         ownerProfile({
           legalConsent: {
             ...currentConsent(),
-            termsVersion: "2026-10-30",
-            privacyVersion: "2026-10-30",
+            termsVersion: version,
+            privacyVersion: version,
           },
         }),
       ),
