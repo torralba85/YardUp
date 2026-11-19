@@ -23,7 +23,7 @@ import { permitStudyLastModified } from "@/lib/adu/dates";
 import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
 const linkClass = "underline underline-offset-2 hover:text-lot-ink";
-const tableClass = "w-full border-collapse text-left text-sm";
+const tableClass = "block w-full border-collapse text-left text-sm sm:table";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
 const thNumClass = "py-3 pl-4 text-right font-semibold text-lot-ink";
 const tdNumClass = "py-3 pl-4 text-right tabular-nums text-lot-ink";
@@ -193,23 +193,10 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <h2 id="sd-permits-by-year" className="lf-card-heading text-lot-ink">
           San Diego ADU permits by year
         </h2>
-        <ul className="mt-4 divide-y divide-lot-line border-y border-lot-line sm:hidden">
-          {byYear.map((row) => (
-            <li key={row.year} className="py-3">
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="font-semibold text-lot-ink">{yearLabel(row.year)}</span>
-                <span className="font-semibold tabular-nums text-lot-ink">{number(row.units)} units</span>
-              </div>
-              <p className="mt-1 text-xs leading-5 tabular-nums text-lot-stone">
-                {number(row.approvals)} permits · {number(row.aduUnits)} ADUs · {number(row.jaduUnits)} JADUs · {number(row.bonusAduUnits)} bonus · {number(row.affordableAduUnits)} income-restricted · {percent(row.multiUnitShare)} 2+
-              </p>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 hidden overflow-x-auto sm:block">
+        <div className="mt-4 overflow-x-auto">
           <table className={tableClass}>
             <caption className="sr-only">City of San Diego ADU and JADU building permits by year</caption>
-            <thead>
+            <thead className="hidden sm:table-header-group">
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>Year</th>
                 <th scope="col" className={thNumClass}>Permits</th>
@@ -221,17 +208,28 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
                 <th scope="col" className={thNumClass}>Permits adding 2+</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block border-b border-lot-line sm:table-row-group sm:border-b-0">
               {byYear.map((row) => (
-                <tr key={row.year} className="border-t border-lot-line">
-                  <th scope="row" className={thClass}>{yearLabel(row.year)}</th>
-                  <td className={tdNumClass}>{number(row.approvals)}</td>
-                  <td className={tdNumClass}>{number(row.units)}</td>
-                  <td className={tdNumClass}>{number(row.aduUnits)}</td>
-                  <td className={tdNumClass}>{number(row.jaduUnits)}</td>
-                  <td className={tdNumClass}>{number(row.bonusAduUnits)}</td>
-                  <td className={tdNumClass}>{number(row.affordableAduUnits)}</td>
-                  <td className={tdNumClass}>{percent(row.multiUnitShare)}</td>
+                <tr
+                  key={row.year}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-t border-lot-line py-3 sm:table-row sm:py-0"
+                >
+                  <th scope="row" className="py-0 pr-0 font-semibold text-lot-ink sm:py-3 sm:pr-4">
+                    {yearLabel(row.year)}
+                  </th>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(row.approvals)}</td>
+                  <td className="py-0 pl-0 text-right font-semibold tabular-nums text-lot-ink sm:py-3 sm:pl-4 sm:font-normal">
+                    <span className="sm:hidden">{number(row.units)} units</span>
+                    <span className="hidden sm:inline">{number(row.units)}</span>
+                  </td>
+                  <td className="col-span-2 pt-1 text-xs leading-5 tabular-nums text-lot-stone sm:hidden">
+                    {number(row.approvals)} permits · {number(row.aduUnits)} ADUs · {number(row.jaduUnits)} JADUs · {number(row.bonusAduUnits)} bonus · {number(row.affordableAduUnits)} income-restricted · {percent(row.multiUnitShare)} 2+
+                  </td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(row.aduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(row.jaduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(row.bonusAduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(row.affordableAduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{percent(row.multiUnitShare)}</td>
                 </tr>
               ))}
             </tbody>
@@ -254,35 +252,12 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
             </>
           ) : null}
         </p>
-        <ul className="mt-4 divide-y divide-lot-line border-y border-lot-line sm:hidden">
-          {shown.map((area) => (
-            <li key={area.name} className="py-3">
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="font-semibold text-lot-ink">
-                  {area.approvals >= PERMIT_AREA_MIN_APPROVALS ? (
-                    <Link href={permitAreaPath(area)} className={linkClass}>
-                      {area.name}
-                    </Link>
-                  ) : (
-                    area.name
-                  )}
-                </span>
-                <span className="shrink-0 font-semibold tabular-nums text-lot-ink">
-                  {number(area.units)} units
-                </span>
-              </div>
-              <p className="mt-1 text-xs leading-5 tabular-nums text-lot-stone">
-                {number(area.approvals)} permits · {number(area.bonusAduUnits)} bonus · {number(area.affordableAduUnits)} income-restricted · {percent(area.multiUnitShare)} 2+ · {number(area.unitsByYear[String(latestFull.year)] ?? 0)} in {latestFull.year}
-              </p>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 hidden overflow-x-auto sm:block">
+        <div className="mt-4 overflow-x-auto">
           <table className={tableClass}>
             <caption className="sr-only">
               City of San Diego ADU and JADU permits by community planning area
             </caption>
-            <thead>
+            <thead className="hidden sm:table-header-group">
               <tr className="border-b border-lot-line">
                 <th scope="col" className={thClass}>Planning area</th>
                 <th scope="col" className={thNumClass}>Units</th>
@@ -293,16 +268,33 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
                 <th scope="col" className={thNumClass}>Units in {latestFull.year}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block border-b border-lot-line sm:table-row-group sm:border-b-0">
               {shown.map((area) => (
-                <tr key={area.name} className="border-t border-lot-line">
-                  <th scope="row" className={thClass}>{area.approvals >= PERMIT_AREA_MIN_APPROVALS ? <Link href={permitAreaPath(area)} className={linkClass}>{area.name}</Link> : area.name}</th>
-                  <td className={tdNumClass}>{number(area.units)}</td>
-                  <td className={tdNumClass}>{number(area.approvals)}</td>
-                  <td className={tdNumClass}>{number(area.bonusAduUnits)}</td>
-                  <td className={tdNumClass}>{number(area.affordableAduUnits)}</td>
-                  <td className={tdNumClass}>{percent(area.multiUnitShare)}</td>
-                  <td className={tdNumClass}>{number(area.unitsByYear[String(latestFull.year)] ?? 0)}</td>
+                <tr
+                  key={area.name}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-t border-lot-line py-3 sm:table-row sm:py-0"
+                >
+                  <th scope="row" className="py-0 pr-0 font-semibold text-lot-ink sm:py-3 sm:pr-4">
+                    {area.approvals >= PERMIT_AREA_MIN_APPROVALS ? (
+                      <Link href={permitAreaPath(area)} className={linkClass}>
+                        {area.name}
+                      </Link>
+                    ) : (
+                      area.name
+                    )}
+                  </th>
+                  <td className="py-0 pl-0 text-right font-semibold tabular-nums text-lot-ink sm:py-3 sm:pl-4 sm:font-normal">
+                    <span className="sm:hidden">{number(area.units)} units</span>
+                    <span className="hidden sm:inline">{number(area.units)}</span>
+                  </td>
+                  <td className="col-span-2 pt-1 text-xs leading-5 tabular-nums text-lot-stone sm:hidden">
+                    {number(area.approvals)} permits · {number(area.bonusAduUnits)} bonus · {number(area.affordableAduUnits)} income-restricted · {percent(area.multiUnitShare)} 2+ · {number(area.unitsByYear[String(latestFull.year)] ?? 0)} in {latestFull.year}
+                  </td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(area.approvals)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(area.bonusAduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(area.affordableAduUnits)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{percent(area.multiUnitShare)}</td>
+                  <td className={`hidden sm:table-cell ${tdNumClass}`}>{number(area.unitsByYear[String(latestFull.year)] ?? 0)}</td>
                 </tr>
               ))}
             </tbody>

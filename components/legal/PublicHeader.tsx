@@ -41,13 +41,13 @@ export function PublicHeader({
 
   return (
     <header className="relative z-(--z-index-header) border-b border-lot-line bg-lot-chalk">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           href="/"
           aria-label="LotFoundry home"
           className="flex min-h-11 shrink-0 items-center gap-2 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
         >
-          <BrandLockup className="h-7 w-auto sm:h-8" />
+          <BrandLockup className="h-6 w-auto sm:h-8" />
         </Link>
 
         <nav
@@ -76,10 +76,10 @@ export function PublicHeader({
           <Link
             href={studioHref}
             prefetch={false}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-control bg-lot-orange px-3.5 py-2 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-control bg-lot-orange px-2.5 py-2 text-xs font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink sm:px-3.5 sm:text-sm"
           >
             <span>{studioLabel}</span>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="hidden h-4 w-4 min-[360px]:inline" aria-hidden="true" />
           </Link>
           <button
             ref={toggleRef}

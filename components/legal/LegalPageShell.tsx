@@ -81,11 +81,11 @@ export function LegalPageShell({
           className="mx-auto max-w-6xl px-5 py-12 sm:px-6 lg:grid lg:grid-cols-[minmax(0,65ch)_minmax(16rem,1fr)] lg:items-start lg:gap-12 lg:py-14"
         >
           <div className="min-w-0">
-            <h1 className="lf-section-heading text-lot-ink">{title}</h1>
+            <h1 className="lf-section-heading break-words text-lot-ink">{title}</h1>
             {kicker ? <p className="lf-kicker mt-3 text-lot-stone">{kicker}</p> : null}
             <div className="mt-8 space-y-8">{children}</div>
           </div>
-          <div className="mt-12 lg:mt-0">{resolvedAside}</div>
+          <div className="mt-12 min-w-0 lg:mt-0">{resolvedAside}</div>
         </main>
       ) : (
         <main id="main-content" className="mx-auto max-w-prose px-6 py-16">
