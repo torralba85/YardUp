@@ -544,6 +544,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
+  const [mobilePresetPicked, setMobilePresetPicked] = useState(false);
   // The URL named a demo lot (a landing or shared link), so the mobile Find
   // CTA keeps that lot rather than switching to the San Diego example.
   const [presetFromLink, setPresetFromLink] = useState(false);
@@ -829,6 +830,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setJourneyStep("find");
     journeyHistory.reset();
     setDemoCommitted(false);
+    setMobilePresetPicked(false);
     setFineTuneOpen(false);
     setReportAutoFocus(false);
     setProjectBriefState(null);
@@ -848,6 +850,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   }
 
   function handleMobilePresetSelect(presetId: string) {
+    setMobilePresetPicked(true);
     switchToPreset(presetId);
   }
 
@@ -1336,7 +1339,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onSubmitText={(query) => searchByAddress(query)}
           parcelLoading={parcelLoading}
           parcelError={parcelError}
-          selectedPresetId={parcelMode === "preset" ? parcelId : null}
+          selectedPresetId={parcelMode === "preset" && (presetFromLink || demoCommitted || mobilePresetPicked) ? parcelId : null}
           presetChosen={presetFromLink}
           onPresetSelect={handleMobilePresetSelect}
           onReveal={() => {
@@ -1455,7 +1458,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           pageScroll={!nativeShell}
           header={
             <MobileHeader
-              address={isRealAddressActive ? shellAddress.address : activeParcel.address}
+              address={
+                isRealAddressActive
+                  ? shellAddress.address
+                  : found || presetFromLink || mobilePresetPicked
+                    ? activeParcel.address
+                    : "Choose a lot or demo"
+              }
               estimated={parcelMode === "estimated"}
               onReset={resetScenario}
             />
@@ -1589,13 +1598,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             <span className="font-semibold">
               Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
             </span>
-            <button
-              type="button"
-              onClick={handleChangeAddress}
-              className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-            >
-              Evaluate My Lot
-            </button>
+            {(activeStep !== "feasibility" || certificateUnlocked) && (
+              <button
+                type="button"
+                onClick={handleChangeAddress}
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              >
+                Evaluate My Lot
+              </button>
+            )}
           </div>
         )}
         {showsVerdictBand && certificateUnlocked && !isRealAddressActive && (
@@ -1660,6 +1671,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onSelect={(found) => searchParcel(found.lat, found.lng, found.formattedAddress)}
                 onSubmitText={searchByAddress}
                 autoFocusSignal={addressFocusSignal}
+                showPrivacyNote
               />
               {parcelLoading && <p role="status" className="text-xs text-lot-stone">Looking up property data…</p>}
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
@@ -1925,7 +1937,7 @@ function SceneViewToggle({
           }`}
         >
           Scan{" "}
-          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
+          <span className="ml-1 rounded-control bg-lot-ink px-1 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-lot-chalk">
             Beta
           </span>
         </Button>
@@ -2009,10 +2021,7 @@ function LotStep({
           We&rsquo;ll check available parcel records and market rents. Local zoning and setbacks may need confirmation.
         </p>
         <div className="mt-5 max-w-xl">
-          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} />
-          <p className="mt-2 text-xs leading-5 text-lot-stone">
-            We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
-          </p>
+          <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} showPrivacyNote />
           {parcelLoading && (
             <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
               <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />

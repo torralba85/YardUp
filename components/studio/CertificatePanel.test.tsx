@@ -1457,4 +1457,19 @@ describe("CertificatePanel", () => {
     expect(peekAddressQuery()).toBe(`${estimated.address}, ${estimated.city}`);
     expect(new URLSearchParams(window.location.search).get("step")).toBe("certificate");
   });
+
+  it("shows decision-support offer copy and preliminary-estimate disclaimer before purchase", () => {
+    mocks.access.purchased = false;
+    mocks.access.loading = false;
+    render(<CertificatePanel {...createProps()} />);
+
+    expect(
+      screen.getByText(/Answer whether rent covers your loan payment and whether your builder/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Preliminary algorithmic planning estimate; does not constitute a municipal building permit, zoning warranty, or architectural certification\./i,
+      ),
+    ).toBeInTheDocument();
+  });
 });

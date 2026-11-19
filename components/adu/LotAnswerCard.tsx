@@ -131,7 +131,7 @@ export function LotAnswerCard({
   inputLabel = "Your street address",
   inputLabelSrOnly = true,
   inputId,
-  placeholder = "123 Main St, San Diego, CA",
+  placeholder = "Enter a street address (e.g. 418 Coyote Brush Ct, San Diego)",
   submitLabel = "Check my address",
   helperText,
   onLookupStart,

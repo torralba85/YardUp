@@ -187,7 +187,7 @@ export default function BeforeAfterBoard({
         </div>
         {lotSizeInfo && (
           <div className="flex flex-col items-start md:items-end justify-center font-sans text-xs text-lot-stone">
-            <span className="text-[10px] uppercase tracking-[0.08em] text-lot-stone">
+            <span className="lf-kicker text-lot-stone">
               Lot info
             </span>
             <span className="font-semibold text-lot-ink uppercase mt-0.5 tracking-[0.08em]">

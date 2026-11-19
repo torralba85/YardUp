@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
+import { CLOUDFLARE_BEACON_LOADER } from "@/lib/analytics/cloudflare-beacon";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
 import { ORGANIZATION_JSON_LD, SITE_NAME } from "@/lib/site-identity";
@@ -148,11 +149,7 @@ export default function RootLayout({
         {children}
         <ServiceWorkerRegistration />
         <Analytics />
-        <script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "8880d5dd54be4476a38b6372c04d060b"}'
-        />
+        <script dangerouslySetInnerHTML={{ __html: CLOUDFLARE_BEACON_LOADER }} />
       </body>
     </html>
   );

@@ -91,7 +91,7 @@ export default function InspirationGalleryPanel({
                     className="object-contain" unoptimized />
                 )}
               </div>
-              <figcaption className="mt-2 text-[10px] leading-relaxed text-lot-stone">
+              <figcaption className="mt-2 text-xs leading-relaxed text-lot-stone">
                 {item.isStyleMatched ? "Style-Matched · Illustrative concept" : "Illustrative concept"}
               </figcaption>
             </figure>
@@ -106,7 +106,7 @@ export default function InspirationGalleryPanel({
             <p className="mt-2 mb-4 text-sm leading-relaxed text-lot-stone">{item.summary}</p>
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-lot-line pt-4">
               <div>
-                <p className="text-[10px] text-lot-stone">Illustrative build budget</p>
+                <p className="text-xs text-lot-stone">Illustrative build budget</p>
                 <p className="mt-1 text-sm font-semibold text-lot-ink tabular-nums">{item.budgetBand}</p>
               </div>
               <Button type="button" variant={appliedId === item.id ? "commit" : "primary"}

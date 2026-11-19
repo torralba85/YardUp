@@ -113,6 +113,7 @@ export default function AduCaliforniaHubPage() {
     <LegalPageShell
       title="Building an ADU in California: Laws and Rules (2026)"
       kicker="San Diego, Sacramento and Santa Clara counties · City-by-city guides"
+      layout="editorial"
     >
       <script
         type="application/ld+json"

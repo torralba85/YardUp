@@ -20,7 +20,7 @@ test.describe("account and support surfaces", () => {
     await page.goto("/delete-account");
     await expect(page.getByRole("heading", { name: /delete your account/i })).toBeVisible();
     await expect(page.getByText(/what lotfoundry deletes/i)).toBeVisible();
-    await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
+    await expect(page.locator("#main-content").getByRole("link", { name: /sign in/i })).toBeVisible();
   });
 
   test("legal pages use Terms & Conditions labeling", async ({ page }) => {

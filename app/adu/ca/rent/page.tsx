@@ -31,6 +31,7 @@ export default function CaliforniaAduRentPage() {
     <LegalPageShell
       title="ADU Rent in California by County"
       kicker={`HUD ${HUD_FMR_YEAR} Fair Market Rents · 12 counties · Verified ${CA_RENT_VERIFIED}`}
+      layout="editorial"
     >
       <CaliforniaAduRentGuide />
     </LegalPageShell>

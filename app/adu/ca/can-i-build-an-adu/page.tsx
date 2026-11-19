@@ -164,6 +164,7 @@ export default function CaliforniaAduEligibilityPage() {
     <LegalPageShell
       title="Can I Build an ADU on My Property in California?"
       kicker={`Statewide checklist · Gov. Code §§66314–66342 · Checked ${ELIGIBILITY_GUIDE_AS_OF}`}
+      layout="editorial"
     >
       {[articleJsonLd, breadcrumbJsonLd, faqJsonLd].map((json, index) => (
         <script

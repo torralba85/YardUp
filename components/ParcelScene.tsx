@@ -1663,7 +1663,7 @@ export default function ParcelScene({
           >
             <Sun className="h-4 w-4 shrink-0 text-lot-ink" aria-hidden="true" />
             <span className="flex min-w-16 flex-col leading-none">
-              <span className="lf-dataprint text-lot-stone">Shadow preview</span>
+              <span className="lf-kicker text-lot-stone">Shadow preview</span>
               <output
                 htmlFor="shadow-preview-hour"
                 className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.08em]"

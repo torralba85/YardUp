@@ -525,7 +525,7 @@ export default function BuilderInbox({
                               {itemAccess === "locked" && <Lock size={14} aria-hidden className="text-lot-stone" />}
                               {itemAccess === "unlocked" && <Unlock size={14} aria-hidden className="text-status-eligible" />}
                               {itemAccess === "confirming" && (
-                                <span aria-hidden className="h-2 w-2 rounded-full bg-status-review motion-safe:animate-pulse" />
+                                <span aria-hidden className="h-2 w-2 rounded-full bg-status-review" />
                               )}
                               <span className="sr-only">{ACCESS_LABEL[itemAccess]}, </span>
                               {item.response.status === "interested" ? "Interested" : item.response.status === "not-a-fit" ? "Archived" : "New"}

@@ -78,7 +78,7 @@ export default function StudioShell({
     // Desktop is one locked viewport. The route layout's planning-guide bar sets
     // `--studio-guide-bar`; reserving it here keeps the bar on screen without a
     // second, document-level scroll. Panes scroll inside `main`.
-    <div className="flex min-h-dvh bg-lot-ink text-lot-ink lg:h-[calc(100dvh_-_var(--studio-guide-bar,0px))] lg:min-h-0 lg:overflow-hidden">
+    <div className="flex min-h-dvh bg-lot-ink text-lot-ink lg:h-[calc(100dvh_-_var(--studio-guide-bar,0px)_-_var(--studio-consent-bar,0px))] lg:min-h-0 lg:overflow-hidden">
       <aside
         aria-label="Studio navigation"
         className="hidden w-[248px] shrink-0 flex-col border-r border-lot-line-dark bg-lot-ink text-lot-chalk lg:flex"
@@ -92,13 +92,13 @@ export default function StudioShell({
             >
               <BrandLockup inverse className="h-8 w-auto" />
             </Link>
-            <p className="pl-0.5 lf-dataprint text-lot-stone-on-dark">
+            <p className="pl-0.5 lf-kicker text-lot-stone-on-dark">
               ADU planning
             </p>
           </div>
 
           <div className="mt-6">
-            <p className="px-2 pb-2 lf-kicker-dense text-lot-stone-on-dark">
+            <p className="px-2 pb-2 lf-kicker text-lot-stone-on-dark">
               Your path
             </p>
             <StepRail
@@ -120,22 +120,28 @@ export default function StudioShell({
                 </div>
               </div>
               {onChangeAddress && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
+                  fullWidth
+                  leftIcon={<MapPin size={13} />}
                   onClick={onChangeAddress}
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-control border border-lot-line-dark text-xs font-medium text-lot-chalk motion-safe:transition hover:border-lot-stone hover:bg-lot-surface-dark-hover motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink"
+                  className="mt-3 border border-lot-line-dark text-xs font-medium text-lot-chalk hover:border-lot-stone hover:bg-lot-surface-dark-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
                 >
-                  <MapPin size={13} />
                   Change address
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
+                fullWidth
                 onClick={onReset}
-                className="mt-3 h-11 w-full rounded-control border border-lot-line-dark text-xs font-medium text-lot-chalk motion-safe:transition hover:border-lot-stone hover:bg-lot-surface-dark-hover motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink"
+                className="mt-3 border border-lot-line-dark text-xs font-medium text-lot-chalk hover:border-lot-stone hover:bg-lot-surface-dark-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
               >
                 Reset Project
-              </button>
+              </Button>
             </div>
 
             {savedScenarios.length > 0 && (
@@ -148,7 +154,7 @@ export default function StudioShell({
                 >
                   <span className="lf-kicker text-lot-stone-on-dark">
                     Saved Concepts
-                    <span className="ml-1.5 rounded-none bg-lot-ink px-1.5 py-0.5 text-[10px] font-bold text-lot-chalk">
+                    <span className="ml-1.5 rounded-none bg-lot-ink px-1.5 py-0.5 text-[11px] font-bold text-lot-chalk">
                       {savedScenarios.length}
                     </span>
                   </span>
@@ -211,13 +217,16 @@ export default function StudioShell({
                 />
               </div>
             ) : (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
+                fullWidth
                 onClick={() => setIsAuthModalOpen(true)}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-stone-on-dark text-sm font-semibold text-lot-chalk motion-safe:transition hover:bg-lot-surface-dark motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink"
+                className="border border-lot-stone-on-dark text-sm font-semibold text-lot-chalk hover:bg-lot-surface-dark focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
               >
                 Sign In
-              </button>
+              </Button>
             )}
           </div>
         </div>
