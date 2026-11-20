@@ -3,7 +3,7 @@ export const dynamic = "force-static";
 const BASE_URL = "https://lotfoundry.net";
 
 /** Render robots.txt with AI Content-Signal preferences and both sitemaps. */
-export function buildRobotsTxt(): string {
+function buildRobotsTxt(): string {
   return [
     "User-Agent: *",
     "Allow: /",

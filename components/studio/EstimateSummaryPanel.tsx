@@ -1,5 +1,6 @@
 "use client";
 
+import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import type { ReactNode } from "react";
 import { BarChart3, CheckCircle2, FileText, Home, Landmark, Lock, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
@@ -76,7 +77,7 @@ export default function EstimateSummaryPanel({
   certificateUnlocked = false,
   feeJurisdiction = "other",
 }: EstimateSummaryPanelProps) {
-  if (!certificateUnlocked) {
+  if (!discloseFeasibility(result, certificateUnlocked).unlocked) {
     return <StudioPreview result={result} onUnlock={onGenerateReport} ctaLabel={reportCtaLabel}
       busy={reportCtaBusy} ctaNote={reportCtaNote} consentControl={consentControl} error={error} />;
   }

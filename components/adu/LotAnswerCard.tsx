@@ -34,7 +34,7 @@ import { acquireLiveParcel } from "@/lib/live-parcel-acquisition";
 import { hasMemberSessionHint } from "@/lib/member-session-hint";
 import { ParcelFetchError } from "@/lib/parcel-api";
 import { parcelConfidence } from "@/lib/parcel-confidence";
-import { stashInitialParcel } from "@/lib/parcel-handoff";
+import { publishResolvedParcel } from "@/lib/studio-handoff";
 import type { LiveParcelData } from "@/lib/parcel-types";
 import { describePlacement, getDefaultAduPose, getScenePlacement } from "@/lib/scene-placement";
 
@@ -301,8 +301,7 @@ export function LotAnswerCard({
     if (!answer) return;
     // Clear any stale text handoff so Studio consumes the already-fetched
     // parcel without re-fetching or double-counting the guest allowance.
-    stashAddressQuery("");
-    stashInitialParcel(answer.parcel);
+    publishResolvedParcel(answer.parcel);
     stashEntrySource("landing_cta");
     trackLotAnswerOpenStudio({
       surface,

@@ -105,11 +105,11 @@ describe("SEO origins with a misconfigured deployment URL", () => {
   it.each(["https://yardup-2026.web.app", "https://yardup-2026.firebaseapp.com", "https://www.lotfoundry.net", "https://preview.hosted.app"])("keeps sitemap and ADU metadata canonical despite %s", async (origin) => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", origin);
     vi.resetModules();
-    const [{ default: sitemap }, { buildRobotsTxt }, adu, { buildAduSitemapXml }] = await Promise.all([
+    const [{ default: sitemap }, { GET: robots }, adu, { buildAduSitemapXml }] = await Promise.all([
       import("./app/sitemap"), import("./app/robots.txt/route"), import("./lib/adu/content"), import("./app/sitemap-adu.xml/build-xml"),
     ]);
     expect(sitemap().every((entry) => entry.url.startsWith("https://lotfoundry.net/"))).toBe(true);
-    const robotsText = buildRobotsTxt();
+    const robotsText = await robots().text();
     expect(robotsText).toContain("Sitemap: https://lotfoundry.net/sitemap.xml");
     expect(robotsText).toContain("Sitemap: https://lotfoundry.net/sitemap-adu.xml");
     expect(robotsText).not.toContain(origin);

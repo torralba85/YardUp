@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { grantLeadUnlock } from "@/lib/server/lead-unlocks";
-import { grantCertificate } from "@/lib/server/certificate-purchases";
+import { fulfillPaidCertificateSession } from "@/lib/server/certificate-purchases";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
@@ -58,17 +58,6 @@ async function rotateReservationForFailedSession(
  * purchases whose currency and amount exactly match LotFoundry's server-side
  * catalog. Deterministic grant/ledger ids make Stripe retries safe.
  */
-/**
- * Parse a Stripe metadata coordinate. Metadata values are strings and must
- * never become NaN in Firestore (where NaN poisons ordering) — unparseable
- * values are dropped so the grant still succeeds without them.
- */
-function toFiniteNumber(raw: string | undefined): number | undefined {
-  if (!raw) return undefined;
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 export async function POST(request: NextRequest) {
   const stripe = await getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -118,38 +107,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const metadata = session.metadata ?? {};
-    const uid = metadata.uid;
-    const certKey = metadata.certKey;
-    const rawBuyerEmail = session.customer_details?.email ?? session.customer_email;
-    const buyerEmail =
-      typeof rawBuyerEmail === "string" && rawBuyerEmail.trim()
-        ? rawBuyerEmail.trim().toLowerCase()
-        : undefined;
-    if (uid && certKey) {
-      await grantCertificate({
-        uid,
-        certKey,
-        stripeSessionId: session.id,
-        amount: CERTIFICATE_PRICE_CENTS,
-        parcelName: metadata.parcelName,
-        address: metadata.address,
-        city: metadata.city,
-        state: metadata.state,
-        zip: metadata.zip,
-        lat: toFiniteNumber(metadata.lat),
-        lng: toFiniteNumber(metadata.lng),
-        ...(buyerEmail ? { buyerEmail } : {}),
-        ...(metadata.anonymousCheckout === "true" ? { anonymousCheckout: true } : {}),
-        ...(metadata.consentVersion
-          ? {
-              consentVersion: metadata.consentVersion,
-              privacyVersion: metadata.privacyVersion,
-              consentAcceptedAt: metadata.consentAcceptedAt,
-            }
-          : {}),
-      });
-    } else {
+    if ((await fulfillPaidCertificateSession(session)) === null) {
       console.error(
         `[stripe/webhook] Missing uid or certKey in certificate purchase metadata for session ${session.id}`,
       );

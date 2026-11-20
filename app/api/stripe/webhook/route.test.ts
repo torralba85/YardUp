@@ -31,9 +31,19 @@ vi.mock("@/lib/server/lead-unlocks", () => ({
   grantLeadUnlock: (...args: unknown[]) => mocks.grant(...args),
 }));
 
-vi.mock("@/lib/server/certificate-purchases", () => ({
-  grantCertificate: (...args: unknown[]) => mocks.grantCertificate(...args),
-}));
+vi.mock("@/lib/server/certificate-purchases", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/server/certificate-purchases")
+  >("@/lib/server/certificate-purchases");
+  return {
+    fulfillPaidCertificateSession: async (
+      session: Parameters<typeof actual.certificateGrantInputFromSession>[0],
+    ) => {
+      const input = actual.certificateGrantInputFromSession(session);
+      return input ? mocks.grantCertificate(input) : null;
+    },
+  };
+});
 
 vi.mock("@/lib/server/active-checkout-sessions", () => ({
   rotateFailedActiveCheckout: (...args: unknown[]) => mocks.rotate(...args),

@@ -10,9 +10,7 @@ import { useWebBuilderAccess } from "@/lib/commerce/use-web-builder-access";
 import { isNativeAppShell } from "@/lib/commerce/purchase-channel";
 import { TYPICAL_MARKET } from "@/lib/typical-market";
 import { parseScenarioParams, validLayoutToken } from "@/lib/scenario-url";
-import { peekAddressQuery } from "@/lib/address-handoff";
-import { peekInitialParcel } from "@/lib/parcel-handoff";
-import { trackStudioOpened } from "@/lib/analytics/events";
+import { hasPendingStudioHandoff } from "@/lib/studio-handoff";import { trackStudioOpened } from "@/lib/analytics/events";
 import LeadScenarioEntry from "@/components/studio/LeadScenarioEntry";
 import EmailedScenarioEntry from "@/components/studio/EmailedScenarioEntry";
 import { consumeEntrySource } from "@/lib/analytics/entry-source";
@@ -57,7 +55,7 @@ export default function StudioPage() {
       if (hasLayout && token) setLayoutToken(token);
       const scenario = parseScenarioParams(search);
       initialDemoEntry.current = Boolean(
-        !hasLayout && (isCert || (scenario.parcelId && !peekAddressQuery() && !peekInitialParcel())),
+        !hasLayout && (isCert || (scenario.parcelId && !hasPendingStudioHandoff())),
       );
     }
     setDemoEntry(initialDemoEntry.current);

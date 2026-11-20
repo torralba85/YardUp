@@ -1,5 +1,6 @@
 "use client";
 
+import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import type { ReactNode } from "react";
 import { AlertTriangle, ArrowRight, CheckCircle2, SlidersHorizontal, XCircle } from "lucide-react";
 import {
@@ -54,7 +55,7 @@ export default function CheckStep({
   onCreateAccount,
   emailLinkCard,
 }: CheckStepProps) {
-  if (!certificateUnlocked) {
+  if (!discloseFeasibility(result, certificateUnlocked).unlocked) {
     return <section aria-label="Feasibility check" className="space-y-5 px-5 py-7">
       <StudioPreview result={result} onUnlock={onContinue} />
       <Button variant="secondary" fullWidth onClick={onFineTune}>Keep exploring the 3D concept</Button>

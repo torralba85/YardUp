@@ -17,7 +17,10 @@ import {
   type CensusLocation,
   fetchCensusLocation,
 } from "@/lib/server/census-geocode";
-import { fetchBuildingFootprint } from "@/lib/server/building-footprints";
+import {
+  type BuildingFootprintResult,
+  fetchBuildingFootprint,
+} from "@/lib/server/building-footprints";
 import { fetchFireHazardZone } from "@/lib/server/fire-hazard-zones";
 import {
   type StreetAddress,
@@ -347,10 +350,6 @@ async function resolveParcel(
       resolveMarketData({ lat, lng, ...loc }),
       fireHazardPromise,
     ]);
-    const structuresFootprint = positiveNumber(structures?.totalSqft);
-    const buildingAreaFallback = positiveNumber(fields.sqft);
-    const existingHouseSqft =
-      regridFootprint ?? structuresFootprint ?? buildingAreaFallback ?? 0;
     const retrievedAt = new Date().toISOString();
     const regridSource: EvidenceSource = {
       provider: "Regrid",
@@ -365,41 +364,56 @@ async function resolveParcel(
       confidence: DataEvidence["confidence"],
       warnings: string[] = [],
       source = regridSource,
-    ): DataEvidence => ({
-      status,
-      source,
-      ...(sourceAsOf ? { sourceAsOf } : {}),
-      ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+    ): DataEvidence => {
+      const isRegrid = source.provider === "Regrid";
+      return {
+        status,
+        source,
+        ...(isRegrid && sourceAsOf ? { sourceAsOf } : {}),
+        ...(isRegrid && sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+        retrievedAt,
+        confidence,
+        warnings,
+      };
+    };
+
+    const footprint = assembleRegridFootprint({
+      regridFootprint,
+      structures,
+      buildingAreaFallback: positiveNumber(fields.sqft),
+      regridSource,
       retrievedAt,
-      confidence,
-      warnings,
+      sourceAsOf,
+      sourceUpdatedAt,
     });
+
+    const coverage = assembleCoverage({
+      zoning: fields.zoning,
+      source: regridSource,
+      retrievedAt,
+      sourceAsOf,
+      sourceUpdatedAt,
+      defaultWarning:
+        "Maximum lot coverage is a planning assumption because zoning rules were unavailable.",
+    });
+
     const rawSetbacks = fields.zoning_setbacks as
       | Record<string, number>
       | null
       | undefined;
     const setbacksObserved = hasCompleteSetbacks(rawSetbacks);
+    const setbacksEvidence = setbacksObserved
+      ? evidence("observed", "medium")
+      : evidence(
+          "defaulted",
+          "low",
+          [
+            "Setbacks are planning assumptions because address-specific rules were unavailable.",
+          ],
+          assumptionSource(),
+        );
     const zoningObserved = typeof fields.zoning === "string" && fields.zoning.trim() !== "";
     const addressObserved = Boolean(fields.saddress ?? fields.address);
-    const structureWarnings = [
-      "Imagery-derived building footprints can lag recent construction.",
-      ...(structures && structures.structureCount > 1
-        ? [
-            `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
-          ]
-        : []),
-    ];
-    const footprintEvidence = regridFootprint !== null
-      ? evidence("observed", "high")
-      : structuresFootprint !== null
-        ? evidence("observed", "medium", structureWarnings, usaStructuresSource())
-        : buildingAreaFallback !== null
-          ? evidence("derived", "low", [
-              "Provider building area is being used as a ground-footprint proxy.",
-            ])
-          : evidence("unavailable", "unknown", [
-              "No existing-building footprint was found; zero means unknown, not vacant.",
-            ]);
 
     const parcelData: LiveParcelData = {
       address: formatAddress(fields, requestedAddress, lat, lng),
@@ -407,8 +421,8 @@ async function resolveParcel(
       lotArea: lotAreaSqft,
       lotWidth,
       lotLength,
-      existingHouseSqft: Math.round(existingHouseSqft),
-      maxLotCoveragePercent: deriveMaxCoverage(fields.zoning) ?? 40,
+      existingHouseSqft: footprint.existingHouseSqft,
+      maxLotCoveragePercent: coverage.maxLotCoveragePercent,
       regulationsEstimated: true,
       setbacks,
       zoning: fields.zoning ?? "Unknown",
@@ -435,19 +449,9 @@ async function resolveParcel(
               ? "Lot dimensions are derived from the parcel polygon."
               : "Lot dimensions are estimated from parcel area because no polygon was available.",
           ]),
-          existingHouseSqft: footprintEvidence,
-          maxLotCoveragePercent: deriveMaxCoverage(fields.zoning) !== null
-            ? evidence("derived", "low", [
-                "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
-              ])
-            : evidence("defaulted", "low", [
-                "Maximum lot coverage is a planning assumption because zoning rules were unavailable.",
-              ]),
-          setbacks: setbacksObserved
-            ? evidence("observed", "medium")
-            : evidence("defaulted", "low", [
-                "Setbacks are planning assumptions because address-specific rules were unavailable.",
-              ]),
+          existingHouseSqft: footprint.evidence,
+          maxLotCoveragePercent: coverage.evidence,
+          setbacks: setbacksEvidence,
           zoning: zoningObserved
             ? evidence("observed", "medium")
             : evidence("unavailable", "unknown", [
@@ -854,10 +858,23 @@ async function countyGisResponse(
         ...(identity.parcelId ? { recordId: identity.parcelId } : {}),
       }
     : undefined;
-  const structuresSqft = positiveNumber(structures?.totalSqft);
   const countyBuildingSqft = positiveNumber(countyParcel.buildingSqft);
-  const existingHouseSqft = structuresSqft ?? countyBuildingSqft ?? 0;
   const countyZoning = stringValue(countyParcel.zoning);
+
+  const footprint = assembleCountyFootprint({
+    structures,
+    countyBuildingSqft,
+    parcelSource,
+    retrievedAt,
+  });
+
+  const coverage = assembleCoverage({
+    zoning: countyZoning,
+    source: parcelSource,
+    retrievedAt,
+    defaultWarning:
+      "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
+  });
 
   const parcel: LiveParcelData = {
     address: location.address,
@@ -869,8 +886,8 @@ async function countyGisResponse(
     // county assessor roll publishes building area. USA Structures supplies
     // mapped footprints when present; assessor roll building area is the
     // fallback; zero remains unknown.
-    existingHouseSqft: Math.round(existingHouseSqft),
-    maxLotCoveragePercent: deriveMaxCoverage(countyZoning) ?? 40,
+    existingHouseSqft: footprint.existingHouseSqft,
+    maxLotCoveragePercent: coverage.maxLotCoveragePercent,
     regulationsEstimated: true,
     setbacks: DEFAULT_SETBACKS,
     zoning: countyZoning ?? "Unknown",
@@ -925,58 +942,8 @@ async function countyGisResponse(
           retrievedAt,
           warnings: [polygonDimensions ? "Lot dimensions are an enclosing rectangle derived from the parcel polygon, not measured frontage." : "Lot dimensions are estimated from area; the polygon did not yield usable dimensions."],
         }),
-        existingHouseSqft:
-          structuresSqft !== null
-            ? fieldEvidence({
-                status: "observed",
-                confidence: "medium",
-                source: usaStructuresSource(),
-                retrievedAt,
-                warnings: [
-                  "Imagery-derived building footprints can lag recent construction.",
-                  ...(structures && structures.structureCount > 1
-                    ? [
-                        `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
-                      ]
-                    : []),
-                ],
-              })
-            : countyBuildingSqft !== null
-              ? fieldEvidence({
-                  status: "observed",
-                  confidence: "medium",
-                  source: parcelSource,
-                  retrievedAt,
-                  warnings: [
-                    "Building area comes from the county assessor roll and may reflect total living area rather than ground footprint.",
-                  ],
-                })
-              : fieldEvidence({
-                  status: "unavailable",
-                  confidence: "unknown",
-                  source: usaStructuresSource(),
-                  retrievedAt,
-                  warnings: ["No building footprint was found; zero means unknown, not vacant."],
-                }),
-        maxLotCoveragePercent: deriveMaxCoverage(countyZoning) !== null
-          ? fieldEvidence({
-              status: "derived",
-              confidence: "low",
-              source: parcelSource,
-              retrievedAt,
-              warnings: [
-                "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
-              ],
-            })
-          : fieldEvidence({
-              status: "defaulted",
-              confidence: "low",
-              source: assumptionSource(),
-              retrievedAt,
-              warnings: [
-                "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
-              ],
-            }),
+        existingHouseSqft: footprint.evidence,
+        maxLotCoveragePercent: coverage.evidence,
         setbacks: fieldEvidence({
           status: "defaulted",
           confidence: "low",
@@ -1209,6 +1176,218 @@ function hasCompleteSetbacks(
     raw.rear ?? raw.rear_setback,
     raw.side ?? raw.side_setback,
   ].every((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function buildingStructureWarnings(
+  structures: BuildingFootprintResult | null,
+): string[] {
+  return [
+    "Imagery-derived building footprints can lag recent construction.",
+    ...(structures && structures.structureCount > 1
+      ? [
+          `Total includes ${structures.structureCount} mapped structures on the parcel (largest ${structures.largestSqft.toLocaleString()} sq ft).`,
+        ]
+      : []),
+  ];
+}
+
+/**
+ * Assemble building-footprint value and field evidence for a Regrid parcel.
+ *
+ * Footprint hierarchy:
+ * 1. Regrid's observed ground footprint (`ll_bldg_footprint_sqft`) -> observed / high
+ * 2. USA Structures imagery-derived outlines -> observed / medium (FEMA/ORNL; no Regrid dates)
+ * 3. Assessor building area fallback (`sqft`) -> derived / low (proxy for ground footprint)
+ * 4. None -> 0 sq ft, unavailable / unknown
+ */
+function assembleRegridFootprint(params: {
+  regridFootprint: number | null;
+  structures: BuildingFootprintResult | null;
+  buildingAreaFallback: number | null;
+  regridSource: EvidenceSource;
+  retrievedAt: string;
+  sourceAsOf?: string;
+  sourceUpdatedAt?: string;
+}): { existingHouseSqft: number; evidence: DataEvidence } {
+  const {
+    regridFootprint,
+    structures,
+    buildingAreaFallback,
+    regridSource,
+    retrievedAt,
+    sourceAsOf,
+    sourceUpdatedAt,
+  } = params;
+
+  if (regridFootprint !== null) {
+    return {
+      existingHouseSqft: Math.round(regridFootprint),
+      evidence: {
+        status: "observed",
+        confidence: "high",
+        source: regridSource,
+        ...(sourceAsOf ? { sourceAsOf } : {}),
+        ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+        retrievedAt,
+        warnings: [],
+      },
+    };
+  }
+
+  const structuresSqft = positiveNumber(structures?.totalSqft);
+  if (structuresSqft !== null) {
+    return {
+      existingHouseSqft: Math.round(structuresSqft),
+      evidence: {
+        status: "observed",
+        confidence: "medium",
+        source: usaStructuresSource(),
+        // Prevent Regrid dates on USA Structures: it is from FEMA / ORNL, not Regrid.
+        retrievedAt,
+        warnings: buildingStructureWarnings(structures),
+      },
+    };
+  }
+
+  if (buildingAreaFallback !== null) {
+    return {
+      existingHouseSqft: Math.round(buildingAreaFallback),
+      evidence: {
+        status: "derived",
+        confidence: "low",
+        source: regridSource,
+        ...(sourceAsOf ? { sourceAsOf } : {}),
+        ...(sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+        retrievedAt,
+        warnings: [
+          "Provider building area is being used as a ground-footprint proxy.",
+        ],
+      },
+    };
+  }
+
+  return {
+    existingHouseSqft: 0,
+    evidence: {
+      status: "unavailable",
+      confidence: "unknown",
+      source: regridSource,
+      retrievedAt,
+      warnings: [
+        "No existing-building footprint was found; zero means unknown, not vacant.",
+      ],
+    },
+  };
+}
+
+/**
+ * Assemble building-footprint value and field evidence for a County GIS parcel.
+ *
+ * Footprint hierarchy:
+ * 1. USA Structures imagery-derived outlines -> observed / medium
+ * 2. County assessor roll building area (`buildingSqft`) -> observed / medium (ArcGIS parcel source)
+ * 3. None -> 0 sq ft, unavailable / unknown (USA Structures source)
+ */
+function assembleCountyFootprint(params: {
+  structures: BuildingFootprintResult | null;
+  countyBuildingSqft: number | null;
+  parcelSource: EvidenceSource;
+  retrievedAt: string;
+}): { existingHouseSqft: number; evidence: DataEvidence } {
+  const { structures, countyBuildingSqft, parcelSource, retrievedAt } = params;
+  const structuresSqft = positiveNumber(structures?.totalSqft);
+
+  if (structuresSqft !== null) {
+    return {
+      existingHouseSqft: Math.round(structuresSqft),
+      evidence: {
+        status: "observed",
+        confidence: "medium",
+        source: usaStructuresSource(),
+        retrievedAt,
+        warnings: buildingStructureWarnings(structures),
+      },
+    };
+  }
+
+  if (countyBuildingSqft !== null) {
+    return {
+      existingHouseSqft: Math.round(countyBuildingSqft),
+      evidence: {
+        status: "observed",
+        confidence: "medium",
+        source: parcelSource,
+        retrievedAt,
+        warnings: [
+          "Building area comes from the county assessor roll and may reflect total living area rather than ground footprint.",
+        ],
+      },
+    };
+  }
+
+  return {
+    existingHouseSqft: 0,
+    evidence: {
+      status: "unavailable",
+      confidence: "unknown",
+      source: usaStructuresSource(),
+      retrievedAt,
+      warnings: [
+        "No building footprint was found; zero means unknown, not vacant.",
+      ],
+    },
+  };
+}
+
+/**
+ * Assemble maximum lot coverage value and field evidence across Regrid and County.
+ *
+ * Coverage hierarchy:
+ * 1. Zoning code string maps to heuristic limit -> derived / low (provider source)
+ * 2. Unrecognized or missing zoning -> 40% default planning assumption (assumptionSource)
+ */
+function assembleCoverage(params: {
+  zoning: string | undefined | null;
+  source: EvidenceSource;
+  retrievedAt: string;
+  sourceAsOf?: string;
+  sourceUpdatedAt?: string;
+  defaultWarning?: string;
+}): { maxLotCoveragePercent: number; evidence: DataEvidence } {
+  const { zoning, source, retrievedAt, sourceAsOf, sourceUpdatedAt, defaultWarning } = params;
+  const derived = deriveMaxCoverage(zoning ?? undefined);
+
+  if (derived !== null) {
+    const isRegrid = source.provider === "Regrid";
+    return {
+      maxLotCoveragePercent: derived,
+      evidence: {
+        status: "derived",
+        confidence: "low",
+        source,
+        ...(isRegrid && sourceAsOf ? { sourceAsOf } : {}),
+        ...(isRegrid && sourceUpdatedAt ? { sourceUpdatedAt } : {}),
+        retrievedAt,
+        warnings: [
+          "Maximum lot coverage is inferred from a broad zoning-code heuristic, not a jurisdiction rule.",
+        ],
+      },
+    };
+  }
+
+  return {
+    maxLotCoveragePercent: 40,
+    evidence: {
+      status: "defaulted",
+      confidence: "low",
+      source: assumptionSource(),
+      retrievedAt,
+      warnings: [
+        defaultWarning ??
+          "The 40% maximum lot coverage is a planning assumption, not an address-specific rule.",
+      ],
+    },
+  };
 }
 
 function userInputSource() {

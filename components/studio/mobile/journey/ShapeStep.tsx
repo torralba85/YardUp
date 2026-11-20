@@ -13,7 +13,7 @@ import {
   type ExteriorFinish,
   type FeasibilityResult,
 } from "@/lib/feasibility";
-import { rentRangeLabel } from "../../StudioPreview";
+import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
 
@@ -64,6 +64,7 @@ export default function ShapeStep({
   onFineTune,
   onContinue,
 }: ShapeStepProps) {
+  const disclosure = discloseFeasibility(result, certificateUnlocked);
   const sizes=useRef<(HTMLButtonElement|null)[]>([]);
   const finishes=useRef<(HTMLButtonElement|null)[]>([]);
   return (
@@ -155,7 +156,7 @@ export default function ShapeStep({
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-lot-line pt-4">
           <p className="text-xs text-lot-stone">Projected rent / mo</p>
-          {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="inline" tone="onLight" /> : <p className="font-display text-lg font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}</p>}
+          {disclosure.unlocked ? <MoneyFigure value={disclosure.result.monthlyRent} animate size="inline" tone="onLight" /> : <p className="font-display text-lg font-semibold tabular-nums text-lot-ink">{disclosure.rentLabel}</p>}
         </div>
 
         <button

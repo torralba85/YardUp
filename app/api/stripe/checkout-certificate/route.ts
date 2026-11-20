@@ -11,6 +11,7 @@ import {
   saveActiveCheckoutSession,
 } from "@/lib/server/active-checkout-sessions";
 import {
+  fulfillPaidCertificateSession,
   grantCertificate,
   hasCertificate,
   wasCertificateTransferredFrom,
@@ -32,6 +33,12 @@ const MAX_CERT_KEY_LEN = 200;
 
 /** Cap on the client-supplied return query echoed into Stripe redirect URLs. */
 const MAX_RETURN_SEARCH_LEN = 500;
+
+/** Address and city ride into the Grant via Session metadata, and
+ * /api/certificates/property-records accepts each up to 200 chars and rebuilds
+ * certKey from them, so a shorter cap would break paid records for that lot.
+ * Stripe allows 500-char metadata values. */
+const MAX_LOT_IDENTITY_METADATA_LEN = 200;
 
 /** What the buyer receives, shown under the line item on the Checkout page. */
 const CERTIFICATE_PRODUCT_DESCRIPTION =
@@ -62,12 +69,6 @@ function cancelReturnQuery(returnQuery: string): string {
   params.set("step", "certificate");
   params.set(CHECKOUT_RETURN_PARAM, CHECKOUT_CANCELLED);
   return params.toString();
-}
-
-function normalizeEmail(raw: string | null | undefined): string | undefined {
-  if (typeof raw !== "string") return undefined;
-  const trimmed = raw.trim().toLowerCase();
-  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 /**
@@ -271,34 +272,8 @@ export async function POST(request: NextRequest) {
               "stripe/checkout-certificate",
             )
           ) {
-            const sessionBuyerEmail = normalizeEmail(
-              existing.customer_details?.email ?? existing.customer_email,
-            );
-            const existingMeta = existing.metadata ?? {};
-            const created = await grantCertificate({
-              uid,
-              certKey,
-              stripeSessionId: existing.id,
-              amount: CERTIFICATE_PRICE_CENTS,
-              parcelName: reservation.parameters.parcelName || undefined,
-              address: reservation.parameters.address || undefined,
-              city: reservation.parameters.city || undefined,
-              state: reservation.parameters.state || undefined,
-              zip: reservation.parameters.zip || undefined,
-              lat: reservation.parameters.lat ? Number(reservation.parameters.lat) : undefined,
-              lng: reservation.parameters.lng ? Number(reservation.parameters.lng) : undefined,
-              ...(sessionBuyerEmail ? { buyerEmail: sessionBuyerEmail } : {}),
-              ...(existingMeta.anonymousCheckout === "true" || auth.isAnonymous
-                ? { anonymousCheckout: true }
-                : {}),
-              ...(existingMeta.consentVersion
-                ? {
-                    consentVersion: existingMeta.consentVersion,
-                    privacyVersion: existingMeta.privacyVersion,
-                    consentAcceptedAt: existingMeta.consentAcceptedAt,
-                  }
-                : consentFields ?? {}),
-            });
+            // Same Session-derived Grant the webhook writes.
+            const created = await fulfillPaidCertificateSession(existing);
             if (created === false && !(await hasCertificate(uid, certKey))) {
               return NextResponse.json(
                 { error: "This certificate was recovered to another account. Sign in to that account to open it." },
@@ -397,8 +372,12 @@ export async function POST(request: NextRequest) {
             uid,
             certKey,
             ...(reservedParcelName ? { parcelName: reservedParcelName.slice(0, 100) } : {}),
-            ...(reservedAddress ? { address: reservedAddress.slice(0, 100) } : {}),
-            ...(reservedCity ? { city: reservedCity.slice(0, 50) } : {}),
+            ...(reservedAddress
+              ? { address: reservedAddress.slice(0, MAX_LOT_IDENTITY_METADATA_LEN) }
+              : {}),
+            ...(reservedCity
+              ? { city: reservedCity.slice(0, MAX_LOT_IDENTITY_METADATA_LEN) }
+              : {}),
             ...(reservedState ? { state: reservedState.slice(0, 50) } : {}),
             ...(reservedZip ? { zip: reservedZip.slice(0, 20) } : {}),
             ...(reservedLat ? { lat: reservedLat } : {}),

@@ -141,6 +141,68 @@ export async function grantCertificate(
   });
 }
 
+function metadataNumber(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+/**
+ * Build the grant input from a paid Checkout Session alone. The webhook and the
+ * checkout-certificate retry both use this, so whichever runs first writes the
+ * identical Grant. Only Session data is read (never request or reservation
+ * state); legacy Sessions simply lack the optional metadata keys.
+ */
+export function certificateGrantInputFromSession(session: {
+  id: string;
+  metadata?: Record<string, string> | null;
+  customer_details?: { email?: string | null } | null;
+  customer_email?: string | null;
+}): GrantCertificateInput | null {
+  const metadata = session.metadata ?? {};
+  const { uid, certKey } = metadata;
+  if (!uid || !certKey) return null;
+  const buyerEmail = normalizeEmail(
+    session.customer_details?.email ?? session.customer_email,
+  );
+  return {
+    uid,
+    certKey,
+    stripeSessionId: session.id,
+    amount: CERTIFICATE_PRICE_CENTS,
+    parcelName: metadata.parcelName || undefined,
+    address: metadata.address || undefined,
+    city: metadata.city || undefined,
+    state: metadata.state || undefined,
+    zip: metadata.zip || undefined,
+    lat: metadataNumber(metadata.lat),
+    lng: metadataNumber(metadata.lng),
+    ...(buyerEmail ? { buyerEmail } : {}),
+    ...(metadata.anonymousCheckout === "true" ? { anonymousCheckout: true } : {}),
+    ...(metadata.consentVersion
+      ? {
+          consentVersion: metadata.consentVersion,
+          privacyVersion: metadata.privacyVersion,
+          consentAcceptedAt: metadata.consentAcceptedAt,
+        }
+      : {}),
+  };
+}
+
+/**
+ * Fulfil a paid certificate Session (shared by webhook and retry). Callers own
+ * auth and trust checks (paid status, amount, owner). Goes through
+ * `grantCertificate`'s transaction, so replays and recovered grants no-op.
+ * Returns the grant result, or null when metadata lacks uid/certKey.
+ */
+export async function fulfillPaidCertificateSession(
+  session: Parameters<typeof certificateGrantInputFromSession>[0],
+): Promise<boolean | null> {
+  const input = certificateGrantInputFromSession(session);
+  if (!input) return null;
+  return grantCertificate(input);
+}
+
 /**
  * Check whether a user already holds a certificate grant for a lot.
  *

@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
-import { rentRangeLabel } from "../../StudioPreview";
+import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
 import { haptic } from "@/lib/haptics";
@@ -29,7 +29,7 @@ export interface EarnStepProps {
  * simple confidence teaser (the market basis line). One primary action.
  */
 export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, onContinue, parcelNotice }: EarnStepProps) {
-  const annualGross = result.monthlyRent * 12;
+  const disclosure = discloseFeasibility(result, certificateUnlocked);
   const unverified =
     !result.market.verified &&
     result.market.source !== "preset" &&
@@ -54,11 +54,11 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
       <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 
       <div className="mt-7">
-        {certificateUnlocked ? <MoneyFigure value={result.monthlyRent} animate size="hero" tone="onLight" /> : <p className="font-display text-4xl font-semibold tabular-nums text-lot-ink">{rentRangeLabel(result)}<span className="ml-2 text-base font-normal">/mo</span></p>}
-        {certificateUnlocked && <p className="mt-3 text-sm text-lot-stone">
+        {disclosure.unlocked ? <MoneyFigure value={disclosure.result.monthlyRent} animate size="hero" tone="onLight" /> : <p className="font-display text-4xl font-semibold tabular-nums text-lot-ink">{disclosure.rentLabel}<span className="ml-2 text-base font-normal">/mo</span></p>}
+        {disclosure.unlocked && <p className="mt-3 text-sm text-lot-stone">
           About{" "}
           <span className="font-display text-lg font-semibold text-lot-ink">
-            {formatCurrency(annualGross)}
+            {formatCurrency(disclosure.result.monthlyRent * 12)}
           </span>{" "}
           a year in gross rent from a {result.aduSqft.toLocaleString()} sf backyard home.
         </p>}

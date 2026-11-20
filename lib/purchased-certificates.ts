@@ -6,8 +6,7 @@ import { db } from "./firebase";
 import { parcelPresets } from "./feasibility";
 import { certificateKey } from "./certificate-key";
 import type { LiveParcelData } from "./parcel-types";
-import { stashInitialParcel } from "./parcel-handoff";
-import { stashAddressQuery } from "./address-handoff";
+import { publishResolvedParcel, stashAddressQuery } from "./studio-handoff";
 import { CERTIFICATE_OPEN, CHECKOUT_RETURN_PARAM } from "./checkout-return";
 
 /**
@@ -193,7 +192,7 @@ export async function fetchUserPurchasedCertificates(
  */
 export function buildStudioUrlForCertificate(cert: PurchasedCertificate): string {
   if (cert.parcelData) {
-    stashInitialParcel(cert.parcelData);
+    publishResolvedParcel(cert.parcelData);
   } else {
     const query = certificateSearchAddress(cert);
     if (query) stashAddressQuery(query);
