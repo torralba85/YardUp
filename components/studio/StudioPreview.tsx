@@ -1,15 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { rentRangeLabel } from "@/lib/feasibility-disclosure";
 import { Lock } from "lucide-react";
-import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
+import type { FeasibilityResult } from "@/lib/feasibility";
 import { Button } from "@/components/ui/Button";
 
-export function rentRangeLabel(result: FeasibilityResult) {
-  return result.rentRange
-    ? `${formatCurrency(result.rentRange.low)}–${formatCurrency(result.rentRange.high)}`
-    : formatCurrency(result.monthlyRent);
-}
+export { rentRangeLabel } from "@/lib/feasibility-disclosure";
 
 /**
  * The free preview contains placeholders, never CSS-blurred paid figures.

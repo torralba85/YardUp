@@ -149,7 +149,7 @@ describe("/can-i-build-a-backyard-home", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Open in 3D/i }));
     expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
-    expect(stashAddressQueryMock).toHaveBeenCalledWith("");
+    expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
     expect(stashEntrySourceMock).toHaveBeenCalledWith("landing_cta");
     expect(pushMock).toHaveBeenCalledWith("/studio");
   });

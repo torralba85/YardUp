@@ -21,6 +21,12 @@ _Avoid_: real parcel
 **Live Parcel Acquisition**:
 An accepted Address or coordinate lookup that resolves a Live Parcel while preserving the entered Address and provider evidence.
 
+**Studio Parcel Handoff**:
+The one-time transfer of a pending Address or a resolved Parcel into Studio. A resolved selection carries its Parcel across navigation so opening it does not spend another lookup.
+
+**Parcel Evidence**:
+The source, dates, confidence, and limitations attached to an individual Parcel field. A Parcel can combine measurements and assumptions from different sources.
+
 **Preset**:
 A built-in curated Parcel used for demos and as an estimation base.
 _Avoid_: demo parcel, demo preset

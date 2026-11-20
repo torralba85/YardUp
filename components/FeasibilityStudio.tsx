@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import {
-  formatCurrency,
   getParcelById,
   parcelPresets,
   type ADUConfig,
@@ -52,7 +51,7 @@ import {
   deleteSavedScenario,
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
-import { consumeAddressQuery } from "@/lib/address-handoff";
+import { takeIncomingAddress } from "@/lib/studio-handoff";
 import { certificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
@@ -104,7 +103,8 @@ import { useBuilderMatches } from "@/lib/use-builder-matches";
 import FeasibilityVerdictBand from "./studio/FeasibilityVerdictBand";
 import ConstraintsPanel from "./studio/ConstraintsPanel";
 import { Button } from "./ui/Button";
-import StudioPreview, { rentRangeLabel } from "./studio/StudioPreview";
+import StudioPreview from "./studio/StudioPreview";
+import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import { Skeleton } from "./ui/Skeleton";
 import { STUDIO_STEPS, deriveStepStates, type StudioStep } from "@/lib/studio-steps";
 import { AlertCircle, ArrowRight, ImageOff, RefreshCw, Search } from "lucide-react";
@@ -658,7 +658,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // per component instance: on a Strict Mode re-run the ref replays the
     // value that the first pass already removed from storage.
     if (incomingAddressRef.current === undefined) {
-      incomingAddressRef.current = consumeAddressQuery() ?? params.get("q")?.trim() ?? null;
+      incomingAddressRef.current = takeIncomingAddress(params);
     }
     const incomingAddress = incomingAddressRef.current;
     // Certificate Recovery owns its Address handoff after observing the Grant.
@@ -727,6 +727,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   });
 
   const certificateUnlocked = certificateRecovery.access.purchased;
+  const desktopDisclosure = discloseFeasibility(result, certificateUnlocked);
 
   const emailScenario: SavedScenario | null = parcelMode === "live" && !parcelLoading && "source" in activeParcel && activeParcel.source !== "estimated"
     ? { version: 2, heightConvention: "wall", id: "email-layout", name: "My 3D lot layout", createdAt: new Date().toISOString(), parcelId, config, pose, assumptions, liveParcel: activeParcel, ...(preapprovedPlan ? { preapprovedPlan } : {}) }
@@ -1635,7 +1636,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             onViewModeChange={changeViewMode}
             hasScan={Boolean(splatScene)}
             hasParcel={parcelResolved}
-            monthlyRent={certificateUnlocked ? formatCurrency(result.monthlyRent) : rentRangeLabel(result)}
+            monthlyRent={desktopDisclosure.rentLabel}
             addressFocusSignal={addressFocusSignal}
             parcelLoading={parcelLoading}
             parcelError={parcelError}
@@ -1654,7 +1655,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               />
               {certificateUnlocked && <PermitGuidePanel address={parcelName} />}
             </div>
-            {certificateUnlocked ? <ConstraintsPanel
+            {desktopDisclosure.unlocked ? <ConstraintsPanel
               parcel={activeParcel}
               result={result}
               config={config}

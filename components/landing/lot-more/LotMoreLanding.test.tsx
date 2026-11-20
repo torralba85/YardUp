@@ -288,9 +288,10 @@ describe("landing address handoff", () => {
     expect(answer).toHaveTextContent("500 Cedar Ave, San Jose, CA");
     expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT - 1);
 
+    window.sessionStorage.setItem("lf:pending-address", "Previous lot");
     fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
     expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
-    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
     expect(consumeEntrySource()).toBe("landing_cta");
   });
@@ -352,8 +353,9 @@ describe("landing address handoff", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(acquireMock).toHaveBeenCalledWith({ kind: "address", query: "456 Pine St, Denver, CO" }, null);
+    window.sessionStorage.setItem("lf:pending-address", "Previous lot");
     fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
-    expect(stash).toHaveBeenCalledExactlyOnceWith("");
+    expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
     expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
   });
 

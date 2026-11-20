@@ -7,12 +7,11 @@ import type { User } from "firebase/auth";
 import { LogOut, Search } from "lucide-react";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { useAuth } from "@/lib/auth-context";
-import { consumeAddressQuery } from "@/lib/address-handoff";
+import { publishResolvedParcel, takeStudioEntry } from "@/lib/studio-handoff";
 import { GeocodeError } from "@/lib/geocode-api";
 import { ParcelFetchError } from "@/lib/parcel-api";
 import { acquireLiveParcel } from "@/lib/live-parcel-acquisition";
 import type { LiveParcelData } from "@/lib/parcel-types";
-import { peekInitialParcel, stashInitialParcel } from "@/lib/parcel-handoff";
 import AddressSearch, { type AddressSearchResult } from "./AddressSearch";
 
 /**
@@ -30,7 +29,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
   const handoffStarted = useRef(false);
 
   const openWithParcel = useCallback((parcel: LiveParcelData) => {
-    if (!stashInitialParcel(parcel)) {
+    if (!publishResolvedParcel(parcel)) {
       setLookupError("Could not open your workspace in this browser. Check storage permissions and try again.");
       return;
     }
@@ -80,15 +79,9 @@ export default function SignedInStudioGate({ user }: { user: User }) {
     if (handoffStarted.current || typeof window === "undefined") return;
     handoffStarted.current = true;
 
-    const pendingAddress = consumeAddressQuery();
-    if (pendingAddress) {
-      void lookupText(pendingAddress);
-      return;
-    }
-
-    if (peekInitialParcel() !== null) {
-      setStudioReady(true);
-    }
+    const entry = takeStudioEntry();
+    if (entry.kind === "address") void lookupText(entry.address);
+    else if (entry.kind === "parcel") setStudioReady(true);
   }, [lookupText]);
   /* eslint-enable react-hooks/set-state-in-effect */
 

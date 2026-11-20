@@ -1246,3 +1246,274 @@ describe("GET /api/parcel — zoning shadow classification", () => {
   });
 });
 
+describe("GET /api/parcel — Parcel Evidence assembly, pairing, and date hygiene", () => {
+  const LOT_POLYGON = rotatedRectPolygon(47.65, -122.31, 50, 120, 0);
+
+  it("prevents Regrid dates from leaking onto USA Structures footprint evidence", async () => {
+    stubProviders({
+      regrid: regridResponse(
+        {
+          ll_gisacre: 0.14,
+          zoning: "R-1",
+          ll_uuid: "regrid-parcel-999",
+          ll_last_refresh: "2026-08-14",
+          ll_updated_at: "2026-08-15T12:00:00Z",
+          saddress: "123 Oak St",
+          scity: "Seattle",
+          state2: "WA",
+          szip5: "98105",
+        },
+        LOT_POLYGON,
+      ),
+      structures: structuresResponse(1450),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    expect(res.status).toBe(200);
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("regrid");
+    // Value and evidence are paired
+    expect(data.existingHouseSqft).toBe(1450);
+    const footprintEvidence = data.dataQuality?.fields.existingHouseSqft;
+    expect(footprintEvidence?.status).toBe("observed");
+    expect(footprintEvidence?.confidence).toBe("medium");
+    expect(footprintEvidence?.source.provider).toBe("FEMA / ORNL");
+    expect(footprintEvidence?.source.dataset).toBe("USA Structures");
+
+    // CRITICAL: Regrid dates MUST NOT leak onto FEMA / ORNL USA Structures evidence
+    expect(footprintEvidence?.sourceAsOf).toBeUndefined();
+    expect(footprintEvidence?.sourceUpdatedAt).toBeUndefined();
+
+    // In contrast, Regrid's own fields (lotArea) must retain their dates
+    expect(data.dataQuality?.fields.lotArea.sourceAsOf).toBe("2026-08-14");
+    expect(data.dataQuality?.fields.lotArea.sourceUpdatedAt).toBe("2026-08-15T12:00:00Z");
+  });
+
+  it("prevents Regrid dates from leaking onto defaulted coverage and setback assumptions", async () => {
+    stubProviders({
+      regrid: regridResponse(
+        {
+          ll_gisacre: 0.14,
+          zoning: "UNKNOWN_ZONE",
+          ll_uuid: "regrid-parcel-888",
+          ll_last_refresh: "2026-08-14",
+          ll_updated_at: "2026-08-15T12:00:00Z",
+          saddress: "123 Oak St",
+          scity: "Seattle",
+          state2: "WA",
+          szip5: "98105",
+        },
+        LOT_POLYGON,
+      ),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    // Coverage defaults to 40% planning assumption
+    expect(data.maxLotCoveragePercent).toBe(40);
+    const coverageEvidence = data.dataQuality?.fields.maxLotCoveragePercent;
+    expect(coverageEvidence?.status).toBe("defaulted");
+    expect(coverageEvidence?.confidence).toBe("low");
+    expect(coverageEvidence?.source.provider).toBe("LotFoundry");
+    expect(coverageEvidence?.source.dataset).toBe("Generic feasibility assumptions");
+    expect(coverageEvidence?.sourceAsOf).toBeUndefined();
+    expect(coverageEvidence?.sourceUpdatedAt).toBeUndefined();
+
+    // Setbacks default to planning assumptions
+    const setbacksEvidence = data.dataQuality?.fields.setbacks;
+    expect(setbacksEvidence?.status).toBe("defaulted");
+    expect(setbacksEvidence?.confidence).toBe("low");
+    expect(setbacksEvidence?.source.provider).toBe("LotFoundry");
+    expect(setbacksEvidence?.source.dataset).toBe("Generic feasibility assumptions");
+    expect(setbacksEvidence?.sourceAsOf).toBeUndefined();
+    expect(setbacksEvidence?.sourceUpdatedAt).toBeUndefined();
+  });
+
+  it("prevents Regrid dates from leaking onto user-supplied address evidence", async () => {
+    stubProviders({
+      regrid: regridResponse({
+        ll_gisacre: 0.14,
+        zoning: "R-1",
+        ll_last_refresh: "2026-08-14",
+        ll_updated_at: "2026-08-15T12:00:00Z",
+      }),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31, "123 User St, Seattle, WA"));
+    const data = (await res.json()) as LiveParcelData;
+
+    const addressEvidence = data.dataQuality?.fields.address;
+    expect(addressEvidence?.status).toBe("derived");
+    expect(addressEvidence?.source.provider).toBe("LotFoundry");
+    expect(addressEvidence?.source.dataset).toBe("User-supplied address");
+    expect(addressEvidence?.sourceAsOf).toBeUndefined();
+    expect(addressEvidence?.sourceUpdatedAt).toBeUndefined();
+  });
+
+  it("pairs footprint and coverage values and evidence across Regrid observation tiers", async () => {
+    // 1. Observed ground footprint from Regrid
+    stubProviders({
+      regrid: regridResponse({
+        ll_gisacre: 0.2,
+        ll_bldg_footprint_sqft: 1850,
+        zoning: "R-2",
+        ll_last_refresh: "2026-08-14",
+        ll_updated_at: "2026-08-15T00:00:00Z",
+      }),
+    });
+    let res = await GET(makeRequest(47.65, -122.31));
+    let data = (await res.json()) as LiveParcelData;
+    expect(data.existingHouseSqft).toBe(1850);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "observed",
+      confidence: "high",
+      source: expect.objectContaining({ provider: "Regrid" }),
+      sourceAsOf: "2026-08-14",
+      sourceUpdatedAt: "2026-08-15T00:00:00Z",
+    });
+    expect(data.maxLotCoveragePercent).toBe(45); // R-2 -> 45%
+    expect(data.dataQuality?.fields.maxLotCoveragePercent).toMatchObject({
+      status: "derived",
+      confidence: "low",
+      source: expect.objectContaining({ provider: "Regrid" }),
+      sourceAsOf: "2026-08-14",
+    });
+
+    // 2. Building area proxy fallback from Regrid sqft (no polygon for structures)
+    stubProviders({
+      regrid: regridResponse({
+        ll_gisacre: 0.2,
+        sqft: 1200,
+        zoning: "R-1",
+        ll_last_refresh: "2026-08-14",
+      }),
+    });
+    res = await GET(makeRequest(47.65, -122.31));
+    data = (await res.json()) as LiveParcelData;
+    expect(data.existingHouseSqft).toBe(1200);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "derived",
+      confidence: "low",
+      source: expect.objectContaining({ provider: "Regrid" }),
+      sourceAsOf: "2026-08-14",
+      warnings: [expect.stringContaining("ground-footprint proxy")],
+    });
+
+    // 3. Unavailable footprint when neither Regrid nor structures have data
+    stubProviders({
+      regrid: regridResponse(
+        { ll_gisacre: 0.2, zoning: "R-1" },
+        LOT_POLYGON,
+      ),
+      structures: { ok: true, status: 200, json: async () => ({ features: [] }) },
+    });
+    res = await GET(makeRequest(47.65, -122.31));
+    data = (await res.json()) as LiveParcelData;
+    expect(data.existingHouseSqft).toBe(0);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "unavailable",
+      confidence: "unknown",
+      source: expect.objectContaining({ provider: "Regrid" }),
+      warnings: [expect.stringContaining("No existing-building footprint was found")],
+    });
+  });
+
+  it("pairs footprint and coverage values and evidence on the county-gis path", async () => {
+    // 1. County parcel with USA Structures footprint and unmapped zoning
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [] } }) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(LOT_POLYGON, { Shape__Area: 6000, ZONE: "UNRECOGNIZED" }),
+      structures: structuresResponse(1750),
+    });
+    let res = await GET(makeRequest(47.65, -122.31));
+    let data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("county-gis");
+    expect(data.existingHouseSqft).toBe(1750);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "observed",
+      confidence: "medium",
+      source: expect.objectContaining({ provider: "FEMA / ORNL" }),
+    });
+    expect(data.dataQuality?.fields.existingHouseSqft.sourceAsOf).toBeUndefined();
+    expect(data.maxLotCoveragePercent).toBe(40);
+    expect(data.dataQuality?.fields.maxLotCoveragePercent).toMatchObject({
+      status: "defaulted",
+      confidence: "low",
+      source: expect.objectContaining({ provider: "LotFoundry" }),
+    });
+
+    // 2. County parcel with assessor building area when USA Structures is empty
+    const venturaLat = 34.2746;
+    const venturaLng = -119.229;
+    const venturaLot = rotatedRectPolygon(venturaLat, venturaLng, 60, 110, 0);
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [] } }) },
+      census: censusCoordinateResponse("CA", "Ventura"),
+      countyGis: countyGisResponse(venturaLot, {
+        Shape__Area: 6500,
+        SQ_FT_I: "2100",
+        ZONE: "R2-1",
+      }),
+      structures: { ok: true, status: 200, json: async () => ({ features: [] }) },
+    });
+    res = await GET(makeRequest(venturaLat, venturaLng));
+    data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("county-gis");
+    expect(data.existingHouseSqft).toBe(2100);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "observed",
+      confidence: "medium",
+      source: expect.objectContaining({ provider: "ArcGIS" }),
+      warnings: [expect.stringContaining("county assessor roll")],
+    });
+    expect(data.maxLotCoveragePercent).toBe(45); // R2-1 -> 45%
+    expect(data.dataQuality?.fields.maxLotCoveragePercent).toMatchObject({
+      status: "derived",
+      confidence: "low",
+      source: expect.objectContaining({ provider: "ArcGIS" }),
+    });
+
+    // 3. County parcel with no structures and no assessor building area
+    stubProviders({
+      regrid: { ok: true, status: 200, json: async () => ({ parcels: { features: [] } }) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(LOT_POLYGON, { Shape__Area: 6000 }),
+      structures: { ok: true, status: 200, json: async () => ({ features: [] }) },
+    });
+    res = await GET(makeRequest(47.65, -122.31));
+    data = (await res.json()) as LiveParcelData;
+    expect(data.source).toBe("county-gis");
+    expect(data.existingHouseSqft).toBe(0);
+    expect(data.dataQuality?.fields.existingHouseSqft).toMatchObject({
+      status: "unavailable",
+      confidence: "unknown",
+      source: expect.objectContaining({ provider: "FEMA / ORNL" }),
+      warnings: [expect.stringContaining("No building footprint was found")],
+    });
+  });
+
+  it("preserves provider fallback and ADR distinctions on rate limit degradation", async () => {
+    stubProviders({
+      regrid: { ok: false, status: 429, json: async () => ({}) },
+      census: censusCoordinateResponse("WA", "King"),
+      countyGis: countyGisResponse(LOT_POLYGON, { Shape__Area: 6000, ZONE: "R-1" }),
+      structures: structuresResponse(1300),
+    });
+
+    const res = await GET(makeRequest(47.65, -122.31));
+    const data = (await res.json()) as LiveParcelData;
+
+    expect(data.source).toBe("county-gis");
+    expect(data.existingHouseSqft).toBe(1300);
+    expect(data.dataQuality?.fields.existingHouseSqft.source.provider).toBe("FEMA / ORNL");
+    expect(data.dataQuality?.fields.existingHouseSqft.sourceAsOf).toBeUndefined();
+    expect(data.maxLotCoveragePercent).toBe(40);
+    expect(data.dataQuality?.providerAttempts).toContainEqual(
+      expect.objectContaining({ provider: "Regrid", outcome: "provider-error" }),
+    );
+  });
+});
+

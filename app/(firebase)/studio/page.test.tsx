@@ -65,8 +65,9 @@ vi.mock("@/lib/commerce/purchase-channel", () => ({
   isNativeAppShell: () => mocks.nativeApp,
 }));
 
-vi.mock("@/lib/address-handoff", () => ({ peekAddressQuery: () => mocks.pendingAddress }));
-vi.mock("@/lib/parcel-handoff", () => ({ peekInitialParcel: () => mocks.pendingParcel }));
+vi.mock("@/lib/studio-handoff", () => ({
+  hasPendingStudioHandoff: () => Boolean(mocks.pendingAddress) || Boolean(mocks.pendingParcel),
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { certificateKey } from "@/lib/certificate-key";
 import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
 import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
@@ -40,11 +41,23 @@ vi.mock("@/lib/server/api-auth", () => ({
   requireApiAuth: async () => mocks.auth,
 }));
 
-vi.mock("@/lib/server/certificate-purchases", () => ({
-  grantCertificate: (...args: unknown[]) => mocks.grant(...args),
-  hasCertificate: async () => mocks.purchased,
-  wasCertificateTransferredFrom: async () => mocks.transferred,
-}));
+vi.mock("@/lib/server/certificate-purchases", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/lib/server/certificate-purchases")
+  >("@/lib/server/certificate-purchases");
+  return {
+    // Real Session -> Grant mapping; only the Firestore write is mocked.
+    certificateGrantInputFromSession: actual.certificateGrantInputFromSession,
+    fulfillPaidCertificateSession: async (
+      session: Parameters<typeof actual.certificateGrantInputFromSession>[0],
+    ) => {
+      const input = actual.certificateGrantInputFromSession(session);
+      return input ? mocks.grant(input) : null;
+    },
+    hasCertificate: async () => mocks.purchased,
+    wasCertificateTransferredFrom: async () => mocks.transferred,
+  };
+});
 
 type FakeReservation = {
   attemptId: string;
@@ -367,6 +380,51 @@ describe("POST /api/stripe/checkout-certificate", () => {
       state: "CA",
       zip: "95110",
     });
+  });
+
+  it("keeps a long but accepted address and city intact so the Grant still matches certKey", async () => {
+    // Property records accept address/city up to 200 chars and rebuild certKey
+    // from the Grant; the old 100/50 metadata caps broke that for these lots.
+    const address = `4000 ${"Old Ranch Road ".repeat(8).trim()}`;
+    const city = "Rancho Santa Margarita Unincorporated Area, Orange County, CA";
+    expect(address.length).toBeGreaterThan(100);
+    expect(city.length).toBeGreaterThan(50);
+    const certKey = certificateKey({ address, city });
+    const create = vi.fn().mockResolvedValue({ id: "cs_long", url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(
+      postRequest({ certKey, checkoutAttemptId: "attempt-1", address, city, state: "CA" }),
+    );
+
+    expect(res.status).toBe(200);
+    const { metadata } = create.mock.calls[0][0];
+    expect(metadata).toMatchObject({ certKey, address, city, state: "CA" });
+    const { certificateGrantInputFromSession } = await vi.importActual<
+      typeof import("@/lib/server/certificate-purchases")
+    >("@/lib/server/certificate-purchases");
+    const grant = certificateGrantInputFromSession({ id: "cs_long", metadata });
+    expect(certificateKey({ address: grant?.address ?? "", city: grant?.city ?? "" })).toBe(
+      certKey,
+    );
+  });
+
+  it("caps address and city metadata at the property-records limit", async () => {
+    const create = vi.fn().mockResolvedValue({ url: "https://stripe.test/cert" });
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    await POST(
+      postRequest({
+        certKey: "parcel-1",
+        checkoutAttemptId: "attempt-1",
+        address: "a".repeat(600),
+        city: "c".repeat(600),
+      }),
+    );
+
+    const { metadata } = create.mock.calls[0][0];
+    expect(metadata.address).toBe("a".repeat(200));
+    expect(metadata.city).toBe("c".repeat(200));
   });
 
   it("strips cert overrides from the client return query in redirect URLs", async () => {
@@ -749,6 +807,65 @@ describe("POST /api/stripe/checkout-certificate", () => {
           consentVersion: CURRENT_LEGAL_CONSENT.termsVersion,
         }),
       );
+    });
+
+    it("writes the same Grant as the webhook for one paid Session", async () => {
+      mocks.auth = { uid: "anon-1", isAnonymous: true };
+      mocks.reservations.set("certificate:anon-1:parcel-1", {
+        attemptId: "attempt-1",
+        // Reservation drifts from the Session; the Session must win.
+        parameters: { origin: "http://localhost", parcelName: "Drifted" },
+        sessionId: "cs_done",
+        sessionUrl: "https://stripe.test/done",
+        expiresAtMs: Date.now() + 60_000,
+      });
+      const session = {
+        id: "cs_done",
+        mode: "payment",
+        status: "complete",
+        payment_status: "paid",
+        currency: "usd",
+        amount_total: 2900,
+        customer_details: { email: "Guest@Example.COM" },
+        metadata: {
+          purchaseType: "certificate",
+          uid: "anon-1",
+          certKey: "parcel-1",
+          parcelName: "123 Main Street",
+          lat: "47.6",
+          lng: "nope",
+          anonymousCheckout: "true",
+        },
+      };
+      mocks.stripe = {
+        checkout: {
+          sessions: { create: vi.fn(), retrieve: vi.fn().mockResolvedValue(session) },
+        },
+      };
+      const res = await POST(
+        postRequest({
+          certKey: "parcel-1",
+          checkoutAttemptId: "attempt-1",
+          legalConsent: CURRENT_LEGAL_CONSENT,
+        }),
+      );
+      expect(res.status).toBe(200);
+      const { certificateGrantInputFromSession } = await vi.importActual<
+        typeof import("@/lib/server/certificate-purchases")
+      >("@/lib/server/certificate-purchases");
+      // The webhook builds its Grant from this same function.
+      expect(mocks.grant).toHaveBeenCalledWith(
+        certificateGrantInputFromSession(session),
+      );
+      expect(certificateGrantInputFromSession(session)).toMatchObject({
+        parcelName: "123 Main Street",
+        lat: 47.6,
+        lng: undefined,
+        buyerEmail: "guest@example.com",
+        anonymousCheckout: true,
+      });
+      // No consent was stamped on the Session, so none is invented at retry.
+      expect(mocks.grant.mock.calls[0][0]).not.toHaveProperty("consentVersion");
     });
   });
 });
