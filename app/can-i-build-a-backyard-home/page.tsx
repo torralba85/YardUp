@@ -52,6 +52,7 @@ const JSON_LD = [
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Any",
     description: PAGE_DESCRIPTION,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   },
 ];
 

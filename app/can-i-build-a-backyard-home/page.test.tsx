@@ -102,6 +102,7 @@ describe("/can-i-build-a-backyard-home", () => {
     );
     expect(jsonLdNode?.textContent).toContain("BreadcrumbList");
     expect(jsonLdNode?.textContent).toContain("WebApplication");
+    expect(jsonLdNode?.textContent).toContain('"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}');
     expect(jsonLdNode?.textContent).not.toContain("FAQPage");
   });
 
