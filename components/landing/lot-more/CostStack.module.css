@@ -1,0 +1,443 @@
+/* The exploded cost stack inside the carbon numbers section. Without the pin
+   (reduced motion, short or narrow screens, no script) the drawing stands
+   exploded and the ledger picks the layer. Pinned, --stack-sep (0 assembled,
+   1 exploded) and --stack-progress come from scroll. */
+.stack {
+  --stack-sep: 1;
+  position: relative;
+  margin-top: 64px;
+  border-bottom: 1px solid var(--color-lot-line-dark);
+}
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6%;
+  padding-bottom: 56px;
+}
+.stack[data-pinned="true"] {
+  height: 260svh;
+}
+.stack[data-pinned="true"] .stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  padding: 40px 0;
+}
+
+/* Drawing */
+.figure {
+  position: relative;
+  margin: 0;
+  min-width: 0;
+}
+.drawing {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stack[data-pinned="true"] .drawing {
+  max-height: calc(100svh - 150px);
+}
+.figure figcaption {
+  margin-top: 10px;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.readout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 2px;
+}
+.readout span {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.readout strong {
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.roof {
+  transform: translate(0, calc(var(--stack-sep) * -126px));
+}
+.openings {
+  transform: translate(calc(var(--stack-sep) * -46px), calc(var(--stack-sep) * 20px));
+}
+.shell {
+  transform: translate(0, calc(var(--stack-sep) * -18px));
+}
+.soft {
+  transform: translate(0, calc(var(--stack-sep) * 66px));
+}
+/* Exploded, the chosen layer comes forward and the others recede. */
+.stack:not([data-pinned="true"]) .layer[data-active="false"],
+.stack[data-exploded="true"] .layer[data-active="false"] {
+  opacity: 0.45;
+}
+.rails {
+  opacity: calc(var(--stack-sep) * 0.9);
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  stroke-opacity: 0.5;
+}
+.rails .railCenter {
+  stroke: var(--color-lot-orange);
+  stroke-opacity: 0.8;
+}
+
+/* Materials, in palette roles only: a chalk-and-stone model with one orange
+   volume. Chalk hairlines separate the planes from carbon. */
+.seam {
+  stroke: var(--color-lot-chalk);
+  stroke-opacity: 0.14;
+  stroke-width: 1;
+}
+.hatch {
+  stroke: var(--color-lot-chalk);
+  stroke-opacity: 0.12;
+  stroke-width: 1;
+}
+.sheet {
+  fill: var(--color-lot-surface-dark);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1.3;
+  stroke-dasharray: 5 4;
+}
+.sheetHatch {
+  fill: url(#cost-stack-hatch);
+}
+.sheetLine {
+  fill: none;
+  stroke: var(--color-lot-chalk);
+  stroke-opacity: 0.7;
+  stroke-width: 1.4;
+}
+.sheetDim {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.stamp {
+  fill: var(--color-lot-orange);
+  stroke: var(--color-lot-chalk);
+  stroke-width: 1.5;
+}
+.slabTop {
+  fill: var(--color-lot-stone-on-dark);
+}
+.slabLeft {
+  fill: var(--color-lot-stone);
+}
+.slabRight {
+  fill: var(--color-lot-line-dark);
+}
+.floor {
+  fill: var(--color-lot-paper);
+}
+.wallInner {
+  fill: var(--color-lot-surface);
+  stroke: var(--color-lot-line);
+  stroke-width: 1;
+}
+.wallInnerShade {
+  fill: var(--color-lot-line);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+}
+.wallFront {
+  fill: var(--color-lot-orange);
+}
+.wallSide {
+  fill: var(--color-lot-orange-ink);
+}
+.windowFrame {
+  fill: var(--color-lot-ink);
+}
+.glass,
+.glazing {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.3;
+}
+.glazing {
+  stroke: var(--color-lot-ink);
+  stroke-width: 2.6;
+}
+.mullion {
+  stroke: var(--color-lot-ink);
+  stroke-width: 2.4;
+}
+.glint {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.4;
+}
+.edge {
+  fill: none;
+  stroke: var(--color-lot-chalk);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5;
+}
+.deckTop {
+  fill: var(--color-lot-stone-on-dark);
+}
+.deckEdge {
+  fill: var(--color-lot-stone);
+}
+.deckSide {
+  fill: var(--color-lot-surface-dark);
+}
+.soffit {
+  fill: var(--color-lot-stone);
+}
+.roofTop {
+  fill: var(--color-lot-line-dark);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1.2;
+}
+.roofSeam {
+  fill: url(#cost-stack-seam);
+}
+.roofFront {
+  fill: var(--color-lot-surface-dark);
+}
+.roofSide {
+  fill: var(--color-lot-ink-hover);
+}
+.skylight {
+  fill: var(--color-lot-ink);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+}
+
+/* Numbered callouts match the ledger rows. */
+.callout line {
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1.2;
+}
+.callout circle {
+  fill: var(--color-lot-ink);
+  stroke: var(--color-lot-chalk);
+  stroke-width: 1.5;
+}
+.callout text {
+  fill: var(--color-lot-chalk);
+  font-family: var(--font-lot-body), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+.layer[data-active="true"] .callout circle {
+  fill: var(--color-lot-orange);
+  stroke: var(--color-lot-orange);
+}
+.layer[data-active="true"] .callout text {
+  fill: var(--color-lot-ink);
+}
+
+/* Ledger */
+.ledger {
+  min-width: 0;
+}
+.kicker {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.ledger h3 {
+  margin-top: 14px !important;
+  font-size: clamp(26px, 2.4vw, 34px);
+  letter-spacing: -0.045em;
+}
+.lead {
+  margin-top: 12px !important;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.rows {
+  display: grid;
+  margin-top: 26px;
+  border-top: 1px solid var(--color-lot-line-dark);
+}
+/* A ui/Button laid out as a ledger row; the landing's chalk focus outline on
+   carbon replaces the button's ring. */
+.row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  justify-content: stretch;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 13px 9px 13px 0;
+  border-bottom: 1px solid var(--color-lot-line-dark);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-lot-chalk);
+  font-weight: 400;
+  text-align: left;
+}
+.row:hover {
+  background: var(--color-lot-surface-dark);
+}
+.row:focus-visible {
+  box-shadow: none;
+}
+.row[aria-checked="true"] {
+  background: var(--color-lot-surface-dark);
+  box-shadow: inset 3px 0 0 var(--color-lot-orange);
+}
+.rowIndex {
+  justify-self: center;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.row[aria-checked="true"] .rowIndex {
+  color: var(--color-lot-orange);
+}
+.rowText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.rowTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+.rowDetail {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.rowAmount {
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 22px 0 0;
+}
+.total dt {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+}
+.total dd {
+  margin: 4px 0 0;
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: clamp(25px, 2.2vw, 31px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total > div:last-child {
+  text-align: right;
+}
+.note {
+  margin-top: 18px !important;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+}
+.rail {
+  position: relative;
+  height: 2px;
+  margin-top: 22px;
+  background: var(--color-lot-line-dark);
+}
+.rail > span {
+  position: absolute;
+  inset: 0;
+  background: var(--color-lot-orange);
+  transform: scaleX(var(--stack-progress, 0));
+  transform-origin: left;
+}
+.stack:not([data-pinned="true"]) .rail {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .layer {
+    transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .callout circle,
+  .callout text,
+  .rowIndex {
+    transition:
+      fill 180ms,
+      stroke 180ms,
+      color 180ms;
+  }
+  .row {
+    transition: background-color 180ms;
+  }
+}
+
+@media (max-width: 1150px) {
+  .stage {
+    gap: 4%;
+  }
+}
+
+@media (max-width: 800px) {
+  .stack {
+    margin-top: 44px;
+  }
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    padding-bottom: 40px;
+  }
+  /* In one column the drawing is too narrow to float the readout over it. */
+  .readout {
+    position: static;
+    margin-bottom: 10px;
+  }
+  .readout strong {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* The callout numerals would fall below the 9px floor; the dots and the
+     ledger carry the index. */
+  .callout text {
+    display: none;
+  }
+  .row {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  .rowAmount {
+    font-size: 17px;
+  }
+  .total {
+    flex-direction: column;
+  }
+  .total > div:last-child {
+    text-align: left;
+  }
+}
