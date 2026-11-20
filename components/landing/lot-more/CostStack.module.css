@@ -10,7 +10,7 @@
 }
 .stage {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   align-items: center;
   gap: 6%;
   padding-bottom: 56px;
@@ -37,7 +37,7 @@
   height: auto;
 }
 .stack[data-pinned="true"] .drawing {
-  max-height: calc(100svh - 150px);
+  max-height: calc(100svh - 110px);
 }
 .figure figcaption {
   margin-top: 10px;
@@ -69,30 +69,27 @@
   font-variant-numeric: tabular-nums;
 }
 
-.roof {
-  transform: translate(0, calc(var(--stack-sep) * -126px));
+/* Every part moves by its own offset (--ox, --oy, px when fully exploded). */
+.part {
+  transform: translate(calc(var(--stack-sep) * var(--ox) * 1px), calc(var(--stack-sep) * var(--oy) * 1px));
 }
-.openings {
-  transform: translate(calc(var(--stack-sep) * -46px), calc(var(--stack-sep) * 20px));
-}
-.shell {
-  transform: translate(0, calc(var(--stack-sep) * -18px));
-}
-.soft {
-  transform: translate(0, calc(var(--stack-sep) * 66px));
+.drawing {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 /* Exploded, the chosen layer comes forward and the others recede. */
 .stack:not([data-pinned="true"]) .layer[data-active="false"],
 .stack[data-exploded="true"] .layer[data-active="false"] {
-  opacity: 0.45;
+  filter: url(#cost-stack-recede);
 }
-.rails {
+.rails line {
   opacity: calc(var(--stack-sep) * 0.9);
   fill: none;
   stroke: var(--color-lot-stone-on-dark);
   stroke-width: 1;
-  stroke-dasharray: 3 5;
-  stroke-opacity: 0.5;
+  stroke-dasharray: 3 6;
+  stroke-opacity: 0.45;
 }
 .rails .railCenter {
   stroke: var(--color-lot-orange);
@@ -100,127 +97,400 @@
 }
 
 /* Materials, in palette roles only: a chalk-and-stone model with one orange
-   volume. Chalk hairlines separate the planes from carbon. */
-.seam {
-  stroke: var(--color-lot-chalk);
-  stroke-opacity: 0.14;
-  stroke-width: 1;
-}
-.hatch {
-  stroke: var(--color-lot-chalk);
-  stroke-opacity: 0.12;
-  stroke-width: 1;
-}
+   volume, lit from the upper left. Hairlines separate planes from carbon. */
+
+/* Drawing set */
 .sheet {
   fill: var(--color-lot-surface-dark);
   stroke: var(--color-lot-stone-on-dark);
-  stroke-width: 1.3;
-  stroke-dasharray: 5 4;
+  stroke-width: 1;
 }
-.sheetHatch {
-  fill: url(#cost-stack-hatch);
+.sheetEdge {
+  fill: var(--color-lot-line-dark);
 }
-.sheetLine {
-  fill: none;
-  stroke: var(--color-lot-chalk);
-  stroke-opacity: 0.7;
-  stroke-width: 1.4;
-}
-.sheetDim {
+.sheetBorder,
+.titleBlock {
   fill: none;
   stroke: var(--color-lot-stone-on-dark);
-  stroke-width: 1;
-  stroke-dasharray: 2 3;
+  stroke-opacity: 0.6;
+  stroke-width: 0.8;
 }
-.stamp {
-  fill: var(--color-lot-orange);
+.sheetFine {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-opacity: 0.35;
+  stroke-width: 0.6;
+}
+.gridLine {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-opacity: 0.55;
+  stroke-width: 0.7;
+  stroke-dasharray: 6 3 1 3;
+}
+.gridBubble,
+.northRing {
+  fill: var(--color-lot-surface-dark);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.8;
+}
+.planWall {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.88;
+}
+.planWallSolid {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.7;
+}
+.planGap {
+  fill: var(--color-lot-surface-dark);
+}
+.planLine,
+.planSwing {
+  fill: none;
   stroke: var(--color-lot-chalk);
-  stroke-width: 1.5;
+  stroke-opacity: 0.8;
+  stroke-width: 0.8;
 }
+.planSwing {
+  stroke-dasharray: 2 2;
+}
+.planFixture {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.7;
+}
+.planDim {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.7;
+}
+.sheetText {
+  fill: var(--color-lot-stone-on-dark);
+  font-family: var(--font-lot-body), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.northArrow {
+  fill: var(--color-lot-chalk);
+}
+.seal {
+  fill: var(--color-lot-orange);
+}
+.sealRing {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-width: 0.9;
+}
+
+/* Slab */
 .slabTop {
   fill: var(--color-lot-stone-on-dark);
 }
-.slabLeft {
-  fill: var(--color-lot-stone);
-}
-.slabRight {
+.slabSide {
   fill: var(--color-lot-line-dark);
 }
+.slabFront {
+  fill: var(--color-lot-stone);
+}
+.slabLine {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-opacity: 0.45;
+  stroke-width: 0.8;
+}
+.joint {
+  fill: none;
+  stroke: var(--color-lot-stone);
+  stroke-width: 0.9;
+}
+.bolt {
+  fill: var(--color-lot-ink);
+}
+
+/* Floor, rug and bath */
 .floor {
   fill: var(--color-lot-paper);
 }
-.wallInner {
+.floorEdge {
+  fill: var(--color-lot-line);
+}
+.plank {
+  fill: none;
+  stroke: var(--color-lot-line);
+  stroke-width: 0.6;
+}
+.rug {
+  fill: var(--color-lot-stone);
+  fill-opacity: 0.16;
+}
+.shower {
   fill: var(--color-lot-surface);
   stroke: var(--color-lot-line);
-  stroke-width: 1;
+  stroke-width: 0.8;
 }
-.wallInnerShade {
+.drain {
+  fill: var(--color-lot-stone);
+}
+
+/* Deck and planters */
+.deck {
+  fill: var(--color-lot-stone-on-dark);
+}
+.deckSide {
+  fill: var(--color-lot-line-dark);
+}
+.deckFront {
+  fill: var(--color-lot-stone);
+}
+.deckBoard {
+  fill: none;
+  stroke: var(--color-lot-stone);
+  stroke-width: 0.7;
+}
+.soilTop {
+  fill: var(--color-lot-line-dark);
+}
+.leaf {
+  fill: var(--color-lot-stone);
+  stroke: var(--color-lot-line-dark);
+  stroke-width: 0.6;
+}
+
+/* Interior walls */
+.innerLit {
+  fill: var(--color-lot-surface);
+  stroke: var(--color-lot-line);
+  stroke-width: 0.6;
+}
+.innerShade {
   fill: var(--color-lot-line);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.6;
+}
+.baseboard {
+  fill: none;
   stroke: var(--color-lot-stone-on-dark);
   stroke-width: 1;
 }
-.wallFront {
+.art {
+  fill: var(--color-lot-line-dark);
+  stroke: var(--color-lot-paper);
+  stroke-width: 1.2;
+}
+
+/* Furniture */
+.furnitureTop {
+  fill: var(--color-lot-paper);
+  stroke: var(--color-lot-line);
+  stroke-width: 0.5;
+}
+.furnitureMid {
+  fill: var(--color-lot-surface);
+}
+.furnitureShade {
+  fill: var(--color-lot-line);
+}
+.counter {
+  fill: var(--color-lot-line-dark);
+}
+.counterEdge {
+  fill: var(--color-lot-ink-hover);
+}
+.basin {
+  fill: var(--color-lot-stone-on-dark);
+  stroke: var(--color-lot-stone);
+  stroke-width: 0.6;
+}
+.faucet,
+.handle {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1.4;
+}
+.burner {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.8;
+}
+.cabinetLine {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.6;
+}
+.wood {
+  fill: var(--color-lot-stone-on-dark);
+}
+.woodShade {
+  fill: var(--color-lot-stone);
+}
+.linen {
+  fill: var(--color-lot-paper);
+}
+.linenMid {
+  fill: var(--color-lot-surface);
+}
+.linenShade {
+  fill: var(--color-lot-line);
+}
+.blanket {
+  fill: var(--color-lot-line-dark);
+}
+.blanketMid {
+  fill: var(--color-lot-ink-hover);
+}
+.blanketShade {
+  fill: var(--color-lot-surface-dark);
+}
+.fold {
+  fill: none;
+  stroke: var(--color-lot-stone);
+  stroke-width: 0.8;
+}
+.sofaTop {
+  fill: var(--color-lot-stone-on-dark);
+}
+.sofaMid {
+  fill: var(--color-lot-stone);
+}
+.sofaShade {
+  fill: var(--color-lot-line-dark);
+}
+.cushion {
+  fill: none;
+  stroke: var(--color-lot-stone);
+  stroke-width: 0.8;
+}
+
+/* Exterior walls: the one orange volume */
+.wallLit {
   fill: var(--color-lot-orange);
 }
-.wallSide {
+.wallShade {
   fill: var(--color-lot-orange-ink);
 }
-.windowFrame {
-  fill: var(--color-lot-ink);
+.boardLit {
+  fill: none;
+  stroke: var(--color-lot-orange-ink);
+  stroke-opacity: 0.55;
+  stroke-width: 0.7;
 }
-.glass,
-.glazing {
+.boardShade {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-opacity: 0.3;
+  stroke-width: 0.7;
+}
+.trim {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+}
+.reveal {
+  fill: var(--color-lot-orange-ink);
+  stroke: var(--color-lot-ink);
+  stroke-opacity: 0.4;
+  stroke-width: 0.5;
+}
+.revealSill {
+  fill: var(--color-lot-orange-edge);
+}
+.wallEnd {
+  fill: var(--color-lot-orange-edge);
+}
+.wallEndShade {
+  fill: var(--color-lot-orange-ink);
+}
+.wallCap {
+  fill: var(--color-lot-paper);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 0.6;
+}
+
+/* Openings */
+.glass {
   fill: var(--color-lot-chalk);
-  fill-opacity: 0.3;
-}
-.glazing {
-  stroke: var(--color-lot-ink);
-  stroke-width: 2.6;
-}
-.mullion {
-  stroke: var(--color-lot-ink);
-  stroke-width: 2.4;
+  fill-opacity: 0.2;
 }
 .glint {
   fill: var(--color-lot-chalk);
-  fill-opacity: 0.4;
+  fill-opacity: 0.45;
 }
-.edge {
-  fill: none;
-  stroke: var(--color-lot-chalk);
-  stroke-opacity: 0.55;
-  stroke-width: 1.5;
+.frame,
+.doorFrame {
+  fill: var(--color-lot-ink);
 }
-.deckTop {
+.sillTop {
+  fill: var(--color-lot-line-dark);
+}
+.door {
+  fill: var(--color-lot-ink-hover);
+  stroke: var(--color-lot-ink);
+  stroke-width: 1;
+}
+
+/* Roof */
+.rafterTop {
   fill: var(--color-lot-stone-on-dark);
 }
-.deckEdge {
+.rafterSide {
   fill: var(--color-lot-stone);
 }
-.deckSide {
-  fill: var(--color-lot-surface-dark);
-}
-.soffit {
-  fill: var(--color-lot-stone);
-}
-.roofTop {
+.rafterFront {
   fill: var(--color-lot-line-dark);
+}
+.roofPanel {
+  fill: var(--color-lot-line-dark);
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+}
+.seamShadow {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-opacity: 0.6;
+  stroke-width: 1.2;
+}
+.seamRib {
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-opacity: 0.5;
+  stroke-width: 0.8;
+}
+.dripEdge {
+  fill: none;
   stroke: var(--color-lot-stone-on-dark);
   stroke-width: 1.2;
 }
-.roofSeam {
-  fill: url(#cost-stack-seam);
-}
-.roofFront {
+.fascia {
   fill: var(--color-lot-surface-dark);
 }
-.roofSide {
+.fasciaLit {
   fill: var(--color-lot-ink-hover);
 }
-.skylight {
+.curbSide {
+  fill: var(--color-lot-surface-dark);
+}
+.curbFront {
+  fill: var(--color-lot-ink-hover);
+}
+.skyFrame {
+  fill: var(--color-lot-ink);
+}
+.skyGlass {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.28;
+}
+.gutter {
+  fill: var(--color-lot-ink-hover);
+}
+.gutterLit {
+  fill: var(--color-lot-line-dark);
+}
+.gutterTop {
   fill: var(--color-lot-ink);
   stroke: var(--color-lot-stone-on-dark);
-  stroke-width: 1;
+  stroke-width: 0.6;
 }
 
 /* Numbered callouts match the ledger rows. */
@@ -228,7 +498,10 @@
   stroke: var(--color-lot-stone-on-dark);
   stroke-width: 1.2;
 }
-.callout circle {
+.calloutDot {
+  fill: var(--color-lot-chalk);
+}
+.callout circle:not(.calloutDot) {
   fill: var(--color-lot-ink);
   stroke: var(--color-lot-chalk);
   stroke-width: 1.5;
@@ -241,7 +514,7 @@
   text-anchor: middle;
   font-variant-numeric: tabular-nums;
 }
-.layer[data-active="true"] .callout circle {
+.layer[data-active="true"] .callout circle:not(.calloutDot) {
   fill: var(--color-lot-orange);
   stroke: var(--color-lot-orange);
 }
@@ -380,9 +653,6 @@
   display: none;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .layer {
-    transition: opacity 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  }
   .callout circle,
   .callout text,
   .rowIndex {
@@ -424,7 +694,8 @@
 @media (max-width: 480px) {
   /* The callout numerals would fall below the 9px floor; the dots and the
      ledger carry the index. */
-  .callout text {
+  .callout text,
+  .sheetText {
     display: none;
   }
   .row {

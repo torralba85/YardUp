@@ -288,7 +288,7 @@ Everything is inside `@media (prefers-reduced-motion: no-preference)`.
 | Landing header | opacity fade, 800ms after 200ms. No translate: a sub-pixel offset measured the 44px home target at 43.99px on a 2.75× phone |
 | Section reveal | children of each section below the model rise once on entering view: `opacity` + `translateY(32px)`, 900ms |
 | Model section | pinned stage; scroll progress maps to the three parcel scenes (thirds) and a 0.94 → 1.02 camera scale |
-| Cost stack | inside the numbers section, a second pinned stage (260svh, same pin conditions as the model section). Scroll lifts the exploded backyard home apart, walks roof → openings → shell → soft costs (bands at 36/52/68%) and settles it back together at the end. Layer separation and the progress rail are CSS variables; only the active layer re-renders. Unpinned it is a static exploded drawing and the ledger radio group picks the layer |
+| Cost stack | inside the numbers section, a second pinned stage (260svh, same pin conditions as the model section). Scroll explodes the backyard home, walks roof → openings → shell → soft costs (bands at 36/52/68%) and settles it back together at the end. The drawing is a 20×30 ft model projected isometrically in code: each part moves on its own vector (the roof lifts off its rafters, the front walls swing out to show the furnished room, windows and doors leave their reveals, the permit set drops below the slab). Inactive layers recede by an opaque darkening filter, not opacity, so they still occlude. Separation and the progress rail are CSS variables; only the active layer re-renders. Unpinned it is a static exploded drawing and the ledger radio group picks the layer |
 
 ```css
 @keyframes settle-in {

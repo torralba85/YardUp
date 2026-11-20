@@ -43,7 +43,7 @@ describe("CostStack", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Soft costs/ }));
     expect(screen.getByRole("radio", { name: /Soft costs/ })).toHaveAttribute("aria-checked", "true");
     expect(active()).toHaveLength(1);
-    expect(active()[0].textContent).toBe("04");
+    expect(active()[0].textContent).toContain("A-101");
   });
 
   it("stays an unpinned, exploded drawing when motion is reduced", () => {
