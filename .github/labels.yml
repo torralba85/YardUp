@@ -57,7 +57,7 @@
   color: "c2e0c6"
   description: "Low: minor/cosmetic; fix opportunistically."
 
-# --- Area (mirrors the repo map in CLAUDE.md) ----------------------------
+# --- Area (mirrors the top-level source directories) ---------------------
 - name: "area: landing"
   color: "bfd4f2"
   description: "app/page.tsx, components/landing/*"
