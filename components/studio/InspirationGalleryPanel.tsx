@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowRight, CheckCircle2, Plus } from "lucide-react";
 import { inspirationItems, type InspirationItem } from "@/lib/inspiration-data";
 import type { ADUConfig, Parcel } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import StyleMatchPanel from "./StyleMatchPanel";
 import { Button } from "@/components/ui/Button";
 
@@ -58,7 +59,7 @@ export default function InspirationGalleryPanel({
             A small home, considered.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-lot-stone">
-            Explore six starting points. Apply a footprint, then refine it on your lot.
+            Explore 6 starting points. Apply a footprint, then refine it on your lot.
           </p>
         </div>
         <p className="max-w-xs text-xs leading-relaxed text-lot-stone">
@@ -99,7 +100,7 @@ export default function InspirationGalleryPanel({
               {item.title}
             </h3>
             <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs leading-relaxed text-lot-stone tabular-nums">
-              <span>{item.sqft.toLocaleString()} sf</span><span aria-hidden="true">/</span>
+              <span>{formatNumber(item.sqft)} sf</span><span aria-hidden="true">/</span>
               <span>{item.width} × {item.length} ft</span><span aria-hidden="true">/</span>
               <span>{finishLabels[item.finish]} · {roofLabels[item.roof]}</span>
             </p>
@@ -124,7 +125,7 @@ export default function InspirationGalleryPanel({
         ))}
       </div>
       <details className="group mt-8 border-t border-lot-line">
-        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-4 text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-5 py-4 text-lot-ink hover:bg-lot-surface motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink [&::-webkit-details-marker]:hidden">
           <span className="flex flex-wrap items-baseline gap-x-7 gap-y-1">
             <span className="font-display text-lg font-medium tracking-tight">Match your own home</span>
             <span className="text-sm text-lot-stone">Explore a concept inspired by your existing exterior.</span>

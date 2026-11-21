@@ -96,7 +96,7 @@ export default function AIProjectBriefPanel({
           aria-label={response ? "Refresh property notes and timeline" : "Generate property notes and timeline"}
           className="shrink-0"
         >
-          {loading ? "Building" : !activeUser ? "Sign in" : response ? "Refresh" : "Generate"}
+          {loading ? "Building…" : !activeUser ? "Sign in" : response ? "Refresh" : "Generate"}
         </Button>
       </div>
 

@@ -34,7 +34,7 @@ export default function BuilderPage() {
   }, [buildersAllowed, loading, profile, router, user]);
 
   if (!buildersAllowed) {
-    return <div role="status" className="p-6 text-lot-ink">Opening Studio...</div>;
+    return <div role="status" className="p-6 text-lot-ink">Opening Studio…</div>;
   }
 
   if (loading || !user || !profile || profile.role !== "builder") {
@@ -65,7 +65,7 @@ export default function BuilderPage() {
                 </div>
               ))}
             </div>
-            <span className="sr-only">Loading...</span>
+            <span className="sr-only">Loading…</span>
           </div>
         </main>
       </div>

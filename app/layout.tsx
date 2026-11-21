@@ -134,15 +134,16 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${manrope.variable}`}
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
-      <body className="font-sans antialiased bg-lot-chalk text-lot-ink" suppressHydrationWarning>
+      <body className="font-sans antialiased bg-lot-chalk text-lot-ink">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <a
           href="#main-content"
-          className="sr-only rounded-control focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lot-ink focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lot-chalk focus:outline-2 focus:outline-offset-2 focus:outline-lot-chalk"
+          className="sr-only rounded-control focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lot-ink focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lot-chalk focus:outline-2 focus:outline-offset-2 focus:outline-lot-orange-ink"
         >
           Skip to content
         </a>

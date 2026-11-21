@@ -26,8 +26,10 @@
   box-sizing: border-box;
 }
 
-@view-transition {
-  navigation: auto;
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
 }
 
 html {
@@ -35,6 +37,12 @@ html {
   scroll-behavior: smooth;
   font-size: 16px;
   text-size-adjust: 100%;
+}
+
+@media (pointer: fine) {
+  html {
+    overscroll-behavior: none;
+  }
 }
 
 body {
@@ -52,6 +60,14 @@ h3,
 h4 {
   letter-spacing: -0.035em;
   text-wrap: balance;
+}
+
+h1[id],
+h2[id],
+h3[id],
+h4[id],
+section[id] {
+  scroll-margin-top: 5rem;
 }
 
 p {
@@ -242,7 +258,9 @@ textarea {
 
 @layer base {
   a:focus-visible,
-  button:focus-visible {
+  button:focus-visible,
+  summary:focus-visible,
+  [role="button"]:focus-visible {
     outline: 2px solid var(--color-lot-orange-ink);
     outline-offset: 5px;
   }
@@ -358,6 +376,7 @@ select,
 textarea,
 summary {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Journey chrome must not long-press-select like a document. Content
@@ -395,6 +414,10 @@ html[data-lf-consent="unset"] [data-consent-banner][data-pending] {
 /* When cookie consent is unset, reserve bottom clearance across mobile,
    tablet, and desktop so the fixed banner does not occlude primary actions,
    auth forms, editorial copy, or the Studio planning guide bar. */
+html[data-lf-consent="unset"] {
+  scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 html[data-lf-consent="unset"] body {
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }
@@ -402,6 +425,7 @@ html[data-lf-consent="unset"] body {
 @media (min-width: 1024px) {
   html[data-lf-consent="unset"] {
     --studio-consent-bar: 4.75rem;
+    scroll-padding-bottom: 4.75rem;
   }
   html[data-lf-consent="unset"] body:has([data-testid="studio-overview"]) {
     padding-bottom: 4.75rem;

@@ -24,6 +24,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [socialConsent, setSocialConsent] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"email" | "google" | "apple" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,12 +45,15 @@ export default function LoginForm() {
     event.preventDefault();
     if (isPending) return;
     setError(null);
+    setPendingAction("email");
     startTransition(async () => {
       try {
         await signIn(email, password);
       } catch (err: unknown) {
         const code = getAuthErrorCode(err);
         setError(code ? getAuthErrorMessage(code) : "Something went wrong. Please try again.");
+      } finally {
+        setPendingAction(null);
       }
     });
   };
@@ -61,6 +65,7 @@ export default function LoginForm() {
       setError("Confirm the legal terms before continuing with Google.");
       return;
     }
+    setPendingAction("google");
     startTransition(async () => {
       try {
         await signInWithGoogle("user", CURRENT_LEGAL_CONSENT);
@@ -73,6 +78,8 @@ export default function LoginForm() {
               ? err.message
               : "Google sign-in failed. Please try again.",
         );
+      } finally {
+        setPendingAction(null);
       }
     });
   };
@@ -84,6 +91,7 @@ export default function LoginForm() {
       setError("Confirm the legal terms before continuing with Apple.");
       return;
     }
+    setPendingAction("apple");
     startTransition(async () => {
       try {
         await signInWithApple("user", CURRENT_LEGAL_CONSENT);
@@ -96,6 +104,8 @@ export default function LoginForm() {
               ? err.message
               : "Apple sign-in failed. Please try again.",
         );
+      } finally {
+        setPendingAction(null);
       }
     });
   };
@@ -104,7 +114,7 @@ export default function LoginForm() {
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="lf-body-sm rounded-none border border-status-blocked/20 bg-status-blocked-soft px-3 py-2 text-status-blocked">
+          <div role="alert" className="lf-body-sm rounded-none border border-status-blocked/20 bg-status-blocked-soft px-3 py-2 text-status-blocked">
             {error}
           </div>
         )}
@@ -118,12 +128,14 @@ export default function LoginForm() {
           </label>
           <Input
             id="email"
+            name="email"
             type="email"
             required
             autoComplete="email"
+            spellCheck={false}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
+            placeholder="you@example.com…"
           />
         </div>
 
@@ -144,12 +156,13 @@ export default function LoginForm() {
           </div>
           <Input
             id="password"
+            name="password"
             type="password"
             required
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
+            placeholder="Enter your password…"
           />
         </div>
 
@@ -159,9 +172,10 @@ export default function LoginForm() {
           size="md"
           fullWidth
           disabled={isPending}
-          loading={isPending}
+          loading={isPending && pendingAction === "email"}
+          aria-busy={isPending && pendingAction === "email"}
         >
-          {isPending ? "Signing in..." : "Sign in"}
+          {isPending && pendingAction === "email" ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
@@ -176,17 +190,18 @@ export default function LoginForm() {
 
       <label className="mt-5 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
         <Checkbox
+          name="socialConsent"
           checked={socialConsent}
           onChange={(event) => setSocialConsent(event.target.checked)}
           className="mt-0.5"
         />
         <span>
           {appleEnabled ? "For Google or Apple" : "For Google"}, I confirm I am 18 or older, agree to the{" "}
-          <Link href="/terms" className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
+          <Link href="/terms" className="text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
             Terms &amp; Conditions
           </Link>
           , and acknowledge the{" "}
-          <Link href="/privacy" className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
+          <Link href="/privacy" className="text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2">
             Privacy Policy
           </Link>
           .
@@ -201,6 +216,8 @@ export default function LoginForm() {
         onClick={handleGoogle}
         aria-describedby="login-social-consent-help"
         disabled={isPending || !socialConsent}
+        loading={isPending && pendingAction === "google"}
+        aria-busy={isPending && pendingAction === "google"}
         className="mt-4 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -221,7 +238,7 @@ export default function LoginForm() {
             fill="#EA4335"
           />
         </svg>
-        Google
+        {isPending && pendingAction === "google" ? "Connecting…" : "Google"}
       </Button>
       {appleEnabled && (
         <Button
@@ -232,12 +249,14 @@ export default function LoginForm() {
           onClick={handleApple}
           aria-describedby="login-social-consent-help"
           disabled={isPending || !socialConsent}
+          loading={isPending && pendingAction === "apple"}
+          aria-busy={isPending && pendingAction === "apple"}
           className="mt-2 font-medium disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone disabled:opacity-100"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
             <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
           </svg>
-          Apple
+          {isPending && pendingAction === "apple" ? "Connecting…" : "Apple"}
         </Button>
       )}
 

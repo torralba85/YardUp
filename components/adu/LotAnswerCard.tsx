@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RefreshCw, TriangleAlert } from "lucide-react";
@@ -119,7 +120,7 @@ export function LotAnswerCard({
   inputLabel = "Your street address",
   inputLabelSrOnly = true,
   inputId,
-  placeholder = "Enter a street address (e.g. 418 Coyote Brush Ct, San Diego)",
+  placeholder = "Enter a street address (e.g. 418 Coyote Brush Ct, San Diego)…",
   submitLabel = "Check my address",
   helperText,
   onLookupStart,
@@ -297,6 +298,11 @@ export function LotAnswerCard({
     void runLookup();
   }
 
+  const studioHref =
+    footprint && footprint !== defaultAduConfig.footprint
+      ? `/studio?size=${footprint}`
+      : "/studio";
+
   function handleOpenStudio() {
     if (!answer) return;
     // Clear any stale text handoff so Studio consumes the already-fetched
@@ -309,11 +315,6 @@ export function LotAnswerCard({
       feasibility_status: mapFeasibilityVerdict(answer.summary.verdict),
       adu_sqft_bucket: getAduSqftBucket(answer.config.footprint),
     });
-    const studioHref =
-      footprint && footprint !== defaultAduConfig.footprint
-        ? `/studio?size=${footprint}`
-        : "/studio";
-    router.push(studioHref);
   }
 
   const isDark = tone === "dark";
@@ -339,6 +340,7 @@ export function LotAnswerCard({
         <Input
           ref={inputRef}
           id={resolvedInputId}
+          name="address"
           type="text"
           autoComplete="street-address"
           placeholder={placeholder}
@@ -398,47 +400,26 @@ export function LotAnswerCard({
           })
         : builtInForm}
 
-      {loading ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="mt-3 flex items-center gap-2 rounded-none border border-lot-line bg-lot-chalk px-4 py-3 text-sm text-lot-ink"
-        >
-          <RefreshCw
-            size={16}
-            className="shrink-0 text-lot-orange-ink motion-safe:animate-spin"
-            aria-hidden="true"
-          />
-          <span>Checking parcel records and modeled ADU fit…</span>
-        </div>
-      ) : null}
-
-      {lookupError ? (
-        <div
-          role="alert"
-          className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-none border border-status-blocked/30 bg-lot-chalk p-4 text-sm text-status-blocked"
-        >
-          <div className="flex min-w-0 flex-1 items-start gap-2">
-            <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-            <span>{lookupError}</span>
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            onClick={() => void runLookup()}
+      <div aria-live="polite">
+        {loading ? (
+          <div
+            role="status"
+            className="mt-3 flex items-center gap-2 rounded-none border border-lot-line bg-lot-chalk px-4 py-3 text-sm text-lot-ink"
           >
-            Try again
-          </Button>
-        </div>
-      ) : null}
+            <RefreshCw
+              size={16}
+              className="shrink-0 text-lot-orange-ink motion-safe:animate-spin"
+              aria-hidden="true"
+            />
+            <span>Checking parcel records and modeled ADU fit…</span>
+          </div>
+        ) : null}
 
-      {answer ? (
-        <section
-          aria-label="Inline lot feasibility answer"
-          aria-live="polite"
-          className="mt-4 space-y-4 rounded-none border border-lot-line bg-lot-chalk p-4 text-lot-ink shadow-paper-sm sm:p-5"
-        >
+        {answer ? (
+          <section
+            aria-label="Inline lot feasibility answer"
+            className="mt-4 space-y-4 rounded-none border border-lot-line bg-lot-chalk p-4 text-lot-ink shadow-paper-sm sm:p-5"
+          >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 space-y-1">
               <p className="lf-kicker-dense text-lot-stone">
@@ -488,18 +469,38 @@ export function LotAnswerCard({
                 Early planning estimates only — not a permit, appraisal, or contractor quote.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              rightIcon={<ArrowRight size={16} aria-hidden="true" />}
+            <Link
+              href={studioHref}
+              prefetch={false}
               onClick={handleOpenStudio}
-              className="w-full shrink-0 sm:w-auto"
+              className="inline-flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-control bg-lot-orange px-[19px] py-3 text-sm font-bold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 sm:w-auto"
             >
               Open in 3D
-            </Button>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
           </div>
         </section>
+        ) : null}
+      </div>
+
+      {lookupError ? (
+        <div
+          role="alert"
+          className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-none border border-status-blocked/30 bg-lot-chalk p-4 text-sm text-status-blocked"
+        >
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <span>{lookupError}</span>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() => void runLookup()}
+          >
+            Try again
+          </Button>
+        </div>
       ) : null}
 
       {authGateOpen ? (

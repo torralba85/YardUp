@@ -1,6 +1,7 @@
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
 import type { JurisdictionContent } from "@/lib/adu/types";
+import { formatDecimal, formatDollars, formatNumber } from "@/lib/intl-format";
 
 /**
  * Projected rent and simple payback by unit size, computed by the Studio
@@ -35,14 +36,14 @@ export function RentAndPayback({ content }: { content: JurisdictionContent }) {
             {aggregate.rows.map((row) => (
               <tr key={row.size} className="border-t border-lot-line">
                 <th scope="row" className="py-3 pr-4 align-top font-semibold text-lot-ink">
-                  {row.size.toLocaleString("en-US")} sq ft
+                  {formatNumber(row.size)} sq ft
                 </th>
-                <td className="py-3 text-lot-stone">
-                  ${row.monthlyRent.toLocaleString("en-US")}{" "}
+                <td className="py-3 tabular-nums text-lot-stone">
+                  {formatDollars(row.monthlyRent)}{" "}
                   <span className="mt-1 block text-xs leading-relaxed">estimate</span>
                 </td>
-                <td className="py-3 text-lot-stone">
-                  {row.paybackYears.toFixed(1)} years{" "}
+                <td className="py-3 tabular-nums text-lot-stone">
+                  {formatDecimal(row.paybackYears, 1)} years{" "}
                   <span className="mt-1 block text-xs leading-relaxed">estimate</span>
                 </td>
               </tr>

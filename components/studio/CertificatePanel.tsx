@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { User as FirebaseUser } from "firebase/auth";
 import { AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
 import type { FeasibilityResult, Parcel } from "@/lib/feasibility";
@@ -62,6 +62,7 @@ import {
 import {
   feeJurisdiction as resolveFeeJurisdiction,
 } from "@/lib/certificate-permit-audit";
+import { formatPercent } from "@/lib/intl-format";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import PropertyRecords from "./PropertyRecords";
 import EstimateSummaryPanel from "./EstimateSummaryPanel";
@@ -133,6 +134,8 @@ export default function CertificatePanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [guestLegalAccepted, setGuestLegalAccepted] = useState(false);
+  const guestConsentId = useId();
+  const guestConsentRef = useRef<HTMLInputElement>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authModeOverride, setAuthModeOverride] = useState<"sign-in" | "sign-up" | null>(null);
   const [preparingBrief, setPreparingBrief] = useState(false);
@@ -515,6 +518,7 @@ export default function CertificatePanel({
           setError(
             "Confirm that you are 18 or older and accept the Terms and Privacy Policy before continuing to checkout.",
           );
+          guestConsentRef.current?.focus();
           return;
         }
         if (typeof ensureCheckoutUser === "function") {
@@ -579,14 +583,14 @@ export default function CertificatePanel({
 
   const ctaLabel = recoveryPending
     ? activeCheckoutUser
-      ? recovery.status === "unverified" ? "Certificate access unverified" : "Checking certificate access"
+      ? recovery.status === "unverified" ? "Certificate access unverified" : "Checking certificate access…"
       : "Sign in to verify certificate access"
     : reportBusy
     ? purchased
-      ? "Preparing complete certificate"
+      ? "Preparing complete certificate…"
       : busy
-        ? isWebChannel ? "Opening secure checkout" : "Opening purchase"
-        : "Preparing certificate"
+        ? isWebChannel ? "Opening secure checkout…" : "Opening purchase…"
+        : "Preparing certificate…"
     : purchased
     ? "View complete certificate"
     : !user
@@ -621,8 +625,11 @@ export default function CertificatePanel({
   );
 
   const guestConsentControl = !purchased && !recoveryPending && !user && isWebChannel ? (
-    <label className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
+    <label htmlFor={guestConsentId} className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
       <Checkbox
+        ref={guestConsentRef}
+        id={guestConsentId}
+        name="guestLegalAccepted"
         checked={guestLegalAccepted}
         onChange={(event) => {
           setGuestLegalAccepted(event.target.checked);
@@ -636,7 +643,7 @@ export default function CertificatePanel({
           href="/terms"
           target="_blank"
           rel="noopener"
-          className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+          className="rounded-control text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
         >
           Terms &amp; Conditions
         </Link>{" "}
@@ -645,7 +652,7 @@ export default function CertificatePanel({
           href="/privacy"
           target="_blank"
           rel="noopener"
-          className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+          className="rounded-control text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
         >
           Privacy Policy
         </Link>
@@ -681,7 +688,7 @@ export default function CertificatePanel({
             : "We could not verify Certificate access yet. This does not mean your payment failed."}</p>
           <div className="mt-2 flex flex-wrap items-center gap-4">
             {activeCheckoutUser && recovery.status === "unverified" && (
-              <button type="button" className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" onClick={recovery.retry}>
+              <button type="button" className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" onClick={recovery.retry}>
                 Check again
               </button>
             )}
@@ -709,7 +716,7 @@ export default function CertificatePanel({
                 Check for guest purchase
               </Button>
             )}
-            <Link className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href="/certificates">
+            <Link className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href="/certificates">
               My Certificates
             </Link>
           </div>
@@ -816,21 +823,21 @@ export default function CertificatePanel({
                 </div>
               ) : projectBriefLoading || preparingBrief ? (
                 <div className="mt-3 border-t border-lot-line pt-3" role="status">
-                  <span className="sr-only">Adding property notes and timeline</span>
+                  <span className="sr-only">Adding property notes and timeline…</span>
                   <div>
                     <Skeleton className="h-2.5 w-28" />
                     <Skeleton className="mt-2 h-2.5 w-4/5" />
                   </div>
                 </div>
               ) : projectBriefError ? (
-                <div className="mt-3 flex items-start gap-2 border-t border-lot-line pt-3 text-xs leading-5 text-status-blocked">
+                <div role="alert" className="mt-3 flex items-start gap-2 border-t border-lot-line pt-3 text-xs leading-5 text-status-blocked">
                   <AlertTriangle
                     size={14}
                     className="mt-0.5 shrink-0"
                     aria-hidden="true"
                   />
                   The core certificate is ready. Property notes could not be
-                  added yet.
+                  added yet—open the certificate to retry.
                 </div>
               ) : null}
               {error && (
@@ -862,11 +869,11 @@ export default function CertificatePanel({
         <PropertyRecords key={activeCheckoutUser.uid + ":" + certKey} user={activeCheckoutUser} address={parcel.address} city={parcel.city} />
       )}
 
-      {purchased && <details className="rounded-none border border-lot-line bg-lot-chalk px-4">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+      {purchased && <details className="rounded-none border border-lot-line bg-lot-chalk">
+        <summary className="flex min-h-11 cursor-pointer items-center px-4 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
           Methodology &amp; data sources
         </summary>
-        <div className="space-y-2 pb-4 text-xs leading-5 text-lot-stone">
+        <div className="space-y-2 px-4 pb-4 text-xs leading-5 text-lot-stone">
           <p>
             <strong className="font-semibold text-lot-ink">Build cost:</strong> a per-square-foot
             construction base by exterior finish, roof and openings, adjusted by a regional cost
@@ -886,7 +893,7 @@ export default function CertificatePanel({
           <p>
             <strong className="font-semibold text-lot-ink">Cash flow (certificate):</strong>{" "}
             fixed-rate, fully amortizing payments on the build cost range at{" "}
-            {FINANCING_SCENARIOS.map((scenario) => `${(scenario.annualRate * 100).toFixed(1)}% over ${scenario.years} years (${Math.round(scenario.financedShare * 100)}% financed)`).join(" or ")},
+            {FINANCING_SCENARIOS.map((scenario) => `${formatPercent(scenario.annualRate, { digits: 1 })} over ${scenario.years} years (${formatPercent(scenario.financedShare, { digits: 0 })} financed)`).join(" or ")},
             after the same operating allowance. Illustrative terms, not a lender quote.
           </p>
           {feeJurisdiction !== "other" && (
@@ -902,14 +909,14 @@ export default function CertificatePanel({
               href="https://www.cslb.ca.gov"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-control text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              className="rounded-control text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               cslb.ca.gov
             </a>
             . Subject to the LotFoundry{" "}
             <Link
               href="/terms"
-              className="rounded-control text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              className="rounded-control text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               Terms &amp; Conditions
             </Link>
@@ -920,7 +927,7 @@ export default function CertificatePanel({
 
       {!purchased && emailLinkCard && (
         <details className="group border-t border-lot-line">
-          <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+          <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone motion-safe:transition-colors hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
             Email this layout for later
             <span aria-hidden="true" className="group-open:rotate-45">+</span>
           </summary>

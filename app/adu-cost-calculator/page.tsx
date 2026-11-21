@@ -11,10 +11,14 @@ import {
   countyMarketAggregate,
   type CityMarketAggregate,
 } from "@/lib/adu/market-aggregate";
+import { defaultFinancialAssumptions } from "@/lib/feasibility";
 import {
-  defaultFinancialAssumptions,
-  formatCurrency,
-} from "@/lib/feasibility";
+  formatCompactDollars,
+  formatDecimal,
+  formatDollars,
+  formatNumber,
+  formatPercent,
+} from "@/lib/intl-format";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { SITE_NAME } from "@/lib/site-identity";
 
@@ -53,7 +57,7 @@ const aggregates = CALCULATOR_COUNTIES.flatMap((county) => {
 });
 
 function k(value: number): string {
-  return `$${Math.round(value / 1000)}K`;
+  return formatCompactDollars(value, 0);
 }
 
 function row600(aggregate: CityMarketAggregate) {
@@ -63,8 +67,13 @@ function row600(aggregate: CityMarketAggregate) {
 const costPerSqft = defaultFinancialAssumptions.costPerSqft;
 const lowFinish = Math.min(...Object.values(costPerSqft));
 const highFinish = Math.max(...Object.values(costPerSqft));
-const opexPercent = Math.round(defaultFinancialAssumptions.operatingExpenseRatio * 1000) / 10;
-const softPercent = Math.round((defaultFinancialAssumptions.softCostMultiplier - 1) * 100);
+const opexPercentLabel = formatPercent(defaultFinancialAssumptions.operatingExpenseRatio, {
+  digits: 1,
+  trimTrailingZero: true,
+});
+const softPercentLabel = formatPercent(defaultFinancialAssumptions.softCostMultiplier - 1, {
+  digits: 0,
+});
 
 // The 600 sq ft build cost is the same in every county (national cost base).
 const sample600 = aggregates[0] ? row600(aggregates[0].aggregate) : undefined;
@@ -125,9 +134,10 @@ export default function AduCostCalculatorPage() {
         {sample600 ? (
           <p>
             A 600 sq ft detached ADU models at{" "}
-            {formatCurrency(sample600.costLow)}–{formatCurrency(sample600.costHigh)}{" "}
+            {formatDollars(sample600.costLow)}–{formatDollars(sample600.costHigh)}{" "}
             with design and permit soft costs, paying back in{" "}
-            {Math.min(...paybacks600).toFixed(0)}–{Math.max(...paybacks600).toFixed(0)}{" "}
+            {formatNumber(Math.round(Math.min(...paybacks600)))}–
+            {formatNumber(Math.round(Math.max(...paybacks600)))}{" "}
             years on HUD county rent. Adjust county, size, finish, rent, or add
             a loan below—free, no account required.
           </p>
@@ -137,7 +147,7 @@ export default function AduCostCalculatorPage() {
       <AduCostCalculator />
 
       <section aria-labelledby="adu-compare-scenarios">
-        <h2 id="adu-compare-scenarios" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-compare-scenarios" className="lf-card-heading scroll-mt-20 text-lot-ink">
           How should you compare two ADU sizes before committing?
         </h2>
         <p className="lf-body mt-3 text-lot-ink">
@@ -150,18 +160,18 @@ export default function AduCostCalculatorPage() {
         <p className="lf-body mt-3 text-lot-ink">
           Simple payback divides the modeled construction midpoint by annual
           rent after operating expenses. It is not a mortgage cash-flow forecast:
-          use the <Link href="#financing" className="underline underline-offset-2 hover:text-lot-ink">loan and cash-flow calculator</Link>{" "}
+          use the <Link href="#financing" className="underline underline-offset-2 hover:text-lot-orange-ink">loan and cash-flow calculator</Link>{" "}
           to subtract loan payments. Taxes on income and future rent changes need a separate review.
           The formulas and data sources are set out in{" "}
-          <Link href="/adu/how-we-estimate" className="underline underline-offset-2 hover:text-lot-ink">
-            how we estimate cost, rent and payback
+          <Link href="/adu/how-we-estimate" className="underline underline-offset-2 hover:text-lot-orange-ink">
+            how LotFoundry estimates cost, rent and payback
           </Link>
           .
         </p>
       </section>
 
       <section aria-labelledby="adu-cost-by-size">
-        <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-cost-by-size" className="lf-card-heading scroll-mt-20 text-lot-ink">
           What does a California ADU cost to build by size?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -188,13 +198,13 @@ export default function AduCostCalculatorPage() {
                 {aggregates[0].aggregate.rows.map((row) => (
                   <tr key={row.size} className="border-t border-lot-line">
                     <th scope="row" className={thClass}>
-                      {row.size.toLocaleString("en-US")} sq ft
+                      {formatNumber(row.size)}&nbsp;sq&nbsp;ft
                     </th>
                     <td className={tdNumClass}>
                       {k(row.costLow)}–{k(row.costHigh)}
                     </td>
                     <td className={tdNumClass}>
-                      ${Math.round(row.costLow / row.size)}–${Math.round(row.costHigh / row.size)}
+                      {formatDollars(Math.round(row.costLow / row.size))}–{formatDollars(Math.round(row.costHigh / row.size))}
                     </td>
                   </tr>
                 ))}
@@ -205,7 +215,7 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-rental-income">
-        <h2 id="adu-rental-income" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rental-income" className="lf-card-heading scroll-mt-20 text-lot-ink">
           What does an ADU rent for by California county?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -221,7 +231,7 @@ export default function AduCostCalculatorPage() {
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
                   <th key={size} scope="col" className={thNumClass}>
-                    {size.toLocaleString("en-US")} sq ft
+                    {formatNumber(size)}&nbsp;sq&nbsp;ft
                   </th>
                 ))}
               </tr>
@@ -232,7 +242,7 @@ export default function AduCostCalculatorPage() {
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
                     <td key={row.size} className={tdNumClass}>
-                      {formatCurrency(row.monthlyRent)}
+                      {formatDollars(row.monthlyRent)}
                     </td>
                   ))}
                 </tr>
@@ -243,7 +253,7 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-payback">
-        <h2 id="adu-payback" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-payback" className="lf-card-heading scroll-mt-20 text-lot-ink">
           What is modeled ADU payback and ROI?
         </h2>
         <p className="lf-body mt-3 text-lot-ink">
@@ -259,7 +269,7 @@ export default function AduCostCalculatorPage() {
                 <th scope="col" className={thClass}>County</th>
                 {CITY_MARKET_SIZES.map((size) => (
                   <th key={size} scope="col" className={thNumClass}>
-                    {size.toLocaleString("en-US")} sq ft
+                    {formatNumber(size)}&nbsp;sq&nbsp;ft
                   </th>
                 ))}
               </tr>
@@ -270,7 +280,7 @@ export default function AduCostCalculatorPage() {
                   <th scope="row" className={thClass}>{county.name}</th>
                   {aggregate.rows.map((row) => (
                     <td key={row.size} className={tdNumClass}>
-                      {row.paybackYears.toFixed(1)} yrs
+                      {formatDecimal(row.paybackYears, 1)}&nbsp;yrs
                     </td>
                   ))}
                 </tr>
@@ -287,22 +297,22 @@ export default function AduCostCalculatorPage() {
       <AduStudioCta city="California" slug="adu-cost-calculator" placement="mid" />
 
       <section aria-labelledby="adu-estimate-method">
-        <h2 id="adu-estimate-method" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-estimate-method" className="lf-card-heading scroll-mt-20 text-lot-ink">
           What does the calculator estimate include?
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
-            Hard construction cost of ${lowFinish}–${highFinish} per sq ft
-            depending on the exterior finish, plus a roof-style premium and
-            $9,000 for windows and doors.
+            Hard construction cost of {formatDollars(lowFinish)}–{formatDollars(highFinish)} per sq ft
+            depending on the exterior finish, plus a roof-style premium and{" "}
+            {formatDollars(9000)} for windows and doors.
           </li>
           <li>
-            A {softPercent}% allowance on top for soft costs such as design,
+            A {softPercentLabel} allowance on top for soft costs such as design,
             engineering, and permits. The range runs from 8% below to 15% above
             that midpoint.
           </li>
           <li>
-            Rent from the county&apos;s HUD Fair Market Rent, with {opexPercent}% of
+            Rent from the county&apos;s HUD Fair Market Rent, with {opexPercentLabel} of
             it set aside for vacancy, management, maintenance, insurance,
             utilities, and property tax.
           </li>
@@ -321,7 +331,7 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-cost-rules">
-        <h2 id="adu-cost-rules" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-cost-rules" className="lf-card-heading scroll-mt-20 text-lot-ink">
           Which California rules change your ADU budget?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -349,7 +359,7 @@ export default function AduCostCalculatorPage() {
       </section>
 
       <section aria-labelledby="adu-builders" className="border-t border-lot-line pt-8">
-        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-builders" className="lf-card-heading scroll-mt-20 text-lot-ink">
           For builders and designers
         </h2>
         <p className="lf-body mt-3 text-lot-stone">

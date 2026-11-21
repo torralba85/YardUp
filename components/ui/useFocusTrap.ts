@@ -3,7 +3,15 @@
 import { useEffect, type RefObject } from "react";
 
 const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+
+function isVisibleFocusable(element: HTMLElement): boolean {
+  if (element.hasAttribute("hidden") || element.closest("[hidden], [inert], [aria-hidden='true']")) {
+    return false;
+  }
+  const style = window.getComputedStyle(element);
+  return style.display !== "none" && style.visibility !== "hidden";
+}
 
 /**
  * Keeps Tab and Shift+Tab inside a modal dialog while `active`, including after
@@ -18,7 +26,7 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, active
     function trapFocus(event: KeyboardEvent) {
       const container = containerRef.current;
       if (event.key !== "Tab" || !container) return;
-      const focusable = Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const focusable = Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(isVisibleFocusable);
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];

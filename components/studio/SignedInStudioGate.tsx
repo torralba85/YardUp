@@ -98,7 +98,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="inline-flex min-h-11 items-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
+            className="inline-flex min-h-11 items-center rounded-control motion-safe:transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink"
           >
             <BrandLockup className="h-8 w-auto" />
           </Link>
@@ -109,7 +109,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
               onClick={() => void logout()}
               className="flex min-h-11 items-center gap-2 rounded-control border border-lot-line px-4 text-sm font-semibold motion-safe:transition hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
-              <LogOut size={15} />
+              <LogOut size={15} aria-hidden="true" />
               Sign out
             </button>
           </div>
@@ -120,7 +120,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
         <section className="w-full lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-14">
           <div>
             <p className="lf-kicker text-lot-orange-ink">Your workspace</p>
-            <h2 className="lf-section-heading mt-3">Start with your property.</h2>
+            <h1 className="lf-section-heading mt-3">Start with your property.</h1>
             <p className="lf-body mt-4 max-w-[42ch] text-lot-stone">
               See your lot in a new light. Find your property to explore its space, local rules, and estimated costs.
             </p>
@@ -133,7 +133,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
               />
               {lookupLoading && (
                 <div role="status" className="mt-3 flex items-center gap-2 text-sm text-lot-stone">
-                  <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
+                  <span aria-hidden="true" className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
                   Loading your property…
                 </div>
               )}
@@ -142,7 +142,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
                   role="alert"
                   className="mt-3 flex items-start gap-2 rounded-none border border-status-blocked/30 bg-status-blocked-soft p-3 text-sm text-status-blocked"
                 >
-                  <Search size={16} className="mt-0.5 shrink-0" />
+                  <Search size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
                   {lookupError}
                 </div>
               )}
@@ -155,6 +155,7 @@ export default function SignedInStudioGate({ user }: { user: User }) {
               src="/landing/a-lot-more/parcel-after-mobile.webp"
               width={768}
               height={512}
+              fetchPriority="high"
               alt="Illustrative model of a home with a small orange backyard home"
               className="aspect-[3/2] w-full object-contain"
             />

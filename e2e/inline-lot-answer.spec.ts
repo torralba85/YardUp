@@ -28,7 +28,7 @@ test("guide visitors get an inline answer and reuse the parcel in Studio", async
   await expect(answer).not.toContainText("sq ft");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("guide-inline-answer.png"), fullPage: true });
-  await answer.getByRole("button", { name: "Open in 3D" }).click();
+  await answer.getByRole("link", { name: "Open in 3D" }).click();
   await expect(page).toHaveURL(/\/studio(?:\?|$)/);
   await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
   expect(geocodes).toBe(1);

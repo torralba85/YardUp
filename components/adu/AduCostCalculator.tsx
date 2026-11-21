@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   CALCULATOR_COUNTIES,
@@ -14,6 +14,8 @@ import {
   type ExteriorFinish,
   type RentScenario,
 } from "@/lib/feasibility";
+import { formatDecimal, formatNumber } from "@/lib/intl-format";
+import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { trackEvent } from "@/lib/analytics/gtag";
@@ -30,6 +32,35 @@ const RENT_SCENARIOS: { value: RentScenario; label: string }[] = [
   { value: "market", label: "Market (+12%)" },
   { value: "optimistic", label: "Optimistic (+25%)" },
 ];
+
+const calculatorUrlListeners = new Set<() => void>();
+function subscribeCalculatorUrl(listener: () => void): () => void {
+  calculatorUrlListeners.add(listener);
+  if (typeof window !== "undefined") {
+    window.addEventListener("popstate", listener);
+  }
+  return () => {
+    calculatorUrlListeners.delete(listener);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("popstate", listener);
+    }
+  };
+}
+function getCalculatorUrlSnapshot(): string {
+  return typeof window === "undefined" ? "" : window.location.search;
+}
+function getServerCalculatorUrlSnapshot(): string {
+  return "";
+}
+function syncCalculatorQuery(updates: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  for (const [key, val] of Object.entries(updates)) {
+    url.searchParams.set(key, val);
+  }
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  calculatorUrlListeners.forEach((listener) => listener());
+}
 
 /**
  * Interactive ADU cost, rent, and payback calculator for California counties.
@@ -52,20 +83,46 @@ export function AduCostCalculator({
   showAddressCheck?: boolean;
 } = {}) {
   const router = useRouter();
-  const [county, setCounty] = useState(initialCounty);
-  const [size, setSize] = useState(600);
-  const [finish, setFinish] = useState<ExteriorFinish>("cedar");
-  const [rentScenario, setRentScenario] = useState<RentScenario>("conservative");
+  const urlSearch = useSyncExternalStore(
+    subscribeCalculatorUrl,
+    getCalculatorUrlSnapshot,
+    getServerCalculatorUrlSnapshot,
+  );
+  const searchParams = useMemo(() => new URLSearchParams(urlSearch), [urlSearch]);
+  const paramCounty = searchParams.get("county");
+  const county =
+    paramCounty && CALCULATOR_COUNTIES.some((entry) => entry.slug === paramCounty)
+      ? paramCounty
+      : initialCounty;
+  const rawSize = searchParams.get("size");
+  const parsedSize = rawSize !== null ? Number(rawSize) : NaN;
+  const size = SIZES.includes(parsedSize) ? parsedSize : 600;
+  const paramFinish = searchParams.get("finish") as ExteriorFinish | null;
+  const finish: ExteriorFinish =
+    paramFinish && FINISHES.includes(paramFinish) ? paramFinish : "cedar";
+  const paramRent = searchParams.get("rent") as RentScenario | null;
+  const rentScenario: RentScenario =
+    paramRent && RENT_SCENARIOS.some((entry) => entry.value === paramRent)
+      ? paramRent
+      : "conservative";
 
   // Custom quote overrides
   const [customHardCost, setCustomHardCost] = useState<string>("");
   const [customSoftCost, setCustomSoftCost] = useState<string>("");
   const [customSiteWork, setCustomSiteWork] = useState<string>("");
   const [customFinancing, setCustomFinancing] = useState<string>("");
+  const [lastClearedQuotes, setLastClearedQuotes] = useState<{
+    hard: string;
+    soft: string;
+    site: string;
+    financing: string;
+  } | null>(null);
   const [showQuoteInputs, setShowQuoteInputs] = useState(false);
 
   // Address check input
   const [address, setAddress] = useState("");
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
 
   const estimate = estimateAdu({ county, size, finish, rentScenario });
   const countyName =
@@ -77,43 +134,42 @@ export function AduCostCalculator({
   const hardCostAllowance = size * baseCostPerSqft + openingPremium;
   const softCostAllowance = Math.round(hardCostAllowance * 0.18);
 
-  // Parse user quote inputs
-  const parsedHardCost = customHardCost.trim()
-    ? Number(customHardCost.replace(/[^0-9]/g, ""))
-    : null;
-  const parsedSoftCost = customSoftCost.trim()
-    ? Number(customSoftCost.replace(/[^0-9]/g, ""))
-    : null;
-  const parsedSiteWork = customSiteWork.trim()
-    ? Number(customSiteWork.replace(/[^0-9]/g, ""))
-    : null;
-  const parsedFinancing = customFinancing.trim()
-    ? Number(customFinancing.replace(/[^0-9]/g, ""))
-    : null;
+  // Parse user quote inputs cleanly: reject non-numeric strings rather than silently coercing to $0
+  function parseQuoteField(raw: string): { value: number | null; invalid: boolean } {
+    const trimmed = raw.trim();
+    if (!trimmed) return { value: null, invalid: false };
+    const cleaned = trimmed.replace(/[$,\s]/g, "");
+    if (!/^\d+$/.test(cleaned)) return { value: null, invalid: true };
+    return { value: Number(cleaned), invalid: false };
+  }
+
+  const hardQuote = parseQuoteField(customHardCost);
+  const softQuote = parseQuoteField(customSoftCost);
+  const siteQuote = parseQuoteField(customSiteWork);
+  const financingQuote = parseQuoteField(customFinancing);
+  const parsedHardCost = hardQuote.value;
+  const parsedSoftCost = softQuote.value;
+  const parsedSiteWork = siteQuote.value;
+  const parsedFinancing = financingQuote.value;
 
   const hasCustomQuotes =
-    (parsedHardCost !== null && !isNaN(parsedHardCost)) ||
-    (parsedSoftCost !== null && !isNaN(parsedSoftCost)) ||
-    (parsedSiteWork !== null && !isNaN(parsedSiteWork)) ||
-    (parsedFinancing !== null && !isNaN(parsedFinancing));
+    parsedHardCost !== null ||
+    parsedSoftCost !== null ||
+    parsedSiteWork !== null ||
+    parsedFinancing !== null;
 
-  const effectiveHardCost =
-    parsedHardCost !== null && !isNaN(parsedHardCost)
-      ? parsedHardCost
-      : hardCostAllowance;
+  const effectiveHardCost = parsedHardCost ?? hardCostAllowance;
 
   const effectiveSoftCost =
-    parsedSoftCost !== null && !isNaN(parsedSoftCost)
+    parsedSoftCost !== null
       ? parsedSoftCost
-      : parsedHardCost !== null && !isNaN(parsedHardCost)
+      : parsedHardCost !== null
         ? Math.round(parsedHardCost * 0.18)
         : softCostAllowance;
 
-  const effectiveSiteWork =
-    parsedSiteWork !== null && !isNaN(parsedSiteWork) ? parsedSiteWork : 0;
+  const effectiveSiteWork = parsedSiteWork ?? 0;
 
-  const effectiveFinancing =
-    parsedFinancing !== null && !isNaN(parsedFinancing) ? parsedFinancing : 0;
+  const effectiveFinancing = parsedFinancing ?? 0;
 
   const totalBudgetMid =
     effectiveHardCost +
@@ -139,16 +195,36 @@ export function AduCostCalculator({
       : estimate?.paybackYears ?? 0;
 
   function resetQuotes() {
+    setLastClearedQuotes({
+      hard: customHardCost,
+      soft: customSoftCost,
+      site: customSiteWork,
+      financing: customFinancing,
+    });
     setCustomHardCost("");
     setCustomSoftCost("");
     setCustomSiteWork("");
     setCustomFinancing("");
   }
 
+  function undoResetQuotes() {
+    if (!lastClearedQuotes) return;
+    setCustomHardCost(lastClearedQuotes.hard);
+    setCustomSoftCost(lastClearedQuotes.soft);
+    setCustomSiteWork(lastClearedQuotes.site);
+    setCustomFinancing(lastClearedQuotes.financing);
+    setLastClearedQuotes(null);
+  }
+
   function handleAddressSubmit(event: React.FormEvent) {
     event.preventDefault();
     const trimmed = address.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setAddressError("Enter a California street address to check your lot.");
+      addressInputRef.current?.focus();
+      return;
+    }
+    setAddressError(null);
     trackEvent(aduCtaEvent("calculator"), { city_slug: county });
     stashAddressQuery(trimmed);
     router.push("/studio");
@@ -177,9 +253,13 @@ export function AduCostCalculator({
         <label className="text-sm font-semibold text-lot-ink">
           County
           <Select
+            name="county"
+            autoComplete="off"
             className="mt-1 block"
             value={county}
-            onChange={(event) => setCounty(event.target.value)}
+            onChange={(event) => {
+              syncCalculatorQuery({ county: event.target.value });
+            }}
           >
             {CALCULATOR_COUNTIES.map((entry) => (
               <option key={entry.slug} value={entry.slug}>
@@ -191,13 +271,17 @@ export function AduCostCalculator({
         <label className="text-sm font-semibold text-lot-ink">
           Unit size
           <Select
+            name="size"
+            autoComplete="off"
             className="mt-1 block"
             value={size}
-            onChange={(event) => setSize(Number(event.target.value))}
+            onChange={(event) => {
+              syncCalculatorQuery({ size: event.target.value });
+            }}
           >
             {SIZES.map((value) => (
               <option key={value} value={value}>
-                {value.toLocaleString("en-US")} sq ft
+                {formatNumber(value)}&nbsp;sq&nbsp;ft
               </option>
             ))}
           </Select>
@@ -205,9 +289,13 @@ export function AduCostCalculator({
         <label className="text-sm font-semibold text-lot-ink">
           Exterior finish
           <Select
+            name="finish"
+            autoComplete="off"
             className="mt-1 block"
             value={finish}
-            onChange={(event) => setFinish(event.target.value as ExteriorFinish)}
+            onChange={(event) => {
+              syncCalculatorQuery({ finish: event.target.value });
+            }}
           >
             {FINISHES.map((value) => (
               <option key={value} value={value}>
@@ -219,11 +307,13 @@ export function AduCostCalculator({
         <label className="text-sm font-semibold text-lot-ink">
           Rent assumption
           <Select
+            name="rentScenario"
+            autoComplete="off"
             className="mt-1 block"
             value={rentScenario}
-            onChange={(event) =>
-              setRentScenario(event.target.value as RentScenario)
-            }
+            onChange={(event) => {
+              syncCalculatorQuery({ rent: event.target.value });
+            }}
           >
             {RENT_SCENARIOS.map((entry) => (
               <option key={entry.value} value={entry.value}>
@@ -261,7 +351,7 @@ export function AduCostCalculator({
               Simple payback
             </dt>
             <dd className="mt-1 whitespace-nowrap lf-money-md text-lot-ink">
-              {effectivePaybackYears.toFixed(1)} years
+              {formatDecimal(effectivePaybackYears, 1)}&nbsp;years
             </dd>
           </div>
         </dl>
@@ -269,7 +359,7 @@ export function AduCostCalculator({
 
       {estimate ? (
         <p className="lf-body mt-4 text-sm text-lot-stone">
-          A {size.toLocaleString("en-US")} sq ft ADU in {countyName} nets about{" "}
+          A {formatNumber(size)}&nbsp;sq&nbsp;ft ADU in {countyName} nets about{" "}
           {formatCurrency(estimate.annualNoi)} a year after operating costs. These
           are countywide estimates, not a quote for your lot.
         </p>
@@ -281,7 +371,7 @@ export function AduCostCalculator({
         {/* Itemized budget breakdown */}
         <div className="space-y-4">
           <div className="border border-lot-line bg-lot-chalk p-5 sm:p-6">
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="font-display text-lg font-semibold text-lot-ink">
                 Itemized budget breakdown
               </h3>
@@ -293,6 +383,13 @@ export function AduCostCalculator({
                 >
                   Reset to allowances
                 </button>
+              ) : lastClearedQuotes ? (
+                <div role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-lot-stone">
+                  <span>Quotes reset.</span>
+                  <Button type="button" variant="ghost" size="xs" onClick={undoResetQuotes}>
+                    Undo
+                  </Button>
+                </div>
               ) : null}
             </div>
             <p className="mt-1 text-xs leading-relaxed text-lot-stone">
@@ -302,16 +399,16 @@ export function AduCostCalculator({
             </p>
 
             <ul className="mt-4 divide-y divide-lot-line text-sm">
-              <li className="flex items-start justify-between py-2.5">
-                <div>
+              <li className="flex items-start justify-between gap-4 py-2.5">
+                <div className="min-w-0 flex-1">
                   <span className="font-semibold text-lot-ink">
                     Construction (hard costs)
                   </span>
                   <p className="text-xs text-lot-stone">
-                    {size} sq ft · {finishLabels[finish]} · openings ($9K)
+                    {formatNumber(size)}&nbsp;sq&nbsp;ft · {finishLabels[finish]} · openings ({formatCompactCurrency(openingPremium)})
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <span className="font-sans font-semibold tabular-nums text-lot-ink">
                     {formatCurrency(effectiveHardCost)}
                   </span>
@@ -321,16 +418,16 @@ export function AduCostCalculator({
                 </div>
               </li>
 
-              <li className="flex items-start justify-between py-2.5">
-                <div>
+              <li className="flex items-start justify-between gap-4 py-2.5">
+                <div className="min-w-0 flex-1">
                   <span className="font-semibold text-lot-ink">
-                    Design & permits (soft costs)
+                    Design &amp; permits (soft costs)
                   </span>
                   <p className="text-xs text-lot-stone">
-                    18% allowance for architectural plans & municipal fees
+                    18% allowance for architectural plans &amp; municipal fees
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <span className="font-sans font-semibold tabular-nums text-lot-ink">
                     {formatCurrency(effectiveSoftCost)}
                   </span>
@@ -340,14 +437,14 @@ export function AduCostCalculator({
                 </div>
               </li>
 
-              <li className="flex items-start justify-between py-2.5">
-                <div>
+              <li className="flex items-start justify-between gap-4 py-2.5">
+                <div className="min-w-0 flex-1">
                   <span className="font-semibold text-lot-ink">Site work</span>
                   <p className="text-xs text-lot-stone">
                     Grading, utility trenching, tie-ins, foundation prep
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <span className="font-sans font-semibold tabular-nums text-lot-ink">
                     {parsedSiteWork !== null
                       ? formatCurrency(effectiveSiteWork)
@@ -361,16 +458,16 @@ export function AduCostCalculator({
                 </div>
               </li>
 
-              <li className="flex items-start justify-between py-2.5">
-                <div>
+              <li className="flex items-start justify-between gap-4 py-2.5">
+                <div className="min-w-0 flex-1">
                   <span className="font-semibold text-lot-ink">
-                    Financing & loan costs
+                    Financing &amp; loan costs
                   </span>
                   <p className="text-xs text-lot-stone">
                     Interest during build, origination, closing
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <span className="font-sans font-semibold tabular-nums text-lot-ink">
                     {parsedFinancing !== null
                       ? formatCurrency(effectiveFinancing)
@@ -384,9 +481,9 @@ export function AduCostCalculator({
                 </div>
               </li>
 
-              <li className="flex items-baseline justify-between pt-3 font-semibold">
-                <span className="text-lot-ink">Itemized total midpoint</span>
-                <span className="font-sans text-base tabular-nums text-lot-ink">
+              <li className="flex items-baseline justify-between gap-4 pt-3 font-semibold">
+                <span className="min-w-0 flex-1 text-lot-ink">Itemized total midpoint</span>
+                <span className="shrink-0 font-sans text-base tabular-nums text-lot-ink">
                   {formatCurrency(totalBudgetMid)}
                 </span>
               </li>
@@ -395,6 +492,7 @@ export function AduCostCalculator({
             <div className="mt-4 pt-3 border-t border-lot-line">
               <button
                 type="button"
+                aria-expanded={showQuoteInputs}
                 onClick={() => setShowQuoteInputs(!showQuoteInputs)}
                 className="inline-flex min-h-11 items-center text-xs font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
               >
@@ -408,54 +506,94 @@ export function AduCostCalculator({
                   <label className="text-xs font-semibold text-lot-ink">
                     Construction quote ($)
                     <Input
+                      name="customHardCost"
+                      autoComplete="off"
                       type="text"
                       inputMode="numeric"
-                      placeholder={formatCurrency(hardCostAllowance)}
+                      placeholder={`${formatCurrency(hardCostAllowance)}…`}
                       value={customHardCost}
-                      onChange={(event) =>
-                        setCustomHardCost(event.target.value)
-                      }
+                      aria-invalid={hardQuote.invalid}
+                      aria-describedby={hardQuote.invalid ? "quote-hard-error" : undefined}
+                      onChange={(event) => {
+                        setCustomHardCost(event.target.value);
+                        setLastClearedQuotes(null);
+                      }}
                       className="mt-1"
                     />
+                    {hardQuote.invalid ? (
+                      <span id="quote-hard-error" role="alert" className="mt-1 block font-normal text-status-blocked">
+                        Enter whole dollars only (e.g. 210000).
+                      </span>
+                    ) : null}
                   </label>
                   <label className="text-xs font-semibold text-lot-ink">
-                    Design & permits quote ($)
+                    Design &amp; permits quote ($)
                     <Input
+                      name="customSoftCost"
+                      autoComplete="off"
                       type="text"
                       inputMode="numeric"
-                      placeholder={formatCurrency(softCostAllowance)}
+                      placeholder={`${formatCurrency(softCostAllowance)}…`}
                       value={customSoftCost}
-                      onChange={(event) =>
-                        setCustomSoftCost(event.target.value)
-                      }
+                      aria-invalid={softQuote.invalid}
+                      aria-describedby={softQuote.invalid ? "quote-soft-error" : undefined}
+                      onChange={(event) => {
+                        setCustomSoftCost(event.target.value);
+                        setLastClearedQuotes(null);
+                      }}
                       className="mt-1"
                     />
+                    {softQuote.invalid ? (
+                      <span id="quote-soft-error" role="alert" className="mt-1 block font-normal text-status-blocked">
+                        Enter whole dollars only (e.g. 38000).
+                      </span>
+                    ) : null}
                   </label>
                   <label className="text-xs font-semibold text-lot-ink">
                     Site work quote ($)
                     <Input
+                      name="customSiteWork"
+                      autoComplete="off"
                       type="text"
                       inputMode="numeric"
-                      placeholder="Unpriced (enter amount)"
+                      placeholder="e.g. $18,000…"
                       value={customSiteWork}
-                      onChange={(event) =>
-                        setCustomSiteWork(event.target.value)
-                      }
+                      aria-invalid={siteQuote.invalid}
+                      aria-describedby={siteQuote.invalid ? "quote-site-error" : undefined}
+                      onChange={(event) => {
+                        setCustomSiteWork(event.target.value);
+                        setLastClearedQuotes(null);
+                      }}
                       className="mt-1"
                     />
+                    {siteQuote.invalid ? (
+                      <span id="quote-site-error" role="alert" className="mt-1 block font-normal text-status-blocked">
+                        Enter whole dollars only (e.g. 18000).
+                      </span>
+                    ) : null}
                   </label>
                   <label className="text-xs font-semibold text-lot-ink">
                     Financing quote ($)
                     <Input
+                      name="customFinancing"
+                      autoComplete="off"
                       type="text"
                       inputMode="numeric"
-                      placeholder="Unpriced (enter amount)"
+                      placeholder="e.g. $12,000…"
                       value={customFinancing}
-                      onChange={(event) =>
-                        setCustomFinancing(event.target.value)
-                      }
+                      aria-invalid={financingQuote.invalid}
+                      aria-describedby={financingQuote.invalid ? "quote-financing-error" : undefined}
+                      onChange={(event) => {
+                        setCustomFinancing(event.target.value);
+                        setLastClearedQuotes(null);
+                      }}
                       className="mt-1"
                     />
+                    {financingQuote.invalid ? (
+                      <span id="quote-financing-error" role="alert" className="mt-1 block font-normal text-status-blocked">
+                        Enter whole dollars only (e.g. 12000).
+                      </span>
+                    ) : null}
                   </label>
                 </div>
               ) : null}
@@ -484,19 +622,31 @@ export function AduCostCalculator({
               </p>
             </div>
 
-            <form onSubmit={handleAddressSubmit} className="mt-5 space-y-3">
+            <form onSubmit={handleAddressSubmit} className="mt-5 space-y-3" noValidate>
               <label htmlFor="calculator-address-input" className="sr-only">
                 Your California street address
               </label>
               <Input
+                ref={addressInputRef}
                 id="calculator-address-input"
+                name="address"
                 type="text"
                 autoComplete="street-address"
-                placeholder={countyName ? `Enter a ${countyName} street address` : "Enter a California street address"}
+                placeholder={countyName ? `e.g. 1420 Coyote Brush Ct, ${countyName}…` : "e.g. 1420 Coyote Brush Ct, San Diego, CA…"}
                 value={address}
-                onChange={(event) => setAddress(event.target.value)}
+                aria-invalid={Boolean(addressError)}
+                aria-describedby={addressError ? "calculator-address-error" : undefined}
+                onChange={(event) => {
+                  setAddress(event.target.value);
+                  if (addressError) setAddressError(null);
+                }}
                 className="bg-lot-surface"
               />
+              {addressError ? (
+                <p id="calculator-address-error" role="alert" className="text-xs font-semibold text-status-blocked">
+                  {addressError}
+                </p>
+              ) : null}
               <button
                 type="submit"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"

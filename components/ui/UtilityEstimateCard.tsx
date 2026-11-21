@@ -1,14 +1,7 @@
 "use client";
 
 import { Ruler, TriangleAlert } from "lucide-react";
-
-function dollars(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
+import { formatDecimal, formatDollars } from "@/lib/intl-format";
 
 export function UtilityEstimateCard({
   distanceFt,
@@ -33,16 +26,16 @@ export function UtilityEstimateCard({
               Utility trench estimate
             </p>
             <p className="mt-1 font-display text-xl font-semibold tabular-nums">
-              {safeDistance.toFixed(1)} ft run
+              {formatDecimal(safeDistance, 1)}&nbsp;ft run
             </p>
           </div>
         </div>
         <div className="text-right">
           <p className="font-display text-xl font-semibold tabular-nums">
-            {dollars(low)}-{dollars(high)}
+            {formatDollars(low)}-{formatDollars(high)}
           </p>
           <p className="mt-1 text-[11px] text-lot-stone">
-            at {dollars(lowRate)}-{dollars(highRate)} / linear ft
+            at {formatDollars(lowRate)}-{formatDollars(highRate)} / linear&nbsp;ft
           </p>
         </div>
       </div>

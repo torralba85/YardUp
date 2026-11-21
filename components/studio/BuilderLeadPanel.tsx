@@ -159,7 +159,7 @@ export default function BuilderLeadPanel({
             : `Sent to ${submitted.matchedCount} local builders.`,
         );
       } catch (err) {
-        setError({ field: null, message: err instanceof Error ? err.message : "Could not submit this snapshot." });
+        setError({ field: null, message: err instanceof Error ? err.message : "Could not submit this snapshot. Please try again." });
       }
     });
   }
@@ -234,6 +234,7 @@ export default function BuilderLeadPanel({
               <FieldLabel htmlFor="builder-lead-name">Name</FieldLabel>
               <Input
                 id="builder-lead-name"
+                name="name"
                 type="text"
                 autoComplete="name"
                 className="mt-1"
@@ -247,8 +248,10 @@ export default function BuilderLeadPanel({
               <FieldLabel htmlFor="builder-lead-email">Email</FieldLabel>
               <Input
                 id="builder-lead-email"
+                name="email"
                 type="email"
                 autoComplete="email"
+                spellCheck={false}
                 className="mt-1"
                 value={draft.email}
                 onChange={(event) => onDraftChange({ ...draft, email: event.target.value })}
@@ -260,6 +263,7 @@ export default function BuilderLeadPanel({
               <FieldLabel htmlFor="builder-lead-phone">Phone (optional)</FieldLabel>
               <Input
                 id="builder-lead-phone"
+                name="phone"
                 type="tel"
                 autoComplete="tel"
                 className="mt-1"
@@ -273,6 +277,7 @@ export default function BuilderLeadPanel({
               <FieldLabel htmlFor="builder-lead-message">Message (optional)</FieldLabel>
               <Textarea
                 id="builder-lead-message"
+                name="message"
                 className="mt-1 min-h-20"
                 value={draft.message}
                 onChange={(event) => onDraftChange({ ...draft, message: event.target.value })}
@@ -294,7 +299,7 @@ export default function BuilderLeadPanel({
               </span>
             </label>
             {fieldError("consent")}
-            {matchNote && <p className="text-sm text-lot-stone md:col-span-2">{matchNote}</p>}
+            {matchNote && <p aria-live="polite" className="text-sm text-lot-stone md:col-span-2">{matchNote}</p>}
             {/* Beside Submit, not atop the form: the form is taller than most
                 screens, so a message up there appeared out of view. */}
             {fieldError(null)}

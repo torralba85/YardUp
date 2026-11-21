@@ -8,6 +8,7 @@ import {
   type ADUConfig,
   type FinancialAssumptions,
 } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import { buildReportCsv, buildReportHtml, downloadBlob } from "@/lib/report";
 import { AIRequestError, requestProjectBrief } from "@/lib/ai-api";
 import type { AIProjectBriefResponse } from "@/lib/ai-types";
@@ -134,6 +135,17 @@ import type { SplatLayerStatus } from "./studio/GaussianSplatLayer";
 
 /** The scene render modes users can switch between via {@link SceneViewToggle}. */
 type SceneViewMode = "3d" | "scan" | "aerial" | "neighborhood" | "terrain";
+const SCENE_VIEW_MODES: readonly SceneViewMode[] = ["3d", "scan", "aerial", "neighborhood", "terrain"];
+
+function parseStepParam(raw: string | null): StudioStep | null {
+  if (!raw) return null;
+  return STUDIO_STEPS.find((step) => step.id === raw)?.id ?? null;
+}
+
+function parseViewModeParam(raw: string | null): SceneViewMode | null {
+  if (!raw) return null;
+  return (SCENE_VIEW_MODES as readonly string[]).includes(raw) ? (raw as SceneViewMode) : null;
+}
 
 const ParcelTerrainPreview = dynamic(() => import("./studio/ParcelTerrainPreview"), { ssr: false });
 
@@ -209,6 +221,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) {
         return "certificate";
       }
+      const parsedStep = parseStepParam(p.get("step"));
+      if (parsedStep) return parsedStep;
     }
     return "feasibility";
   });
@@ -386,7 +400,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // User-controlled scene mode. Seeded once to the conceptual 3D model and
   // never auto-switched afterward —
   // this replaces the old data-driven auto-switch with an explicit toggle.
-  const [viewMode, setViewMode] = useState<SceneViewMode>("3d");
+  const [viewMode, setViewMode] = useState<SceneViewMode>(() => {
+    if (typeof window !== "undefined") {
+      const parsedView = parseViewModeParam(new URLSearchParams(window.location.search).get("view"));
+      if (parsedView) return parsedView;
+    }
+    return "3d";
+  });
   const parcelPresetId = parcelMode === "preset" && "id" in activeParcel ? activeParcel.id : undefined;
   const splatScene = useMemo(() => getSplatSceneForParcel(parcelPresetId), [parcelPresetId]);
   const [userCalibration, setUserCalibration] = useState<{ id: string; transform: SplatTransform } | null>(null);
@@ -627,6 +647,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
     const certParam = incomingCertRef.current ?? params.get("cert");
     const stepParam = params.get("step");
+    const parsedStep = parseStepParam(stepParam);
+    const parsedView = parseViewModeParam(params.get("view"));
     const certMatchingPreset = certParam
       ? parcelPresets.find((p) => certificateKey(p) === certParam || p.id === certParam)
       : undefined;
@@ -675,6 +697,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       setJourneyStep((step) => (step === "find" ? "earn" : step));
     }
 
+    if (parsedView) {
+      setViewMode(parsedView);
+    }
+
     // A purchase or agent-code claim that went through sign-in reopens the
     // Certificate step, where the panel resumes it.
     if (certParam || stepParam === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) {
@@ -684,6 +710,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       if (certMatchingPreset) {
         resetToPreset(certMatchingPreset);
       }
+    } else if (parsedStep) {
+      setActiveStep(parsedStep);
     }
     setHydratedFromUrl(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -759,6 +787,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     const checkoutCancelled = currentParams.get(CHECKOUT_RETURN_PARAM) === CHECKOUT_CANCELLED;
     const nextQuery = [
       serialized,
+      ...(activeStep !== "feasibility" && activeStep !== "certificate" ? [`step=${encodeURIComponent(activeStep)}`] : []),
+      ...(effectiveViewMode !== "3d" ? [`view=${encodeURIComponent(effectiveViewMode)}`] : []),
       ...(sameInitialParcel && initialScenario?.id === "builder-intake" && /^[A-Za-z0-9_-]{1,128}$/.test(currentParams.get("lead") ?? "") ? [`lead=${encodeURIComponent(currentParams.get("lead")!)}`] : []),
       ...(layoutParam ? [`layout=${encodeURIComponent(layoutParam)}`] : []),
       ...["utm_source", "utm_medium", "utm_campaign"].flatMap((name) => {
@@ -775,7 +805,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     // Next.js's own router state on this entry, since replaceState's first
     // argument replaces the whole state object, not just the URL.
     window.history.replaceState(window.history.state, "", next);
-  }, [activeParcel, assumptions, config, hydratedFromUrl, initialScenario, parcelId, pose, preapprovedPlan, parcelMode]);
+  }, [activeParcel, activeStep, assumptions, config, effectiveViewMode, hydratedFromUrl, initialScenario, parcelId, pose, preapprovedPlan, parcelMode]);
 
   // Track feasibility result review once per parcel context when reached
   const reviewedParcelsRef = useRef<Set<string>>(new Set());
@@ -821,8 +851,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     stepBodyRef.current?.focus();
   }, [activeStep]);
 
-  function resetScenario() {
-    if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return;
+  function resetScenario(): boolean {
+    if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return false;
     resetToPreset(parcelPresets[0]);
     dispatchScenario({ type: "reset" });
     setReportOpen(false);
@@ -835,6 +865,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     setFineTuneOpen(false);
     setReportAutoFocus(false);
     setProjectBriefState(null);
+    return true;
   }
 
   function handleStepSelect(id: StudioStep) {
@@ -992,7 +1023,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
         feasibility_status: mapFeasibilityVerdict(summary.verdict),
       });
     } catch {
-      setSaveNotice("Save failed");
+      setSaveNotice("Could not save. Try again.");
     } finally {
       setSavingScenario(false);
       setTimeout(() => setSaveNotice(null), 2000);
@@ -1049,7 +1080,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       await deleteSavedScenario(user.uid, id);
       setSavedScenarios((prev) => prev.filter((s) => s.id !== id));
     } catch {
-      setDeleteNotice("Delete failed");
+      setDeleteNotice("Could not delete. Try again.");
       setTimeout(() => setDeleteNotice(null), 2000);
     }
   }
@@ -1485,7 +1516,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               <button
                 type="button"
                 onClick={() => setJourneyStep("find")}
-                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 Evaluate My Lot
               </button>
@@ -1603,7 +1634,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               <button
                 type="button"
                 onClick={handleChangeAddress}
-                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 Evaluate My Lot
               </button>
@@ -1694,7 +1725,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               />
               {planBrowser}
               <details className="group border-t border-lot-line bg-lot-chalk">
-                <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+                <summary className="flex min-h-14 cursor-pointer items-center justify-between px-6 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Browse designs
                   <span aria-hidden="true" className="group-open:rotate-45">+</span>
                 </summary>
@@ -1816,7 +1847,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           styleName={activeConcept.style}
           matchPercentage={activeConcept.matchPercentage || 91}
           styleTraits={activeConcept.traits || []}
-          lotSizeInfo={`${activeParcel.lotArea ? activeParcel.lotArea.toLocaleString() : "5,200"} sf lot`}
+          lotSizeInfo={`${formatNumber(activeParcel.lotArea || 5200)} sf lot`}
           isAttached={!!activeConcept.isAttached}
           onToggleAttach={() => handleToggleAttach(activeConcept.id)}
           onRecast={handleRecast}
@@ -2024,8 +2055,8 @@ function LotStep({
         <div className="mt-5 max-w-xl">
           <AddressSearch onSelect={onSelect} onSubmitText={onSubmitText} autoFocusSignal={addressFocusSignal} showPrivacyNote />
           {parcelLoading && (
-            <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
-              <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
+            <div role="status" aria-live="polite" className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+              <span aria-hidden="true" className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
               Looking up property data…
             </div>
           )}
@@ -2034,17 +2065,17 @@ function LotStep({
               role="alert"
               className="mt-2 flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked-soft p-3 text-xs text-status-blocked"
             >
-              <Search size={14} className="mt-0.5 shrink-0" />
+              <Search size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
               {parcelError}
             </div>
           )}
         </div>
         <details className="mt-4 max-w-xl border-y border-lot-line">
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">Try a sample property</summary>
           <label className="block pb-4 text-sm text-lot-stone">
             Sample Property
-            <Select value={parcelId} onChange={(event) => onPresetChange(event.target.value)} className="mt-2 block">
-              {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({preset.lotArea.toLocaleString()} sf)</option>)}
+            <Select name="parcelPreset" autoComplete="off" value={parcelId} onChange={(event) => onPresetChange(event.target.value)} className="mt-2 block">
+              {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({formatNumber(preset.lotArea)} sf)</option>)}
             </Select>
           </label>
         </details>

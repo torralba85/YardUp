@@ -105,7 +105,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
             {guide.permitSteps.map((step, idx) => (
               <label
                 key={idx}
-                className="flex items-start gap-3 rounded-none border border-lot-line bg-lot-chalk/20 p-3 hover:bg-lot-chalk/40 motion-safe:transition cursor-pointer"
+                className="flex items-start gap-3 rounded-none border border-lot-line bg-lot-chalk p-3 hover:bg-lot-surface motion-safe:transition-colors cursor-pointer"
               >
                 <Checkbox
                   checked={!!checkedItems[step]}
@@ -129,7 +129,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
               </h4>
               <div className="rounded-none border border-status-blocked/30 bg-status-blocked-soft p-3.5 text-xs text-status-blocked">
                 <div className="flex gap-2">
-                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
                   <ul className="list-disc pl-3 space-y-1 font-medium">
                     {guide.blockers.map((blocker, idx) => (
                       <li key={idx}>{blocker}</li>
@@ -159,9 +159,9 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           rel="noopener noreferrer"
                           className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:text-lot-ink"
                         >
-                          <BookOpen size={14} />
+                          <BookOpen size={14} aria-hidden="true" />
                           {citationLabel}
-                          <ExternalLink size={12} className="opacity-70" />
+                          <ExternalLink size={12} className="opacity-70" aria-hidden="true" />
                         </a>
                       ) : (
                         <span
@@ -169,7 +169,7 @@ export default function PermitGuidePanel({ address }: PermitGuidePanelProps) {
                           title="Citation link unavailable"
                           className="inline-flex items-center gap-1.5 text-sm font-semibold text-lot-stone"
                         >
-                          <BookOpen size={14} />
+                          <BookOpen size={14} aria-hidden="true" />
                           {citationLabel}
                         </span>
                       )}

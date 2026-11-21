@@ -12,6 +12,12 @@ import {
   formatCompactCurrency,
   formatCurrency,
 } from "@/lib/feasibility";
+import {
+  formatDollars,
+  formatNumber,
+  formatPercent,
+  formatUtcDate,
+} from "@/lib/intl-format";
 
 export const CALIFORNIA_COST_GUIDE_AS_OF = "2026-10-07";
 
@@ -24,7 +30,7 @@ const HUD_FMR_URL = HUD_FMR_FY2027_URL;
 const CSLB_CONTRACTOR_URL =
   "https://cslb.ca.gov/consumers/hire_a_contractor/finding_the_right_contractor.aspx";
 
-const linkClass = "underline underline-offset-2 hover:text-lot-ink";
+const linkClass = "underline underline-offset-2 transition-colors hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
 const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
@@ -58,8 +64,9 @@ export function CaliforniaAduCostGuide() {
   const costPerSqft = defaultFinancialAssumptions.costPerSqft;
   const hardCostLow = Math.min(...Object.values(costPerSqft));
   const hardCostHigh = Math.max(...Object.values(costPerSqft));
-  const softCostPercent = Math.round(
-    (defaultFinancialAssumptions.softCostMultiplier - 1) * 100,
+  const softCostAllowance = formatPercent(
+    defaultFinancialAssumptions.softCostMultiplier - 1,
+    { digits: 0 },
   );
 
   const faqs = [
@@ -69,7 +76,7 @@ export function CaliforniaAduCostGuide() {
     },
     {
       question: "What does a California ADU cost per square foot?",
-      answer: `Across the ${first.size.toLocaleString("en-US")}-${last.size.toLocaleString("en-US")} sq ft detached units modeled here, the all-in range is about $${perSqftLow} to $${perSqftHigh} per sq ft. Smaller units can cost more per square foot because fixed costs are spread across less space.`,
+      answer: `Across the ${formatNumber(first.size)}-${formatNumber(last.size)} sq ft detached units modeled here, the all-in range is about ${formatDollars(perSqftLow)} to ${formatDollars(perSqftHigh)} per sq ft. Smaller units can cost more per square foot because fixed costs are spread across less space.`,
     },
     {
       question: "How much do California ADU permits cost?",
@@ -176,7 +183,7 @@ export function CaliforniaAduCostGuide() {
       <section aria-labelledby="california-adu-cost-by-size" className="mt-12">
         <h2
           id="california-adu-cost-by-size"
-          className="lf-card-heading text-lot-ink"
+          className="scroll-mt-20 lf-card-heading text-lot-ink"
         >
           What does a California ADU cost by size?
         </h2>
@@ -201,11 +208,11 @@ export function CaliforniaAduCostGuide() {
               {rows.map((row) => (
                 <tr key={row.size} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>
-                    {row.size.toLocaleString("en-US")} sq ft
+                    {formatNumber(row.size)} sq ft
                   </th>
                   <td className={tdClass}>{range(row.costLow, row.costHigh)}</td>
                   <td className={tdClass}>
-                    ${Math.round(row.costLow / row.size)}-${Math.round(row.costHigh / row.size)}
+                    {formatDollars(Math.round(row.costLow / row.size))}-{formatDollars(Math.round(row.costHigh / row.size))}
                   </td>
                 </tr>
               ))}
@@ -231,17 +238,17 @@ export function CaliforniaAduCostGuide() {
       </p>
 
       <section aria-labelledby="adu-cost-includes" className="mt-12">
-        <h2 id="adu-cost-includes" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-cost-includes" className="scroll-mt-20 lf-card-heading text-lot-ink">
           What is included in a California ADU estimate?
         </h2>
         <CostBreakdownDiagram />
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
-            A hard-cost base of ${hardCostLow}-${hardCostHigh} per sq ft,
+            A hard-cost base of {formatDollars(hardCostLow)}-{formatDollars(hardCostHigh)} per sq ft,
             depending on exterior finish, plus the modeled roof and openings.
           </li>
           <li>
-            A {softCostPercent}% allowance for design, engineering, and permits,
+            A {softCostAllowance} allowance for design, engineering, and permits,
             with an uncertainty band around the resulting midpoint.
           </li>
           <li>
@@ -259,13 +266,13 @@ export function CaliforniaAduCostGuide() {
       <section aria-labelledby="adu-cost-per-square-foot" className="mt-12">
         <h2
           id="adu-cost-per-square-foot"
-          className="lf-card-heading text-lot-ink"
+          className="scroll-mt-20 lf-card-heading text-lot-ink"
         >
           Why ADU cost per square foot changes with size
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
-          The modeled all-in range runs from about ${perSqftLow} to ${perSqftHigh}
-          per sq ft across the sizes above. A smaller unit still needs a kitchen,
+          The modeled all-in range runs from about {formatDollars(perSqftLow)} to{" "}
+          {formatDollars(perSqftHigh)} per sq ft across the sizes above. A smaller unit still needs a kitchen,
           bathroom, service connections, plans, and inspections, so those fixed
           costs are divided by fewer square feet. A single per-square-foot number
           is most useful only when the unit type, finish, and site scope match.
@@ -273,7 +280,7 @@ export function CaliforniaAduCostGuide() {
       </section>
 
       <section aria-labelledby="adu-regional-costs" className="mt-12">
-        <h2 id="adu-regional-costs" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-regional-costs" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Regional differences: what the model knows
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -287,7 +294,7 @@ export function CaliforniaAduCostGuide() {
       </section>
 
       <section aria-labelledby="adu-permit-costs" className="mt-12">
-        <h2 id="adu-permit-costs" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-permit-costs" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Permit fees and other soft costs
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -312,7 +319,7 @@ export function CaliforniaAduCostGuide() {
       <section aria-labelledby="adu-prefab-conversions" className="mt-12">
         <h2
           id="adu-prefab-conversions"
-          className="lf-card-heading text-lot-ink"
+          className="scroll-mt-20 lf-card-heading text-lot-ink"
         >
           Prefab ADUs and garage conversions
         </h2>
@@ -327,7 +334,7 @@ export function CaliforniaAduCostGuide() {
       </section>
 
       <section aria-labelledby="adu-quote-checklist" className="mt-12">
-        <h2 id="adu-quote-checklist" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-quote-checklist" className="scroll-mt-20 lf-card-heading text-lot-ink">
           What should you ask for in an ADU quote?
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
@@ -354,13 +361,13 @@ export function CaliforniaAduCostGuide() {
       </div>
 
       <section aria-labelledby="adu-cost-faq" className="mt-12">
-        <h2 id="adu-cost-faq" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-cost-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
           California ADU cost questions, answered
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
             <details key={faq.question} className="group py-1">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
+              <summary className="min-h-11 cursor-pointer rounded-sm py-2.5 font-semibold text-lot-ink transition-colors marker:text-lot-orange-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -374,7 +381,7 @@ export function CaliforniaAduCostGuide() {
       </div>
 
       <section aria-labelledby="adu-builders" className="mt-12 border-t border-lot-line pt-8">
-        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-builders" className="scroll-mt-20 lf-card-heading text-lot-ink">
           For builders and designers
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -388,7 +395,7 @@ export function CaliforniaAduCostGuide() {
       </section>
 
       <section aria-labelledby="adu-cost-sources" className="mt-12">
-        <h2 id="adu-cost-sources" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-cost-sources" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Sources and estimate basis
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -425,7 +432,11 @@ export function CaliforniaAduCostGuide() {
         <p className="lf-body mt-4 text-sm text-lot-stone">
           Cost figures are LotFoundry planning estimates generated from the
           product&apos;s finance assumptions; they are not figures published by
-          HCD, HUD, or CSLB. Last reviewed {CALIFORNIA_COST_GUIDE_AS_OF}.
+          HCD, HUD, or CSLB. Last reviewed{" "}
+          <time dateTime={CALIFORNIA_COST_GUIDE_AS_OF}>
+            {formatUtcDate(CALIFORNIA_COST_GUIDE_AS_OF, "long")}
+          </time>
+          .
         </p>
       </section>
 

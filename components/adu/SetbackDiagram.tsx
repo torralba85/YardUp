@@ -21,7 +21,7 @@ function wrapDiagramRule(text: string, maxChars = 24): string[] {
  * Visual of the short-ADU versus tall-ADU setback split (e.g. San
  * Diego's under-16-ft zero setback against the 4-ft rule at 16 ft and
  * over). Inline SVG — no image fetch, no layout shift — drawn in
- * `currentColor` so it stays legible in dark mode, and wrapping to one
+ * `currentColor` against the chalk ground, and wrapping to one
  * column below 375px via a stacked viewBox.
  */
 export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
@@ -33,7 +33,7 @@ export function SetbackDiagram({ content }: { content: JurisdictionContent }) {
   return (
     <figure
       aria-label={`Setback diagram for ${content.city}`}
-      className="mt-6 text-lot-ink dark:text-lot-chalk"
+      className="mt-6 text-lot-ink"
     >
       <svg
         viewBox="0 0 360 240"

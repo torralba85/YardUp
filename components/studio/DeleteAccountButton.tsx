@@ -37,7 +37,7 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
       // On success the session ends and `deleteAccount` navigates to the public
       // landing, so this control goes away with the rest of the signed-in tree.
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Account deletion failed.");
+      setError(err instanceof Error ? err.message : "Account deletion failed. Please try again.");
       setPending(false);
       setConfirming(false);
     }

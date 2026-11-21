@@ -88,8 +88,8 @@ export default function FindStep({
           showPrivacyNote
         />
         {parcelLoading && (
-          <div className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
-            <span className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
+          <div role="status" aria-live="polite" className="mt-2 flex items-center gap-2 rounded-none border border-lot-line bg-lot-surface px-3 py-2 text-xs text-lot-stone">
+            <span aria-hidden="true" className="block h-3.5 w-3.5 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
             Looking up property data…
           </div>
         )}
@@ -98,7 +98,7 @@ export default function FindStep({
             role="alert"
             className="mt-2 flex items-start gap-2 rounded-none border border-status-blocked/40 bg-status-blocked/10 p-3 text-xs text-status-blocked"
           >
-            <Search size={14} className="mt-0.5 shrink-0" />
+            <Search size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
             {parcelError}
           </div>
         )}

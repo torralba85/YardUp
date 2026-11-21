@@ -117,7 +117,7 @@ export default function AerialView({
   }, [parcel.boundaryGeoJson, lat, lng, resolvedZoom]);
 
   return (
-    <div
+    <section
       className="relative flex h-full min-h-[460px] w-full flex-col overflow-hidden bg-lot-ink"
       aria-label="Aerial lot view"
     >
@@ -195,6 +195,7 @@ export default function AerialView({
           {requestedZoom === 20 ? "Closer view (2×)" : "Closer lot view"}
         </Button>
         <div
+          role="note"
           className="pointer-events-none border border-lot-line bg-lot-chalk px-2.5 py-1.5 text-xs font-semibold text-lot-ink"
           aria-label="Zoning designation, not approval"
         >
@@ -206,7 +207,7 @@ export default function AerialView({
       {aerialError && (
         <div
           className="pointer-events-none absolute left-4 top-20 max-w-[min(24rem,calc(100%-2rem))] rounded-none border border-lot-line bg-lot-chalk px-3 py-3 text-xs leading-5 text-lot-ink shadow-callout"
-          role="note"
+          role="alert"
         >
           <span className="flex items-center gap-2 font-semibold"><TriangleAlert size={16} className="shrink-0 text-status-review" aria-hidden="true" />Aerial imagery unavailable</span>
           <span className="mt-1 block text-lot-stone">Satellite detail is unavailable. Use the 3D model for conceptual placement.</span>
@@ -217,7 +218,7 @@ export default function AerialView({
 
       {/* Normal flow reserves space when the context and credits wrap on phones.
           Provider-embedded Google logos/credits stay in the uncropped image. */}
-      <div className="shrink-0 space-y-[7px] border-t border-lot-line-dark bg-lot-ink px-4 py-[13px]"
+      <section className="shrink-0 space-y-[7px] border-t border-lot-line-dark bg-lot-ink px-4 py-[13px]"
         aria-label="Aerial context and imagery credits">
         <div
           className="pointer-events-none flex items-start gap-2 rounded-none border border-status-review-on-dark/40 bg-lot-ink/90 px-3 py-2 text-xs text-lot-chalk"
@@ -236,7 +237,7 @@ export default function AerialView({
             {attribution}
           </div>
         )}
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }

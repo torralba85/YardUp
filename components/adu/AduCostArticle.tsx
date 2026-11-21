@@ -17,6 +17,12 @@ import {
   formatCompactCurrency,
   formatCurrency,
 } from "@/lib/feasibility";
+import {
+  formatDecimal,
+  formatDollars,
+  formatNumber,
+  formatPercent,
+} from "@/lib/intl-format";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
@@ -32,8 +38,13 @@ const linkClass = "underline underline-offset-2 hover:text-lot-ink";
 const costPerSqft = defaultFinancialAssumptions.costPerSqft;
 const lowFinish = Math.min(...Object.values(costPerSqft));
 const highFinish = Math.max(...Object.values(costPerSqft));
-const opexPercent = Math.round(defaultFinancialAssumptions.operatingExpenseRatio * 1000) / 10;
-const softPercent = Math.round((defaultFinancialAssumptions.softCostMultiplier - 1) * 100);
+const opexPercentLabel = formatPercent(defaultFinancialAssumptions.operatingExpenseRatio, {
+  digits: 1,
+  trimTrailingZero: true,
+});
+const softPercentLabel = formatPercent(defaultFinancialAssumptions.softCostMultiplier - 1, {
+  digits: 0,
+});
 
 function range(low: number, high: number): string {
   return `${formatCompactCurrency(low)}–${formatCompactCurrency(high)}`;
@@ -72,11 +83,11 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
   const computedFaqs: AduFaq[] = [
     {
       question: `How much does an ADU cost to build in ${city.city}?`,
-      answer: `LotFoundry's model estimates ${formatCurrency(first.costLow)} to ${formatCurrency(first.costHigh)} for a ${first.size.toLocaleString("en-US")} sq ft unit, ${formatCurrency(row600.costLow)} to ${formatCurrency(row600.costHigh)} for ${row600.size.toLocaleString("en-US")} sq ft, and ${formatCurrency(last.costLow)} to ${formatCurrency(last.costHigh)} for ${last.size.toLocaleString("en-US")} sq ft, including a soft-cost allowance. These are planning estimates, not a contractor quote.`,
+      answer: `LotFoundry's model estimates ${formatCurrency(first.costLow)} to ${formatCurrency(first.costHigh)} for a ${formatNumber(first.size)} sq ft unit, ${formatCurrency(row600.costLow)} to ${formatCurrency(row600.costHigh)} for ${formatNumber(row600.size)} sq ft, and ${formatCurrency(last.costLow)} to ${formatCurrency(last.costHigh)} for ${formatNumber(last.size)} sq ft, including a soft-cost allowance. These are planning estimates, not a contractor quote.`,
     },
     {
       question: `What does an ADU cost per square foot in ${city.city}?`,
-      answer: `About $${perSqftLow} to $${perSqftHigh} per square foot all-in across the sizes on this page. Smaller units cost more per square foot because fixed costs such as windows and doors spread over less floor area.`,
+      answer: `About ${formatDollars(perSqftLow)} to ${formatDollars(perSqftHigh)} per square foot all-in across the sizes on this page. Smaller units cost more per square foot because fixed costs such as windows and doors spread over less floor area.`,
     },
     {
       question: `How much rent can an ADU earn in ${city.city}?`,
@@ -84,7 +95,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
     },
     {
       question: `How long does an ADU take to pay for itself in ${city.city}?`,
-      answer: `On the model's conservative rent, simple payback runs from about ${first.paybackYears.toFixed(1)} years for ${first.size.toLocaleString("en-US")} sq ft to ${last.paybackYears.toFixed(1)} years for ${last.size.toLocaleString("en-US")} sq ft. It ignores financing, taxes and appreciation, so use it to compare options, not as a forecast.`,
+      answer: `On the model's conservative rent, simple payback runs from about ${formatDecimal(first.paybackYears, 1)} years for ${formatNumber(first.size)} sq ft to ${formatDecimal(last.paybackYears, 1)} years for ${formatNumber(last.size)} sq ft. It ignores financing, taxes and appreciation, so use it to compare options, not as a forecast.`,
     },
   ];
   const faqs = [...computedFaqs, ...cost.faqs];
@@ -136,13 +147,13 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
       </p>
       <div className="mt-4 space-y-4">
         <p className="lf-body text-lg leading-relaxed">
-          For a {row600.size.toLocaleString("en-US")} sq ft detached ADU in{" "}
+          For a {formatNumber(row600.size)}&nbsp;sq&nbsp;ft detached ADU in{" "}
           {city.city}, LotFoundry&apos;s planning model estimates{" "}
           {formatCurrency(row600.costLow)} to {formatCurrency(row600.costHigh)}{" "}
           to build, including an allowance for design and permit soft costs. At{" "}
           {city.county}&apos;s HUD Fair Market Rent of{" "}
           {formatCurrency(row600.monthlyRent)} a month, simple payback is about{" "}
-          {row600.paybackYears.toFixed(1)} years.
+          {formatDecimal(row600.paybackYears, 1)}&nbsp;years.
         </p>
         {cost.introAnswer.map((paragraph, index) => (
           <p key={index} className="lf-body text-lg leading-relaxed">
@@ -185,11 +196,11 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
               {rows.map((row) => (
                 <tr key={row.size} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>
-                    {row.size.toLocaleString("en-US")} sq ft
+                    {formatNumber(row.size)}&nbsp;sq&nbsp;ft
                   </th>
                   <td className={tdClass}>{range(row.costLow, row.costHigh)}</td>
                   <td className={tdClass}>
-                    ${Math.round(row.costLow / row.size)}–${Math.round(row.costHigh / row.size)}
+                    {formatDollars(Math.round(row.costLow / row.size))}–{formatDollars(Math.round(row.costHigh / row.size))}
                   </td>
                 </tr>
               ))}
@@ -264,18 +275,18 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         <CostBreakdownDiagram />
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           <li>
-            Hard construction cost of ${lowFinish}–${highFinish} per sq ft
+            Hard construction cost of {formatDollars(lowFinish)}–{formatDollars(highFinish)} per sq&nbsp;ft
             depending on the exterior finish, plus a roof-style premium and
-            $9,000 for windows and doors. This is a national cost base, not a{" "}
+            {` ${formatDollars(9000)} `}for windows and doors. This is a national cost base, not a{" "}
             {city.city} contractor survey.
           </li>
           <li>
-            A {softPercent}% allowance on top for design, engineering and
+            A {softPercentLabel} allowance on top for design, engineering and
             permits. The range runs from 8% below to 15% above that midpoint.
           </li>
           <li>
             Rent from {city.county}&apos;s HUD Fair Market Rent, with{" "}
-            {opexPercent}% of it set aside for vacancy, management,
+            {opexPercentLabel} of it set aside for vacancy, management,
             maintenance, insurance, utilities and property tax.
           </li>
           <li>
@@ -344,7 +355,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
             <details key={faq.question} className="group py-1">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>

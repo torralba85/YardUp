@@ -1,10 +1,10 @@
 "use client";
 
-import { Component, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
 import { Color, DoubleSide, PerspectiveCamera, SRGBColorSpace, Vector3 } from "three";
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Mountain, RotateCw } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Mountain, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { AduArchitecture } from "./AduArchitecture";
 import type { ADUConfig } from "@/lib/feasibility";
@@ -15,6 +15,14 @@ import { createTerrainGrid, FEET_PER_METER, insideTerrainParcel, terrainFootprin
 import { isWebGLAvailable } from "@/lib/webgl";
 
 const NO_WEBGL = "Terrain preview needs WebGL, which this browser could not start. The other Studio views still work.";
+const subscribeWebgl = () => () => {};
+const getServerWebgl = () => false;
+
+type TerrainCameraAction = "orbit-left" | "orbit-right" | "zoom-in" | "zoom-out" | "reset";
+interface TerrainCameraCommand {
+  kind: TerrainCameraAction;
+  seq: number;
+}
 
 /**
  * Computes smooth upward-facing vertex normals (+Y up) for an indexed terrain mesh
@@ -256,7 +264,19 @@ function initialPose(terrain: ParcelTerrain, config: ADUConfig): Pose2D {
   return { x: 0, z: 0, rotationDeg: 0 };
 }
 
-function TerrainCamera({ width, depth, height, topView }: { width: number; depth: number; height: number; topView: boolean }) {
+function TerrainCamera({
+  width,
+  depth,
+  height,
+  topView,
+  command,
+}: {
+  width: number;
+  depth: number;
+  height: number;
+  topView: boolean;
+  command: TerrainCameraCommand | null;
+}) {
   const { camera, size, invalidate } = useThree();
   const radius = Math.hypot(width + 12, depth + 30, height) / 2;
   useEffect(() => {
@@ -270,6 +290,34 @@ function TerrainCamera({ width, depth, height, topView }: { width: number; depth
     camera.updateProjectionMatrix();
     invalidate();
   }, [camera, size.width, size.height, radius, height, topView, invalidate]);
+
+  useEffect(() => {
+    if (!command || !(camera instanceof PerspectiveCamera) || size.width <= 0 || size.height <= 0) return;
+    const target = new Vector3(0, height / 2, 0);
+    if (command.kind === "reset") {
+      const vertical = camera.fov * Math.PI / 360;
+      const horizontal = Math.atan(Math.tan(vertical) * size.width / size.height);
+      const distance = radius / Math.sin(Math.min(vertical, horizontal)) * 1.1;
+      const direction = (topView ? new Vector3(0, 1, 0.001) : new Vector3(1, 1.15, 1)).normalize();
+      camera.position.copy(direction.multiplyScalar(distance)).add(target);
+      camera.lookAt(target);
+      invalidate();
+      return;
+    }
+    const offset = camera.position.clone().sub(target);
+    if (command.kind === "orbit-left" || command.kind === "orbit-right") {
+      const angle = command.kind === "orbit-left" ? Math.PI / 12 : -Math.PI / 12;
+      offset.applyAxisAngle(new Vector3(0, 1, 0), angle);
+    } else {
+      const factor = command.kind === "zoom-in" ? 0.84 : 1.18;
+      const nextLength = Math.max(radius * 0.3, Math.min(radius * 10, offset.length() * factor));
+      offset.setLength(nextLength);
+    }
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+    invalidate();
+  }, [camera, command, height, invalidate, radius, size.height, size.width, topView]);
+
   return <OrbitControls makeDefault target={[0, height / 2, 0]} minDistance={radius * 0.3} maxDistance={radius * 10} maxPolarAngle={Math.PI / 2.05} />;
 }
 
@@ -279,6 +327,7 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
   const [notice, setNotice] = useState("");
   const [topView, setTopView] = useState(false);
   const [showContours, setShowContours] = useState(true);
+  const [cameraCommand, setCameraCommand] = useState<TerrainCameraCommand | null>(null);
   const { grid, elevations } = terrain;
   const base = Math.min(...elevations) * FEET_PER_METER;
   const relief = (Math.max(...elevations) - Math.min(...elevations)) * FEET_PER_METER;
@@ -287,6 +336,32 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
   const footprint = useMemo(() => terrainFootprint(terrain, pose, config.width, config.length), [terrain, pose, config.width, config.length]);
   const inParcelHeights = grid.points.flatMap((p, i) => insideTerrainParcel(p, grid) ? [elevations[i]] : []);
   const parcelRelief = inParcelHeights.length > 1 ? (Math.max(...inParcelHeights) - Math.min(...inParcelHeights)) * FEET_PER_METER : null;
+
+  function triggerCamera(kind: TerrainCameraAction) {
+    setCameraCommand((prev) => ({ kind, seq: (prev?.seq ?? 0) + 1 }));
+  }
+
+  function handleCanvasKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) return;
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      triggerCamera("orbit-left");
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      triggerCamera("orbit-right");
+    } else if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      triggerCamera("zoom-in");
+    } else if (event.key === "-") {
+      event.preventDefault();
+      triggerCamera("zoom-out");
+    } else if (event.key === "0") {
+      event.preventDefault();
+      triggerCamera("reset");
+    }
+  }
 
   function move(next: Pose2D) {
     // Once a turn has carried the ADU off the sampled ground, steps back toward its middle still count.
@@ -321,7 +396,14 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
           <Button size="xs" variant="secondary" onClick={() => setTopView((value) => !value)}>{topView ? "Angled view" : "Top view"}</Button>
         </div>
       </div>
-      <div className="relative min-h-[280px] flex-1" data-testid="terrain-canvas">
+      <div
+        role="region"
+        aria-label="Terrain 3D viewport"
+        tabIndex={0}
+        onKeyDown={handleCanvasKeyDown}
+        className="relative min-h-[280px] flex-1 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink"
+        data-testid="terrain-canvas"
+      >
         <Canvas shadows frameloop="demand" dpr={[1, 1.5]} camera={{ position: [span, span + sceneHeight, span], fov: 45, near: 0.1, far: span * 20 }}>
           <color attach="background" args={[COLOR["lot-chalk"]]} />
           <ambientLight intensity={1.3} />
@@ -339,9 +421,27 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
               })}
             </>
           )}
-          <TerrainCamera width={grid.width} depth={grid.depth} height={sceneHeight} topView={topView} />
+          <TerrainCamera width={grid.width} depth={grid.depth} height={sceneHeight} topView={topView} command={cameraCommand} />
         </Canvas>
-        <p className="pointer-events-none absolute bottom-2 left-3 bg-lot-chalk/90 px-2 py-1 text-xs text-lot-stone">Arrow points north · Drag to orbit · Pinch or scroll to zoom</p>
+        <div
+          role="group"
+          aria-label="Terrain camera controls"
+          className="absolute top-2 right-2 flex flex-col border border-lot-line bg-lot-chalk p-1 shadow-paper-sm"
+        >
+          <Button size="xs" variant="ghost" aria-label="Zoom terrain in" title="Zoom in (+)" onClick={() => triggerCamera("zoom-in")} className="w-11 px-0">
+            <ZoomIn size={16} aria-hidden="true" />
+          </Button>
+          <Button size="xs" variant="ghost" aria-label="Zoom terrain out" title="Zoom out (-)" onClick={() => triggerCamera("zoom-out")} className="w-11 px-0">
+            <ZoomOut size={16} aria-hidden="true" />
+          </Button>
+          <Button size="xs" variant="ghost" aria-label="Orbit terrain left" title="Orbit left (Left arrow)" onClick={() => triggerCamera("orbit-left")} className="w-11 px-0">
+            <RotateCcw size={16} aria-hidden="true" />
+          </Button>
+          <Button size="xs" variant="ghost" aria-label="Orbit terrain right" title="Orbit right (Right arrow)" onClick={() => triggerCamera("orbit-right")} className="w-11 px-0">
+            <RotateCw size={16} aria-hidden="true" />
+          </Button>
+        </div>
+        <p className="pointer-events-none absolute bottom-2 left-3 bg-lot-chalk/90 px-2 py-1 text-xs text-lot-stone">Arrow points north · Drag or arrow keys to orbit · Scroll or +/− to zoom</p>
       </div>
       <div className="shrink-0 space-y-2 border-t border-lot-line p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -357,11 +457,11 @@ function LoadedTerrain({ terrain, config }: { terrain: ParcelTerrain; config: AD
           <Button size="xs" variant="ghost" onClick={() => { setPose(initialPose(terrain, config)); setNotice(""); }}>Reset position</Button>
         </div>
         <p role="status" className="text-xs text-lot-stone">{notice || (!footprint ? "Rotate the ADU, or move it back toward the middle of the sampled ground." : placeOnClick ? "Tap the ground to position the ADU. Buttons move it 5 ft." : "Use the arrows to explore locations, or choose Place on ground.")}</p>
-        {footprint?.boundaryCrossing && <p className="flex items-center gap-1 text-xs text-status-review"><AlertTriangle size={14} aria-hidden="true" />Preview crosses the published parcel boundary.</p>}
+        {footprint?.boundaryCrossing && <p aria-live="polite" className="flex items-center gap-1 text-xs text-status-review"><AlertTriangle size={14} aria-hidden="true" />Preview crosses the published parcel boundary.</p>}
         <p className="text-xs text-lot-stone">Level floor shown above the sampled ground. Lines illustrate the height gap; foundation design, setbacks and existing buildings need a site check. This preview position is separate from your saved layout.</p>
         <details className="text-xs text-lot-stone">
-          <summary className="min-h-11 cursor-pointer py-3 font-medium text-lot-ink">Elevation source and accuracy</summary>
-          <p><a href={TERRAIN_SOURCE_URL} target="_blank" rel="noreferrer" className="underline">USGS 3DEP</a> ground data. {terrain.resolutionMeters === null ? "Source resolution unavailable." : `Source resolution up to ${terrain.resolutionMeters.toFixed(1)} m across this area.`} Preview spacing: {(Math.max(grid.width, grid.depth) / (grid.size - 1)).toFixed(1)} ft. {terrain.acquiredYears.length ? `Acquired ${terrain.acquiredYears.join(", ")}.` : "Acquisition date unavailable."} Resolution is not survey accuracy; small retaining walls and recent grading may be missing.</p>
+          <summary className="min-h-11 cursor-pointer rounded-control py-3 font-medium text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink">Elevation source and accuracy</summary>
+          <p><a href={TERRAIN_SOURCE_URL} target="_blank" rel="noreferrer" className="rounded-control text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink">USGS 3DEP</a> ground data. {terrain.resolutionMeters === null ? "Source resolution unavailable." : `Source resolution up to ${terrain.resolutionMeters.toFixed(1)} m across this area.`} Preview spacing: {(Math.max(grid.width, grid.depth) / (grid.size - 1)).toFixed(1)} ft. {terrain.acquiredYears.length ? `Acquired ${terrain.acquiredYears.join(", ")}.` : "Acquisition date unavailable."} Resolution is not survey accuracy; small retaining walls and recent grading may be missing.</p>
           <p className="mt-1">Vertical reference: {terrain.verticalDatum}. Heights are displayed relative to each other, with no vertical exaggeration.</p>
         </details>
       </div>
@@ -387,7 +487,7 @@ export default function ParcelTerrainPreview({ parcel, config, pending = false }
   const boundary = "boundaryGeoJson" in parcel && parcel.source !== "fallback" ? parcel.boundaryGeoJson : null;
   const boundaryKey = boundary ? JSON.stringify(boundary) : "";
   const available = !pending && createTerrainGrid(boundary) !== null;
-  const [webgl] = useState(isWebGLAvailable);
+  const webgl = useSyncExternalStore(subscribeWebgl, isWebGLAvailable, getServerWebgl);
   return (
     <section aria-label="Parcel terrain preview" className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto bg-lot-chalk text-lot-ink">
       <header className="shrink-0 border-b border-lot-line p-3">

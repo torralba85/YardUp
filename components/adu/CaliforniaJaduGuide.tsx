@@ -20,8 +20,9 @@ import {
   stateCostPath,
 } from "@/lib/adu/content";
 import { jaduLastModified } from "@/lib/adu/dates";
+import { formatUtcDate } from "@/lib/intl-format";
 
-const linkClass = "underline underline-offset-2 hover:text-lot-ink";
+const linkClass = "underline underline-offset-2 transition-colors hover:text-lot-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 align-top font-semibold text-lot-ink";
 const tdClass = "py-3 pr-4 align-top text-lot-stone";
@@ -95,7 +96,7 @@ export function CaliforniaJaduGuide() {
       </div>
 
       <section aria-labelledby="jadu-glance" className="mt-12">
-        <h2 id="jadu-glance" className="lf-card-heading text-lot-ink">
+        <h2 id="jadu-glance" className="scroll-mt-20 lf-card-heading text-lot-ink">
           California JADU rules at a glance
         </h2>
         <div className="mt-4 overflow-x-auto">
@@ -125,7 +126,7 @@ export function CaliforniaJaduGuide() {
       <JaduComparisonDiagram />
 
       <section aria-labelledby="jadu-vs-adu" className="mt-12">
-        <h2 id="jadu-vs-adu" className="lf-card-heading text-lot-ink">
+        <h2 id="jadu-vs-adu" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Junior ADU vs ADU: the differences
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -161,7 +162,7 @@ export function CaliforniaJaduGuide() {
       <div className="mt-12 space-y-10">
         {JADU_SECTIONS.map((section) => (
           <section key={section.id} aria-labelledby={section.id}>
-            <h2 id={section.id} className="lf-card-heading text-lot-ink">
+            <h2 id={section.id} className="scroll-mt-20 lf-card-heading text-lot-ink">
               {section.heading}
             </h2>
             <div className="lf-body mt-3 space-y-3 text-lot-stone">
@@ -203,13 +204,13 @@ export function CaliforniaJaduGuide() {
       </div>
 
       <section aria-labelledby="jadu-faq" className="mt-12">
-        <h2 id="jadu-faq" className="lf-card-heading text-lot-ink">
+        <h2 id="jadu-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Junior ADU questions, answered
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {JADU_FAQS.map((faq) => (
             <details key={faq.question} className="group py-1">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
+              <summary className="min-h-11 cursor-pointer rounded-sm py-2.5 font-semibold text-lot-ink transition-colors marker:text-lot-orange-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -219,7 +220,7 @@ export function CaliforniaJaduGuide() {
       </section>
 
       <section aria-labelledby="jadu-owner-occupancy" className="mt-12">
-        <h2 id="jadu-owner-occupancy" className="lf-card-heading text-lot-ink">
+        <h2 id="jadu-owner-occupancy" className="scroll-mt-20 lf-card-heading text-lot-ink">
           When does a JADU require owner-occupancy under Gov. Code §66333(b)?
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -265,7 +266,7 @@ export function CaliforniaJaduGuide() {
       </div>
 
       <section aria-labelledby="jadu-sources" className="mt-12">
-        <h2 id="jadu-sources" className="lf-card-heading text-lot-ink">
+        <h2 id="jadu-sources" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Sources and as-of date
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -277,8 +278,10 @@ export function CaliforniaJaduGuide() {
         </p>
         <p className="lf-body mt-3 text-lot-stone">
           Every rule on this page is California state law, checked against the
-          sources below on {JADU_AS_OF}. Your city&apos;s own code may lag behind
-          it; confirm with the permitting office before you pay for plans.
+          sources below on{" "}
+          <time dateTime={JADU_AS_OF}>{formatUtcDate(JADU_AS_OF, "long")}</time>.
+          Your city&apos;s own code may lag behind it; confirm with the permitting
+          office before you pay for plans.
         </p>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
           {JADU_SOURCES.map((source) => (

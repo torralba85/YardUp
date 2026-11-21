@@ -53,7 +53,7 @@ export default function StudioLayout({
       <section
         data-testid="studio-overview"
         aria-labelledby="studio-overview-heading"
-        className="border-t border-lot-line bg-lot-chalk text-lot-ink lg:relative lg:z-(--z-index-sheet) lg:ml-[248px] lg:h-(--studio-guide-bar)"
+        className="border-t border-lot-line bg-lot-chalk pb-[env(safe-area-inset-bottom,0px)] text-lot-ink lg:relative lg:z-(--z-index-sheet) lg:ml-[248px] lg:h-(--studio-guide-bar) lg:pb-0"
       >
         <details className="group lg:h-full">
           <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
@@ -73,7 +73,7 @@ export default function StudioLayout({
               +
             </span>
           </summary>
-          <div className="border-t border-lot-line px-[4.5%] py-8 lg:absolute lg:inset-x-0 lg:bottom-full lg:max-h-[min(70dvh,560px)] lg:overflow-y-auto lg:bg-lot-chalk">
+          <div className="overscroll-contain border-t border-lot-line px-[4.5%] py-8 lg:absolute lg:inset-x-0 lg:bottom-full lg:max-h-[min(70dvh,560px)] lg:overflow-y-auto lg:bg-lot-chalk">
             <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-stone xl:grid-cols-2">
               <div>
                 <h2 className="font-display text-lg font-medium text-lot-ink">What the address check covers</h2>
@@ -113,19 +113,19 @@ export default function StudioLayout({
               aria-label="Studio resources"
               className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm font-semibold"
             >
-              <Link href="/sample-certificate/san-diego" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+              <Link href="/sample-certificate/san-diego" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
                 Sample certificate
               </Link>
-              <Link href="/adu/how-we-estimate" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+              <Link href="/adu/how-we-estimate" prefetch={false} className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
                 Cost and rent methodology
               </Link>
-              <Link href="/adu/ca" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+              <Link href="/adu/ca" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
                 California ADU rules
               </Link>
-              <Link href="/about" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+              <Link href="/about" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
                 About LotFoundry
               </Link>
-              <Link href="/help" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4">
+              <Link href="/help" className="inline-flex min-h-11 items-center text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
                 Help
               </Link>
             </nav>

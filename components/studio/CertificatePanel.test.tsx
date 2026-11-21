@@ -405,7 +405,7 @@ describe("CertificatePanel", () => {
     it("offers a linked agent code and claims it in place without a purchase conversion", async () => {
       rememberAgentPass("smith-elm");
       render(<CertificatePanel {...createProps()} />);
-      expect(screen.getByText("Agent code SMITH-ELM")).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "Agent code" })).toHaveTextContent("Agent code SMITH-ELM");
       fireEvent.click(screen.getByRole("button", { name: "Get this certificate free" }));
       await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
       expect(mocks.redeemAgentPass).toHaveBeenCalledWith(expect.objectContaining({
@@ -486,17 +486,17 @@ describe("CertificatePanel", () => {
       rememberAgentPass("SMITH-ELM");
       mocks.auth.profile = { role: "builder" };
       const { rerender } = render(<CertificatePanel {...createProps()} />);
-      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Agent code" })).not.toBeInTheDocument();
 
       mocks.auth.profile = null;
       storePrice.override = { channel: "google-play", amount: "", amountCompact: "", unitAmount: "", exact: false, loading: false } as StorePriceDisplay;
       rerender(<CertificatePanel {...createProps()} />);
-      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Agent code" })).not.toBeInTheDocument();
 
       storePrice.override = null;
       mocks.access.purchased = true;
       rerender(<CertificatePanel {...createProps()} />);
-      expect(screen.queryByText("Agent code SMITH-ELM")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Agent code" })).not.toBeInTheDocument();
     });
 
     it("labels a $0 agent-pass grant as complimentary", () => {
@@ -1235,7 +1235,7 @@ describe("CertificatePanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
 
-    const busy = await screen.findByRole("button", { name: "Opening secure checkout" });
+    const busy = await screen.findByRole("button", { name: "Opening secure checkout…" });
     expect(busy).toHaveAttribute("aria-busy", "true");
     expect(busy).toBeDisabled();
     expect(screen.queryByRole("button", { name: /preparing certificate/i })).not.toBeInTheDocument();

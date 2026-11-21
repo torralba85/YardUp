@@ -88,7 +88,7 @@ export default function StudioShell({
             <Link
               href="/"
               aria-label="LotFoundry home"
-              className="self-start rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
+              className="self-start rounded-control motion-safe:transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
             >
               <BrandLockup inverse className="h-8 w-auto" />
             </Link>
@@ -150,7 +150,7 @@ export default function StudioShell({
                   type="button"
                   onClick={() => setScenariosOpen((o) => !o)}
                   aria-expanded={scenariosOpen}
-                  className="flex w-full min-h-11 items-center justify-between px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset"
+                  className="flex w-full min-h-11 items-center justify-between px-3 py-2 motion-safe:transition-colors hover:bg-lot-surface-dark-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset"
                 >
                   <span className="lf-kicker text-lot-stone-on-dark">
                     Saved Concepts
@@ -160,6 +160,7 @@ export default function StudioShell({
                   </span>
                   <ChevronDown
                     size={13}
+                    aria-hidden="true"
                     className={`text-lot-stone-on-dark motion-safe:transition-transform duration-(--duration-disclosure) ${scenariosOpen ? "rotate-180" : ""}`}
                   />
                 </button>
@@ -185,7 +186,7 @@ export default function StudioShell({
                             aria-label={`Delete saved concept ${scenario.name}`}
                             className="relative flex h-9 w-9 items-center justify-center rounded-control p-1 text-lot-stone-on-dark motion-safe:transition hover:bg-lot-ink hover:text-lot-chalk focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink before:absolute before:-inset-1"
                           >
-                            <Trash2 size={12} />
+                            <Trash2 size={12} aria-hidden="true" />
                           </button>
                         </li>
                       ))}
@@ -243,7 +244,7 @@ export default function StudioShell({
           <Link
             href="/"
             aria-label="LotFoundry home"
-            className="shrink-0 rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            className="shrink-0 rounded-control motion-safe:transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             <BrandLockup className="h-7 w-auto" />
           </Link>

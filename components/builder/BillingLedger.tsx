@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/feasibility";
+import { formatNumber, formatUtcDate } from "@/lib/intl-format";
 import type { BuilderLedgerEntry } from "@/lib/marketplace-types";
+import { Button } from "@/components/ui/Button";
 import { PanelHeader } from "@/components/ui/Panel";
 import { FileText, Receipt, ShieldCheck } from "lucide-react";
+
+const PAGE_SIZE = 20;
 
 export interface BillingLedgerProps {
   /** The builder's financial and credit ledger transactions. */
@@ -28,6 +32,8 @@ const TYPE_LABEL: Record<string, string> = {
  * newest first.
  */
 export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
+  const [page, setPage] = useState(1);
+
   const totals = useMemo(() => {
     let totalPaid = 0;
     let totalCreditsGained = 0;
@@ -53,6 +59,9 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
     () => [...ledger].sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0)),
     [ledger],
   );
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visibleRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="mt-6 space-y-6">
@@ -112,66 +121,96 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-lot-line bg-lot-surface text-lot-stone">
-                <tr>
-                  <th scope="col" className="lf-kicker-dense px-6 py-3">Date (UTC)</th>
-                  <th scope="col" className="lf-kicker-dense px-6 py-3">Description</th>
-                  <th scope="col" className="lf-kicker-dense px-6 py-3">Type</th>
-                  <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Credits</th>
-                  <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-lot-line">
-                {rows.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-lot-surface/50 motion-safe:transition-colors">
-                    <td className="whitespace-nowrap px-6 py-4 tabular-nums text-lot-stone">
-                      {formatLedgerDate(entry.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-lot-ink">
-                      {entry.description || "Marketplace Lead Unlock"}
-                      {entry.referenceId && (
-                        <span className="lf-caption ml-2 font-normal tabular-nums text-lot-stone">
-                          ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-lot-line bg-lot-surface text-lot-stone">
+                  <tr>
+                    <th scope="col" className="lf-kicker-dense px-6 py-3">Date (UTC)</th>
+                    <th scope="col" className="lf-kicker-dense px-6 py-3">Description</th>
+                    <th scope="col" className="lf-kicker-dense px-6 py-3">Type</th>
+                    <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Credits</th>
+                    <th scope="col" className="lf-kicker-dense px-6 py-3 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-lot-line">
+                  {visibleRows.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-lot-surface/50 motion-safe:transition-colors">
+                      <td className="whitespace-nowrap px-6 py-4 tabular-nums text-lot-stone">
+                        {formatLedgerDate(entry.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-lot-ink">
+                        {entry.description || "Marketplace Lead Unlock"}
+                        {entry.referenceId && (
+                          <span translate="no" className="lf-caption ml-2 font-normal tabular-nums text-lot-stone">
+                            ({entry.referenceId.startsWith("LF-") ? entry.referenceId : `Ref: ${entry.referenceId.slice(0, 10)}…`})
+                          </span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <span className="lf-kicker-dense inline-flex items-center rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 text-lot-stone">
+                          {TYPE_LABEL[entry.type] ?? entry.type.toUpperCase()}
                         </span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span className="lf-kicker-dense inline-flex items-center rounded-none border border-lot-line bg-lot-surface px-2 py-0.5 text-lot-stone">
-                        {TYPE_LABEL[entry.type] ?? entry.type.toUpperCase()}
-                      </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums">
+                        {entry.creditsChange > 0 && (
+                          <span className="text-lot-ink font-semibold">+{entry.creditsChange}</span>
+                        )}
+                        {entry.creditsChange < 0 && (
+                          <span className="text-lot-stone">{entry.creditsChange}</span>
+                        )}
+                        {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums font-semibold text-lot-ink">
+                        {formatCurrency(entry.amountPaid || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="border-t-4 border-double border-lot-ink bg-lot-surface/80 font-semibold text-lot-ink">
+                  <tr>
+                    <td colSpan={3} className="lf-kicker px-6 py-4">
+                      Net Account Total
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums">
-                      {entry.creditsChange > 0 && (
-                        <span className="text-lot-ink font-semibold">+{entry.creditsChange}</span>
-                      )}
-                      {entry.creditsChange < 0 && (
-                        <span className="text-lot-stone">{entry.creditsChange}</span>
-                      )}
-                      {entry.creditsChange === 0 && <span className="text-lot-stone">—</span>}
+                      {credits} balance
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums font-semibold text-lot-ink">
-                      {formatCurrency(entry.amountPaid || 0)}
+                    <td className="px-6 py-4 text-right tabular-nums">
+                      {formatCurrency(totals.totalPaid)}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot className="border-t-4 border-double border-lot-ink bg-lot-surface/80 font-semibold text-lot-ink">
-                <tr>
-                  <td colSpan={3} className="lf-kicker px-6 py-4">
-                    Net Account Total
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right tabular-nums">
-                    {credits} balance
-                  </td>
-                  <td className="px-6 py-4 text-right tabular-nums">
-                    {formatCurrency(totals.totalPaid)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                </tfoot>
+              </table>
+            </div>
+            {pageCount > 1 && (
+              <nav
+                aria-label="Billing ledger pages"
+                className="flex items-center justify-between gap-3 border-t border-lot-line bg-lot-surface/40 px-6 py-3"
+              >
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  Previous page
+                </Button>
+                <span role="status" className="text-sm tabular-nums text-lot-stone">
+                  Page {formatNumber(currentPage)} of {formatNumber(pageCount)}
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={currentPage === pageCount}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Next page
+                </Button>
+              </nav>
+            )}
+          </>
         )}
       </div>
 
@@ -181,7 +220,7 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
         <div className="lf-body-sm text-lot-stone">
           <strong className="text-lot-ink">Bad-Lead Guarantee:</strong> If homeowner contact details bounce, the phone
           is disconnected, or the owner denies having submitted their parcel feasibility request, use the &ldquo;Report this lead&rdquo;
-          button on your unlocked lead card. An immediate 1-credit refund will be applied to your balance and recorded in this ledger.
+          button on your unlocked lead card. We immediately add 1 credit back to your balance and record the adjustment in this ledger.
         </div>
       </div>
     </div>
@@ -192,12 +231,5 @@ function formatLedgerDate(iso: string | null): string {
   if (!iso) return "—";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
-  return date
-    .toLocaleDateString("en-US", {
-      timeZone: "UTC",
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    })
-    .toUpperCase();
+  return formatUtcDate(date, "short").toUpperCase();
 }

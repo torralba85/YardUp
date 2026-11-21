@@ -116,7 +116,7 @@ export default function StudioPage() {
       <div role="status" className="flex h-[100dvh] items-center justify-center bg-lot-chalk">
         <div className="px-6 text-center">
           <p className="lf-kicker-dense text-lot-stone">
-            Opening studio · typical supported markets
+            Opening studio… · typical supported markets
           </p>
           <p data-money className="lf-money-lg mt-3 text-lot-ink">
             {TYPICAL_MARKET.rentBand}

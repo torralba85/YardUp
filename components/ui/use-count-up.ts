@@ -30,7 +30,7 @@ function prefersReducedMotion(): boolean {
  * Retargets cleanly: a value change mid-tween continues from wherever the
  * number currently sits, so rapid slider drags never queue tweens.
  */
-export function useCountUp(value: number, duration = DEFAULT_DURATION): number {
+export function useCountUp(value: number, duration = DEFAULT_DURATION, enabled = true): number {
   const [display, setDisplay] = useState(value);
   const [target, setTarget] = useState(value);
 
@@ -45,14 +45,14 @@ export function useCountUp(value: number, duration = DEFAULT_DURATION): number {
   // immediately after rerender.
   if (value !== target) {
     setTarget(value);
-    if (prefersReducedMotion()) {
+    if (!enabled || prefersReducedMotion()) {
       setDisplay(value);
     }
   }
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion()) {
+    if (!enabled || prefersReducedMotion()) {
       displayRef.current = value;
       return;
     }
@@ -77,7 +77,7 @@ export function useCountUp(value: number, duration = DEFAULT_DURATION): number {
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [value, duration]);
+  }, [value, duration, enabled]);
 
-  return display;
+  return enabled ? display : value;
 }

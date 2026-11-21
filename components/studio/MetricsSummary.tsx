@@ -1,5 +1,6 @@
 import { BarChart3, CheckCircle2, Home, Layers3, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { formatPercent } from "@/lib/intl-format";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import type { FeasibilityResult } from "./types";
 import { useCountUp } from "./use-count-up";
@@ -35,7 +36,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       label: "Annual NOI",
       value: result.annualNoi,
       format: formatCurrency,
-      detail: `After ${formatPercent(result.operatingExpenseRatio)} operating expenses`,
+      detail: `After ${formatPercent(result.operatingExpenseRatio, { digits: 1, trimTrailingZero: true })} operating expenses`,
     },
   ] as const;
 
@@ -46,7 +47,7 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       icon: Ruler,
       label: "Build Cost Range",
       value: `${formatCompactCurrency(result.costLow)}-${formatCompactCurrency(result.costHigh)}`,
-      detail: `$${result.costPerSqftLow} - $${result.costPerSqftHigh} / sf`,
+      detail: `${formatCurrency(result.costPerSqftLow)} - ${formatCurrency(result.costPerSqftHigh)} / sf`,
       detailMono: true,
       valueClass: "font-display font-semibold text-xl tracking-tight text-lot-ink",
     },
@@ -63,8 +64,8 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
       key: "lot-coverage",
       icon: Layers3,
       label: "Lot Coverage",
-      value: result.footprintKnown === false ? "Unknown" : `${Math.round(result.coveragePercent)}%`,
-      detail: result.footprintKnown === false ? "Existing footprint unavailable" : `of ${result.maxCoveragePercent}% ${result.regulationsEstimated ? "assumed max" : "max"}`,
+      value: result.footprintKnown === false ? "Unknown" : formatPercent(result.coveragePercent / 100, { digits: 0 }),
+      detail: result.footprintKnown === false ? "Existing footprint unavailable" : `of ${formatPercent(result.maxCoveragePercent / 100, { digits: 1, trimTrailingZero: true })} ${result.regulationsEstimated ? "assumed max" : "max"}`,
       detailMono: true,
       valueClass: `font-sans font-semibold text-xl ${
         result.remainingCapacity < 0 ? "text-status-blocked" : "text-lot-ink"
@@ -131,11 +132,6 @@ export default function MetricsSummary({ result }: MetricsSummaryProps) {
   );
 }
 
-/** "32.5%" with the trailing .0 trimmed ("31%", not "31.0%"). */
-function formatPercent(ratio: number): string {
-  return `${String(Math.round(ratio * 1000) / 10)}%`;
-}
-
 function LeadCell({
   icon: Icon,
   label,
@@ -170,7 +166,7 @@ function LeadCell({
 function CellLabel({ icon: Icon, label }: { icon: typeof Home; label: string }) {
   return (
     <div className="flex items-center gap-1.5 lf-kicker-dense font-medium text-lot-stone sm:text-[11px]">
-      <Icon size={13} />
+      <Icon size={13} aria-hidden="true" />
       {label}
     </div>
   );

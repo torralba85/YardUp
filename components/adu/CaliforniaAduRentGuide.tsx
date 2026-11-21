@@ -26,9 +26,12 @@ import {
 import { rentLastModified } from "@/lib/adu/dates";
 import { RENT_SCENARIO_SPREADS } from "@/lib/adu/market-aggregate";
 import { formatCurrency } from "@/lib/feasibility";
+import { formatPercent, formatUtcDate } from "@/lib/intl-format";
 import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
-const linkClass = "underline underline-offset-2 hover:text-lot-ink";
+const linkClass = "underline underline-offset-2 transition-colors hover:text-lot-ink";
+const inkLinkClass =
+  "underline underline-offset-2 transition-colors hover:text-lot-orange-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 font-semibold text-lot-ink";
 const tdClass = "py-3 pr-4 tabular-nums text-lot-stone";
@@ -42,7 +45,11 @@ function byOneBedroom(): CountyRent[] {
 
 function change(row: CountyRent): string {
   const pct = rentChangePercent(row, "1br");
-  return `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
+  return formatPercent(pct / 100, {
+    digits: 1,
+    trimTrailingZero: false,
+    signed: pct > 0,
+  });
 }
 
 function countyList(names: string[]): string {
@@ -66,8 +73,8 @@ export function CaliforniaAduRentGuide() {
   const shared = areas.filter((area) => area.counties.length > 1);
   const sanDiego = CA_COUNTY_RENTS.find((row) => row.slug === "san-diego")!;
   const sdRange = planningRange(sanDiego.fy2027["1br"]);
-  const marketPct = Math.round((RENT_SCENARIO_SPREADS.market - 1) * 100);
-  const optimisticPct = Math.round((RENT_SCENARIO_SPREADS.optimistic - 1) * 100);
+  const marketPct = formatPercent(RENT_SCENARIO_SPREADS.market - 1, { digits: 0 });
+  const optimisticPct = formatPercent(RENT_SCENARIO_SPREADS.optimistic - 1, { digits: 0 });
 
   const faqs = [
     {
@@ -90,7 +97,7 @@ export function CaliforniaAduRentGuide() {
     },
     {
       question: "Which rent does LotFoundry use for my lot?",
-      answer: `The Studio and calculator start from the HUD Fair Market Rent for your county and the unit's bedroom count, then show a market case ${marketPct}% higher and an optimistic case ${optimisticPct}% higher. They are early planning estimates, not appraisals or guaranteed income.`,
+      answer: `The Studio and calculator start from the HUD Fair Market Rent for your county and the unit's bedroom count, then show a market case ${marketPct} higher and an optimistic case ${optimisticPct} higher. They are early planning estimates, not appraisals or guaranteed income.`,
     },
   ];
 
@@ -177,13 +184,16 @@ export function CaliforniaAduRentGuide() {
       </div>
 
       <section aria-labelledby="adu-rent-by-county" className="mt-12">
-        <h2 id="adu-rent-by-county" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rent-by-county" className="scroll-mt-20 lf-card-heading text-lot-ink">
           ADU rent benchmarks by county ({HUD_FMR_YEAR})
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
-          Monthly HUD Fair Market Rents, effective {HUD_FMR_EFFECTIVE}, ordered by the
-          one-bedroom figure. The last column compares the one-bedroom figure with
-          FY2026.
+          Monthly HUD Fair Market Rents, effective{" "}
+          <time dateTime={HUD_FMR_EFFECTIVE}>
+            {formatUtcDate(HUD_FMR_EFFECTIVE, "long")}
+          </time>
+          , ordered by the one-bedroom figure. The last column compares the
+          one-bedroom figure with FY2026.
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className={tableClass}>
@@ -204,7 +214,7 @@ export function CaliforniaAduRentGuide() {
                 <tr key={row.slug} className="border-t border-lot-line">
                   <th scope="row" className={thClass}>
                     {row.guidePath ? (
-                      <Link href={row.guidePath} className={`inline-flex min-h-11 items-center ${linkClass}`}>
+                      <Link href={row.guidePath} className={`inline-flex min-h-11 items-center ${inkLinkClass}`}>
                         {row.county}
                       </Link>
                     ) : (
@@ -239,14 +249,14 @@ export function CaliforniaAduRentGuide() {
       </section>
 
       <section aria-labelledby="adu-rent-planning-range" className="mt-12">
-        <h2 id="adu-rent-planning-range" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rent-planning-range" className="scroll-mt-20 lf-card-heading text-lot-ink">
           From a HUD benchmark to a backyard-home rent range
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           LotFoundry quotes the studio figure for a unit up to 400 sq ft, the
           one-bedroom figure for 401-800 sq ft, and the two-bedroom figure above
           that. The HUD figure is the conservative case; the market case adds{" "}
-          {marketPct}% and the optimistic case {optimisticPct}%. For a 600 sq ft
+          {marketPct} and the optimistic case {optimisticPct}. For a 600 sq ft
           one-bedroom in San Diego County, that gives{" "}
           {formatCurrency(sdRange.conservative)} to {formatCurrency(sdRange.optimistic)}{" "}
           a month.
@@ -289,7 +299,7 @@ export function CaliforniaAduRentGuide() {
       </section>
 
       <section aria-labelledby="adu-rent-what-fmr-measures" className="mt-12">
-        <h2 id="adu-rent-what-fmr-measures" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rent-what-fmr-measures" className="scroll-mt-20 lf-card-heading text-lot-ink">
           What a Fair Market Rent measures
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -322,13 +332,13 @@ export function CaliforniaAduRentGuide() {
       </div>
 
       <section aria-labelledby="adu-rent-faq" className="mt-12">
-        <h2 id="adu-rent-faq" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rent-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
           California ADU rent questions, answered
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {faqs.map((faq) => (
             <details key={faq.question} className="group py-1">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
+              <summary className="min-h-11 cursor-pointer rounded-sm py-2.5 font-semibold text-lot-ink transition-colors marker:text-lot-orange-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -342,7 +352,7 @@ export function CaliforniaAduRentGuide() {
       </div>
 
       <section aria-labelledby="adu-rent-sources" className="mt-12">
-        <h2 id="adu-rent-sources" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-rent-sources" className="scroll-mt-20 lf-card-heading text-lot-ink">
           Sources and data
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
@@ -366,8 +376,11 @@ export function CaliforniaAduRentGuide() {
           </li>
         </ul>
         <p className="lf-body mt-4 text-sm text-lot-stone">
-          HUD figures were read from HUD&apos;s documentation pages on {CA_RENT_VERIFIED}.
-          Planning ranges are LotFoundry estimates, not figures published by HUD.
+          HUD figures were read from HUD&apos;s documentation pages on{" "}
+          <time dateTime={CA_RENT_VERIFIED}>
+            {formatUtcDate(CA_RENT_VERIFIED, "long")}
+          </time>
+          . Planning ranges are LotFoundry estimates, not figures published by HUD.
         </p>
       </section>
 

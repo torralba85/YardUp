@@ -13,6 +13,7 @@ import { sanDiego } from "@/content/adu/ca/san-diego";
 import { ADU_CITIES } from "@/lib/adu/content";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { formatDecimal, formatNumber } from "@/lib/intl-format";
 import { landingDemos, landingScenarios } from "@/lib/landing-demo";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 
@@ -151,7 +152,7 @@ export function BackyardHomeLanding() {
 
   const costBand = `${CURRENCY.format(marketScenario.costLow)} – ${CURRENCY.format(marketScenario.costHigh)}`;
   const monthlyRent = `${CURRENCY.format(marketScenario.rent)}/mo`;
-  const paybackText = `${marketScenario.payback.toFixed(1)} yrs`;
+  const paybackText = `${formatDecimal(marketScenario.payback, 1)} yrs`;
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-lot-chalk text-lot-ink">
@@ -163,7 +164,7 @@ export function BackyardHomeLanding() {
       <main id="main-content">
         <section
           id="quiz"
-          className="mx-auto max-w-6xl px-5 pb-14 pt-8 sm:px-8 sm:pb-16 sm:pt-12"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 pb-14 pt-8 sm:px-8 sm:pb-16 sm:pt-12"
         >
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12">
             <div className="min-w-0 space-y-5">
@@ -180,26 +181,26 @@ export function BackyardHomeLanding() {
                   accessory dwelling unit (ADU)
                 </strong>{" "}
                 ministerially, often with 4-foot (or 0-foot in San Diego) yard
-                setbacks. Screen your property in five quick checks, then verify
+                setbacks. Screen your property in 5 quick checks, then verify
                 your exact lot in 3D.
               </p>
 
-              <dl className="grid grid-cols-3 gap-4 border-t border-lot-line pt-5">
-                <div>
+              <dl className="grid grid-cols-2 gap-4 border-t border-lot-line pt-5 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(0,1.2fr)]">
+                <div className="min-w-0">
                   <dt className="lf-kicker-dense text-lot-stone">Lot quiz</dt>
                   <dd className="lf-card-heading mt-1 text-lot-ink">5 checks</dd>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <dt className="lf-kicker-dense text-lot-stone">
                     San Diego setback
                   </dt>
                   <dd className="lf-card-heading mt-1 text-lot-ink">0–4 ft</dd>
                 </div>
-                <div>
+                <div className="col-span-2 min-w-0 sm:col-span-1">
                   <dt className="lf-kicker-dense text-lot-stone">
                     Est. 600 sf cost
                   </dt>
-                  <dd className="lf-card-heading mt-1 whitespace-nowrap text-lot-ink tabular-nums">
+                  <dd className="lf-card-heading mt-1 text-lot-ink tabular-nums">
                     {costRange600}
                   </dd>
                 </div>
@@ -214,7 +215,7 @@ export function BackyardHomeLanding() {
 
         <section
           id="san-diego-rules"
-          className="border-t border-lot-line bg-lot-surface py-14 sm:py-16"
+          className="scroll-mt-20 border-t border-lot-line bg-lot-surface py-14 sm:py-16"
         >
           <div className="mx-auto max-w-6xl space-y-10 px-5 sm:px-8">
             <div className="grid items-end gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
@@ -240,7 +241,11 @@ export function BackyardHomeLanding() {
                   innerClassName="p-2"
                 >
                   <picture>
-                    <source srcSet={PARCEL_BEFORE.avifSrcSet} type="image/avif" />
+                    <source
+                      srcSet={PARCEL_BEFORE.avifSrcSet}
+                      sizes="(max-width: 768px) 45vw, 240px"
+                      type="image/avif"
+                    />
                     <img
                       src={PARCEL_BEFORE.src}
                       srcSet={PARCEL_BEFORE.srcSet}
@@ -262,7 +267,11 @@ export function BackyardHomeLanding() {
                   innerClassName="p-2"
                 >
                   <picture>
-                    <source srcSet={PARCEL_AFTER.avifSrcSet} type="image/avif" />
+                    <source
+                      srcSet={PARCEL_AFTER.avifSrcSet}
+                      sizes="(max-width: 768px) 45vw, 240px"
+                      type="image/avif"
+                    />
                     <img
                       src={PARCEL_AFTER.src}
                       srcSet={PARCEL_AFTER.srcSet}
@@ -304,9 +313,9 @@ export function BackyardHomeLanding() {
                     {item.value}
                   </dd>
                   {item.note ? (
-                    <p className="lf-body-sm mt-2 text-lot-stone">
+                    <dd className="lf-body-sm mt-2 text-lot-stone">
                       {item.note}
-                    </p>
+                    </dd>
                   ) : null}
                 </div>
               ))}
@@ -343,7 +352,7 @@ export function BackyardHomeLanding() {
 
         <section
           id="california-cost"
-          className="bg-lot-ink py-14 text-lot-chalk sm:py-16"
+          className="scroll-mt-20 bg-lot-ink py-14 text-lot-chalk sm:py-16"
         >
           <div className="mx-auto max-w-6xl space-y-8 px-5 sm:px-8">
             <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -360,7 +369,7 @@ export function BackyardHomeLanding() {
                     {allSizeRange}
                   </strong>{" "}
                   using LotFoundry&apos;s baseline finish and soft-cost model (a
-                  typical 600 sq ft one-bedroom averages{" "}
+                  typical 600 sq ft 1-bedroom averages{" "}
                   <strong className="font-semibold text-lot-chalk">
                     {costRange600}
                   </strong>
@@ -389,13 +398,13 @@ export function BackyardHomeLanding() {
                 <div key={row.size} className="space-y-2 py-4">
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="lf-body font-semibold text-lot-chalk tabular-nums">
-                      {row.size.toLocaleString()} sq ft{" "}
+                      {formatNumber(row.size)} sq ft{" "}
                       <span className="font-normal text-lot-stone-on-dark">
                         ({row.bedroom})
                       </span>
                     </span>
                     <span className="lf-body-sm tabular-nums text-lot-stone-on-dark">
-                      ~{row.paybackYears.toFixed(1)} yrs
+                      ~{formatDecimal(row.paybackYears, 1)} yrs
                     </span>
                   </div>
                   <div className="flex items-baseline justify-between gap-4 text-sm tabular-nums">
@@ -432,7 +441,7 @@ export function BackyardHomeLanding() {
                   {sizeRows.map((row) => (
                     <tr key={row.size}>
                       <td className="py-3.5 pr-4 lf-body-sm font-semibold text-lot-chalk tabular-nums">
-                        {row.size.toLocaleString()} sq ft{" "}
+                        {formatNumber(row.size)} sq ft{" "}
                         <span className="font-normal text-lot-stone-on-dark">
                           ({row.bedroom})
                         </span>
@@ -445,7 +454,7 @@ export function BackyardHomeLanding() {
                         {formatCurrency(row.monthlyRent)}/mo
                       </td>
                       <td className="py-3.5 pl-4 text-right whitespace-nowrap lf-body-sm text-lot-stone-on-dark tabular-nums">
-                        ~{row.paybackYears.toFixed(1)} yrs
+                        ~{formatDecimal(row.paybackYears, 1)} yrs
                       </td>
                     </tr>
                   ))}
@@ -486,13 +495,13 @@ export function BackyardHomeLanding() {
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/adu/ca/cost"
-                  className="inline-flex min-h-11 items-center rounded-control lf-body-sm font-medium text-lot-chalk underline underline-offset-4 hover:text-lot-stone-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
+                  className="inline-flex min-h-11 items-center rounded-control px-2 lf-body-sm font-medium text-lot-chalk underline decoration-lot-stone-on-dark underline-offset-4 transition-colors hover:bg-lot-surface-dark hover:decoration-lot-chalk hover:decoration-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
                 >
                   California cost guide
                 </Link>
                 <Link
                   href="/adu-cost-calculator"
-                  className="inline-flex min-h-11 items-center rounded-control lf-body-sm font-medium text-lot-chalk underline underline-offset-4 hover:text-lot-stone-on-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
+                  className="inline-flex min-h-11 items-center rounded-control px-2 lf-body-sm font-medium text-lot-chalk underline decoration-lot-stone-on-dark underline-offset-4 transition-colors hover:bg-lot-surface-dark hover:decoration-lot-chalk hover:decoration-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
                 >
                   Cost calculator
                 </Link>
@@ -503,7 +512,7 @@ export function BackyardHomeLanding() {
 
         <section
           id="lot-edge-cases"
-          className="border-b border-lot-line bg-lot-surface py-14 sm:py-16"
+          className="scroll-mt-20 border-b border-lot-line bg-lot-surface py-14 sm:py-16"
         >
           <div className="mx-auto max-w-6xl space-y-10 px-5 sm:px-8">
             <div className="max-w-prose space-y-3">
@@ -585,7 +594,7 @@ export function BackyardHomeLanding() {
 
         <section
           id="faq"
-          className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16"
+          className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14 sm:px-8 sm:py-16"
         >
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-4">
@@ -596,7 +605,7 @@ export function BackyardHomeLanding() {
               <div className="divide-y divide-lot-line border-y border-lot-line">
                 {BACKYARD_HOME_FAQS.map((item) => (
                   <details key={item.question} className="group py-4">
-                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control lf-body font-semibold text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
+                    <summary className="-mx-2 flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-control px-2 lf-body font-semibold text-lot-ink transition-colors hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
                       <span>{item.question}</span>
                       <span
                         aria-hidden="true"

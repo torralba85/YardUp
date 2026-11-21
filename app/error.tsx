@@ -26,7 +26,7 @@ export default function Error({
       >
         <h1 className="lf-section-heading">Something went wrong</h1>
         <p className="lf-body-sm mx-auto mt-3 max-w-md text-lot-stone">
-          We hit an unexpected error. Try again, head home, or visit Help if it keeps happening.
+          An unexpected error occurred. Try again, head home, or visit Help if it keeps happening.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button type="button" variant="commit" onClick={reset}>
@@ -34,13 +34,13 @@ export default function Error({
           </Button>
           <Link
             href="/"
-            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink"
+            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-ink hover:bg-lot-surface"
           >
             Home
           </Link>
           <Link
             href="/help"
-            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink"
+            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-ink hover:bg-lot-surface"
           >
             Get help
           </Link>

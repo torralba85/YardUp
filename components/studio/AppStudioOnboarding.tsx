@@ -239,7 +239,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
         <button
           type="button"
           onClick={() => go("welcome")}
-          className={`mt-3 min-h-11 w-full rounded-control text-sm font-semibold underline underline-offset-4 ${focusRing}`}
+          className={`mt-3 min-h-11 w-full rounded-control text-sm font-semibold underline underline-offset-4 hover:bg-lot-surface hover:text-lot-orange-ink motion-safe:transition-colors ${focusRing}`}
         >
           Try a demo city instead
         </button>
@@ -268,7 +268,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
               {index + 1}
             </span>
             <div>
-              <h2 className="text-[15px] font-semibold leading-6">{item.title}</h2>
+              <h3 className="text-[15px] font-semibold leading-6">{item.title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-lot-stone">{item.copy}</p>
             </div>
           </li>
@@ -303,7 +303,7 @@ function Screen({ testId, onBack, children }: { testId: string; onBack?: () => v
           <button
             type="button"
             onClick={onBack}
-            className={`-ml-2 inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold ${focusRing}`}
+            className={`-ml-2 inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold hover:bg-lot-surface hover:text-lot-orange-ink motion-safe:transition-colors ${focusRing}`}
           >
             <ArrowLeft size={18} strokeWidth={1.5} aria-hidden="true" /> Back
           </button>

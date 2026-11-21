@@ -37,7 +37,7 @@ test.describe("A lot more landing", () => {
     await expect.poll(() => guestGeocode).toBe(true);
     await expect.poll(() => guestParcel).toBe(true);
 
-    await answer.getByRole("button", { name: "Open in 3D" }).click();
+    await answer.getByRole("link", { name: "Open in 3D" }).click();
     await expect(page).toHaveURL(/\/studio/);
     await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("dialog")).not.toBeVisible();

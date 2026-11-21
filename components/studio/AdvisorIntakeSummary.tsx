@@ -1,6 +1,7 @@
 import type { AdvisorIntake } from "@/lib/marketplace-types";
 import { formatCurrency, roofLabels, type RoofStyle } from "@/lib/feasibility";
 import { fireZoneLabel } from "@/lib/fire-hazard";
+import { formatNumber } from "@/lib/intl-format";
 import type { FireHazardZone } from "@/lib/parcel-types";
 
 const bedroomLabels: Record<string, string> = { studio: "Studio", "1br": "1 bedroom", "2br": "2 bedrooms" };
@@ -31,8 +32,8 @@ export function AdvisorIntakeSummary({
   title?: string;
 }) {
   const rows = [
-    ["Lot", `${intake.lotSqft.toLocaleString()} sq ft`],
-    ["Existing building footprint", intake.existingFootprintSqft === null ? "Not confirmed" : `${intake.existingFootprintSqft.toLocaleString()} sq ft`],
+    ["Lot", `${formatNumber(intake.lotSqft)} sq ft`],
+    ["Existing building footprint", intake.existingFootprintSqft === null ? "Not confirmed" : `${formatNumber(intake.existingFootprintSqft)} sq ft`],
     ["Reported zoning", intake.zoning ?? "Not found"],
     ["Fire hazard zone", fireHazardText(intake.fireHazard)], ["Slope", intake.slope],
     ["Proposed size", intake.dimensions], ["Roof", roofLabels[intake.roof as RoofStyle] ?? sentenceCase(intake.roof)],

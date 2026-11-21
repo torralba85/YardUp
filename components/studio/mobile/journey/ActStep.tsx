@@ -81,7 +81,7 @@ export default function ActStep({
               loading={savingScenario}
               onClick={onSaveScenario}
             >
-              {saveNotice ?? "Save scenario"}
+              {saveNotice ?? (savingScenario ? "Saving…" : "Save scenario")}
             </Button>
             <Button
               type="button"
@@ -93,6 +93,10 @@ export default function ActStep({
             >
               {shareNotice ?? "Share link"}
             </Button>
+          </div>
+          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {saveNotice && <span>Save status: {saveNotice}</span>}
+            {shareNotice && <span>Share status: {shareNotice}</span>}
           </div>
         </div>
       </div>

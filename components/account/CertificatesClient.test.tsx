@@ -129,11 +129,10 @@ describe("CertificatesClient", () => {
     expect(screen.getByText(/Amount: \$29/)).toBeInTheDocument();
     expect(screen.getAllByText(/Unlocked/).length).toBeGreaterThanOrEqual(1);
 
-    const openButton = screen.getByRole("button", { name: /open in 3d studio/i });
-    expect(openButton).toBeInTheDocument();
-    fireEvent.click(openButton);
-
-    expect(routerMock.push).toHaveBeenCalledWith(
+    const openLink = screen.getByRole("link", { name: /open in 3d studio/i });
+    expect(openLink).toBeInTheDocument();
+    expect(openLink).toHaveAttribute(
+      "href",
       "/studio?cert=ca-san-jose-141-n-almaden-blvd-95110&checkout=open",
     );
   });

@@ -231,10 +231,10 @@ describe("BuilderDashboard", () => {
     // Inspection pane initially shows "No lead selected"
     expect(screen.getByText(/no lead selected/i)).toBeInTheDocument();
 
-    // Select row
-    const row = screen.getByText("LF-AB12CD").closest("tr");
-    expect(row).toBeInTheDocument();
-    await userEvent.click(row!);
+    // Select row via its semantic button action
+    const selectButton = screen.getByRole("button", { name: /LF-AB12CD/i });
+    expect(selectButton).toBeInTheDocument();
+    await userEvent.click(selectButton);
 
     // Inspection pane shows the locked cover details
     expect(screen.getByText(/feasibility certificate locked/i)).toBeInTheDocument();

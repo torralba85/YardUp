@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -25,6 +27,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Field";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import { ParcelMark } from "@/components/ui/BrandLockup";
@@ -35,6 +38,7 @@ import {
   defaultFinancialAssumptions,
   getParcelById,
 } from "@/lib/feasibility";
+import { formatPercent } from "@/lib/intl-format";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { stashEntrySource } from "@/lib/analytics/entry-source";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
@@ -113,6 +117,141 @@ function XLogo() {
   );
 }
 
+interface LandingAddressStore {
+  get: () => string;
+  set: (next: string) => void;
+  subscribe: (listener: () => void) => () => void;
+}
+
+function createLandingAddressStore(): LandingAddressStore {
+  let value = "";
+  const listeners = new Set<() => void>();
+  return {
+    get: () => value,
+    set: (next: string) => {
+      if (value === next) return;
+      value = next;
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
+/** Isolated address form so typing syncs hero + closing forms without re-rendering the full landing page. */
+function LandingAddressForm({
+  id,
+  store,
+  busy,
+  busyLabel,
+  onSubmitAddress,
+}: {
+  id: string;
+  store: LandingAddressStore;
+  busy: boolean;
+  busyLabel?: string;
+  onSubmitAddress: (trimmed: string, submitBtn: HTMLButtonElement | null) => void;
+}) {
+  const value = useSyncExternalStore(store.subscribe, store.get, store.get);
+  const [hasError, setHasError] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setHasError(true);
+      (event.currentTarget.elements.namedItem("address") as HTMLInputElement | null)?.focus();
+      return;
+    }
+    setHasError(false);
+    onSubmitAddress(
+      trimmed,
+      event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]'),
+    );
+  }
+
+  return (
+    <form className={styles.addressForm} onSubmit={handleSubmit} noValidate>
+      <label className={styles.fieldLabel} htmlFor={`${id}-address`}>
+        Property address
+      </label>
+      <div className={styles.inputRow}>
+        <MapPin size={19} aria-hidden="true" />
+        <input
+          id={`${id}-address`}
+          name="address"
+          autoComplete="street-address"
+          type="text"
+          value={value}
+          placeholder="1420 Coyote Brush Ct, San Diego…"
+          aria-invalid={hasError}
+          aria-describedby={`${id}-note${hasError ? ` ${id}-error` : ""}`}
+          onChange={(event) => {
+            store.set(event.target.value);
+            if (hasError) setHasError(false);
+          }}
+        />
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          loading={busy}
+          className={styles.primaryButton}
+        >
+          {busy ? (busyLabel ?? "Opening…") : "Explore my lot"}
+          {!busy && <ArrowUpRight size={19} aria-hidden="true" />}
+        </Button>
+      </div>
+      {hasError && (
+        <p id={`${id}-error`} className={styles.formError} role="alert">
+          Enter an address to explore your lot.
+        </p>
+      )}
+      <p id={`${id}-note`} className={styles.formNote}>
+        Free to explore. No account needed for up to 3 addresses.
+      </p>
+    </form>
+  );
+}
+
+const DEFAULT_COPYRIGHT_YEAR = 2026;
+const subscribeNoop = () => () => {};
+const getClientCopyrightYear = () => new Date().getFullYear();
+const getServerCopyrightYear = () => DEFAULT_COPYRIGHT_YEAR;
+
+const landingUrlListeners = new Set<() => void>();
+function subscribeLandingUrl(listener: () => void): () => void {
+  landingUrlListeners.add(listener);
+  if (typeof window !== "undefined") {
+    window.addEventListener("popstate", listener);
+  }
+  return () => {
+    landingUrlListeners.delete(listener);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("popstate", listener);
+    }
+  };
+}
+function getLandingUrlSnapshot(): string {
+  return typeof window === "undefined" ? "" : window.location.search;
+}
+function getServerLandingUrlSnapshot(): string {
+  return "";
+}
+function syncLandingQuery(updates: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  for (const [k, v] of Object.entries(updates)) {
+    url.searchParams.set(k, v);
+  }
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  landingUrlListeners.forEach((listener) => listener());
+}
+
 export function LotMoreLanding({
   scenarios,
   city = "san-diego",
@@ -127,21 +266,41 @@ export function LotMoreLanding({
   // Stripe catalog figure. Falls back to naming no figure at all.
   const certPrice = useStorePrice("certificate");
   const certificatePrice = certPrice.exact ? certPrice.amountCompact : null;
-  const [query, setQuery] = useState("");
-  const [errorForm, setErrorForm] = useState<string | null>(null);
+  const [addressStore] = useState(createLandingAddressStore);
   const [authOpen, setAuthOpen] = useState(false);
   const [entering, setEntering] = useState(false);
+  const copyrightYear = useSyncExternalStore(
+    subscribeNoop,
+    getClientCopyrightYear,
+    getServerCopyrightYear,
+  );
+  const urlSearch = useSyncExternalStore(
+    subscribeLandingUrl,
+    getLandingUrlSnapshot,
+    getServerLandingUrlSnapshot,
+  );
+  const searchParams = useMemo(() => new URLSearchParams(urlSearch), [urlSearch]);
   const [scene, setScene] = useState(2);
   const [intention, setIntention] = useState(0);
-  const [scenarioIndex, setScenarioIndex] = useState(() => Math.max(0, scenarios.findIndex((item) => item.id === "market")));
-  const [reportTab, setReportTab] = useState(1);
+  const defaultScenarioIndex = Math.max(0, scenarios.findIndex((item) => item.id === "market"));
+  const paramScenario = searchParams.get("scenario");
+  const scenarioIdxFromUrl = paramScenario
+    ? scenarios.findIndex((item) => item.id === paramScenario)
+    : -1;
+  const scenarioIndex = scenarioIdxFromUrl >= 0 ? scenarioIdxFromUrl : defaultScenarioIndex;
+  const rawReport = searchParams.get("report");
+  const reportTab = rawReport === "0" ? 0 : rawReport === "2" ? 2 : 1;
   const [sampleOpen, setSampleOpen] = useState(false);
   const [mobileCta, setMobileCta] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeHotspot, setActiveHotspot] = useState<number>(0);
   const [activeStep, setActiveStep] = useState<number>(0);
-  const [explorerFootprint, setExplorerFootprint] = useState<450 | 600 | 800>(600);
-  const [explorerRoof, setExplorerRoof] = useState<"shed" | "gable" | "flat">("shed");
+  const rawFootprint = searchParams.get("footprint");
+  const explorerFootprint: 450 | 600 | 800 =
+    rawFootprint === "450" ? 450 : rawFootprint === "800" ? 800 : 600;
+  const rawRoof = searchParams.get("roof");
+  const explorerRoof: "shed" | "gable" | "flat" =
+    rawRoof === "gable" || rawRoof === "flat" ? rawRoof : "shed";
   // The server snapshot is always false, so the prerendered header carries the
   // plain `Sign in` link and a signed-out visit never reaches the auth island.
   const hasMemberSession = useSyncExternalStore(
@@ -211,17 +370,24 @@ export function LotMoreLanding({
     },
   ];
 
-  const explorerConfig =
-    explorerFootprint === 600 && explorerRoof === "shed"
-      ? defaultScenarioState.config
-      : configForFootprint(explorerFootprint, {
-          ...defaultScenarioState.config,
-          roof: explorerRoof,
-        });
-  const explorerResult = calculateFeasibility(
-    getParcelById(demo.parcelId),
-    explorerConfig,
-    { ...defaultFinancialAssumptions, rentScenario: sample.id },
+  const explorerConfig = useMemo(
+    () =>
+      explorerFootprint === 600 && explorerRoof === "shed"
+        ? defaultScenarioState.config
+        : configForFootprint(explorerFootprint, {
+            ...defaultScenarioState.config,
+            roof: explorerRoof,
+          }),
+    [explorerFootprint, explorerRoof],
+  );
+  const explorerResult = useMemo(
+    () =>
+      calculateFeasibility(
+        getParcelById(demo.parcelId),
+        explorerConfig,
+        { ...defaultFinancialAssumptions, rentScenario: sample.id },
+      ),
+    [demo.parcelId, explorerConfig, sample.id],
   );
   const explorerRent = explorerResult.monthlyRent;
   const explorerCostLow = Math.round(explorerResult.costLow / 1000);
@@ -231,7 +397,7 @@ export function LotMoreLanding({
   const intentions = [
     {
       label: "For family",
-      lead: "A 600 sq ft, one-bedroom concept.",
+      lead: "A 600 sq ft, 1-bedroom concept.",
       copy: "Keep the people you love nearby, with a little more independence for everyone.",
     },
     {
@@ -259,6 +425,7 @@ export function LotMoreLanding({
     pose: undefined,
     assumptions: { ...defaultScenarioState.assumptions, rentScenario: sample.id },
   })}`;
+
   useEffect(() => {
     const update = () => {
       const hero = heroRef.current?.getBoundingClientRect();
@@ -290,15 +457,23 @@ export function LotMoreLanding({
     const motionQuery = window.matchMedia("(prefers-reduced-motion: no-preference) and (min-width: 801px) and (min-height: 700px)");
     let frame = 0;
     let band = -1;
+    let isPinned = false;
     const update = () => {
       frame = 0;
       if (!motionQuery.matches) {
-        delete section.dataset.pinned;
-        section.style.removeProperty("--story-progress");
+        if (isPinned) {
+          delete section.dataset.pinned;
+          section.style.removeProperty("--story-progress");
+          isPinned = false;
+        }
         band = -1;
         return;
       }
-      section.dataset.pinned = "true";
+      if (!isPinned) {
+        section.dataset.pinned = "true";
+        isPinned = true;
+      }
+      // Read geometry cleanly without mutating DOM attributes on every scroll frame.
       const rect = section.getBoundingClientRect();
       const travel = rect.height - window.innerHeight;
       const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
@@ -363,35 +538,21 @@ export function LotMoreLanding({
     };
   }, []);
 
-  function submit(event: FormEvent<HTMLFormElement>, id: string) {
-    event.preventDefault();
-    if (!query.trim()) {
-      setErrorForm(id);
-      (
-        event.currentTarget.elements.namedItem("address") as HTMLInputElement
-      ).focus();
-      return;
-    }
-    submitButton.current = event.currentTarget.querySelector(
-      'button[type="submit"]',
-    );
-    pendingAddress.current = query.trim();
-    // A visitor with a free lookup left goes straight to the studio. Asking a
-    // stranger to create an account before they have seen anything is the
-    // single most expensive step in this funnel, and it also pulls the Firebase
-    // client bundle onto the critical path. The account ask comes after they
-    // have seen their own lot, not before. A remembered member marker can be
-    // expired; it must not put an eligible guest behind the landing auth gate.
-    // Studio resolves the actual session before selecting parcel providers.
-    if (canGuestLookup()) {
-      stashAddressQuery(pendingAddress.current);
-      stashEntrySource("landing_cta");
-      setEntering(true);
-      router.push("/studio");
-      return;
-    }
-    setAuthOpen(true);
-  }
+  const handleClosingSubmit = useCallback(
+    (trimmed: string, submitBtn: HTMLButtonElement | null) => {
+      submitButton.current = submitBtn;
+      pendingAddress.current = trimmed;
+      if (canGuestLookup()) {
+        stashAddressQuery(pendingAddress.current);
+        stashEntrySource("landing_cta");
+        setEntering(true);
+        router.push("/studio");
+        return;
+      }
+      setAuthOpen(true);
+    },
+    [router],
+  );
 
   function focusHeroAddress(event: MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
@@ -403,98 +564,26 @@ export function LotMoreLanding({
     input?.focus({ preventScroll: true });
   }
 
-  function addressForm(
-    id: string,
-    override?: {
-      onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
-      disabled?: boolean;
-      busyLabel?: string;
-    },
-  ) {
-    const busy = authOpen || entering || Boolean(override?.disabled);
-    return (
-      <form
-        className={styles.addressForm}
-        onSubmit={override?.onSubmit ?? ((event) => submit(event, id))}
-        noValidate
-      >
-        <label className={styles.fieldLabel} htmlFor={`${id}-address`}>
-          Property address
-        </label>
-        <div className={styles.inputRow}>
-          <MapPin size={19} aria-hidden="true" />
-          <input
-            id={`${id}-address`}
-            name="address"
-            autoComplete="street-address"
-            type="text"
-            value={query}
-            placeholder="Enter your property address"
-            aria-invalid={errorForm === id}
-            aria-describedby={`${id}-note${errorForm === id ? ` ${id}-error` : ""}`}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setErrorForm(null);
-            }}
-          />
-          <button
-            type="submit"
-            className={styles.primaryButton}
-            disabled={busy}
-          >
-            {override?.disabled
-              ? (override.busyLabel ?? "Checking…")
-              : authOpen || entering
-                ? "Opening…"
-                : "Explore my lot"}
-            <ArrowUpRight size={19} aria-hidden="true" />
-          </button>
-        </div>
-        {errorForm === id && (
-          <p id={`${id}-error`} className={styles.formError} role="alert">
-            Enter an address to explore your lot.
-          </p>
-        )}
-        <p id={`${id}-note`} className={styles.formNote}>
-          Free to explore. No account needed for up to 3 addresses.
-        </p>
-      </form>
-    );
-  }
-
   function heroLotAnswer() {
     return (
       <LotAnswerCard
         surface="landing"
-        query={query}
-        onQueryChange={(next) => {
-          setQuery(next);
-          setErrorForm(null);
-        }}
         onAuthGateRequired={(trimmed) => {
           pendingAddress.current = trimmed;
           setAuthOpen(true);
         }}
-        renderForm={({ submit: runHeroLookup, loading: answerLoading }) =>
-          addressForm("hero", {
-            disabled: answerLoading,
-            busyLabel: "Checking…",
-            onSubmit: (event) => {
-              event.preventDefault();
-              if (!query.trim()) {
-                setErrorForm("hero");
-                (
-                  event.currentTarget.elements.namedItem("address") as HTMLInputElement
-                ).focus();
-                return;
-              }
-              submitButton.current = event.currentTarget.querySelector(
-                'button[type="submit"]',
-              );
-              void runHeroLookup(query);
-            },
-          })
-        }
+        renderForm={({ submit: runHeroLookup, loading: answerLoading }) => (
+          <LandingAddressForm
+            id="hero"
+            store={addressStore}
+            busy={authOpen || entering || answerLoading}
+            busyLabel={answerLoading ? "Checking…" : "Opening…"}
+            onSubmitAddress={(trimmed, submitBtn) => {
+              submitButton.current = submitBtn;
+              void runHeroLookup(trimmed);
+            }}
+          />
+        )}
       />
     );
   }
@@ -511,7 +600,7 @@ export function LotMoreLanding({
             }
           }}
         >
-          <Link href="/" className={styles.brand} aria-label="LotFoundry home">
+          <Link href="/" translate="no" className={styles.brand} aria-label="LotFoundry home">
             <ParcelMark />
             LotFoundry
             <span className={styles.brandDot} aria-hidden="true" />
@@ -741,8 +830,7 @@ export function LotMoreLanding({
                       sizes="(max-width: 800px) 100vw, 60vw"
                       width={1536}
                       height={1024}
-                      fetchPriority="high"
-                      loading="eager"
+                      loading="lazy"
                       decoding="async"
                       alt="Illustrative miniature lot with an existing house and an orange backyard home"
                     />
@@ -928,7 +1016,7 @@ export function LotMoreLanding({
               </div>
               <div className={styles.demoIntro}>
                 <p>
-                  Explore the same {explorerFootprint} sq ft {demo.name} demo shown above, with
+                  Explore the same {explorerFootprint}&nbsp;sq&nbsp;ft {demo.name} demo shown above, with
                   the {money(explorerRent)}/mo market rent assumption.
                 </p>
                 <Link
@@ -967,7 +1055,7 @@ export function LotMoreLanding({
                     alt={`${demo.name} demo in the LotFoundry 3D studio, showing an existing home and a proposed backyard home`}
                   />
                 </picture>
-                <div className={styles.interactiveSandbox} aria-label="Interactive massing preview">
+                <div role="region" className={styles.interactiveSandbox} aria-label="Interactive massing preview">
                   <div className={styles.sandboxControlsRow}>
                     <div className={styles.sandboxControlGroup}>
                       <span className={styles.sandboxControlLabel}>FOOTPRINT</span>
@@ -975,10 +1063,12 @@ export function LotMoreLanding({
                         aria-label="Preview footprint"
                         className={styles.sandboxToggleBar}
                         value={String(explorerFootprint)}
-                        onChange={(value) => setExplorerFootprint(Number(value) as 450 | 600 | 800)}
+                        onChange={(value) => {
+                          syncLandingQuery({ footprint: value });
+                        }}
                         options={([450, 600, 800] as const).map((sqft) => ({
                           value: String(sqft),
-                          label: `${sqft} sq ft`,
+                          label: `${sqft}\u00A0sq\u00A0ft`,
                         }))}
                       />
                     </div>
@@ -988,7 +1078,9 @@ export function LotMoreLanding({
                         aria-label="Preview roof profile"
                         className={styles.sandboxToggleBar}
                         value={explorerRoof}
-                        onChange={(value) => setExplorerRoof(value)}
+                        onChange={(value) => {
+                          syncLandingQuery({ roof: value });
+                        }}
                         options={(
                           [
                             ["shed", "Shed"],
@@ -1032,10 +1124,20 @@ export function LotMoreLanding({
                     className={activeStep === 0 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(0)}
                     onFocusCapture={() => setActiveStep(0)}
-                    onClick={() => setActiveStep(0)}
                   >
                     <div>
-                      <h3>Place a backyard home.</h3>
+                      <h3>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          aria-pressed={activeStep === 0}
+                          onClick={() => setActiveStep(0)}
+                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                        >
+                          Place a backyard home.
+                        </Button>
+                      </h3>
                       <p>
                         Explore size, roof, and placement alongside your
                         existing home and modeled setbacks.
@@ -1046,10 +1148,20 @@ export function LotMoreLanding({
                     className={activeStep === 1 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(1)}
                     onFocusCapture={() => setActiveStep(1)}
-                    onClick={() => setActiveStep(1)}
                   >
                     <div>
-                      <h3>Compare the estimates.</h3>
+                      <h3>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          aria-pressed={activeStep === 1}
+                          onClick={() => setActiveStep(1)}
+                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                        >
+                          Compare the estimates.
+                        </Button>
+                      </h3>
                       <p>
                         See build costs, rental potential, and payback with the
                         assumptions behind them.
@@ -1064,10 +1176,20 @@ export function LotMoreLanding({
                     className={activeStep === 2 ? styles.demoStepActive : undefined}
                     onMouseEnter={() => setActiveStep(2)}
                     onFocusCapture={() => setActiveStep(2)}
-                    onClick={() => setActiveStep(2)}
                   >
                     <div>
-                      <h3>Plan your next questions.</h3>
+                      <h3>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          aria-pressed={activeStep === 2}
+                          onClick={() => setActiveStep(2)}
+                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                        >
+                          Plan your next questions.
+                        </Button>
+                      </h3>
                       <p>
                         Review what needs local confirmation and what the
                         complete certificate includes.
@@ -1128,7 +1250,10 @@ export function LotMoreLanding({
                 aria-label="Demo rent assumption"
                 className={styles.scenarioControls}
                 value={String(scenarioIndex)}
-                onChange={(value) => setScenarioIndex(Number(value))}
+                onChange={(value) => {
+                  const chosen = scenarios[Number(value)];
+                  if (chosen) syncLandingQuery({ scenario: chosen.id });
+                }}
                 options={scenarios.map((item, index) => ({
                   value: String(index),
                   label: item.id,
@@ -1165,18 +1290,18 @@ export function LotMoreLanding({
                 <small>Based on operating income</small>
               </div>
             </div>
-            <div className={styles.telemetryStrip} aria-label="Operating cash flow breakdown">
+            <div role="region" className={styles.telemetryStrip} aria-label="Operating cash flow breakdown">
               <div className={styles.telemetryItem}>
                 <span>ANNUAL OPERATING INCOME</span>
                 <strong>{money(scenario.noi)}/yr</strong>
               </div>
               <div className={styles.telemetryItem}>
                 <span>NET OPERATING MARGIN</span>
-                <strong>{((1 - scenario.expenseRatio) * 100).toFixed(1)}%</strong>
+                <strong>{formatPercent(1 - scenario.expenseRatio, { digits: 1 })}</strong>
               </div>
               <div className={styles.telemetryItem}>
                 <span>MODELED EXPENSE ALLOWANCE</span>
-                <strong>{(scenario.expenseRatio * 100).toFixed(1)}% of gross</strong>
+                <strong>{formatPercent(scenario.expenseRatio, { digits: 1 })} of gross</strong>
               </div>
             </div>
             {scenario.costBreakdown && (
@@ -1193,11 +1318,10 @@ export function LotMoreLanding({
                   <Plus size={17} aria-hidden="true" />
                 </summary>
                 <p>
-                  The curated {demo.name} demo in {demo.city}, calculated by the studio engine: 600
-                  sq ft, cedar finish, shed roof, openings included. Base
-                  construction is $340/sq ft, with an 18% soft-cost allowance.
+                  The curated {demo.name} demo in {demo.city}, calculated by the studio engine: 600&nbsp;sq&nbsp;ft, cedar finish, shed roof, openings included. Base
+                  construction is $340/sq&nbsp;ft, with an 18% soft-cost allowance.
                   Operating expenses use{" "}
-                  {(scenario.expenseRatio * 100).toFixed(1)}% of gross rent;
+                  {formatPercent(scenario.expenseRatio, { digits: 1 })} of gross rent;
                   estimated annual net operating income is {money(scenario.noi)}{" "}
                   before financing and income tax. Simple payback uses the
                   central project estimate divided by this operating income.{" "}
@@ -1210,7 +1334,7 @@ export function LotMoreLanding({
               </a>
             </div>
             <p className={styles.estimateNote}>
-              Calculated with the Studio engine. Compare three rent assumptions before planning your next step.
+              Calculated with the Studio engine. Compare 3 rent assumptions before planning your next step.
             </p>
           </section>
 
@@ -1269,7 +1393,9 @@ export function LotMoreLanding({
                 className={styles.reportTabs}
                 aria-label="Sample report pages"
                 value={String(reportTab)}
-                onChange={(value) => setReportTab(Number(value))}
+                onChange={(value) => {
+                  syncLandingQuery({ report: value });
+                }}
                 options={["The overview", "The estimates", "Next steps"].map(
                   (label, index) => ({ value: String(index), label }),
                 )}
@@ -1279,7 +1405,7 @@ export function LotMoreLanding({
                 aria-label="Sample feasibility report"
               >
                 <div className={styles.paperTop}>
-                  <span>
+                  <span translate="no">
                     <ParcelMark />
                     LotFoundry
                   </span>
@@ -1342,7 +1468,7 @@ export function LotMoreLanding({
                         </div>
                         <div>
                           <span>Proposed size</span>
-                          <strong>600 sq ft</strong>
+                          <strong>600&nbsp;sq&nbsp;ft</strong>
                         </div>
                       </div>
                     </>
@@ -1382,7 +1508,7 @@ export function LotMoreLanding({
                         </div>
                       </dl>
                       <p className={styles.paperDetail}>
-                        Same 600 sq ft {demo.name} demo, {demo.city}, and selected
+                        Same 600&nbsp;sq&nbsp;ft {demo.name} demo, {demo.city}, and selected
                         rent assumption as above. The full sample adds the financing comparison.
                       </p>
                     </>
@@ -1511,7 +1637,12 @@ export function LotMoreLanding({
                 your address.
               </h2>
               <p>See what more could look like on your lot.</p>
-              {addressForm("closing")}
+              <LandingAddressForm
+                id="closing"
+                store={addressStore}
+                busy={authOpen || entering}
+                onSubmitAddress={handleClosingSubmit}
+              />
               <div className={styles.appDownload}>
                 <span>Also on Android</span>
                 <a className={styles.appStoreLink} href={GOOGLE_PLAY_URL}>
@@ -1521,8 +1652,9 @@ export function LotMoreLanding({
                   <img
                     src="/landing/google-play-badge.svg"
                     alt="Get it on Google Play"
-                    width={238.96}
-                    height={70.87}
+                    width={239}
+                    height={71}
+                    loading="lazy"
                   />
                 </a>
               </div>
@@ -1593,12 +1725,12 @@ export function LotMoreLanding({
               and requirements with local authorities and licensed professionals.
             </p>
           </div>
-          <div className={styles.footerWordmark} aria-hidden="true">
+          <div className={styles.footerWordmark} aria-hidden="true" translate="no">
             LotFoundry
           </div>
           <div className={styles.footerBottom}>
-            <span>© {new Date().getFullYear()} LotFoundry</span>
-            <div className={styles.socialRail} aria-label="Social media">
+            <span translate="no">© {copyrightYear} LotFoundry</span>
+            <nav className={styles.socialRail} aria-label="Social media">
               <a
                 href={SOCIAL_LINKS.youtube}
                 rel="noopener noreferrer"
@@ -1644,7 +1776,7 @@ export function LotMoreLanding({
               >
                 <Linkedin size={18} strokeWidth={1.5} aria-hidden="true" />
               </a>
-            </div>
+            </nav>
             <div className={styles.footerLegal}>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>

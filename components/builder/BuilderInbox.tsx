@@ -37,20 +37,22 @@ import UnlockSlip from "./UnlockSlip";
 import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { PanelHeader } from "@/components/ui/Panel";
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  CircleSlash, 
-  Download, 
-  FileSpreadsheet, 
-  FileText, 
-  Lock, 
-  Mail, 
-  Phone, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CircleSlash,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  Lock,
+  Mail,
+  Phone,
   Unlock,
 } from "lucide-react";
 import { buildReportHtml, buildReportCsv, downloadBlob } from "@/lib/report";
 import { finishLabels, roofLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { formatNumber, formatUtcDate } from "@/lib/intl-format";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -208,7 +210,11 @@ export default function BuilderInbox({
           body: JSON.stringify({ requestId }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Unlock failed");
+        if (!res.ok) {
+          throw new Error(
+            data.error || "Could not unlock this lead. Check your connection and try again.",
+          );
+        }
 
         setCredits(data.newCredits);
         setSessionLedger((current) => [
@@ -299,7 +305,11 @@ export default function BuilderInbox({
       setAnnounce(`Lead ${serial} unlocked. Owner contact is now visible.`);
     } catch (err) {
       clearPendingLeadUnlock();
-      setSlipError(err instanceof Error ? err.message : "Unlock failed.");
+      setSlipError(
+        err instanceof Error
+          ? err.message
+          : "Could not unlock this lead. Check your connection and try again.",
+      );
     } finally {
       setSlipPending(false);
     }
@@ -314,6 +324,7 @@ export default function BuilderInbox({
       : true;
     if (!confirmed) return;
 
+    setError(null);
     setReportingId(requestId);
     try {
       const idToken = user ? await user.getIdToken() : undefined;
@@ -335,11 +346,12 @@ export default function BuilderInbox({
       ]);
       setAnnounce(`Lead ${serial} reported. 1 unlock credit added to your account.`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to report lead.";
-      if (typeof window !== "undefined" && window.alert) {
-        window.alert(msg);
-      }
-      setAnnounce(`Failed to report lead ${serial}: ${msg}`);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Could not report this lead. Check your connection and try again.";
+      setError(msg);
+      setAnnounce(`Could not report lead ${serial}: ${msg}`);
     } finally {
       setReportingId(null);
     }
@@ -469,7 +481,11 @@ export default function BuilderInbox({
                       const itemAccess = access[item.request.id] ?? (item.unlocked ? "unlocked" : "locked");
                       const itemContact = contacts[item.request.id] ?? null;
                       const hasAccess = itemAccess === "unlocked";
-                      const dateStr = item.request.createdAt ? new Date(item.request.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" }).toUpperCase() : "PENDING";
+                      const createdAtDate = item.request.createdAt ? new Date(item.request.createdAt) : null;
+                      const dateStr =
+                        createdAtDate && !Number.isNaN(createdAtDate.getTime())
+                          ? formatUtcDate(createdAtDate, "monthDayShort").toUpperCase()
+                          : "PENDING";
                       const isSelected = selectedItemId === item.request.id;
 
                       return (
@@ -479,19 +495,28 @@ export default function BuilderInbox({
                           aria-selected={isSelected}
                           onClick={() => setSelectedItemId(item.request.id)}
                           onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) return;
                             if (event.key === "Enter" || event.key === " ") {
                               event.preventDefault();
                               setSelectedItemId(item.request.id);
                             }
                           }}
-                          className={`group border-b border-lot-line cursor-pointer motion-safe:transition hover:bg-lot-surface/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-lot-orange-ink ${
+                          className={`group cursor-pointer border-b border-lot-line motion-safe:transition-colors hover:bg-lot-surface/60 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink ${
                             isSelected ? "bg-lot-surface border-l-[3px] border-l-lot-orange" : ""
                           }`}
                         >
                           <td className="px-3 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold tabular-nums text-lot-ink group-hover:text-lot-orange-ink motion-safe:transition">
-                              {item.request.preview.previewSerial}
-                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              aria-pressed={isSelected}
+                              aria-label={`Inspect lead ${item.request.preview.previewSerial}`}
+                              onClick={() => setSelectedItemId(item.request.id)}
+                              className="-ml-2 px-2 text-left text-sm font-semibold tabular-nums text-lot-ink group-hover:text-lot-orange-ink"
+                            >
+                              <span translate="no">{item.request.preview.previewSerial}</span>
+                            </Button>
                             <div className="lf-kicker-dense mt-1 text-lot-stone">{dateStr}</div>
                           </td>
                           <td className="px-3 py-4">
@@ -506,10 +531,10 @@ export default function BuilderInbox({
                           </td>
                           <td className="px-3 py-4 whitespace-nowrap xl:hidden">
                             <div className="text-sm tabular-nums text-lot-ink">
-                              {item.request.preview.aduSqft.toLocaleString()} sf ADU
+                              {formatNumber(item.request.preview.aduSqft)} sf ADU
                             </div>
                             <div className="lf-caption mt-0.5 tabular-nums text-lot-stone">
-                              {item.request.preview.lotSqft.toLocaleString()} sf lot
+                              {formatNumber(item.request.preview.lotSqft)} sf lot
                             </div>
                           </td>
                           <td className="px-3 py-4 whitespace-nowrap">
@@ -545,8 +570,8 @@ export default function BuilderInbox({
                 {selectedItemId === null ? (
                   /* No Selection State */
                   <div className="flex flex-col items-center justify-center border border-dashed border-lot-stone bg-lot-chalk/50 p-8 text-center min-h-[350px]">
-                    <FileText size={36} className="text-lot-stone" />
-                    <h3 className="lf-card-heading mt-3 text-sm font-semibold text-lot-ink">No lead selected</h3>
+                    <FileText size={36} aria-hidden="true" className="text-lot-stone" />
+                    <h2 className="lf-card-heading mt-3 text-sm font-semibold text-lot-ink">No lead selected</h2>
                     <p className="lf-body-sm mt-1.5 max-w-xs text-lot-stone">
                       Select a lead from the ledger table on the left to inspect its feasibility details and contact information.
                     </p>
@@ -563,16 +588,13 @@ export default function BuilderInbox({
                       const demo = demoGrants[selectedItem.request.id];
                       const responding = isPending && pendingId === selectedItem.request.id;
 
-                      const recordedDate = selectedItem.request.createdAt
+                      const recordedAtDate = selectedItem.request.createdAt
                         ? new Date(selectedItem.request.createdAt)
-                            .toLocaleDateString("en-US", {
-                              timeZone: "UTC",
-                              year: "numeric",
-                              month: "short",
-                              day: "2-digit",
-                            })
-                            .toUpperCase()
                         : null;
+                      const recordedDate =
+                        recordedAtDate && !Number.isNaN(recordedAtDate.getTime())
+                          ? formatUtcDate(recordedAtDate, "short").toUpperCase()
+                          : null;
 
                       // Functions for actions
                       const handleDownloadHtml = () => {
@@ -604,7 +626,7 @@ export default function BuilderInbox({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="self-start lg:hidden"
+                            className="self-start xl:hidden"
                             onClick={() => setSelectedItemId(null)}
                             leftIcon={<ArrowLeft size={14} />}
                           >
@@ -649,17 +671,17 @@ export default function BuilderInbox({
                                   {selectedItem.request.preview.neighborhood}
                                 </p>
                                 <p className="mt-1 flex flex-wrap gap-2.5 lf-kicker-dense text-lot-stone">
-                                  <span>{selectedItem.request.preview.lotSqft.toLocaleString()} sqft lot</span>
-                                  <span>{selectedItem.request.preview.aduSqft.toLocaleString()} sf ADU</span>
+                                  <span>{formatNumber(selectedItem.request.preview.lotSqft)} sqft lot</span>
+                                  <span>{formatNumber(selectedItem.request.preview.aduSqft)} sf ADU</span>
                                   <span>{finishLabels[selectedItem.request.preview.config.finish]}</span>
                                 </p>
                               </div>
 
                               <div className="space-y-3 rounded-none border border-dashed border-lot-stone bg-lot-surface/30 p-5 text-center">
                                 <Lock size={24} aria-hidden className="mx-auto text-lot-stone" />
-                                <h4 className="lf-kicker text-lot-ink">
+                                <h2 className="lf-kicker text-lot-ink">
                                   Feasibility Certificate Locked
-                                </h4>
+                                </h2>
                                 <p className="lf-body-sm mx-auto max-w-xs text-lot-stone">
                                   Unlock this lead to reveal the exact street address, parcel boundaries, zoning calculations, detailed finances ledger, and direct homeowner contact info.
                                 </p>
@@ -723,7 +745,7 @@ export default function BuilderInbox({
                                 {itemContact.ownerContact.message && (
                                   <div className="mt-3 border-t border-dashed border-lot-line pt-2">
                                     <span className="lf-kicker-dense text-lot-stone">Homeowner Message</span>
-                                    <p className="text-sm italic text-lot-ink mt-1 leading-relaxed bg-lot-chalk/60 p-2 border-l border-lot-stone">
+                                    <p className="mt-1 break-words border-l border-lot-stone bg-lot-chalk/60 p-2 text-sm italic leading-relaxed text-lot-ink">
                                       &ldquo;{itemContact.ownerContact.message}&rdquo;
                                     </p>
                                   </div>
@@ -731,13 +753,20 @@ export default function BuilderInbox({
                               </div>
 
                               {itemContact.snapshot?.advisorIntake && <AdvisorIntakeSummary intake={itemContact.snapshot.advisorIntake} />}
-                              {itemContact.snapshot?.studioScenarioJson && <a className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink" href={`/studio?lead=${encodeURIComponent(selectedItem.request.id)}`}>Open shared 3D layout</a>}
+                              {itemContact.snapshot?.studioScenarioJson && (
+                                <a
+                                  className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                                  href={`/studio?lead=${encodeURIComponent(selectedItem.request.id)}`}
+                                >
+                                  Open shared 3D layout
+                                </a>
+                              )}
 
                               {/* Visual Certificate Section — single frame (no nested rounded cards). */}
                               <div className="space-y-3">
-                                <div className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
+                                <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
                                   Feasibility Certificate
-                                </div>
+                                </h2>
 
                                 {(!itemContact.snapshot?.result || !itemContact.snapshot?.parcel || !itemContact.snapshot?.config) ? (
                                   /* Defensively Fallback to Plain Text Report if structure is not present (e.g. tests) */
@@ -751,8 +780,8 @@ export default function BuilderInbox({
                                   <div className="space-y-4 border-[1.5px] border-lot-ink bg-lot-chalk p-4">
                                       {/* Monogram / Header */}
                                       <div className="border-b border-lot-line pb-2 text-center">
-                                        <div className="lf-dataprint text-lot-orange-ink">LotFoundry</div>
-                                        <h5 className="mt-0.5 font-display text-base font-medium leading-tight text-lot-ink">Certificate of Feasibility</h5>
+                                        <div translate="no" className="lf-dataprint text-lot-orange-ink">LotFoundry</div>
+                                        <h3 className="mt-0.5 font-display text-base font-medium leading-tight text-lot-ink">Certificate of Feasibility</h3>
                                         <p className="lf-caption mt-1 truncate text-lot-stone">
                                           No. {selectedItem.request.preview.previewSerial} · {itemContact.streetAddress}
                                         </p>
@@ -793,7 +822,7 @@ export default function BuilderInbox({
                                       <div className="text-xs tabular-nums space-y-1 border-t border-dashed border-lot-line pt-3">
                                         <div className="flex justify-between py-1">
                                           <span className="lf-kicker-dense text-lot-stone">ADU Size</span>
-                                          <span className="font-semibold text-lot-ink">{itemContact.snapshot.result.aduSqft} sf</span>
+                                          <span className="font-semibold text-lot-ink">{formatNumber(itemContact.snapshot.result.aduSqft)} sf</span>
                                         </div>
                                         <div className="flex justify-between py-1">
                                           <span className="lf-kicker-dense text-lot-stone">Roof Style</span>
@@ -903,7 +932,7 @@ function ZeroEverEmptyState() {
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-start">
       <div className="border-t-[1.5px] border-lot-ink pt-5">
-        <h3 className="lf-card-heading text-lot-ink">No matched leads yet</h3>
+        <h2 className="lf-card-heading text-lot-ink">No matched leads yet</h2>
         <p className="lf-body-sm mt-2 max-w-prose text-lot-stone">
           A lead lands here when a homeowner in one of your service areas submits a feasibility
           report. Complete your profile and add every area you build in — complete profiles get
@@ -1057,7 +1086,11 @@ function CreditShop({ credits }: { credits: number }) {
         window.location.reload();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not start credit pack checkout. Check your connection and try again.",
+      );
     } finally {
       setLoading(null);
     }
@@ -1066,7 +1099,7 @@ function CreditShop({ credits }: { credits: number }) {
   return (
     <div className="border border-lot-line bg-lot-chalk">
       <PanelHeader
-        as="h3"
+        as="h2"
         title="Credit Shop"
         sub="Unlock leads instantly with credits."
         actions={
@@ -1085,33 +1118,49 @@ function CreditShop({ credits }: { credits: number }) {
         <div className="space-y-3">
           {/* Product rows are purchase instruments (ledger cards), not pill CTAs. */}
           <Button
+            type="button"
             variant="secondary"
             fullWidth
             onClick={() => buyPack(5)}
             disabled={loading !== null || priceBlocked}
+            aria-busy={loading === 5}
             className="min-h-16 justify-between text-left"
           >
             <span>
               <span className="block text-sm font-bold text-lot-ink">5-Lead Pack</span>
-              <span className="block text-xs font-medium text-lot-stone">{prices[5].perLead}</span>
+              <span className="block text-xs font-medium text-lot-stone">
+                {loading === 5 ? "Starting checkout…" : prices[5].perLead}
+              </span>
             </span>
-            <span className="lf-money-md text-lot-ink">
-              {loading === 5 ? "…" : prices[5].total}
+            <span className="inline-flex items-center gap-1.5 lf-money-md text-lot-ink">
+              {loading === 5 ? (
+                <Loader2 size={16} aria-hidden="true" className="motion-safe:animate-spin" />
+              ) : (
+                prices[5].total
+              )}
             </span>
           </Button>
           <Button
+            type="button"
             variant="primary"
             fullWidth
             onClick={() => buyPack(10)}
             disabled={loading !== null || priceBlocked}
+            aria-busy={loading === 10}
             className="min-h-16 justify-between text-left"
           >
             <span>
               <span className="block text-sm font-bold">10-Lead Pack</span>
-              <span className="block text-xs font-medium">{prices[10].perLead}</span>
+              <span className="block text-xs font-medium">
+                {loading === 10 ? "Starting checkout…" : prices[10].perLead}
+              </span>
             </span>
-            <span className="lf-money-md">
-              {loading === 10 ? "…" : prices[10].total}
+            <span className="inline-flex items-center gap-1.5 lf-money-md">
+              {loading === 10 ? (
+                <Loader2 size={16} aria-hidden="true" className="motion-safe:animate-spin" />
+              ) : (
+                prices[10].total
+              )}
             </span>
           </Button>
         </div>

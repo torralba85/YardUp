@@ -77,7 +77,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See whatâ€
           href="/sample-certificate/san-diego"
           target="_blank"
           rel="noopener"
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
         >
           See a sample certificate<span className="sr-only"> (opens in a new tab)</span>
         </a>

@@ -18,6 +18,7 @@ import type { PlacementFitStatus } from "@/lib/placement-validation";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, FieldLabel, Select } from "@/components/ui/Field";
 import { StatusChip } from "@/components/ui/StatusChip";
+import { formatNumber } from "@/lib/intl-format";
 
 /** How a chosen plan connects to the Studio's 3D model. */
 export interface PlanModelLink {
@@ -50,8 +51,8 @@ interface Props {
   layout?: "panel" | "inline";
 }
 
-const linkClass = "inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink";
-const sqft = (value: number) => `${value.toLocaleString()} sq ft`;
+const linkClass = "inline-flex min-h-11 items-center rounded-control text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lot-orange-ink";
+const sqft = (value: number) => `${formatNumber(value)} sq ft`;
 const feet = (value: number) => `${Number(value.toFixed(2))}`;
 const authorityLabel = (program: PreapprovedProgram) => `${program.city}, ${program.state}`;
 
@@ -160,7 +161,7 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
       <p className="text-sm leading-relaxed text-lot-stone">Start from a plan your permitting authority has already reviewed. Using one gives your 3D model the plan&apos;s footprint from its official drawings, so you can check how it fits this lot.</p>
       <div className="space-y-2">
         <FieldLabel htmlFor={`${id}-authority`}>Permitting authority for this lot</FieldLabel>
-        <Select id={`${id}-authority`} value={authorityId} onChange={event => {
+        <Select id={`${id}-authority`} name="permittingAuthority" autoComplete="off" value={authorityId} onChange={event => {
           const next = event.target.value;
           setAuthorityId(next);
           setConfirmed(false);
@@ -235,6 +236,7 @@ export default function PreapprovedPlansPanel({ parcel, selected, onSelect, onRe
 export function PreapprovedPlansSection(props: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusSummary = useRef(false);
+  const [removedReference, setRemovedReference] = useState<PreapprovedPlanReference | null>(null);
   // After "Use this plan", move to the summary that reports the new size and fit.
   useEffect(() => {
     if (!focusSummary.current || !headingRef.current) return;
@@ -249,16 +251,53 @@ export function PreapprovedPlansSection(props: Props) {
   const inline = props.layout === "inline";
   return (
     <div className={`bg-lot-chalk ${inline ? "border border-lot-line" : "border-t border-lot-line"}`}>
-      <PreapprovedPlanSummary selected={props.selected} onRemove={props.onRemove} model={props.model} layout={props.layout} headingRef={headingRef} />
+      <PreapprovedPlanSummary
+        selected={props.selected}
+        onRemove={() => {
+          if (props.selected) setRemovedReference(props.selected);
+          props.onRemove();
+        }}
+        model={props.model}
+        layout={props.layout}
+        headingRef={headingRef}
+      />
+      {!props.selected && removedReference && (
+        <div
+          aria-live="polite"
+          className={`flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface py-2.5 text-xs text-lot-ink ${inline ? "px-4" : "px-6"}`}
+        >
+          <span>Pre-approved plan removed.</span>
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            onClick={() => {
+              const restore = removedReference;
+              setRemovedReference(null);
+              focusSummary.current = true;
+              props.onSelect(restore);
+            }}
+          >
+            Undo remove
+          </Button>
+        </div>
+      )}
       <details className="group">
-        <summary className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink ${inline ? "px-4" : "px-6"}`}>
+        <summary className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink ${inline ? "px-4" : "px-6"}`}>
           <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
             <span>Pre-approved plans</span>
             <span className="text-xs font-normal text-lot-stone">{hint}</span>
           </span>
           <span aria-hidden="true" className="group-open:rotate-45">+</span>
         </summary>
-        <PreapprovedPlansPanel {...props} onSelect={reference => { focusSummary.current = true; props.onSelect(reference); }} />
+        <PreapprovedPlansPanel
+          {...props}
+          onSelect={reference => {
+            setRemovedReference(null);
+            focusSummary.current = true;
+            props.onSelect(reference);
+          }}
+        />
       </details>
     </div>
   );

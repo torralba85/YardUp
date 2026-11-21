@@ -28,29 +28,29 @@ export function CookiePreferences() {
   if (!isAnalyticsConfigured()) return null;
   if (consent === "pending") return null;
 
+  const isGranted = consent === "granted";
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="lf-caption text-lot-stone">{STATUS_LABEL[consent]}</p>
+      <p role="status" aria-live="polite" className="lf-caption text-lot-stone">
+        {STATUS_LABEL[consent]}
+      </p>
       <div className="flex shrink-0 gap-3">
-        {/* Only a granted decision has anything to turn off; an undecided
-            visitor is already untracked, so offering it would misdescribe state. */}
-        {consent === "granted" && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
+        {/* Single mounted button so toggling preserves keyboard focus instead of dropping it to body. */}
+        <Button
+          variant={isGranted ? "secondary" : "primary"}
+          size="sm"
+          onClick={() => {
+            if (isGranted) {
               clearAnalyticsCookies();
               writeConsent("denied");
-            }}
-          >
-            Turn off measurement
-          </Button>
-        )}
-        {consent !== "granted" && (
-          <Button variant="primary" size="sm" onClick={() => writeConsent("granted")}>
-            Turn on measurement
-          </Button>
-        )}
+            } else {
+              writeConsent("granted");
+            }
+          }}
+        >
+          {isGranted ? "Turn off measurement" : "Turn on measurement"}
+        </Button>
         {consent !== "unset" && (
           <Button variant="ghost" size="sm" onClick={clearConsent}>
             Ask me again

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, Layers, RefreshCcw, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { formatUtcDate } from "@/lib/intl-format";
 
 /** Props for {@link BeforeAfterBoard}. */
 export interface BeforeAfterBoardProps {
@@ -64,7 +65,7 @@ export default function BeforeAfterBoard({
   const [mountedDateStr, setMountedDateStr] = useState("");
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    setMountedDateStr(new Date().toISOString().split("T")[0] + " UTC");
+    setMountedDateStr(`${formatUtcDate(new Date(), "short")} UTC`);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -114,7 +115,7 @@ export default function BeforeAfterBoard({
             variant="destructive"
             size="md"
             onClick={onDelete}
-            leftIcon={<XCircle size={16} />}
+            leftIcon={<XCircle size={16} aria-hidden="true" />}
           >
             Delete photo & renders
           </Button>
@@ -133,6 +134,8 @@ export default function BeforeAfterBoard({
             <img
               src={beforePhotoUrl}
               alt="Original house before photo"
+              width={800}
+              height={600}
               className="h-full w-full object-cover"
             />
           </div>
@@ -155,6 +158,8 @@ export default function BeforeAfterBoard({
             <img
               src={afterConceptUrl}
               alt="Generated style-matched ADU concept"
+              width={800}
+              height={600}
               className="h-full w-full object-cover"
             />
             {/* Rotated Concept Stamp */}

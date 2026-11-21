@@ -24,7 +24,7 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   await page.getByRole("button", { name: "Check my address" }).click();
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
-  await answer.getByRole("button", { name: "Open in 3D" }).click();
+  await answer.getByRole("link", { name: "Open in 3D" }).click();
   await expect(page).toHaveURL(/\/studio(?:\?|$)/);
   expect(page.url()).not.toContain(SAMPLE_LIVE_PARCEL.address.split(" ")[1]);
 });

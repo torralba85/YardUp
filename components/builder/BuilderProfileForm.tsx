@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { validateEmail } from "@/lib/account-settings";
@@ -37,8 +37,31 @@ export default function BuilderProfileForm({
   const [serviceScope, setServiceScope] = useState<"city" | "county" | "state">("city");
   const [addedAreas, setAddedAreas] = useState<ServiceArea[]>([]);
   const [active, setActive] = useState(true);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const isDirty =
+    !saved &&
+    (companyName !== defaults.companyName ||
+      contactEmail !== defaults.contactEmail ||
+      phone.trim() !== "" ||
+      licenseNumber.trim() !== "" ||
+      serviceAreaText.trim() !== "" ||
+      serviceState !== "" ||
+      serviceScope !== "city" ||
+      addedAreas.length > 0 ||
+      !active);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const [invalidField, setInvalidField] = useState<string | null>(null);
   const fields = useRef<Record<string, HTMLInputElement | HTMLSelectElement | null>>({});
@@ -58,14 +81,6 @@ export default function BuilderProfileForm({
     setError(null);
     setInvalidField(null);
 
-    const pendingArea = normalizeServiceArea(serviceAreaText, serviceState, serviceScope);
-    const hasPending = Boolean(serviceAreaText.trim() || serviceState);
-    if (hasPending && (!pendingArea.state || (serviceScope !== "state" && !serviceAreaText.trim()))) {
-      invalidate(!pendingArea.state ? "builder-service-state" : "builder-service-areas", "Enter a city or county and select its state.");
-      return;
-    }
-    const serviceAreas = Array.from(new Map([...addedAreas, ...(hasPending ? [pendingArea] : [])].map(area => [area.key, area])).values());
-
     if (!companyName.trim()) {
       invalidate("builder-company-name", "Enter your company name.");
       return;
@@ -74,8 +89,25 @@ export default function BuilderProfileForm({
       invalidate("builder-contact-email", "Enter a valid contact email.");
       return;
     }
+
+    const pendingArea = normalizeServiceArea(serviceAreaText, serviceState, serviceScope);
+    const hasPending = Boolean(serviceAreaText.trim() || serviceState);
+    if (hasPending && (!pendingArea.state || (serviceScope !== "state" && !serviceAreaText.trim()))) {
+      invalidate(
+        !pendingArea.state ? "builder-service-state" : "builder-service-areas",
+        "Enter a city or county and select its state.",
+      );
+      return;
+    }
+    const serviceAreas = Array.from(
+      new Map([...addedAreas, ...(hasPending ? [pendingArea] : [])].map((area) => [area.key, area])).values(),
+    );
+
     if (serviceAreas.length === 0 || serviceAreas.length > 25) {
-      invalidate(serviceScope === "state" ? "builder-service-state" : "builder-service-areas", "Add 1 to 25 service areas, each with a selected state.");
+      invalidate(
+        serviceScope === "state" ? "builder-service-state" : "builder-service-areas",
+        "Add 1 to 25 service areas, each with a selected state.",
+      );
       return;
     }
 
@@ -89,8 +121,9 @@ export default function BuilderProfileForm({
           serviceAreas,
           active,
         });
+        setSaved(true);
       } catch {
-        setError("Could not save this builder profile.");
+        setError("Could not save this builder profile. Check your connection and try submitting again.");
       }
     });
   }
@@ -142,6 +175,7 @@ export default function BuilderProfileForm({
           aria-describedby={invalidField === "builder-contact-email" ? "builder-contact-email-error" : undefined}
           type="email"
           autoComplete="email"
+          spellCheck={false}
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={contactEmail}
           onChange={(event) => setContactEmail(event.target.value)}
@@ -153,6 +187,7 @@ export default function BuilderProfileForm({
         Phone (optional)
         <Input
           id="builder-phone"
+          name="builder-phone"
           type="tel"
           autoComplete="tel"
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
@@ -164,19 +199,39 @@ export default function BuilderProfileForm({
         License number (optional)
         <Input
           id="builder-license"
+          name="builder-license"
           type="text"
+          autoComplete="off"
+          spellCheck={false}
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
           value={licenseNumber}
           onChange={(event) => setLicenseNumber(event.target.value)}
         />
       </label>
-      <label className="lf-body-sm font-medium text-lot-ink">Coverage type
-        <Select value={serviceScope} onChange={event => { setServiceScope(event.target.value as typeof serviceScope); setServiceAreaText(""); }} className="mt-1 text-base sm:text-sm">
+      <label htmlFor="builder-coverage-type" className="lf-body-sm font-medium text-lot-ink">Coverage type
+        <Select
+          id="builder-coverage-type"
+          name="builder-coverage-type"
+          autoComplete="off"
+          value={serviceScope}
+          onChange={(event) => { setServiceScope(event.target.value as typeof serviceScope); setServiceAreaText(""); }}
+          className="mt-1 text-base sm:text-sm"
+        >
           <option value="city">City</option><option value="county">County</option><option value="state">Entire state</option>
         </Select>
       </label>
-      <label className="lf-body-sm font-medium text-lot-ink">Service state
-        <Select id="builder-service-state" ref={element => { fields.current["builder-service-state"] = element; }} aria-invalid={invalidField === "builder-service-state"} aria-describedby={invalidField === "builder-service-state" ? "builder-service-state-error" : undefined} value={serviceState} onChange={event => setServiceState(event.target.value)} className="mt-1 text-base sm:text-sm">
+      <label htmlFor="builder-service-state" className="lf-body-sm font-medium text-lot-ink">Service state
+        <Select
+          id="builder-service-state"
+          name="builder-service-state"
+          autoComplete="address-level1"
+          ref={(element) => { fields.current["builder-service-state"] = element; }}
+          aria-invalid={invalidField === "builder-service-state"}
+          aria-describedby={invalidField === "builder-service-state" ? "builder-service-state-error" : undefined}
+          value={serviceState}
+          onChange={(event) => setServiceState(event.target.value)}
+          className="mt-1 text-base sm:text-sm"
+        >
           <option value="">Select a state</option>
           {Object.entries(US_STATE_NAMES).map(([code, name]) => <option key={code} value={code}>{name}</option>)}
         </Select>
@@ -195,8 +250,9 @@ export default function BuilderProfileForm({
           aria-invalid={invalidField === "builder-service-areas"}
           aria-describedby={invalidField === "builder-service-areas" ? "builder-service-areas-error" : undefined}
           type="text"
+          autoComplete="off"
           className="mt-1 w-full rounded-control border border-lot-stone bg-lot-chalk px-3 py-2 text-base sm:text-sm"
-          placeholder={serviceScope === "county" ? "Los Angeles" : "Seattle"}
+          placeholder={serviceScope === "county" ? "Los Angeles…" : "Seattle…"}
           disabled={serviceScope === "state"}
           value={serviceAreaText}
           onChange={(event) => setServiceAreaText(event.target.value)}
@@ -210,10 +266,25 @@ export default function BuilderProfileForm({
           setAddedAreas(current => [...current.filter(item => item.key !== area.key), area]);
           setServiceAreaText(""); setServiceState("");
         }}>Add service area</Button>
-        <ul className="space-y-1">{addedAreas.map(area => <li key={area.key} className="flex items-center justify-between gap-2 text-sm">
-          <span>{area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, {area.state}</span>
-          <Button type="button" variant="secondary" size="sm" aria-label={`Remove ${area.county || area.city || area.state}`} onClick={() => setAddedAreas(current => current.filter(item => item.key !== area.key))}>Remove</Button>
-        </li>)}</ul>
+        <ul className="space-y-1">
+          {addedAreas.map((area) => (
+            <li key={area.key} className="flex items-center justify-between gap-2 text-sm">
+              <span className="min-w-0 break-words">
+                {area.scope === "state" ? "Entire state" : area.county ? `${area.county} County` : area.city}, {area.state}
+              </span>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="shrink-0"
+                aria-label={`Remove ${area.county || area.city || area.state}`}
+                onClick={() => setAddedAreas((current) => current.filter((item) => item.key !== area.key))}
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
       </div>
       <label
         htmlFor="builder-active"
@@ -221,6 +292,7 @@ export default function BuilderProfileForm({
       >
         <Checkbox
           id="builder-active"
+          name="builder-active"
           checked={active}
           onChange={(event) => setActive(event.target.checked)}
         />

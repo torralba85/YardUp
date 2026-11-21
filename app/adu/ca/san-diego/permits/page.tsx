@@ -3,6 +3,7 @@ import { SanDiegoAduPermitStudy } from "@/components/adu/SanDiegoAduPermitStudy"
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { SAN_DIEGO_PERMIT_STUDY } from "@/content/adu/ca/san-diego-permits";
 import { permitStudyUrl } from "@/lib/adu/content";
+import { formatUtcDate } from "@/lib/intl-format";
 import { SITE_NAME } from "@/lib/site-identity";
 
 const { coverage, generatedAt } = SAN_DIEGO_PERMIT_STUDY;
@@ -11,12 +12,7 @@ const TO_YEAR = coverage.to.slice(0, 4);
 
 /** "Oct 27, 2026": readable, and it doesn't break mid-date on a phone like an ISO date does. */
 function shortDate(iso: string): string {
-  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return formatUtcDate(iso, "short");
 }
 
 const TITLE = `San Diego ADU Permits by Neighborhood (${FROM_YEAR}-${TO_YEAR})`;

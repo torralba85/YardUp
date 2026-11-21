@@ -118,7 +118,7 @@ export default function AddressSearch({
   onSubmitText,
   onValidationChange,
   onQueryChange,
-  placeholder = "Search property address…",
+  placeholder = "123 Main St, City, ST…",
   disabled = false,
   autoFocusSignal,
   showPrivacyNote = false,
@@ -141,6 +141,7 @@ export default function AddressSearch({
   // referrer block, network) — hand autocomplete to the server path instead.
   const [googleFailed, setGoogleFailed] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [emptySubmitError, setEmptySubmitError] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   // The query the shown suggestions were fetched for; they stay visible while
   // the next debounced fetch runs, but keyboard picks only accept a current list.
@@ -299,6 +300,7 @@ export default function AddressSearch({
   async function pickSuggestion(suggestion: AddressSuggestion) {
     selectedValueRef.current = suggestion.text;
     setInputValue(suggestion.text);
+    setEmptySubmitError(false);
     onQueryChange?.(suggestion.text);
     setSuggestions([]);
     setSuggestionsOpen(false);
@@ -450,7 +452,12 @@ export default function AddressSearch({
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const query = inputValue.trim();
-    if (!query) return;
+    if (!query) {
+      setEmptySubmitError(true);
+      inputRef.current?.focus();
+      return;
+    }
+    setEmptySubmitError(false);
 
     if (!onSubmitText && suggestionsCurrent) {
       const targetSuggestion = activeIndex >= 0 ? suggestions[activeIndex] : suggestions[0];
@@ -480,10 +487,7 @@ export default function AddressSearch({
       {/* Search icon — anchored to the h-11 input's 22px midline (top-5.5), not
           the form's center: helper text below the input stretches the form and
           would drag top-1/2 children out of the pill. */}
-      <span
-        className="pointer-events-none absolute left-3 top-5.5 -translate-y-1/2 text-lot-stone"
-        aria-hidden="true"
-      >
+      <span className="pointer-events-none absolute left-3 top-5.5 -translate-y-1/2 text-lot-stone">
         {loading ? (
           <span
             className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange"
@@ -491,18 +495,20 @@ export default function AddressSearch({
             aria-label="Loading address search"
           />
         ) : (
-          <Search size={16} />
+          <Search size={16} aria-hidden="true" />
         )}
       </span>
 
       <input
         id="address-search"
+        name="address"
         ref={inputRef}
         type="search"
         autoComplete="off"
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
+          if (emptySubmitError && e.target.value.trim()) setEmptySubmitError(false);
           onQueryChange?.(e.target.value);
           setActiveIndex(-1);
         }}
@@ -515,7 +521,10 @@ export default function AddressSearch({
         disabled={isDisabled}
         aria-label="Search property address"
         aria-busy={loading}
-        aria-invalid={activeValidation ? !activeValidation.deliverable : undefined}
+        aria-invalid={
+          emptySubmitError || (activeValidation ? !activeValidation.deliverable : undefined)
+        }
+        aria-describedby={emptySubmitError ? "address-search-error" : undefined}
         role={dropdownEnabled ? "combobox" : undefined}
         aria-autocomplete={dropdownEnabled ? "list" : undefined}
         aria-expanded={dropdownEnabled ? suggestionsOpen : undefined}
@@ -527,16 +536,16 @@ export default function AddressSearch({
           "h-11 w-full rounded-control border pl-9 pr-26 text-sm",
           "bg-lot-chalk text-lot-ink placeholder:text-lot-stone",
           "outline-none motion-safe:transition",
-          "focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink",
+          "focus-visible:border-lot-orange-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink",
           isDisabled
-            ? "cursor-not-allowed border-lot-line opacity-60"
-            : "border-lot-line hover:border-lot-stone/70",
+            ? "cursor-not-allowed border-lot-stone opacity-60"
+            : "border-lot-stone hover:border-lot-ink",
         ].join(" ")}
       />
 
       <button
         type="submit"
-        disabled={isDisabled || !inputValue.trim()}
+        disabled={isDisabled}
         className="absolute right-2.5 top-5.5 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-control px-2.5 text-xs font-semibold motion-safe:transition before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] disabled:cursor-not-allowed disabled:border disabled:border-lot-line disabled:bg-lot-chalk disabled:text-lot-stone enabled:bg-lot-orange enabled:text-lot-ink enabled:hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-1"
       >
         <MapPin size={13} aria-hidden="true" />

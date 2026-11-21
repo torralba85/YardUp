@@ -147,11 +147,12 @@ describe("/can-i-build-a-backyard-home", () => {
     });
     expect(answer).toHaveTextContent("500 Cedar Ave, San Jose, CA");
 
-    fireEvent.click(screen.getByRole("button", { name: /Open in 3D/i }));
+    const openLink = screen.getByRole("link", { name: /Open in 3D/i });
+    expect(openLink).toHaveAttribute("href", "/studio");
+    fireEvent.click(openLink);
     expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
     expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
     expect(stashEntrySourceMock).toHaveBeenCalledWith("landing_cta");
-    expect(pushMock).toHaveBeenCalledWith("/studio");
   });
 
   it("recommends 400 sq ft when backyard space is tight", () => {

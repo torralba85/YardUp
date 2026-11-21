@@ -60,8 +60,9 @@ describe("AduStudioCta", () => {
     const answer = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(answer).toHaveTextContent("500 Cedar Ave, San Jose, CA");
 
-    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    const openLink = screen.getByRole("link", { name: "Open in 3D" });
+    expect(openLink).toHaveAttribute("href", "/studio");
+    fireEvent.click(openLink);
     expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
-    expect(pushMock).toHaveBeenCalledExactlyOnceWith("/studio");
   });
 });

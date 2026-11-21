@@ -126,7 +126,10 @@ function FeedbackFields() {
         </p>
         <p className="lf-body-sm mt-3 text-lot-stone">
           Ticket ID{" "}
-          <span className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink">
+          <span
+            translate="no"
+            className="font-sans text-xs font-semibold uppercase tracking-[0.08em] text-lot-ink"
+          >
             {ticketId}
           </span>
           {email ? " — we'll reply to the email you provided if follow-up is needed." : ""}
@@ -143,6 +146,8 @@ function FeedbackFields() {
         </label>
         <Select
           id="feedback-category"
+          name="category"
+          autoComplete="off"
           value={category}
           onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
         >

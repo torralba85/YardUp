@@ -40,16 +40,16 @@ export function PlacementEditor({
 
   return (
     <details className="border-t border-lot-line bg-lot-chalk px-3">
-      <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">
+      <summary className="flex min-h-11 cursor-pointer items-center rounded-control text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk">
         Move or rotate ADU
       </summary>
       <p className="mb-3 text-xs text-lot-stone">
-        Selected: {config.width} × {config.length} ft ADU · {config.height} ft walls · {total?.toFixed(1)} ft total height. Position uses modeled lot coordinates; +Z is the front.
+        Selected: {config.width} × {config.length} ft ADU · {config.height} ft walls{total != null ? ` · ${total.toFixed(1)} ft total height` : ""}. Position uses modeled lot coordinates; +Z is the front.
       </p>
       <div className="grid grid-cols-3 gap-2">
-        <NumericField label="X position (ft)" value={pose.x} min={-10000} max={10000} onChange={(x) => commit({ ...pose, x })} />
-        <NumericField label="Z position (ft)" value={pose.z} min={-10000} max={10000} onChange={(z) => commit({ ...pose, z })} />
-        <NumericField label="Rotation (degrees)" value={pose.rotationDeg} min={0} max={359.9} step={1} onChange={(rotationDeg) => commit({ ...pose, rotationDeg })} />
+        <NumericField label="X position (ft)" name="adu-x-position" value={pose.x} min={-10000} max={10000} onChange={(x) => commit({ ...pose, x })} />
+        <NumericField label="Z position (ft)" name="adu-z-position" value={pose.z} min={-10000} max={10000} onChange={(z) => commit({ ...pose, z })} />
+        <NumericField label="Rotation (degrees)" name="adu-rotation" value={pose.rotationDeg} min={0} max={359.9} step={1} onChange={(rotationDeg) => commit({ ...pose, rotationDeg })} />
       </div>
       <div role="group" aria-label="Nudge ADU one foot" className="my-3 flex flex-wrap gap-1">
         {[

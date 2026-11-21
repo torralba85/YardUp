@@ -20,7 +20,7 @@ describe("/adu/ca/can-i-build-an-adu page", () => {
       screen.getByRole("heading", { level: 1, name: /Can I Build an ADU on My Property in California/i }),
     ).toBeInTheDocument();
     expect(screen.getByText(/backyard home \(ADU\)/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: /Five parcel checks/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /5 parcel checks/i })).toBeInTheDocument();
 
     const schemas = Array.from(container.querySelectorAll('script[type="application/ld+json"]')).map((node) =>
       JSON.parse(node.textContent ?? "{}"),

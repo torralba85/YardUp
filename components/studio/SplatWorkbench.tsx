@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { formatNumber } from "@/lib/intl-format";
 import { createSplatDepthFixture, DEFAULT_SPLAT_TRANSFORM, validateLocalSplat, type SplatSource, type SplatTransform } from "@/lib/splat-scene";
 import type { SplatLayerStatus } from "./GaussianSplatLayer";
 
@@ -61,7 +62,7 @@ export default function SplatWorkbench() {
           <h1 className="font-display text-3xl">3D scan workbench</h1>
           <p className="mt-2 max-w-2xl text-sm">Inspect a scan beside our dimensioned ADU. This sample has no property match. Calibration changes only the scan.</p>
         </div>
-        <Link href="/studio" prefetch={false} className="inline-flex min-h-11 items-center underline">Open Studio</Link>
+        <Link href="/studio" prefetch={false} className="inline-flex min-h-11 items-center rounded-control underline motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink">Open Studio</Link>
       </header>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section aria-label="Scan rendering workbench" className="min-w-0">
@@ -74,9 +75,9 @@ export default function SplatWorkbench() {
             <SplatWorkbenchScene source={source} transform={transform} visible={visible} generation={generation}
               orthographic={orthographic} aduZ={aduZ} onStatus={onStatus} sampleDiagnostics={sampleDiagnostics} />
           </div>
-          <p role="status" className="mt-3 text-sm">
+          <p role="status" className="mt-3 text-sm tabular-nums">
             {!visible ? "Scan hidden. ADU stays in place." : status.state === "ready"
-              ? `Decoded ${status.splats.toLocaleString()} splats in ${Math.round(status.loadMs)} ms. Orbit to inspect depth.`
+              ? `Decoded ${formatNumber(status.splats)} splats in ${Math.round(status.loadMs)} ms. Orbit to inspect depth.`
               : status.state === "error" ? `Scan unavailable: ${status.message}` : "Loading scan…"}
           </p>
           <p className="mt-1 break-all text-sm text-lot-stone">{source.fileName} · {source.bytes ? (source.bytes.length / 1048576).toFixed(2) : "0.00"} MiB · {source.normalizeForInspection ? "Scaled to 30 ft for inspection; source scale unknown." : "Synthetic blue wall, 44 × 18 ft; depth test only."}</p>
@@ -91,7 +92,7 @@ export default function SplatWorkbench() {
         <aside aria-label="Scan calibration" className="space-y-5">
           <div>
             <label htmlFor="local-scan" className="mb-2 block font-medium">Open local scan</label>
-            <input id="local-scan" type="file" accept=".spz,.splat,.ply,.ksplat" className="min-h-11 w-full text-sm" onChange={(event) => {
+            <input id="local-scan" name="localScan" type="file" accept=".spz,.splat,.ply,.ksplat" className="min-h-11 w-full rounded-control text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-orange-ink" onChange={(event) => {
               const file = event.currentTarget.files?.[0];
               if (file) void openFile(file);
               event.currentTarget.value = "";
@@ -102,20 +103,20 @@ export default function SplatWorkbench() {
           </div>
           <h2 className="font-display text-xl">Visual calibration</h2>
           <label className="block text-sm">Uniform scale
-            <input aria-label="Uniform scale" className={control} type="number" min="0.01" max="100" step="0.05" value={transform.uniformScale} onChange={(event) => {
+            <input name="uniformScale" autoComplete="off" aria-label="Uniform scale" className={control} type="number" min="0.01" max="100" step="0.05" value={transform.uniformScale} onChange={(event) => {
               const value = event.currentTarget.valueAsNumber;
               if (Number.isFinite(value) && value >= 0.01 && value <= 100) setTransform({ ...transform, uniformScale: value });
             }} />
           </label>
           <label className="block text-sm">Yaw (degrees)
-            <input aria-label="Yaw (degrees)" className={control} type="number" min="-180" max="180" step="1" value={Math.round(transform.yawRad * 180 / Math.PI)} onChange={(event) => {
+            <input name="yawDegrees" autoComplete="off" aria-label="Yaw (degrees)" className={control} type="number" min="-180" max="180" step="1" value={Math.round(transform.yawRad * 180 / Math.PI)} onChange={(event) => {
               const value = event.currentTarget.valueAsNumber;
               if (Number.isFinite(value) && Math.abs(value) <= 180) setTransform({ ...transform, yawRad: value * Math.PI / 180 });
             }} />
           </label>
           {(["X", "Y", "Z"] as const).map((axis, index) => (
             <label key={axis} className="block text-sm">{axis} offset (ft)
-              <input aria-label={`${axis} offset (ft)`} className={control} type="number" min="-200" max="200" step="0.5" value={transform.positionFt[index]} onChange={(event) => {
+              <input name={`offset${axis}`} autoComplete="off" aria-label={`${axis} offset (ft)`} className={control} type="number" min="-200" max="200" step="0.5" value={transform.positionFt[index]} onChange={(event) => {
                 const value = event.currentTarget.valueAsNumber;
                 if (!Number.isFinite(value) || Math.abs(value) > 200) return;
                 const positionFt: [number, number, number] = [...transform.positionFt];
@@ -128,7 +129,7 @@ export default function SplatWorkbench() {
             <Button variant="secondary" onClick={() => setTransform(DEFAULT_SPLAT_TRANSFORM)}>Reset calibration</Button>
             <Button onClick={() => setShowCalibration(true)}>Export calibration</Button>
           </div>
-          {showCalibration && <label className="block text-sm">Calibration JSON<textarea aria-label="Calibration JSON" readOnly className={`${control} mt-2 h-52`} value={calibrationJson} /></label>}
+          {showCalibration && <label className="block text-sm">Calibration JSON<textarea name="calibrationJson" spellCheck={false} aria-label="Calibration JSON" readOnly className={`${control} mt-2 h-52`} value={calibrationJson} /></label>}
         </aside>
       </div>
     </main>

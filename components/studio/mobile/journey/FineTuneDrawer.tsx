@@ -42,16 +42,19 @@ export default function FineTuneDrawer({ open, onClose, children }: FineTuneDraw
           <Drawer.Description className="sr-only">
             Adjust exact dimensions, roof, finish, and financial assumptions.
           </Drawer.Description>
-          <div className="relative shrink-0 pt-2">
-            <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-lot-line" />
+          <div className="relative flex shrink-0 items-center justify-end px-3 py-1">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-lot-line"
+            />
             <button
               type="button"
               ref={closeRef}
               aria-label="Close fine-tune panel"
               onClick={onClose}
-              className="absolute right-3 top-1 flex h-11 w-11 items-center justify-center rounded-control text-lot-stone motion-safe:transition hover:text-lot-ink"
+              className="flex h-11 w-11 items-center justify-center rounded-control text-lot-stone motion-safe:transition-colors hover:bg-lot-surface hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
             >
-              <X size={20} />
+              <X size={20} aria-hidden="true" />
             </button>
           </div>
           <div

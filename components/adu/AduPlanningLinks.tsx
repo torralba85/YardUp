@@ -24,7 +24,7 @@ export function AduPlanningLinks({ current }: { current: string }) {
       <ul className="mt-3 space-y-3">
         {resources.filter((resource) => resource.href !== current).map((resource) => (
           <li key={resource.href}>
-            <Link href={resource.href} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
+            <Link href={resource.href} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
               {resource.label}
             </Link>
             <p className="lf-body text-sm text-lot-stone">{resource.detail}</p>

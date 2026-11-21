@@ -130,7 +130,7 @@ export default function GaussianSplatLayer({ source, transform, onStatus }: Prop
           pendingUpdate = spark.update({ scene, camera }).catch((error: unknown) => {
             failed = true;
             detach();
-            if (!released) onStatus({ state: "error", message: error instanceof Error ? error.message : "Scan rendering failed." });
+            if (!released) onStatus({ state: "error", message: error instanceof Error ? error.message : "Scan rendering failed. Reload the scan or continue with the 3D model." });
           }).finally(() => {
             pendingUpdate = null;
             if (failed) dispose();
@@ -144,7 +144,7 @@ export default function GaussianSplatLayer({ source, transform, onStatus }: Prop
       } catch (error) {
         detach();
         dispose();
-        if (!released) onStatus({ state: "error", message: error instanceof Error ? error.message : "Could not decode this scan." });
+        if (!released) onStatus({ state: "error", message: error instanceof Error ? error.message : "Could not decode this scan. Try another scan file or continue with the 3D model." });
       }
     })();
 

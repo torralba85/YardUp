@@ -123,7 +123,7 @@
   gap: 24px;
   max-width: 1680px;
   margin: 0 auto;
-  padding: 18px 6%;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) max(6%, env(safe-area-inset-right, 0px)) 18px max(6%, env(safe-area-inset-left, 0px));
   color: var(--chalk);
   border-bottom: 1px solid color-mix(in srgb, var(--chalk) 18%, transparent);
 }
@@ -189,7 +189,7 @@
   white-space: nowrap;
 }
 .memberNav summary:focus-visible {
-  outline: 2px solid var(--orange-ink);
+  outline: 2px solid var(--chalk);
   outline-offset: 4px;
 }
 .memberPanel {
@@ -220,6 +220,10 @@
 .memberPanel a:hover,
 .memberPanel button:hover {
   background: var(--line);
+}
+.memberPanel :is(a, button):focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: 2px;
 }
 .signIn {
   min-width: 44px;
@@ -542,6 +546,9 @@
   margin-bottom: 0;
   min-height: 48px;
 }
+.appStoreLink:hover {
+  opacity: 0.88;
+}
 .appStoreLink img {
   display: block;
   width: 100%;
@@ -837,6 +844,10 @@
   min-height: 44px;
   font-size: 13px;
 }
+.numberNotes summary:hover {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
 .numberNotes details p {
   color: var(--color-lot-stone-on-dark);
   font-size: 13px;
@@ -1057,7 +1068,7 @@
   font-weight: 500;
 }
 .faqList summary:hover {
-  color: var(--ink);
+  color: var(--orange-ink);
 }
 .faqList details p {
   font-size: 16px;
@@ -1237,6 +1248,11 @@
 .footerLegal a {
   min-width: 44px;
   justify-content: center;
+}
+.footerLegal a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .footerBottom a {
   display: flex;
@@ -1487,7 +1503,7 @@
 
 @media (max-width: 800px) {
   .header {
-    padding: 16px 6%;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) max(6%, env(safe-area-inset-right, 0px)) 16px max(6%, env(safe-area-inset-left, 0px));
   }
   .brand {
     font-size: 22px;
@@ -1531,6 +1547,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+  .mobileMenu a:hover {
+    color: var(--orange-ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
   /* Phones: the copy flows from the top so the address form clears the
      consent bar on a first visit; the sample result follows it. */
@@ -1712,13 +1733,16 @@
     flex-wrap: wrap;
     justify-content: space-between;
   }
+  .page {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
   .stickyCta {
     display: flex;
     position: fixed;
     z-index: 25;
     bottom: calc(16px + env(safe-area-inset-bottom));
-    left: 6%;
-    right: 6%;
+    left: max(6%, env(safe-area-inset-left, 0px));
+    right: max(6%, env(safe-area-inset-right, 0px));
     align-items: center;
     justify-content: space-between;
     background: var(--ink);
@@ -2368,7 +2392,8 @@
     animation: cad-dash 4s linear 1;
   }
   .metricMeter > span {
-    transition: width 300ms cubic-bezier(0.32, 0.72, 0, 1);
+    transform-origin: left;
+    transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
   }
   .hotspotPin {
     transition:
@@ -2473,7 +2498,7 @@
   color: color-mix(in srgb, var(--chalk) 92%, transparent);
 }
 .hero .sampleFigures {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px 18px;
 }
@@ -2621,9 +2646,8 @@
 @media (prefers-reduced-motion: no-preference) {
   .storyChapters p {
     transition:
-      max-height 450ms cubic-bezier(0.32, 0.72, 0, 1),
-      opacity 450ms ease,
-      visibility 450ms;
+      opacity 300ms ease,
+      transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
   }
   .storyChapters h3,
   .storyChapters li > span {

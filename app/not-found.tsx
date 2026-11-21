@@ -18,20 +18,20 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/"
-            className="inline-flex h-11 items-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-chalk"
+            className="inline-flex h-11 items-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover"
           >
             Home
           </Link>
           <Link
             href="/studio"
             prefetch={false}
-            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink"
+            className="inline-flex h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-ink hover:bg-lot-surface"
           >
             Start a feasibility study
           </Link>
           <Link
             href="/help"
-            className="inline-flex h-11 items-center rounded-control px-5 text-sm font-semibold text-lot-orange-ink"
+            className="inline-flex h-11 items-center rounded-control px-5 text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink hover:underline hover:underline-offset-4"
           >
             Get help
           </Link>

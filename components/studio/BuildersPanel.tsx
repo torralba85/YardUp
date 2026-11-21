@@ -118,11 +118,15 @@ export default function BuildersPanel({
           aria-busy="true"
           className="flex items-center justify-center gap-2 rounded-none border border-lot-line bg-lot-chalk p-6 text-sm text-lot-stone"
         >
-          <span className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
+          <span aria-hidden="true" className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-lot-line border-t-lot-orange" />
           Finding builders near you…
         </div>
       ) : noneMatched ? (
-        <div className="rounded-none border border-lot-line bg-lot-surface p-6 text-center">
+        <div
+          role={loadError ? "alert" : "status"}
+          aria-live={loadError ? undefined : "polite"}
+          className="rounded-none border border-lot-line bg-lot-surface p-6 text-center"
+        >
           <p className="text-sm font-semibold text-lot-ink">
             No builders are registered for {parcelCity} yet.
           </p>
@@ -142,7 +146,7 @@ export default function BuildersPanel({
             {matched.map((b) => (
               <li key={b.id} className="rounded-none border border-lot-line bg-lot-chalk p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-semibold text-lot-ink">{b.companyName}</span>
+                  <span className="min-w-0 break-words text-sm font-semibold text-lot-ink">{b.companyName}</span>
                   {b.licensed ? (
                     <StatusChip status="clear" label="License provided" size="sm" className="shrink-0" />
                   ) : null}

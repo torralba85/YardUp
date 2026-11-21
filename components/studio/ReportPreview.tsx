@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { AIPermitStage, AIProjectBrief, AIRiskLevel } from "@/lib/ai-types";
 import { formatCurrency, type ADUConfig } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import {
   buildCashFlowProForma,
   formatCurrencyRange,
@@ -241,7 +242,7 @@ export default function ReportPreview({
           </p>
 
           <div className="mt-4 grid gap-2.5 text-sm text-lot-stone sm:grid-cols-2">
-            <ReportFact icon={FileText} text={`${result.aduSqft.toLocaleString()} sf ADU concept`} />
+            <ReportFact icon={FileText} text={`${formatNumber(result.aduSqft)} sf ADU concept`} />
             <ReportFact
               icon={Ruler}
               text={result.footprintKnown === false ? "Lot coverage unknown — existing footprint unavailable" : `${result.coveragePercent.toFixed(1)}% projected lot coverage${result.regulationsEstimated ? " · maximum coverage unverified" : ""}`}
@@ -281,7 +282,7 @@ export default function ReportPreview({
                 "Source and rent basis",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-2">
-                  <CheckCircle2 size={14} className="shrink-0 text-status-eligible" />
+                  <CheckCircle2 size={14} className="shrink-0 text-status-eligible" aria-hidden="true" />
                   {item}
                 </div>
               ))}
@@ -386,6 +387,9 @@ function CertificateStyleMatchSection({
               <img
                 src={concept.photoUrl}
                 alt="Reference Home"
+                width={900}
+                height={600}
+                loading="lazy"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -400,6 +404,9 @@ function CertificateStyleMatchSection({
             <img
               src={concept.conceptUrl}
               alt={`${concept.styleName} Concept`}
+              width={900}
+              height={600}
+              loading="lazy"
               className="h-full w-full object-cover"
             />
           </div>
@@ -508,7 +515,7 @@ function CertificatePermitAuditSection({ audit }: { audit: PermitFeeAudit }) {
         {audit.jurisdiction !== "other" && (
           <StatusChip
             status={threshold.isExempt ? "clear" : "review"}
-            label={threshold.isExempt ? "Within 750 sq ft" : `${threshold.sqftOverLimit.toLocaleString()} sq ft over 750`}
+            label={threshold.isExempt ? "Within 750 sq ft" : `${formatNumber(threshold.sqftOverLimit)} sq ft over 750`}
           />
         )}
       </div>
@@ -555,7 +562,7 @@ function CertificatePermitAuditSection({ audit }: { audit: PermitFeeAudit }) {
                 href={source.url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 items-center rounded-control text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                className="inline-flex min-h-11 items-center rounded-control text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
                 {source.label}
               </a>
@@ -652,7 +659,7 @@ function CertificateBriefSection({
         </div>
         {loading ? (
           <div className="mt-4" role="status">
-            <span className="sr-only">Adding property notes and timeline</span>
+            <span className="sr-only">Adding property notes and timeline…</span>
             <Skeleton className="h-3 w-52" />
             <Skeleton className="mt-2 h-2.5 w-full" />
             <Skeleton className="mt-1.5 h-2.5 w-4/5" />
@@ -890,7 +897,7 @@ function ReportFact({
 
   return (
     <div className={`flex items-center gap-2 ${toneClass}`}>
-      <Icon size={16} className={`shrink-0 ${iconClass}`} />
+      <Icon size={16} className={`shrink-0 ${iconClass}`} aria-hidden="true" />
       {text}
     </div>
   );

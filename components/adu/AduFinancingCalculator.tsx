@@ -15,14 +15,15 @@ export function AduFinancingCalculator({
   const [customLoan, setCustomLoan] = useState<string | null>(null);
   const [rate, setRate] = useState("7.5");
   const [term, setTerm] = useState("30");
+
   const loan = customLoan ?? String(Math.round(projectCost * 0.8));
   const principal = Number(loan);
   const annualRate = Number(rate);
   const years = Number(term);
-  const valid = loan.trim() !== "" && rate.trim() !== "" && term.trim() !== ""
-    && Number.isFinite(principal) && principal >= 0 && principal <= projectCost
-    && Number.isFinite(annualRate) && annualRate >= 0 && annualRate <= 100
-    && Number.isInteger(years) && years >= 1 && years <= 50;
+  const loanValid = loan.trim() !== "" && Number.isFinite(principal) && principal >= 0 && principal <= projectCost;
+  const rateValid = rate.trim() !== "" && Number.isFinite(annualRate) && annualRate >= 0 && annualRate <= 100;
+  const termValid = term.trim() !== "" && Number.isInteger(years) && years >= 1 && years <= 50;
+  const valid = loanValid && rateValid && termValid;
   const payment = valid ? calculateMonthlyPayment(principal, annualRate / 100, years) : null;
   const monthlyNoi = annualNoi / 12;
 
@@ -40,25 +41,82 @@ export function AduFinancingCalculator({
         <div>
           <label className="block space-y-2 text-sm text-lot-ink">
             <span>Loan amount ($)</span>
-            <Input type="number" min="0" max={projectCost} step="1" value={loan}
-              onChange={(event) => setCustomLoan(event.target.value)} aria-describedby="adu-financing-note" />
+            <Input
+              name="loanAmount"
+              autoComplete="off"
+              inputMode="numeric"
+              type="number"
+              min="0"
+              max={projectCost}
+              step="1"
+              value={loan}
+              aria-invalid={!loanValid}
+              aria-describedby={!loanValid ? "adu-loan-error" : "adu-financing-note"}
+              onChange={(event) => {
+                setCustomLoan(event.target.value);
+              }}
+            />
           </label>
-          {valid ? (
+          {!loanValid ? (
+            <p id="adu-loan-error" role="alert" className="mt-1 text-xs text-status-blocked">
+              Enter $0 to {formatCurrency(projectCost)}.
+            </p>
+          ) : (
             <p className="mt-1 text-xs tabular-nums text-lot-stone">
               {formatCurrency(principal)} principal
             </p>
+          )}
+        </div>
+        <div>
+          <label className="block space-y-2 text-sm text-lot-ink">
+            <span>Annual interest rate (%)</span>
+            <Input
+              name="interestRate"
+              autoComplete="off"
+              inputMode="decimal"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={rate}
+              aria-invalid={!rateValid}
+              aria-describedby={!rateValid ? "adu-rate-error" : undefined}
+              onChange={(event) => {
+                setRate(event.target.value);
+              }}
+            />
+          </label>
+          {!rateValid ? (
+            <p id="adu-rate-error" role="alert" className="mt-1 text-xs text-status-blocked">
+              Enter 0% to 100%.
+            </p>
           ) : null}
         </div>
-        <label className="space-y-2 text-sm text-lot-ink">
-          <span>Annual interest rate (%)</span>
-          <Input type="number" min="0" max="100" step="0.01" value={rate}
-            onChange={(event) => setRate(event.target.value)} />
-        </label>
-        <label className="space-y-2 text-sm text-lot-ink">
-          <span>Loan term (years)</span>
-          <Input type="number" min="1" max="50" step="1" value={term}
-            onChange={(event) => setTerm(event.target.value)} />
-        </label>
+        <div>
+          <label className="block space-y-2 text-sm text-lot-ink">
+            <span>Loan term (years)</span>
+            <Input
+              name="loanTerm"
+              autoComplete="off"
+              inputMode="numeric"
+              type="number"
+              min="1"
+              max="50"
+              step="1"
+              value={term}
+              aria-invalid={!termValid}
+              aria-describedby={!termValid ? "adu-term-error" : undefined}
+              onChange={(event) => {
+                setTerm(event.target.value);
+              }}
+            />
+          </label>
+          {!termValid ? (
+            <p id="adu-term-error" role="alert" className="mt-1 text-xs text-status-blocked">
+              Enter 1 to 50 whole years.
+            </p>
+          ) : null}
+        </div>
       </div>
       <div aria-live="polite" className="mt-5">
         {payment === null ? (

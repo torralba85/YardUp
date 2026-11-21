@@ -116,14 +116,14 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           Inside City of San Diego limits? Read the{" "}
           <Link
             href="/adu/ca/san-diego"
-            className="font-semibold text-lot-ink underline underline-offset-2"
+            className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
           >
             City of San Diego ADU guide
           </Link>
           . Inside Carlsbad? Read the{" "}
           <Link
             href="/adu/ca/carlsbad"
-            className="font-semibold text-lot-ink underline underline-offset-2"
+            className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
           >
             Carlsbad ADU rules and permits
           </Link>
@@ -138,7 +138,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             San Diego County. For a lot outside city limits, read the{" "}
             <Link
               href="/adu/ca/san-diego-county"
-              className="font-semibold text-lot-ink underline underline-offset-2"
+              className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
             >
               unincorporated San Diego County ADU guide
             </Link>
@@ -147,14 +147,14 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           </p>
           <nav aria-label="On this San Diego guide" className="flex flex-wrap gap-x-5 gap-y-2">
             {[["adu-glance", "Rules at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
-              <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
+              <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
             ))}
           </nav>
         </div>
       ) : null}
 
       <section aria-labelledby="adu-glance" className="mt-12">
-        <h2 id="adu-glance" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-glance" className="lf-card-heading scroll-mt-20 text-lot-ink">
           {content.city} ADU rules at a glance
         </h2>
         <div className="mt-4 overflow-x-auto">

@@ -42,6 +42,28 @@ type CheckoutReturnState = {
   status: "confirming" | "confirmed" | "delayed";
 };
 
+type BuilderDashboardView = "inbox" | "billing";
+
+function readViewParam(search: string): BuilderDashboardView {
+  return new URLSearchParams(search).get("view") === "billing" ? "billing" : "inbox";
+}
+
+function syncViewParam(nextView: BuilderDashboardView) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  if (nextView === "billing") {
+    params.set("view", "billing");
+  } else {
+    params.delete("view");
+  }
+  const query = params.toString();
+  const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) {
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }
+}
+
 const MAIN_CLASS = "px-4 pb-16 pt-8 lg:px-8 lg:pt-12";
 
 /** "San Diego, CA · San Diego County, CA" — the service areas a builder is matched in. */
@@ -78,10 +100,20 @@ export default function BuilderDashboard({
   const [profile, setProfile] = useState<BuilderProfile | null>(null);
   const [items, setItems] = useState<BuilderInboxItem[]>([]);
   const [ledger, setLedger] = useState<BuilderLedgerEntry[]>([]);
-  const [activeView, setActiveView] = useState<"inbox" | "billing">("inbox");
+  const [activeView, setActiveView] = useState<BuilderDashboardView>(() =>
+    typeof window !== "undefined" ? readViewParam(window.location.search) : "inbox",
+  );
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [checkoutReturn, setCheckoutReturn] = useState<CheckoutReturnState | null>(null);
+
+  useEffect(() => {
+    function handlePopState() {
+      setActiveView(readViewParam(window.location.search));
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +134,9 @@ export default function BuilderDashboard({
         }
       } catch {
         if (!cancelled) {
-          setLoadError("Could not load the builder dashboard.");
+          setLoadError(
+            "Could not load the builder dashboard. Check your connection and refresh the page to try again.",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -242,6 +276,11 @@ export default function BuilderDashboard({
     );
   }
 
+  function handleViewChange(nextView: BuilderDashboardView) {
+    setActiveView(nextView);
+    syncViewParam(nextView);
+  }
+
   return (
     <div className="min-h-dvh bg-lot-chalk text-lot-ink">
       <BuilderHeader
@@ -288,7 +327,7 @@ export default function BuilderDashboard({
               <Segmented
                 aria-label="Dashboard views"
                 value={activeView}
-                onChange={setActiveView}
+                onChange={handleViewChange}
                 options={[
                   { value: "inbox", label: `Leads · ${items.length}` },
                   { value: "billing", label: "Billing & credits" },

@@ -14,11 +14,11 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title, description, url: "/terms" }),
 };
 
-const linkClass = "font-medium text-lot-orange-ink underline";
+const linkClass = "font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink";
 
 function SupportEmail() {
   return (
-    <a href="mailto:support@lotfoundry.net" className={linkClass}>
+    <a href="mailto:support@lotfoundry.net" translate="no" className={linkClass}>
       support@lotfoundry.net
     </a>
   );

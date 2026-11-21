@@ -96,12 +96,12 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
       ) : (
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-3">
           <div className="flex flex-col gap-2 @min-[440px]:flex-row">
-            <div className="min-w-0 flex-1"><FieldLabel htmlFor={`${id}-email`} className="sr-only">Email address for your 3D lot link</FieldLabel><Input id={`${id}-email`} className="w-full bg-lot-chalk text-lot-ink placeholder:text-lot-stone focus-visible:ring-lot-orange-ink" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy} /></div>
+            <div className="min-w-0 flex-1"><FieldLabel htmlFor={`${id}-email`} className="sr-only">Email address for your 3D lot link</FieldLabel><Input id={`${id}-email`} name="email" spellCheck={false} className="w-full bg-lot-chalk text-lot-ink placeholder:text-lot-stone focus-visible:ring-lot-orange-ink" type="email" autoComplete="email" placeholder="you@example.com…" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy} /></div>
             <Button type="submit" variant="secondary" className="w-full shrink-0 border-lot-ink bg-lot-ink text-lot-chalk hover:bg-lot-ink/90 @min-[440px]:w-auto focus-visible:ring-lot-orange-ink" loading={busy} disabled={busy}>Email My 3D Link</Button>
           </div>
           <div className="hidden" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
           <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-xs leading-5 text-lot-stone"><Checkbox checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} disabled={busy} />Also send me San Diego / California ADU permit &amp; fee waiver updates.</label>
-          <p className="text-xs leading-5 text-lot-stone">We’ll save your email and design to send this link. Anyone with the link can view the layout and property address. Updates are optional. <a href="/privacy" className="underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-lot-orange-ink">Privacy</a></p>
+          <p className="text-xs leading-5 text-lot-stone">We’ll save your email and design to send this link. Anyone with the link can view the layout and property address. Updates are optional. <a href="/privacy" className="underline underline-offset-2 hover:text-lot-ink motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-lot-orange-ink">Privacy</a></p>
           {error && <p role="alert" className="flex items-start gap-2 text-sm text-status-blocked"><TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />{error}</p>}
         </form>
       )}

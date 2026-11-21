@@ -3,7 +3,7 @@
 import { BookmarkPlus, Check, ChevronDown, DoorOpen, MapPin, RefreshCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { NumericField } from "./NumericField";
 import { FootprintDiagram, RoofProfile } from "./DesignDiagrams";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import {
   configForFootprint,
   finishColors,
@@ -13,6 +13,7 @@ import {
   parcelPresets,
   roofLabels,
 } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import { useParcel } from "@/lib/parcel-context";
 import { parcelConfidence } from "@/lib/parcel-confidence";
 import { aduSetbacks } from "@/lib/adu-setbacks";
@@ -135,8 +136,8 @@ export interface FeasibilityInspectorProps {
   onConfigChange: (config: ADUConfig) => void;
   /** Called when the financial assumptions change. */
   onAssumptionsChange: (assumptions: FinancialAssumptions) => void;
-  /** Called to reset the inspector to defaults. */
-  onReset: () => void;
+  /** Called to reset the inspector to defaults. Return `false` if cancelled. */
+  onReset: () => boolean | void;
   /** Called to generate the feasibility report. */
   onGenerateReport: () => void;
   /** Optional handler to save the current scenario. */
@@ -198,14 +199,15 @@ export default function FeasibilityInspector({
   }
 
   function handleResetToPreset() {
+    if (!handleReset()) return;
     resetToPreset(presetParcel);
-    handleReset();
   }
 
-  function handleReset() {
+  function handleReset(): boolean {
+    if (onReset() === false) return false;
     setOpenStep(1);
     setCompletedSteps(new Set());
-    onReset();
+    return true;
   }
 
   function toggleStep(step: 1 | 2 | 3) {
@@ -333,7 +335,7 @@ export default function FeasibilityInspector({
                           {"dataQuality" in displayParcel &&
                             (displayParcel.dataQuality?.fields.address.source.recordId ??
                               displayParcel.dataQuality?.fields.boundaryGeoJson.source.recordId) && (
-                            <span className="tabular-nums text-lot-ink">
+                            <span translate="no" className="tabular-nums text-lot-ink">
                               · ID{" "}
                               {displayParcel.dataQuality?.fields.address.source.recordId ??
                                 displayParcel.dataQuality?.fields.boundaryGeoJson.source.recordId}
@@ -369,12 +371,14 @@ export default function FeasibilityInspector({
                   <LabelRow label="Sample Property" htmlFor="parcel-preset" />
                   <Select
                     id="parcel-preset"
+                    name="parcelPreset"
+                    autoComplete="off"
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
                   >
                     {parcelPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
-                        {preset.name} ({preset.lotArea.toLocaleString()} sf)
+                        {preset.name} ({formatNumber(preset.lotArea)} sf)
                       </option>
                     ))}
                   </Select>
@@ -403,12 +407,12 @@ export default function FeasibilityInspector({
               )}
 
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <Fact label="Lot Area" value={`${displayParcel.lotArea.toLocaleString()} sf${physicalEstimated ? " (assumed)" : ""}`} />
+                <Fact label="Lot Area" value={`${formatNumber(displayParcel.lotArea)} sf${physicalEstimated ? " (assumed)" : ""}`} />
                 <Fact label="Lot Dimensions" value={`${displayParcel.lotWidth}' x ${displayParcel.lotLength}'${"source" in displayParcel ? " (modeled)" : ""}`} />
-                <Fact label="Existing Footprint" value={footprintKnown ? `${displayParcel.existingHouseSqft.toLocaleString()} sf` : "Unknown"} />
+                <Fact label="Existing Footprint" value={footprintKnown ? `${formatNumber(displayParcel.existingHouseSqft)} sf` : "Unknown"} />
                 <Fact label="Max Coverage" value={`${displayParcel.maxLotCoveragePercent}%${regulationsEstimated ? " (assumed)" : ""}`} />
                 {"zoning" in displayParcel && (
-                  <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} />
+                  <Fact label="Zoning" value={String((displayParcel as { zoning: string }).zoning)} noTranslate />
                 )}
                 <Fact
                   label="ADU Setbacks"
@@ -477,12 +481,12 @@ export default function FeasibilityInspector({
                 <p className="text-xs leading-5 text-lot-stone">
                   {selectedOption
                     ? `Selected: ${selectedOption.label} (${selectedOption.summary})`
-                    : `Custom size: ${config.footprint.toLocaleString()} sf (${config.width}' x ${config.length}')`}
+                    : `Custom size: ${formatNumber(config.footprint)} sf (${config.width}' x ${config.length}')`}
                 </p>
               </div>
 
               <details open={!designOnly} className="group/dimensions border-y border-lot-line">
-                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
                   Fine-tune dimensions
                   <ChevronDown size={16} aria-hidden="true" className="motion-safe:transition-transform group-open/dimensions:rotate-180" />
                 </summary>
@@ -704,7 +708,7 @@ export default function FeasibilityInspector({
             onClick={handleGenerateReportClick}
             leftIcon={<Sparkles size={16} />}
           >
-            Create my ADU report
+            Create your ADU report
           </Button>}
           {onSaveScenario && (
             <Button
@@ -792,7 +796,6 @@ function AccordionStep({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
-  const reduceMotion = usePrefersReducedMotion();
   if (plain) return <div className="px-6 py-5">{children}</div>;
   return (
     <div>
@@ -823,39 +826,26 @@ function AccordionStep({
         />
       </button>
 
-      {/* Animated reveal: grid-template-rows 0fr→1fr gives a smooth height
-          transition without measuring. Values are set inline because this
-          project's Tailwind build does not emit the arbitrary grid-rows/
-          transition-property utilities. `inert` keeps collapsed content out
-          of the tab order and the a11y tree. */}
+      {/* Instant collapse avoids animating layout (`grid-template-rows`);
+          compositor-only opacity/transform settle respects reduced motion.
+          `inert` keeps collapsed content out of the tab order and a11y tree. */}
       <div
         className="grid"
-        style={{
-          gridTemplateRows: isOpen ? "1fr" : "0fr",
-          transition: reduceMotion ? undefined : "grid-template-rows 300ms ease-out",
-        }}
+        style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="px-6 pb-6 pt-1" inert={!isOpen}>
+          <div
+            className={`px-6 pb-6 pt-1 motion-safe:transition-[opacity,transform] motion-safe:duration-(--duration-disclosure) motion-safe:ease-out ${
+              isOpen ? "translate-y-0 opacity-100" : "-translate-y-1 opacity-0"
+            }`}
+            inert={!isOpen}
+          >
             {children}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-/** True when the user has requested reduced motion; updates live. */
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-  return reduced;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -887,11 +877,16 @@ function LabelRow({
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value, noTranslate }: { label: string; value: string; noTranslate?: boolean }) {
   return (
     <div>
       <div className="text-xs text-lot-stone">{label}</div>
-      <div className="mt-0.5 font-sans text-xs font-medium tabular-nums text-lot-ink">{value}</div>
+      <div
+        translate={noTranslate ? "no" : undefined}
+        className="mt-0.5 font-sans text-xs font-medium tabular-nums text-lot-ink"
+      >
+        {value}
+      </div>
     </div>
   );
 }

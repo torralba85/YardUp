@@ -20,6 +20,7 @@ vi.mock("@/lib/address-handoff", () => ({
 describe("AduCostCalculator", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState(null, "", "/");
   });
 
   it("renders the Los Angeles 600 sq ft estimate by default", () => {

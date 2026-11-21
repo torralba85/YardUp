@@ -100,7 +100,7 @@ describe("LotAnswerCard", () => {
     expect(region).toHaveTextContent("Needs Review");
     expect(region).toHaveTextContent(/backyard home fits this lot/);
     expect(region).toHaveTextContent(/Early planning estimates only/);
-    expect(screen.getByRole("button", { name: "Open in 3D" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open in 3D" })).toHaveAttribute("href", "/studio");
     for (const detail of ["5,600 sq ft", "44′ × 127′", "R-1", "Fits the estimated model", "$2,500", "$266K", "14.2 yrs", "HUD FMR"]) {
       expect(region).not.toHaveTextContent(detail);
     }
@@ -305,10 +305,12 @@ describe("LotAnswerCard", () => {
       ),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    const openLink = screen.getByRole("link", { name: "Open in 3D" });
+    expect(openLink).toHaveAttribute("href", "/studio?size=400");
+    expect(openLink.getAttribute("href")).not.toMatch(/Cedar|500|37\.335|-121\.889/);
+    window.addEventListener("click", (event) => event.preventDefault(), { once: true });
+    fireEvent.click(openLink);
     expect(peekInitialParcel()).toEqual(buildLiveParcel());
-    expect(pushMock).toHaveBeenCalledExactlyOnceWith("/studio?size=400");
-    expect(pushMock.mock.calls[0][0]).not.toMatch(/Cedar|500|37\.335|-121\.889/);
 
     expect(gtag).toHaveBeenCalledWith(
       "event",
