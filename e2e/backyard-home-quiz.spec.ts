@@ -73,7 +73,7 @@ test.describe("/can-i-build-a-backyard-home", () => {
     await page.getByRole("button", { name: /Yes, flat and clear/i }).click();
     await page.getByRole("button", { name: /Yes, housing or family/i }).click();
 
-    await expect(page.getByText("Likely eligible")).toBeVisible();
+    await expect(page.getByText("Likely eligible", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("link", { name: /Explore sample 600 sq ft lot/i }),
     ).toHaveAttribute("href", "/studio?parcel=coyote-brush&size=600");
@@ -92,7 +92,7 @@ test.describe("/can-i-build-a-backyard-home", () => {
     });
     await expect(answer).toBeVisible();
     await expect(answer).toContainText(SAMPLE_LIVE_PARCEL.address);
-    await answer.getByRole("button", { name: "Open in 3D" }).click();
+    await answer.getByRole("link", { name: "Open in 3D" }).click();
 
     await expect(page).toHaveURL(/\/studio(?:\?|$)/, { timeout: 15000 });
     expect(page.url()).not.toContain("Cedar");
@@ -112,7 +112,7 @@ test.describe("/can-i-build-a-backyard-home", () => {
     await page.getByRole("button", { name: /Yes, flat and clear/i }).click();
     await page.getByRole("button", { name: /Yes, housing or family/i }).click();
 
-    await expect(page.getByText("Needs parcel check")).toBeVisible();
+    await expect(page.getByText("Needs parcel check", { exact: true })).toBeVisible();
     const sampleLink = page.getByRole("link", {
       name: /Explore sample 400 sq ft lot/i,
     });
