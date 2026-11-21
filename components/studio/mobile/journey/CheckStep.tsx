@@ -56,11 +56,17 @@ export default function CheckStep({
   emailLinkCard,
 }: CheckStepProps) {
   if (!discloseFeasibility(result, certificateUnlocked).unlocked) {
-    return <section aria-label="Feasibility check" className="space-y-5 px-5 py-7">
-      <StudioPreview result={result} onUnlock={onContinue} />
-      <Button variant="secondary" fullWidth onClick={onFineTune}>Keep exploring the 3D concept</Button>
-      {emailLinkCard}
-    </section>;
+    return (
+      <section
+        aria-label="Feasibility check"
+        className="space-y-5 px-5 pt-7"
+        style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <StudioPreview result={result} onUnlock={onContinue} />
+        <Button variant="secondary" fullWidth onClick={onFineTune}>Keep exploring the 3D concept</Button>
+        {emailLinkCard}
+      </section>
+    );
   }
   const summary = summarizeFeasibility(parcel, result, config);
   const tone = verdictTone(summary.verdict);
@@ -154,7 +160,7 @@ export default function CheckStep({
         onClick={onFineTune}
         className="mt-4 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink motion-safe:transition hover:bg-lot-stone-soft"
       >
-        <SlidersHorizontal size={15} />
+        <SlidersHorizontal size={15} aria-hidden="true" />
         Fine-tune the numbers
       </button>
 

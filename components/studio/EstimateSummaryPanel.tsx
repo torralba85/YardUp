@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { BarChart3, CheckCircle2, FileText, Home, Landmark, Lock, Ruler, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import { hasValidPayback } from "@/lib/finance";
+import { formatNumber } from "@/lib/intl-format";
 import type { FeasibilityStatus } from "@/lib/analytics/events";
 import {
   buildCashFlowProForma,
@@ -259,10 +260,10 @@ export default function EstimateSummaryPanel({
               </p>
               <p className="mt-1 text-xs leading-5 text-lot-stone">
                 {feeThreshold.isExempt
-                  ? `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout is within California's 750 sq ft SB 13 impact-fee exemption.`
+                  ? `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout is within California's 750 sq ft SB 13 impact-fee exemption.`
                   : feeJurisdiction === "san-diego"
-                    ? `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit. The City of San Diego still exempts a lot's first two ADUs from its own impact fees; school and utility fees can apply.`
-                    : `At ${feeThreshold.sqft.toLocaleString()} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit, so impact fees can apply in proportion to the main house. Trimming ${feeThreshold.sqftOverLimit.toLocaleString()} sq ft of footprint keeps it under.`}{" "}
+                    ? `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit. The City of San Diego still exempts a lot's first two ADUs from its own impact fees; school and utility fees can apply.`
+                    : `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit, so impact fees can apply in proportion to the main house. Trimming ${formatNumber(feeThreshold.sqftOverLimit)} sq ft of footprint keeps it under.`}{" "}
                 {certificateUnlocked
                   ? "The fee and submittal breakdown is in your certificate."
                   : "See the fee and submittal breakdown in the certificate."}

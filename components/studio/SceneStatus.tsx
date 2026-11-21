@@ -82,7 +82,7 @@ export function SceneStatus({
       )}
 
       {analysisUnlocked && <details className="group/status px-4" open={placement.status === "blocked" ? true : undefined}>
-        <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
+        <summary className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control text-xs font-semibold motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-inset">
           Modeled site fit details
           <ChevronDown size={14} aria-hidden="true" className="ml-auto shrink-0 group-open/status:rotate-180" />
         </summary>

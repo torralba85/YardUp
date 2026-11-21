@@ -20,6 +20,9 @@ export default function PropertyRecords({
   const [history, setHistory] = useState<Result | null>(null);
   const [comps, setComps] = useState<Result | null>(null);
   const [requested, setRequested] = useState(false);
+  const [historyAttempt, setHistoryAttempt] = useState(0);
+  const [historyRetrying, setHistoryRetrying] = useState(false);
+  const [compsAttempt, setCompsAttempt] = useState(0);
   const load = useCallback(
     async (mode: Mode, signal: AbortSignal): Promise<Result> => {
       try {
@@ -45,13 +48,23 @@ export default function PropertyRecords({
   );
   useEffect(() => {
     const controller = new AbortController();
-    const mode = requested ? "comparables" : "history";
-    void load(mode, controller.signal).then((result) => {
-      if (!controller.signal.aborted)
-        (requested ? setComps : setHistory)(result);
+    void load("history", controller.signal).then((result) => {
+      if (!controller.signal.aborted) {
+        setHistory(result);
+        setHistoryRetrying(false);
+      }
     });
     return () => controller.abort();
-  }, [load, requested]);
+  }, [load, historyAttempt]);
+
+  useEffect(() => {
+    if (!requested) return;
+    const controller = new AbortController();
+    void load("comparables", controller.signal).then((result) => {
+      if (!controller.signal.aborted) setComps(result);
+    });
+    return () => controller.abort();
+  }, [load, requested, compsAttempt]);
 
   if (history === null || history === "denied" || comps === "denied")
     return null;
@@ -65,7 +78,24 @@ export default function PropertyRecords({
         County assessor and recorder data via Realie. Coverage varies by county.
       </p>
       {history === "error" && (
-        <p>Property history is temporarily unavailable.</p>
+        <div role="status" aria-live="polite" className="space-y-2 text-sm text-status-blocked">
+          <p>
+            {historyRetrying
+              ? "Retrying property history…"
+              : "Property history is temporarily unavailable. Check your connection and try again, or verify records directly with your county assessor."}
+          </p>
+          <Button
+            variant="secondary"
+            size="xs"
+            disabled={historyRetrying}
+            onClick={() => {
+              setHistoryRetrying(true);
+              setHistoryAttempt((count) => count + 1);
+            }}
+          >
+            Retry property history
+          </Button>
+        </div>
       )}
       {Array.isArray(history) && !history.length && (
         <p>No confirmed property history was returned for this address.</p>
@@ -89,15 +119,31 @@ export default function PropertyRecords({
         </Button>
       )}
       {requested && (
-        <p role="status" className="text-sm">
-          {comps === null
-            ? "Looking up comparable sales…"
-            : comps === "error"
-              ? "Comparable sales are temporarily unavailable."
+        comps === "error" ? (
+          <div role="alert" className="space-y-2 text-sm text-status-blocked">
+            <p>
+              Comparable sales are temporarily unavailable. Try again shortly, or check recent sales in your county assessor records.
+            </p>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => {
+                setComps(null);
+                setCompsAttempt((count) => count + 1);
+              }}
+            >
+              Retry comparable sales
+            </Button>
+          </div>
+        ) : (
+          <p role="status" className="text-sm">
+            {comps === null
+              ? "Looking up comparable sales…"
               : !comps.length
                 ? "No verified nearby sales were returned."
                 : ""}
-        </p>
+          </p>
+        )
       )}
     </section>
   );

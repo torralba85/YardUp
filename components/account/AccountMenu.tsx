@@ -126,7 +126,31 @@ export function AccountMenu({
   useEffect(() => {
     if (staticPanel || !open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      if (!panelRef.current) return;
+      const items = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])'),
+      );
+      if (items.length === 0) return;
+      const idx = items.indexOf(document.activeElement as HTMLElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        items[(idx + 1 + items.length) % items.length]?.focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        items[(idx - 1 + items.length) % items.length]?.focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        items[0]?.focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+      }
     }
     function onPointer(e: MouseEvent) {
       const target = e.target as Node;
@@ -167,7 +191,7 @@ export function AccountMenu({
           className={cn(
             "flex min-h-11 w-full items-center gap-2 rounded-control px-3 text-sm motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
             isDark
-              ? "text-lot-chalk hover:bg-lot-ink/60 focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+              ? "text-lot-chalk hover:bg-lot-surface-dark-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
               : "text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
           )}
           onClick={() => !staticPanel && setOpen(false)}
@@ -274,8 +298,8 @@ export function AccountMenu({
         className={cn(
           "flex h-11 w-11 items-center justify-center rounded-control text-sm font-bold motion-safe:transition focus-visible:outline-none focus-visible:ring-2",
           isDark
-            ? "bg-lot-orange text-lot-ink focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
-            : "bg-lot-orange text-lot-ink focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
+            ? "bg-lot-orange text-lot-ink hover:bg-lot-orange-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+            : "bg-lot-orange text-lot-ink hover:bg-lot-orange-hover focus-visible:ring-lot-orange-ink focus-visible:ring-offset-lot-chalk",
         )}
       >
         {initials}

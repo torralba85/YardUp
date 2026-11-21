@@ -3,11 +3,7 @@ import {
   defaultFinancialAssumptions,
 } from "@/lib/feasibility";
 import { calculateFinance } from "@/lib/finance";
-
-function formatCompact(value: number): string {
-  const k = value / 1000;
-  return Number.isInteger(k) ? `$${k}K` : `$${k.toFixed(1)}K`;
-}
+import { formatCompactDollars } from "@/lib/intl-format";
 
 /**
  * Inline SVG breakdown of the modeled 600 sq ft detached ADU budget,
@@ -65,18 +61,18 @@ export function CostBreakdownDiagram() {
         aria-labelledby={`${titleId} ${descId}`}
       >
         <title id={titleId}>
-          {`Modeled 600 sq ft ADU cost breakdown (${formatCompact(total)} midpoint)`}
+          {`Modeled 600 sq ft ADU cost breakdown (${formatCompactDollars(total, 1)} midpoint)`}
         </title>
         <desc id={descId}>
-          Stacked budget bar showing base construction ({formatCompact(baseConstruction)}),
-          windows and doors ({formatCompact(openings)}), and design and permit soft costs
-          ({formatCompact(softCosts)}), summing to a {formatCompact(total)} midpoint
-          (range {formatCompact(finance.costLow)} to {formatCompact(finance.costHigh)}).
+          Stacked budget bar showing base construction ({formatCompactDollars(baseConstruction, 1)}),
+          windows and doors ({formatCompactDollars(openings, 1)}), and design and permit soft costs
+          ({formatCompactDollars(softCosts, 1)}), summing to a {formatCompactDollars(total, 1)} midpoint
+          (range {formatCompactDollars(finance.costLow, 1)} to {formatCompactDollars(finance.costHigh, 1)}).
         </desc>
 
         <text x="20" y="22" fontSize="13" fontWeight="700" fill="currentColor">
-          600 sq ft detached ADU midpoint: {formatCompact(total)} (range{" "}
-          {formatCompact(finance.costLow)}–{formatCompact(finance.costHigh)})
+          600 sq ft detached ADU midpoint: {formatCompactDollars(total, 1)} (range{" "}
+          {formatCompactDollars(finance.costLow, 1)}–{formatCompactDollars(finance.costHigh, 1)})
         </text>
 
         <g>
@@ -116,7 +112,7 @@ export function CostBreakdownDiagram() {
                 className="text-lot-stone"
                 fill="currentColor"
               >
-                {formatCompact(seg.value)} · {seg.detail}
+                {formatCompactDollars(seg.value, 1)} · {seg.detail}
               </text>
             </g>
           );

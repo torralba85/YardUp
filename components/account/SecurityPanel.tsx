@@ -88,7 +88,7 @@ export function SecurityPanel({
       setStatus("Check your inbox to confirm the new email.");
       setEmailPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not change email.");
+      setError(err instanceof Error ? err.message : "Could not change email. Try again.");
     } finally {
       setPending(false);
     }
@@ -116,7 +116,7 @@ export function SecurityPanel({
       setPasswordPassword("");
       setNextPassword("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not change password.");
+      setError(err instanceof Error ? err.message : "Could not change password. Try again.");
     } finally {
       setPending(false);
     }

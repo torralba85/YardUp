@@ -38,7 +38,9 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
   if (linkedCode) {
     return (
       <section aria-label="Agent code" className="rounded-none border border-lot-line bg-lot-surface px-5 py-4">
-        <p className="lf-kicker-dense text-lot-stone">Agent code {linkedCode}</p>
+        <p className="lf-kicker-dense text-lot-stone">
+          Agent code <span translate="no">{linkedCode}</span>
+        </p>
         <p className="lf-body-sm mt-1 text-lot-ink">
           Your agent shared a complimentary certificate for this home.
         </p>
@@ -67,7 +69,7 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
 
   return (
     <details className="group border-t border-lot-line">
-      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone hover:text-lot-ink motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
         Have an agent code?
         <span aria-hidden="true" className="group-open:rotate-45">+</span>
       </summary>
@@ -77,12 +79,17 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
           event.preventDefault();
           const code = normalizeAgentPassCode(typed);
           setTypedInvalid(!code);
-          if (code) onRedeem(code);
+          if (code) {
+            onRedeem(code);
+          } else {
+            document.getElementById(inputId)?.focus();
+          }
         }}
       >
         <FieldLabel htmlFor={inputId}>Agent code</FieldLabel>
         <Input
           id={inputId}
+          name="agentCode"
           value={typed}
           autoComplete="off"
           autoCapitalize="characters"

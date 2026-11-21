@@ -37,7 +37,7 @@ describe("AddressSearch", () => {
     render(<AddressSearch onSelect={vi.fn()} onSubmitText={vi.fn()} />);
 
     const input = screen.getByLabelText("Search property address");
-    expect(input).toHaveAttribute("placeholder", "Search property address…");
+    expect(input).toHaveAttribute("placeholder", "123 Main St, City, ST…");
   });
 
   it("keeps the embedded Search button nested inside the rounded-full input", () => {

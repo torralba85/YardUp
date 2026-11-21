@@ -24,7 +24,7 @@ export function DataExportButton() {
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || "Export failed.");
+        throw new Error(data?.error || "Export failed. Try again or contact support.");
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -36,7 +36,9 @@ export function DataExportButton() {
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed.");
+      setError(
+        err instanceof Error ? err.message : "Export failed. Try again or contact support.",
+      );
     } finally {
       setPending(false);
     }

@@ -34,7 +34,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
           onBack ? "" : "invisible"
         }`}
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={18} aria-hidden="true" />
       </button>
       <ol className="grid min-w-0 flex-1 grid-cols-5">
         {steps.map((step) => {
@@ -52,7 +52,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                   isCurrent
                     ? "text-lot-orange-ink"
                     : isDone
-                      ? "text-status-eligible"
+                      ? "cursor-pointer text-status-eligible hover:bg-lot-surface"
                       : "text-lot-stone"
                 }`}
               >

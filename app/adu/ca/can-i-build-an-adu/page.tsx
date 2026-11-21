@@ -186,7 +186,7 @@ export default function CaliforniaAduEligibilityPage() {
           That state floor covers single-family and multifamily parcels across
           every California city and county. Local rules still set fire
           clearances, coastal permits, septic capacity, and larger size caps, so
-          run through the five checks below before paying for architectural
+          run through the 5 checks below before paying for architectural
           plans.
         </p>
       </div>
@@ -201,8 +201,8 @@ export default function CaliforniaAduEligibilityPage() {
       </div>
 
       <section aria-labelledby="adu-eligibility-checklist" className="mt-12">
-        <h2 id="adu-eligibility-checklist" className="lf-card-heading text-lot-ink">
-          Five parcel checks before you plan a backyard home
+        <h2 id="adu-eligibility-checklist" className="lf-card-heading scroll-mt-20 text-lot-ink">
+          5 parcel checks before you plan a backyard home
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {CHECKLIST_ITEMS.map((item) => (
@@ -220,7 +220,7 @@ export default function CaliforniaAduEligibilityPage() {
       </section>
 
       <section aria-labelledby="adu-eligibility-city-guides" className="mt-12">
-        <h2 id="adu-eligibility-city-guides" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-eligibility-city-guides" className="lf-card-heading scroll-mt-20 text-lot-ink">
           Check your city or county rules next
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
@@ -261,13 +261,13 @@ export default function CaliforniaAduEligibilityPage() {
       </div>
 
       <section aria-labelledby="adu-eligibility-faq" className="mt-12">
-        <h2 id="adu-eligibility-faq" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-eligibility-faq" className="lf-card-heading scroll-mt-20 text-lot-ink">
           California ADU eligibility questions, answered
         </h2>
         <div className="mt-4 divide-y divide-lot-line border-y border-lot-line">
           {FAQS.map((faq) => (
             <details key={faq.question} className="group py-1">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
+              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink hover:text-lot-orange-ink motion-safe:transition-colors">
                 {faq.question}
               </summary>
               <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
@@ -281,7 +281,7 @@ export default function CaliforniaAduEligibilityPage() {
       </div>
 
       <section aria-labelledby="adu-eligibility-sources" className="mt-12">
-        <h2 id="adu-eligibility-sources" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-eligibility-sources" className="lf-card-heading scroll-mt-20 text-lot-ink">
           Primary sources and methodology
         </h2>
         <p className="lf-body mt-3 text-lot-stone">

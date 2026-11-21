@@ -15,6 +15,7 @@ import {
 import { Mail, Lock, User as UserIcon, TriangleAlert } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 import { Dialog } from "@/components/ui/Dialog";
+import { Button } from "@/components/ui/Button";
 import { Checkbox, Input, Select } from "@/components/ui/Field";
 import { readCapturedEmail } from "@/lib/certificate-purchase-intent";
 import { GUEST_LOOKUP_LIMIT } from "@/lib/guest-lookup";
@@ -116,8 +117,10 @@ export function AuthModal({
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [legalAccepted, setLegalAccepted] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const consentRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const triggerHostsRef = useRef<TriggerHost[]>([]);
   const restoredTriggerRef = useRef<HTMLElement | null>(null);
@@ -205,7 +208,15 @@ export function AuthModal({
         });
       }
       wasOpenRef.current = true;
-      panelRef.current?.querySelector<HTMLElement>("input")?.focus();
+      const isCoarsePointer =
+        typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(pointer: coarse)").matches;
+      if (!isCoarsePointer) {
+        panelRef.current
+          ?.querySelector<HTMLElement>(initialMode === "sign-up" ? "#auth-role" : "#auth-email")
+          ?.focus({ preventScroll: true });
+      }
     } else {
       if (wasOpenRef.current) {
         const trigger = triggerRef.current;
@@ -283,13 +294,19 @@ export function AuthModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setConsentError(null);
+
+    if (isSignUp && !legalAccepted) {
+      const msg = "Confirm that you are 18 or older and accept the Terms and Privacy Policy.";
+      setConsentError(msg);
+      consentRef.current?.focus();
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        if (!legalAccepted) {
-          throw new Error("Confirm that you are 18 or older and accept the Terms and Privacy Policy.");
-        }
         trackSignupStarted({
           method: "password",
           surface: analyticsSurface,
@@ -468,22 +485,29 @@ export function AuthModal({
     <div className={isSignUp ? "mb-5" : "mt-6"}>
       <label className="mb-4 flex min-h-11 cursor-pointer items-start gap-3 lf-body-sm text-lot-stone">
         <Checkbox
+          ref={consentRef}
+          name="legalAccepted"
           checked={legalAccepted}
-          onChange={(event) => setLegalAccepted(event.target.checked)}
+          aria-invalid={Boolean(consentError)}
+          aria-describedby={consentError ? "auth-consent-error" : undefined}
+          onChange={(event) => {
+            setLegalAccepted(event.target.checked);
+            if (consentError) setConsentError(null);
+          }}
           className="mt-0.5"
         />
         <span>
           I confirm I am 18 or older, agree to the{" "}
           <a
             href="/terms"
-            className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+            className="text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
           >
             Terms &amp; Conditions
           </a>
           , and acknowledge the{" "}
           <a
             href="/privacy"
-            className="text-lot-orange-ink underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
+            className="text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
           >
             Privacy Policy
           </a>
@@ -496,6 +520,11 @@ export function AuthModal({
               : ". This confirmation is required for Google."}
         </span>
       </label>
+      {consentError && (
+        <p id="auth-consent-error" role="alert" className="-mt-2 mb-3 text-xs font-medium text-status-blocked">
+          {consentError}
+        </p>
+      )}
       {!isSignUp && (
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -528,10 +557,14 @@ export function AuthModal({
         type="button"
         onClick={handleGoogleSignIn}
         aria-describedby="auth-social-consent-help"
+        aria-busy={loading || undefined}
         disabled={loading || !legalAccepted}
         className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-stone bg-lot-ink px-4 py-2.5 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
+        {loading ? (
+          <span aria-hidden="true" className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
@@ -549,6 +582,7 @@ export function AuthModal({
             fill="#EA4335"
           />
         </svg>
+        )}
         Continue with Google
       </button>
       {appleEnabled && (
@@ -556,12 +590,17 @@ export function AuthModal({
           type="button"
           onClick={handleAppleSignIn}
           aria-describedby="auth-social-consent-help"
+          aria-busy={loading || undefined}
           disabled={loading || !legalAccepted}
           className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-control border border-lot-stone bg-lot-ink px-4 py-2.5 text-sm font-medium text-lot-chalk motion-safe:transition-colors hover:bg-lot-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          {loading ? (
+            <span aria-hidden="true" className="block h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M16.365 1.43c0 1.14-.42 2.2-1.2 3.02-.9.96-2.38 1.7-3.64 1.6-.1-1.1.4-2.26 1.18-3.08.9-.96 2.46-1.66 3.66-1.54zM20.5 17.2c-.62 1.42-1.36 2.8-2.42 2.82-1.04.02-1.38-.62-2.58-.62s-1.58.6-2.56.64c-1.04.04-1.84-1.3-2.48-2.7-1.28-2.82-.34-7 1.02-9.28.66-1.12 1.8-1.88 3.06-1.9 1.02-.02 1.98.68 2.58.68.6 0 1.74-.84 2.94-.72.5.02 1.9.2 2.8 1.52-.08.04-1.68 1-1.66 2.96.02 2.34 2.06 3.12 2.1 3.14-.02.06-.32 1.12-.82 2.2z" />
           </svg>
+          )}
           Continue with Apple
         </button>
       )}
@@ -620,6 +659,8 @@ export function AuthModal({
           </label>
           <Select
             id="auth-role"
+            name="role"
+            autoComplete="off"
             value={role}
             onChange={(event) =>
               setRole(event.target.value as "user" | "builder")
@@ -649,7 +690,7 @@ export function AuthModal({
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-                <UserIcon size={16} />
+                <UserIcon size={16} aria-hidden="true" />
               </div>
               <Input
                 id="auth-display-name"
@@ -659,8 +700,8 @@ export function AuthModal({
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
-                className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
-                placeholder="Alma Reyes"
+                className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus-visible:outline-none focus-visible:border-lot-orange-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                placeholder="Alma Reyes…"
               />
             </div>
           </div>
@@ -675,17 +716,18 @@ export function AuthModal({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-              <Mail size={16} />
+              <Mail size={16} aria-hidden="true" />
             </div>
             <Input
               id="auth-email"
               name="email"
               type="email"
               autoComplete="email"
+              spellCheck={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus-visible:outline-none focus-visible:border-lot-orange-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               placeholder="name@example.com"
             />
           </div>
@@ -700,7 +742,7 @@ export function AuthModal({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-lot-stone">
-              <Lock size={16} />
+              <Lock size={16} aria-hidden="true" />
             </div>
             <Input
               id="auth-password"
@@ -710,19 +752,22 @@ export function AuthModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus:outline-none focus:border-lot-orange-ink focus:ring-2 focus:ring-lot-orange-ink"
+              className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus-visible:outline-none focus-visible:border-lot-orange-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               placeholder="••••••••"
             />
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          disabled={loading}
-          className="mt-2 min-h-11 w-full rounded-control bg-lot-orange px-4 py-2.5 text-sm font-semibold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="primary"
+          size="sm"
+          fullWidth
+          loading={loading}
+          className="mt-2 font-semibold"
         >
-          {loading ? "Please wait..." : isSignUp ? "Create free account" : "Sign In"}
-        </button>
+          {loading ? (isSignUp ? "Creating account…" : "Signing in…") : isSignUp ? "Create free account" : "Sign In"}
+        </Button>
       </form>
 
       {!isSignUp && socialChoices}

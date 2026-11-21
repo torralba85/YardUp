@@ -303,13 +303,14 @@ export default function StyleMatchPanel({
               htmlFor={inputId}
               className={`flex min-h-24 flex-col items-center justify-center border-[1.5px] border-dashed border-lot-orange bg-lot-chalk px-4 py-5 text-center motion-safe:transition focus-within:outline-none focus-within:ring-2 focus-within:ring-lot-orange-ink focus-within:ring-offset-2 ${
                 aiConsent
-                  ? "cursor-pointer hover:bg-lot-chalk"
+                  ? "cursor-pointer hover:border-lot-ink hover:bg-lot-surface"
                   : "cursor-not-allowed opacity-50"
               }`}
             >
               <input
                 ref={inputRef}
                 id={inputId}
+                name="styleMatchPhoto"
                 type="file"
                 accept={STYLE_MATCH_ACCEPT}
                 disabled={!aiConsent}
@@ -335,7 +336,7 @@ export default function StyleMatchPanel({
               aria-hidden="true"
             />
             <span className="lf-kicker">
-              Preparing photo
+              Preparing photo…
             </span>
           </div>
         )}
@@ -349,10 +350,16 @@ export default function StyleMatchPanel({
             <div className="relative aspect-[4/3] w-full border border-lot-line overflow-hidden mb-3">
               {previewUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={previewUrl} alt="Uploading house" className="h-full w-full object-cover opacity-60" />
+                <img
+                  src={previewUrl}
+                  alt="Uploading house"
+                  width={prepared?.width ?? 800}
+                  height={prepared?.height ?? 600}
+                  className="h-full w-full object-cover opacity-60"
+                />
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-lot-ink/10">
-                <Loader2 className="motion-safe:animate-spin text-lot-orange-ink" size={24} />
+                <Loader2 className="motion-safe:animate-spin text-lot-orange-ink" size={24} aria-hidden="true" />
               </div>
             </div>
 
@@ -391,7 +398,7 @@ export default function StyleMatchPanel({
             </div>
 
             <p className="mt-3 text-[11px] text-lot-stone leading-normal">
-              Usually under a minute. You can keep adjusting the plan — we will settle it into the gallery when it is ready.
+              Usually under a minute. Keep adjusting the plan — the concept appears in the gallery as soon as it is ready.
             </p>
 
             {showDeveloperTestControls && (

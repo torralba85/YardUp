@@ -50,7 +50,7 @@ export default function IncomeRail({ monthlyRent, verdict }: IncomeRailProps) {
         className="inline-flex items-center gap-1.5 rounded-none px-3 py-1 lf-kicker-dense"
         style={{ backgroundColor: tone.soft, color: tone.onDark }}
       >
-        <Icon size={13} />
+        <Icon size={13} aria-hidden="true" />
         {verdict}
       </span>
     </div>

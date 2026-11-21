@@ -14,6 +14,7 @@ import {
   type FeasibilityResult,
 } from "@/lib/feasibility";
 import { discloseFeasibility } from "@/lib/feasibility-disclosure";
+import { formatNumber } from "@/lib/intl-format";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
 import { Button } from "@/components/ui/Button";
 
@@ -105,7 +106,7 @@ export default function ShapeStep({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2 font-semibold">{option.title}{selected && <Check size={14} aria-hidden="true" />}</span>
                   <span className={`mt-1 block text-xs leading-5 ${selected ? "text-lot-stone-on-dark" : "text-lot-stone"}`}>
-                    {option.footprint.toLocaleString()} ft², {preset.width} × {preset.length} ft<br />{option.blurb}
+                    {formatNumber(option.footprint)}&nbsp;ft², {preset.width}&nbsp;×&nbsp;{preset.length}&nbsp;ft<br />{option.blurb}
                   </span>
                 </span>
                 <FootprintDiagram width={preset.width} length={preset.length} />
@@ -114,7 +115,7 @@ export default function ShapeStep({
           })}
         </div>
 
-        <div className="mt-4 grid grid-cols-3 items-end gap-2" aria-label="Exact ADU dimensions">
+        <div role="group" className="mt-4 grid grid-cols-3 items-end gap-2" aria-label="Exact ADU dimensions">
           <NumericField label="Width (ft)" value={config.width} min={1} max={Math.min(80,2000/config.length)} onChange={width=>onConfigChange({...config,width,footprint:width*config.length})}/>
           <NumericField label="Length (ft)" value={config.length} min={1} max={Math.min(80,2000/config.width)} onChange={length=>onConfigChange({...config,length,footprint:config.width*length})}/>
           <NumericField label="Wall height (ft)" value={config.height} min={1} max={30} onChange={height=>onConfigChange({...config,height})}/>
@@ -164,7 +165,7 @@ export default function ShapeStep({
           onClick={onFineTune}
           className="mt-5 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-semibold text-lot-orange-ink hover:bg-lot-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
         >
-          <SlidersHorizontal size={15} />
+          <SlidersHorizontal size={15} aria-hidden="true" />
           Fine-tune dimensions &amp; assumptions
         </button>
 

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 
 /**
@@ -56,10 +57,10 @@ export default function ForgotPasswordPage() {
       <AuthLayout title="Check your email" subtitle="Password reset instructions sent.">
         <div ref={confirmationRef} tabIndex={-1} role="status" aria-label="Password reset instructions sent" className="flex flex-col items-center gap-4 py-4 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-status-eligible-soft text-status-eligible">
-            <CheckCircle className="h-6 w-6" />
+            <CheckCircle className="h-6 w-6" aria-hidden="true" />
           </div>
           <p className="lf-body-sm text-lot-stone">
-            If <strong className="text-lot-ink">{email}</strong> is registered,
+            If <strong translate="no" className="break-all text-lot-ink">{email}</strong> is registered,
             you&apos;ll receive a reset link shortly. Check your spam folder if it doesn&apos;t arrive.
           </p>
           <Link
@@ -104,17 +105,21 @@ export default function ForgotPasswordPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder="you@example.com…"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="md"
+          fullWidth
           disabled={isPending}
-          className="min-h-11 w-full rounded-control bg-lot-orange py-3 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 disabled:opacity-50"
+          loading={isPending}
+          aria-busy={isPending}
         >
           {isPending ? "Sending…" : "Send reset link"}
-        </button>
+        </Button>
       </form>
 
       <p className="lf-body-sm mt-6 text-center text-lot-stone">

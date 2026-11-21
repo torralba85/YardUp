@@ -56,7 +56,7 @@ export default function MobileJourney({
           <JourneyRail steps={steps} onBack={onBack} onStepSelect={onStepSelect} />
         </div>
       </div>
-      <main ref={mainRef} id="main-content" aria-label={activeStep ? `${activeStep.label} step` : undefined} tabIndex={-1} className={pageScroll ? "flex min-h-[calc(100dvh-7.25rem)] flex-1 flex-col [&>section]:flex-1" : "min-h-0 flex-1 overflow-y-auto"}>
+      <main ref={mainRef} id="main-content" aria-label={activeStep ? `${activeStep.label} step` : undefined} tabIndex={-1} className={pageScroll ? "flex min-h-[calc(100dvh-7.25rem)] flex-1 scroll-mt-[calc(7.25rem+env(safe-area-inset-top,0px))] flex-col [&>section]:flex-1" : "min-h-0 flex-1 overflow-y-auto"}>
         {children}
       </main>
     </div>

@@ -15,11 +15,11 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title, description, url: "/privacy" }),
 };
 
-const linkClass = "font-medium text-lot-orange-ink underline";
+const linkClass = "font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink";
 
 function SupportEmail() {
   return (
-    <a href="mailto:support@lotfoundry.net" className={linkClass}>
+    <a href="mailto:support@lotfoundry.net" translate="no" className={linkClass}>
       support@lotfoundry.net
     </a>
   );
@@ -301,8 +301,8 @@ export default function PrivacyPage() {
         <p>
           <strong>Google Analytics 4 and Google Ads conversion measurement (Consent Gated):</strong>{" "}
           We load these Google tags only if you click Accept. They then set first-party measurement
-          cookies (including <code>_ga</code> and <code>_ga_*</code> for Analytics, and{" "}
-          <code>_gcl_au</code>, <code>_gcl_aw</code>, and <code>_gcl_dc</code> for Google Ads) to
+          cookies (including <code translate="no">_ga</code> and <code translate="no">_ga_*</code> for Analytics, and{" "}
+          <code translate="no">_gcl_au</code>, <code translate="no">_gcl_aw</code>, and <code translate="no">_gcl_dc</code> for Google Ads) to
           measure site usage, ad-driven visits, and purchases. Google Consent Mode grants analytics
           and ad storage but keeps ad personalization denied, so personalized advertising and
           remarketing stay off. Google Ads receives a purchase value, currency, and transaction

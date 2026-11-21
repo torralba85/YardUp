@@ -76,10 +76,9 @@ export function MoneyFigure({
   className,
 }: MoneyFigureProps) {
   const Component = as ?? "span";
-  // The hook must be called unconditionally; select the static value when the
-  // caller has not opted into motion.
-  const animated = useCountUp(value);
-  const shown = animate ? animated : value;
+  // The hook must be called unconditionally; disable the rAF tween when the
+  // caller has not opted into motion so static figures do zero animation work.
+  const shown = useCountUp(value, undefined, animate);
 
   // Rendered via createElement so the polymorphic `as` element accepts children
   // without TS collapsing the child prop of the ElementType union to `never`.

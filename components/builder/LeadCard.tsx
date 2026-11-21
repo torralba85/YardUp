@@ -1,15 +1,58 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import { CheckCircle2, CircleSlash, FileText, Flag, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusChip, type StatusChipStatus } from "@/components/ui/StatusChip";
 import { finishLabels, formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
+import { formatNumber, formatUtcDate } from "@/lib/intl-format";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import type {
   BuilderInboxItem,
   UnlockedLeadContact,
 } from "@/lib/marketplace-types";
+
+let clockNow = 0;
+let clockTimer: ReturnType<typeof setInterval> | null = null;
+const clockListeners = new Set<() => void>();
+
+function subscribeNoop(): () => void {
+  return () => {};
+}
+
+function subscribeClock(listener: () => void): () => void {
+  if (clockListeners.size === 0) {
+    if (clockNow === 0) {
+      clockNow = Date.now();
+    }
+    clockTimer = setInterval(() => {
+      clockNow = Date.now();
+      clockListeners.forEach((notify) => notify());
+    }, 60_000);
+  }
+  clockListeners.add(listener);
+  return () => {
+    clockListeners.delete(listener);
+    if (clockListeners.size === 0) {
+      if (clockTimer !== null) {
+        clearInterval(clockTimer);
+        clockTimer = null;
+      }
+      clockNow = 0;
+    }
+  };
+}
+
+function getClockSnapshot(): number {
+  if (clockNow === 0) {
+    clockNow = Date.now();
+  }
+  return clockNow;
+}
+
+function getServerClockSnapshot(): null {
+  return null;
+}
 
 /** A lead card's reveal state: paywalled, mid-unlock, or revealed. */
 export type LeadAccess = "locked" | "confirming" | "unlocked";
@@ -74,23 +117,22 @@ export default function LeadCard({
   const headline =
     access === "unlocked" && contact ? contact.streetAddress : preview.neighborhood;
 
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!item.request.headStartUntil) return;
-    const interval = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(interval);
-  }, [item.request.headStartUntil]);
-
   const headStartUntil = item.request.headStartUntil;
-  const headStartMs = headStartUntil
-    ? new Date(headStartUntil).getTime() - now
-    : 0;
+  const now = useSyncExternalStore(
+    headStartUntil ? subscribeClock : subscribeNoop,
+    headStartUntil ? getClockSnapshot : getServerClockSnapshot,
+    getServerClockSnapshot,
+  );
+  const headStartMs =
+    headStartUntil && now !== null
+      ? new Date(headStartUntil).getTime() - now
+      : 0;
   const isHeadStartActive = headStartMs > 0 && access === "locked";
 
   // Build is the widest figure, so on two-column phones it takes the last row whole.
   const facts: Array<{ label: string; value: ReactNode; wide?: boolean }> = [
-    { label: "Lot", value: `${preview.lotSqft.toLocaleString()} sqft` },
-    { label: "ADU", value: `${preview.aduSqft.toLocaleString()} sf` },
+    { label: "Lot", value: `${formatNumber(preview.lotSqft)} sqft` },
+    { label: "ADU", value: `${formatNumber(preview.aduSqft)} sf` },
     { label: "Finish", value: finishLabels[preview.config.finish] },
     { label: "Payback", value: `${preview.paybackYears} yrs` },
     {
@@ -312,14 +354,7 @@ function formatRecorded(iso: string | null): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return date
-    .toLocaleDateString("en-US", {
-      timeZone: "UTC",
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-    })
-    .toUpperCase();
+  return formatUtcDate(date, "short").toUpperCase();
 }
 
 function formatHeadStartRemaining(ms: number): string {

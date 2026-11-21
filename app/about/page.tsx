@@ -36,7 +36,7 @@ export default function AboutPage() {
       <LegalSection title="Who it is for">
         <p>
           Homeowners deciding whether their backyard can earn, and{" "}
-          <Link href="/builder" className="font-medium text-lot-orange-ink underline">
+          <Link href="/builder" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             ADU builders and designers
           </Link>{" "}
           who want consented feasibility snapshots matched to their service areas.
@@ -69,11 +69,11 @@ export default function AboutPage() {
           structured Article schema. We enforce a 90-day re-verification gate in automated tests,
           re-check local ordinances when cities adopt amendments, and accept source-backed corrections
           through{" "}
-          <Link href="/feedback" className="font-medium text-lot-orange-ink underline">
+          <Link href="/feedback" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             feedback
           </Link>
           . Full cost, rent, and payback formulas are documented on{" "}
-          <Link href="/adu/how-we-estimate" className="font-medium text-lot-orange-ink underline">
+          <Link href="/adu/how-we-estimate" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             how we estimate ADU feasibility
           </Link>
           .
@@ -93,7 +93,7 @@ export default function AboutPage() {
             Help
           </Link>
           , send{" "}
-          <Link href="/feedback" className="font-medium text-lot-orange-ink underline">
+          <Link href="/feedback" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             feedback
           </Link>
           , or email{" "}

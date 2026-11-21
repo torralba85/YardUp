@@ -89,7 +89,7 @@ export default function SplatCalibrationPanel({
             ref={closeButton}
             className="h-11 w-11 shrink-0 p-0 text-lot-stone hover:text-lot-ink"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
       </div>
@@ -112,6 +112,8 @@ export default function SplatCalibrationPanel({
           </div>
           <input
             type="number"
+            name="uniformScale"
+            autoComplete="off"
             min="0.01"
             max="100"
             step="0.05"
@@ -135,6 +137,8 @@ export default function SplatCalibrationPanel({
           </div>
           <input
             type="number"
+            name="yawDeg"
+            autoComplete="off"
             min="-180"
             max="180"
             step="1"
@@ -160,6 +164,8 @@ export default function SplatCalibrationPanel({
               <span className="mb-1 block text-xs font-medium">{axis} (ft)</span>
               <input
                 type="number"
+                name={`offset${axis}`}
+                autoComplete="off"
                 step="0.5"
                 min="-200"
                 max="200"

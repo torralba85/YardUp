@@ -24,9 +24,9 @@ describe("FieldBookIndex", () => {
     expect(screen.getByText("1411 Elm St")).toBeInTheDocument();
     expect(screen.getByText(/061-244-018/)).toBeInTheDocument();
     for (const name of ["The Lot", "The Build", "The Return", "The Record"]) {
-      expect(screen.getByRole("button", { name: new RegExp(name) })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: new RegExp(name) })).toBeInTheDocument();
     }
-    expect(screen.getByRole("button", { name: /The Lot/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /The Lot/ })).toHaveAttribute(
       "aria-current",
       "page",
     );
@@ -43,7 +43,7 @@ describe("FieldBookIndex", () => {
         subject={{ address: "1411 Elm St" }}
       />,
     );
-    await user.click(screen.getByRole("button", { name: /The Return/ }));
+    await user.click(screen.getByRole("link", { name: /The Return/ }));
     expect(onNavigate).toHaveBeenCalledWith("return");
   });
 
@@ -58,9 +58,9 @@ describe("FieldBookIndex", () => {
       />,
     );
 
-    const first = screen.getByRole("button", { name: /The Lot/ });
-    const second = screen.getByRole("button", { name: /The Build/ });
-    const third = screen.getByRole("button", { name: /The Return/ });
+    const first = screen.getByRole("link", { name: /The Lot/ });
+    const second = screen.getByRole("link", { name: /The Build/ });
+    const third = screen.getByRole("link", { name: /The Return/ });
 
     first.focus();
     expect(document.activeElement).toBe(first);

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Award, ArrowRight, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { claimCertificatesByEmail } from "@/lib/certificate-checkout";
+import { formatDollars } from "@/lib/intl-format";
 import { Button } from "@/components/ui/Button";
 import { Bezel } from "@/components/ui/Bezel";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -29,16 +29,17 @@ function formatDate(date: Date | null): string {
 }
 
 function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(0)}`;
+  return formatDollars(Math.round(cents / 100));
 }
 
 export function CertificatesClient() {
-  const router = useRouter();
   const { user, profile, loading: authLoading, logout, refreshProfile, sendVerification } = useAuth();
   const { certificates, loading: certsLoading, error, refresh } =
     useUserPurchasedCertificates(user?.uid);
   const [recoveredCount, setRecoveredCount] = useState(0);
+  const [verificationSending, setVerificationSending] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [checkingRecovery, setCheckingRecovery] = useState(false);
   const [recoveryError, setRecoveryError] = useState(false);
   const [recoveryAttempt, setRecoveryAttempt] = useState(0);
@@ -89,7 +90,7 @@ export function CertificatesClient() {
           actions={
             <Link
               href="/studio"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink hover:underline"
             >
               Open studio
             </Link>
@@ -98,7 +99,7 @@ export function CertificatesClient() {
 
         <div className="mx-auto max-w-md px-4 py-16 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
-            <Award className="h-6 w-6 text-lot-orange-ink" />
+            <Award className="h-6 w-6 text-lot-orange-ink" aria-hidden="true" />
           </div>
           <h1 className="lf-panel-heading mt-6 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
           <p className="lf-body-sm mt-3 text-lot-ink">
@@ -190,13 +191,23 @@ export function CertificatesClient() {
                   type="button"
                   variant="secondary"
                   size="xs"
+                  loading={verificationSending}
                   onClick={() => {
+                    setVerificationSending(true);
+                    setVerificationError(null);
                     void sendVerification()
                       .then(() => setVerificationSent(true))
-                      .catch(() => undefined);
+                      .catch(() =>
+                        setVerificationError("Could not send verification email. Try again."),
+                      )
+                      .finally(() => setVerificationSending(false));
                   }}
                 >
-                  {verificationSent ? "Verification email sent" : "Resend verification email"}
+                  {verificationSending
+                    ? "Sending…"
+                    : verificationSent
+                      ? "Verification email sent"
+                      : "Resend verification email"}
                 </Button>
               )}
               {typeof refreshProfile === "function" && (
@@ -215,6 +226,16 @@ export function CertificatesClient() {
                 </Button>
               )}
             </div>
+            {verificationSent && (
+              <p role="status" aria-live="polite" className="mt-2 text-xs text-status-eligible">
+                Verification email sent. Check your inbox, then verify again.
+              </p>
+            )}
+            {verificationError && (
+              <p role="alert" className="mt-2 text-xs text-status-blocked">
+                {verificationError}
+              </p>
+            )}
           </div>
         )}
 
@@ -242,7 +263,7 @@ export function CertificatesClient() {
         ) : certificates.length === 0 ? (
           <div className="my-10 rounded-none border border-dashed border-lot-line bg-lot-chalk p-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
-              <ShieldCheck className="h-7 w-7 text-lot-stone" />
+              <ShieldCheck className="h-7 w-7 text-lot-stone" aria-hidden="true" />
             </div>
             <h2 className="mt-4 text-base font-semibold text-lot-ink">
               No certificates unlocked yet
@@ -255,7 +276,7 @@ export function CertificatesClient() {
             <div className="mt-6">
               <Link
                 href="/studio"
-                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-semibold text-lot-ink"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-6 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover"
               >
                 Explore 3D Studio
               </Link>
@@ -299,27 +320,25 @@ export function CertificatesClient() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 pt-1 text-xs text-lot-stone">
-                          <span className="tabular-nums">ID: #{cert.certKey}</span>
-                          <span>·</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-lot-stone">
+                          <span className="break-all tabular-nums" translate="no">
+                            ID: #{cert.certKey}
+                          </span>
+                          <span aria-hidden="true">·</span>
                           {/* A $0 grant is an agent-pass certificate, not a sale. */}
                           <span>{cert.amount === 0 ? "Complimentary" : <>Amount: {formatPrice(cert.amount)}</>}</span>
                         </div>
                       </div>
 
                       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
-                        <Button
-                          variant="commit"
-                          size="md"
-                          onClick={() => {
-                            const url = buildStudioUrlForCertificate(cert);
-                            router.push(url);
-                          }}
-                          className="w-full sm:w-auto"
+                        <Link
+                          href={buildStudioUrlForCertificate(cert)}
+                          prefetch={false}
+                          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-lot-ink px-[19px] py-3 text-sm font-bold text-lot-chalk motion-safe:transition hover:bg-lot-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 sm:w-auto"
                         >
                           Open in 3D Studio
-                          <ArrowRight className="ml-1.5 h-4 w-4" />
-                        </Button>
+                          <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                        </Link>
                       </div>
                     </div>
                   </Bezel>

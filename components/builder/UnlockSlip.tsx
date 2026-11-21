@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import {
   leadUnlockPayLabel,
   leadUnlockSecureNote,
@@ -96,8 +97,8 @@ export default function UnlockSlip({
       <div className="border border-lot-line bg-lot-surface px-4 py-3.5">
         <p className="font-semibold">{preview.neighborhood}</p>
         <p className="mt-1 flex flex-wrap gap-3.5 lf-kicker-dense text-lot-stone">
-          <span>{preview.lotSqft.toLocaleString()} sqft lot</span>
-          <span>{preview.aduSqft.toLocaleString()} sf ADU</span>
+          <span>{formatNumber(preview.lotSqft)} sqft lot</span>
+          <span>{formatNumber(preview.aduSqft)} sf ADU</span>
           {item.request.ownerVerified && <span>Verified email</span>}
         </p>
         <p className="mt-2 lf-money-lg text-lot-ink">
@@ -139,6 +140,7 @@ export default function UnlockSlip({
       <div className="mt-4 flex items-center gap-2.5 border border-lot-line px-3.5 py-2.5">
         <span
           aria-hidden
+          translate="no"
           className="flex h-8 w-8 flex-none items-center justify-center border-[1.5px] border-lot-ink font-display text-lg font-medium"
         >
           LF

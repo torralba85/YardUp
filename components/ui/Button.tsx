@@ -26,7 +26,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary: "bg-lot-orange text-lot-ink hover:bg-lot-orange-hover",
   commit: "bg-lot-ink text-lot-chalk hover:bg-lot-ink-hover",
   selected:
-    "border border-lot-ink bg-lot-ink text-lot-chalk ring-1 ring-lot-ink/20",
+    "border border-lot-ink bg-lot-ink text-lot-chalk ring-1 ring-lot-ink/20 hover:bg-lot-ink-hover",
   secondary:
     "border border-lot-stone bg-lot-chalk text-lot-ink hover:border-lot-ink hover:bg-lot-surface",
   ghost: "text-lot-ink hover:bg-lot-line/30",

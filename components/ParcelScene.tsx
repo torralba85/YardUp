@@ -1422,7 +1422,7 @@ export default function ParcelScene({
             />
             <SceneCameras mode={viewMode} />
             <OrbitControls
-              enableDamping
+              enableDamping={!reducedMotion}
               dampingFactor={0.06}
               makeDefault
               maxPolarAngle={Math.PI / 2.05}
@@ -1652,7 +1652,7 @@ export default function ParcelScene({
         <PlacementEditor parcel={parcel} config={config} pose={activePose} onChange={commitPose} />
 
       <details className="shrink-0 border-t border-lot-line bg-lot-chalk px-3">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
           Lighting and quality
         </summary>
         <div className="space-y-3 pb-3">
@@ -1663,7 +1663,12 @@ export default function ParcelScene({
           >
             <Sun className="h-4 w-4 shrink-0 text-lot-ink" aria-hidden="true" />
             <span className="flex min-w-16 flex-col leading-none">
-              <span className="lf-kicker text-lot-stone">Shadow preview</span>
+              <label
+                htmlFor="shadow-preview-hour"
+                className={`lf-kicker text-lot-stone ${shadowPreview ? "cursor-pointer" : ""}`}
+              >
+                Shadow preview
+              </label>
               <output
                 htmlFor="shadow-preview-hour"
                 className="mt-1 font-sans text-xs font-semibold tabular-nums tracking-[0.08em]"
@@ -1673,6 +1678,7 @@ export default function ParcelScene({
             </span>
             <input
               id="shadow-preview-hour"
+              name="shadowPreviewHour"
               type="range"
               min="7"
               max="19"

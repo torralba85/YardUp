@@ -159,6 +159,41 @@ export function SceneVisibility({
     invalidate();
   };
 
+  useEffect(() => {
+    const housePose = house?.pose;
+    const houseWidth = house?.footprint.width;
+    const houseDepth = house?.footprint.depth;
+    if (!utilityMode || !housePose || !houseWidth || !houseDepth) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key !== "u" && event.key !== "U") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      const halfW = houseWidth / 2;
+      const halfD = houseDepth / 2;
+      const clampedX = pose
+        ? Math.max(housePose.x - halfW, Math.min(housePose.x + halfW, pose.x))
+        : housePose.x;
+      const z = pose && pose.z < housePose.z
+        ? housePose.z - halfD
+        : housePose.z + halfD;
+      setUtilityAnchor({ x: clampedX, y: 0.3, z });
+      invalidate();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [house, invalidate, pose, utilityMode]);
+
   return (
     <>
       {parcel && boundary.length >= 3 && innerBoundary.length >= 3 && (

@@ -31,7 +31,7 @@ describe("A LOT MORE shared design contract", () => {
   });
 
   it("does not regress money figures to status green or orange buttons to chalk labels", () => {
-    for (const file of componentFiles(resolve(root, "components"))) {
+    for (const file of [...componentFiles(resolve(root, "app")), ...componentFiles(resolve(root, "components"))]) {
       const source = readFileSync(file, "utf8");
       expect(source, file).not.toMatch(/lf-money-\w+[^"\n]*text-status-eligible/);
       // Match unprefixed pairs only; selected/unselected variants intentionally

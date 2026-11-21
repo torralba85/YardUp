@@ -40,13 +40,13 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
       <Link
         href="/"
         aria-label="LotFoundry home"
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control motion-safe:transition-colors hover:bg-lot-surface-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
       >
         <ParcelMark className="h-7 w-7 text-lot-chalk" />
       </Link>
-      <span className="min-w-0 flex-1 truncate rounded-none border border-lot-line-dark bg-lot-surface-dark px-2.5 py-1.5 text-xs text-lot-chalk">
-        {address}
-        {estimated && <span className="ml-1.5 lf-kicker text-status-review-on-dark">est.</span>}
+      <span className="flex min-w-0 flex-1 items-baseline gap-1.5 rounded-none border border-lot-line-dark bg-lot-surface-dark px-2.5 py-1.5 text-xs text-lot-chalk">
+        <span className="min-w-0 truncate">{address}</span>
+        {estimated && <span className="shrink-0 lf-kicker text-status-review-on-dark">est.</span>}
       </span>
       <button
         type="button"
@@ -54,7 +54,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
         onClick={onReset}
         className="flex h-11 w-11 items-center justify-center rounded-control text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
       >
-        <RotateCcw size={17} />
+        <RotateCcw size={17} aria-hidden="true" />
       </button>
       {user ? (
         <AccountMenu
@@ -70,7 +70,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
           onClick={() => setAuthOpen(true)}
           className="flex h-11 w-11 items-center justify-center rounded-control text-lot-stone-on-dark motion-safe:transition-colors hover:bg-lot-surface-dark hover:text-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lot-chalk"
         >
-          <UserRound size={18} />
+          <UserRound size={18} aria-hidden="true" />
         </button>
       )}
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />

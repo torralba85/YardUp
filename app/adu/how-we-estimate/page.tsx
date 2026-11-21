@@ -5,7 +5,7 @@ import { METHODOLOGY_AS_OF, methodologyUrl } from "@/lib/adu/content";
 import { SITE_OG_IMAGE } from "@/lib/og-images";
 import { SITE_NAME } from "@/lib/site-identity";
 
-const TITLE = "How We Estimate ADU Cost, Rent & Payback | LotFoundry";
+const TITLE = "How LotFoundry Estimates ADU Cost, Rent & Payback";
 const DESCRIPTION =
   "The formulas, data sources and limits behind LotFoundry's ADU build-cost, rent and payback estimates, with a worked San Diego County example.";
 

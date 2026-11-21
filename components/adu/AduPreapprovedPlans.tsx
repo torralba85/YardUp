@@ -27,7 +27,7 @@ export function AduPreapprovedPlans({ content }: { content: JurisdictionContent 
 
   return (
     <section aria-labelledby="adu-plans" className="mt-12">
-      <h2 id="adu-plans" className="lf-card-heading text-lot-ink">
+      <h2 id="adu-plans" className="lf-card-heading scroll-mt-20 text-lot-ink">
         Official pre-approved ADU plans for {content.city}
       </h2>
       <p className="lf-body mt-3 text-lot-stone">{program.notes}</p>

@@ -22,7 +22,7 @@ const TICK_META: Record<PlateTick, { icon: LucideIcon; label: string; className:
 
 /** Arrow-key roving focus across the four surveyor plates. */
 function useArrowNav(plates: readonly { id: StudioPlate }[]) {
-  const refs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const refs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   function handleKeyDown(event: React.KeyboardEvent, index: number) {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
@@ -62,9 +62,13 @@ export default function FieldBookIndex({
         </p>
         {(subject.apn || subject.zone) && (
           <p className="mt-0.5 font-sans text-xs text-lot-stone-on-dark">
-            {subject.apn ? `APN ${subject.apn}` : ""}
+            {subject.apn ? (
+              <>
+                APN <span translate="no">{subject.apn}</span>
+              </>
+            ) : null}
             {subject.apn && subject.zone ? " · " : ""}
-            {subject.zone ?? ""}
+            {subject.zone ? <span translate="no">{subject.zone}</span> : null}
           </p>
         )}
       </div>
@@ -75,13 +79,25 @@ export default function FieldBookIndex({
           const tick = TICK_META[statuses[plate.id]];
           const TickIcon = tick.icon;
           return (
-            <button
+            <a
               key={plate.id}
               ref={(el) => {
                 refs.current[plate.id] = el;
               }}
-              type="button"
-              onClick={() => onNavigate(plate.id)}
+              href={`#${plate.id}`}
+              onClick={(event) => {
+                if (
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey ||
+                  event.button !== 0
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                onNavigate(plate.id);
+              }}
               onKeyDown={(event) => handleKeyDown(event, index)}
               aria-current={isActive ? "page" : undefined}
               className={`relative flex w-full min-h-11 items-center gap-3 rounded-control py-2 pl-3 pr-2.5 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset ${
@@ -118,7 +134,7 @@ export default function FieldBookIndex({
                 <TickIcon size={13} aria-hidden="true" />
                 <span className="sr-only"> {tick.label}</span>
               </span>
-            </button>
+            </a>
           );
         })}
       </nav>

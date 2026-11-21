@@ -55,21 +55,20 @@ export function CookieConsentBanner() {
         // The script must precede the banner so it runs before the banner paints.
         <script dangerouslySetInnerHTML={{ __html: CONSENT_PREPAINT_SCRIPT }} />
       ) : null}
-      <div
-        role="region"
+      <section
         aria-label="Cookie consent"
         data-consent-banner=""
         data-pending={pending ? "" : undefined}
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-index-toast) sm:px-4 sm:pt-2 sm:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-(--z-index-toast) pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] sm:px-[max(1rem,env(safe-area-inset-left))] sm:pt-2 sm:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
         <div className="pointer-events-auto mx-auto flex w-full max-w-5xl flex-col gap-1.5 rounded-none border-t border-lot-line bg-lot-chalk px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-4 sm:border sm:px-4 sm:py-2">
           <p className="lf-caption flex-1 text-lot-ink">
-            Allow Google Analytics and Google Ads cookies to measure how people find us? Google never gets your address or results.
+            Allow Google Analytics and Google Ads cookies to measure how people find LotFoundry? Google never gets your address or results.
           </p>
           <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
             <Link
               href="/privacy"
-              className="inline-flex min-h-11 shrink-0 items-center lf-caption font-medium text-lot-orange-ink underline"
+              className="inline-flex min-h-11 shrink-0 items-center lf-caption font-medium text-lot-orange-ink underline underline-offset-2 motion-safe:transition-colors hover:text-lot-ink"
             >
               Privacy Policy
             </Link>
@@ -94,7 +93,7 @@ export function CookieConsentBanner() {
             </Button>
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }

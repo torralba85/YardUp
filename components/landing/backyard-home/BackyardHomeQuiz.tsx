@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, RotateCcw } from "lucide-react";
-import { useCallback, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { Bezel } from "@/components/ui/Bezel";
 import { Button } from "@/components/ui/Button";
@@ -40,6 +40,9 @@ export function BackyardHomeQuiz() {
   const [view, setView] = useState<QuizView>("questions");
   const [address, setAddress] = useState("");
   const [showAuthGate, setShowAuthGate] = useState(false);
+  const [transitionCount, setTransitionCount] = useState(0);
+  const questionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const viewHeadingRef = useRef<HTMLDivElement>(null);
 
   const currentQuestion = QUIZ_QUESTIONS[stepIndex];
   const evaluation = evaluateEligibilityQuiz(answers);
@@ -47,12 +50,22 @@ export function BackyardHomeQuiz() {
     Object.keys(answers).length === QUIZ_QUESTIONS.length;
   const demoSize = completedAllSteps ? evaluation.recommendedFootprint : 400;
 
+  useEffect(() => {
+    if (transitionCount === 0) return;
+    if (view === "questions") {
+      questionHeadingRef.current?.focus();
+    } else {
+      viewHeadingRef.current?.focus();
+    }
+  }, [transitionCount, view, stepIndex]);
+
   const handleAnswer = (answer: QuizAnswer) => {
     const nextAnswers: QuizAnswers = {
       ...answers,
       [currentQuestion.id]: answer,
     };
     setAnswers(nextAnswers);
+    setTransitionCount((count) => count + 1);
 
     const nextStep = stepIndex + 1;
     if (nextStep < QUIZ_QUESTIONS.length) {
@@ -71,10 +84,12 @@ export function BackyardHomeQuiz() {
 
   const handleBack = () => {
     if (view === "direct_address") {
+      setTransitionCount((count) => count + 1);
       setView("questions");
       return;
     }
     if (stepIndex > 0) {
+      setTransitionCount((count) => count + 1);
       setStepIndex(stepIndex - 1);
     }
   };
@@ -82,6 +97,7 @@ export function BackyardHomeQuiz() {
   const handleRetake = () => {
     setAnswers({});
     setStepIndex(0);
+    setTransitionCount((count) => count + 1);
     setView("questions");
   };
 
@@ -104,12 +120,23 @@ export function BackyardHomeQuiz() {
   const progressPercent = Math.round(
     ((stepIndex + 1) / QUIZ_QUESTIONS.length) * 100,
   );
+  const liveAnnouncement =
+    transitionCount === 0
+      ? ""
+      : view === "questions"
+        ? `Question ${stepIndex + 1} of ${QUIZ_QUESTIONS.length}: ${currentQuestion.prompt}`
+        : view === "result"
+          ? `Eligibility check complete. ${evaluation.chipLabel}. ${evaluation.headline}`
+          : "Direct parcel check. Test your address against modeled setbacks in 3D.";
 
   return (
     <Bezel
       className="border-lot-line bg-lot-surface shadow-paper"
       innerClassName="p-5 sm:p-6"
     >
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {liveAnnouncement}
+      </p>
       {view === "questions" ? (
         <div className="space-y-5">
           <div className="space-y-2.5">
@@ -128,11 +155,11 @@ export function BackyardHomeQuiz() {
               aria-valuemin={1}
               aria-valuemax={QUIZ_QUESTIONS.length}
               aria-valuenow={stepIndex + 1}
-              className="h-1.5 w-full bg-lot-line"
+              className="h-1.5 w-full overflow-hidden bg-lot-line"
             >
               <div
-                className="h-full bg-lot-orange transition-[width] duration-200 ease-out"
-                style={{ width: `${progressPercent}%` }}
+                className="h-full w-full origin-left bg-lot-orange motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out"
+                style={{ transform: `scaleX(${progressPercent / 100})` }}
               />
             </div>
           </div>
@@ -141,7 +168,11 @@ export function BackyardHomeQuiz() {
             <span className="lf-kicker-dense text-lot-orange-ink">
               Check {currentQuestion.number}
             </span>
-            <h2 className="lf-card-heading text-lot-ink">
+            <h2
+              ref={questionHeadingRef}
+              tabIndex={-1}
+              className="lf-card-heading rounded-control text-lot-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            >
               {currentQuestion.prompt}
             </h2>
             <p className="lf-body-sm text-lot-stone">
@@ -158,6 +189,7 @@ export function BackyardHomeQuiz() {
               variant={
                 answers[currentQuestion.id] === "yes" ? "selected" : "secondary"
               }
+              aria-pressed={answers[currentQuestion.id] === "yes"}
               size="lg"
               fullWidth
               onClick={() => handleAnswer("yes")}
@@ -170,6 +202,7 @@ export function BackyardHomeQuiz() {
               variant={
                 answers[currentQuestion.id] === "no" ? "selected" : "secondary"
               }
+              aria-pressed={answers[currentQuestion.id] === "no"}
               size="lg"
               fullWidth
               onClick={() => handleAnswer("no")}
@@ -192,7 +225,10 @@ export function BackyardHomeQuiz() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setView("direct_address")}
+              onClick={() => {
+                setTransitionCount((count) => count + 1);
+                setView("direct_address");
+              }}
               className="text-lot-orange-ink"
             >
               Skip to address check
@@ -200,63 +236,69 @@ export function BackyardHomeQuiz() {
           </div>
         </div>
       ) : (
-        <div className="space-y-5" aria-live="polite">
-          {view === "result" ? (
-            <>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <StatusChip
-                  status={evaluation.verdict}
-                  label={evaluation.chipLabel}
-                  size="md"
-                />
-                <span className="lf-caption text-lot-stone tabular-nums">
-                  {evaluation.yesCount} of {QUIZ_QUESTIONS.length} signals clear
-                </span>
-              </div>
+        <div className="space-y-5">
+          <div
+            ref={viewHeadingRef}
+            tabIndex={-1}
+            className="space-y-5 rounded-control focus:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+          >
+            {view === "result" ? (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <StatusChip
+                    status={evaluation.verdict}
+                    label={evaluation.chipLabel}
+                    size="md"
+                  />
+                  <span className="lf-caption text-lot-stone tabular-nums">
+                    {evaluation.yesCount} of {QUIZ_QUESTIONS.length} signals clear
+                  </span>
+                </div>
 
+                <PanelHeader
+                  as="h2"
+                  eyebrow={`Suggested test footprint: ${evaluation.recommendedFootprint} sq ft`}
+                  title={evaluation.headline}
+                  sub={evaluation.summary}
+                />
+
+                <ul
+                  className="divide-y divide-lot-line border border-lot-line bg-lot-chalk"
+                  aria-label="Checklist breakdown"
+                >
+                  {evaluation.checks.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex items-start justify-between gap-3 px-3.5 py-2.5"
+                    >
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="lf-body-sm font-medium text-lot-ink">
+                          <span className="mr-1.5 text-lot-stone tabular-nums">
+                            {item.number}
+                          </span>
+                          {item.prompt}
+                        </p>
+                        <p className="lf-caption text-lot-stone">{item.note}</p>
+                      </div>
+                      <StatusChip
+                        status={item.status}
+                        label={item.answer === "yes" ? "Yes" : "Check"}
+                        size="sm"
+                        className="shrink-0"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
               <PanelHeader
                 as="h2"
-                eyebrow={`Suggested test footprint: ${evaluation.recommendedFootprint} sq ft`}
-                title={evaluation.headline}
-                sub={evaluation.summary}
+                eyebrow="Direct parcel check"
+                title="Test your address against modeled setbacks in 3D"
+                sub="Skip straight to parcel lines, backyard home placement, and local cost estimates."
               />
-
-              <ul
-                className="divide-y divide-lot-line border border-lot-line bg-lot-chalk"
-                aria-label="Checklist breakdown"
-              >
-                {evaluation.checks.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-start justify-between gap-3 px-3.5 py-2.5"
-                  >
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="lf-body-sm font-medium text-lot-ink">
-                        <span className="mr-1.5 text-lot-stone tabular-nums">
-                          {item.number}
-                        </span>
-                        {item.prompt}
-                      </p>
-                      <p className="lf-caption text-lot-stone">{item.note}</p>
-                    </div>
-                    <StatusChip
-                      status={item.status}
-                      label={item.answer === "yes" ? "Yes" : "Check"}
-                      size="sm"
-                      className="shrink-0"
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <PanelHeader
-              as="h2"
-              eyebrow="Direct parcel check"
-              title="Test your address against modeled setbacks in 3D"
-              sub="Skip straight to parcel lines, backyard home placement, and local cost estimates."
-            />
-          )}
+            )}
+          </div>
 
           <div className="border-t border-lot-line pt-4">
             <LotAnswerCard
@@ -268,7 +310,7 @@ export function BackyardHomeQuiz() {
               inputId={addressInputId}
               inputLabel="Check your exact address in the 3D studio"
               inputLabelSrOnly={false}
-              placeholder="1420 Coyote Brush Ct, San Diego, CA"
+              placeholder="1420 Coyote Brush Ct, San Diego, CA…"
               submitLabel="Check my lot"
               onLookupStart={() => {
                 trackEvent("eligibility_quiz_studio_cta", {

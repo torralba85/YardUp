@@ -4,6 +4,10 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -17,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { formatNumber } from "@/lib/intl-format";
 import type { LiveParcelData, Parcel } from "@/lib/parcel-types";
 import type { ADUConfig } from "@/lib/feasibility";
 import { type Pose2D } from "@/lib/scene-model";
@@ -89,13 +94,27 @@ const CAMERA_STEP_MS = 240;
 /** Flight time back to the property from wherever the user has wandered. */
 const RECENTER_FLIGHT_S = 1;
 
-/** One narrow column, grouped zoom / rotate / tilt / recenter, so phones keep the middle of the map. */
+type PanDirection = "pan-north" | "pan-south" | "pan-east" | "pan-west";
+type CameraControl = NeighborhoodCameraStep | PanDirection | "recenter";
+
+const PAN_DELTA: Record<PanDirection, { dx: number; dy: number }> = {
+  "pan-north": { dx: 0, dy: 1 },
+  "pan-south": { dx: 0, dy: -1 },
+  "pan-east": { dx: 1, dy: 0 },
+  "pan-west": { dx: -1, dy: 0 },
+};
+
+function isPanDirection(control: CameraControl): control is PanDirection {
+  return control in PAN_DELTA;
+}
+
+/** Compact grouped zoom / rotate / tilt / pan / recenter controls so phones keep the middle of the map. */
 const CAMERA_CONTROL_GROUPS: ReadonlyArray<
-  ReadonlyArray<{ control: NeighborhoodCameraStep | "recenter"; label: string; title: string; Icon: typeof Plus }>
+  ReadonlyArray<{ control: CameraControl; label: string; title: string; Icon: typeof Plus }>
 > = [
   [
-    { control: "zoom-in", label: "Zoom in", title: "Zoom in", Icon: Plus },
-    { control: "zoom-out", label: "Zoom out", title: "Zoom out", Icon: Minus },
+    { control: "zoom-in", label: "Zoom in", title: "Zoom in (+)", Icon: Plus },
+    { control: "zoom-out", label: "Zoom out", title: "Zoom out (-)", Icon: Minus },
   ],
   [
     { control: "rotate-ccw", label: "Rotate counterclockwise", title: "Rotate counterclockwise", Icon: RotateCcw },
@@ -104,6 +123,12 @@ const CAMERA_CONTROL_GROUPS: ReadonlyArray<
   [
     { control: "tilt-up", label: "Tilt up", title: "Tilt up, toward the horizon", Icon: ChevronUp },
     { control: "tilt-down", label: "Tilt down", title: "Tilt down, toward overhead", Icon: ChevronDown },
+  ],
+  [
+    { control: "pan-north", label: "Pan north", title: "Pan north (Up arrow)", Icon: ArrowUp },
+    { control: "pan-south", label: "Pan south", title: "Pan south (Down arrow)", Icon: ArrowDown },
+    { control: "pan-west", label: "Pan west", title: "Pan west (Left arrow)", Icon: ArrowLeft },
+    { control: "pan-east", label: "Pan east", title: "Pan east (Right arrow)", Icon: ArrowRight },
   ],
   [{ control: "recenter", label: "Recenter on property", title: "Recenter on property", Icon: LocateFixed }],
 ];
@@ -419,7 +444,7 @@ export default function CesiumNeighborhoodView({
     return route === "osm" ? 0 : null;
   }
 
-  function runCameraControl(control: NeighborhoodCameraStep | "recenter") {
+  function runCameraControl(control: CameraControl) {
     const viewer = viewerRef.current;
     const Cesium = cesiumModuleRef.current;
     const groundMeters = cameraGroundMeters();
@@ -450,12 +475,33 @@ export default function CesiumNeighborhoodView({
 
     const { positionWC, directionWC, upWC } = viewer.camera;
     const start = poseToLocal(frame, { position: positionWC, direction: directionWC, up: upWC });
-    const plan = planCameraStep(start, control);
-    if (!plan) return;
+    let showFraction: (fraction: number) => void;
+    if (isPanDirection(control)) {
+      const stepMeters = Math.max(25, Math.min(250, Math.abs(start.position.z) * 0.25));
+      const { dx, dy } = PAN_DELTA[control];
+      showFraction = (fraction: number) => {
+        if (!viewer.isDestroyed()) {
+          viewer.camera.setView(
+            toCesiumView({
+              position: {
+                x: start.position.x + dx * stepMeters * fraction,
+                y: start.position.y + dy * stepMeters * fraction,
+                z: start.position.z,
+              },
+              direction: start.direction,
+              up: start.up,
+            }),
+          );
+        }
+      };
+    } else {
+      const plan = planCameraStep(start, control);
+      if (!plan) return;
+      showFraction = (fraction: number) => {
+        if (!viewer.isDestroyed()) viewer.camera.setView(toCesiumView(applyCameraStep(start, plan, fraction)));
+      };
+    }
 
-    const showFraction = (fraction: number) => {
-      if (!viewer.isDestroyed()) viewer.camera.setView(toCesiumView(applyCameraStep(start, plan, fraction)));
-    };
     if (reduceMotion) {
       showFraction(1);
       return;
@@ -476,6 +522,33 @@ export default function CesiumNeighborhoodView({
     };
     animation.frame = requestAnimationFrame(tick);
     cameraAnimationRef.current = animation;
+  }
+
+  function handleViewportKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (!cameraControlsReady || event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    const keyMap: Record<string, CameraControl> = {
+      ArrowUp: "pan-north",
+      ArrowDown: "pan-south",
+      ArrowLeft: "pan-west",
+      ArrowRight: "pan-east",
+      "+": "zoom-in",
+      "=": "zoom-in",
+      "-": "zoom-out",
+    };
+    const control = keyMap[event.key];
+    if (!control) return;
+    event.preventDefault();
+    runCameraControl(control);
   }
 
   // ---------------------------------------------------------------------------
@@ -644,6 +717,7 @@ export default function CesiumNeighborhoodView({
         // actually loaded rather than guessing an altitude.
         const flight = new Promise<void>((resolve) => { finishFlight = resolve; });
         const flightCallbacks = { complete: finishFlight, cancel: finishFlight };
+        const flightDuration = prefersReducedMotion() ? 0 : 1.5;
         if (coarse.heightMeters !== null) {
           viewer.camera.flyTo({
             ...flightCallbacks,
@@ -657,13 +731,13 @@ export default function CesiumNeighborhoodView({
               pitch: Cesium.Math.toRadians(-35),
               roll: 0,
             },
-            duration: 1.5,
+            duration: flightDuration,
           });
         } else if (hasPhotoreal) {
           const boundingSphere = (photoreal.tileset as { boundingSphere?: unknown } | null)
             ?.boundingSphere;
           if (boundingSphere) {
-            viewer.camera.flyToBoundingSphere(boundingSphere, { duration: 1.5, ...flightCallbacks });
+            viewer.camera.flyToBoundingSphere(boundingSphere, { duration: flightDuration, ...flightCallbacks });
           } else {
             finishFlight?.();
           }
@@ -681,7 +755,7 @@ export default function CesiumNeighborhoodView({
               pitch: Cesium.Math.toRadians(-35),
               roll: 0,
             },
-            duration: 1.5,
+            duration: flightDuration,
           });
         }
 
@@ -730,7 +804,7 @@ export default function CesiumNeighborhoodView({
                 pitch: Cesium.Math.toRadians(-35),
                 roll: 0,
               },
-              duration: 1.5,
+              duration: prefersReducedMotion() ? 0 : 1.5,
             });
           }
         } else if (hasPhotoreal && coarse.status === "measured") {
@@ -774,7 +848,7 @@ export default function CesiumNeighborhoodView({
                   pitch: Cesium.Math.toRadians(-35),
                   roll: 0,
                 },
-                duration: 0.9,
+                duration: prefersReducedMotion() ? 0 : 0.9,
               });
             }
           }
@@ -835,7 +909,7 @@ export default function CesiumNeighborhoodView({
     if (ground.status !== "measured" || ground.feet === null) {
       return "Ground height unavailable — placement is draped, framing is approximate";
     }
-    const feet = ground.feet.toLocaleString();
+    const feet = formatNumber(ground.feet);
     return ground.corrected
       ? `Ground ${feet} ft above sea level`
       : `Ground ${feet} ft (ellipsoid — sea-level correction pending)`;
@@ -845,7 +919,13 @@ export default function CesiumNeighborhoodView({
   const cameraControlsReady = status === "ready" && (ground?.status === "measured" || route === "osm");
 
   return (
-    <div className="relative h-full w-full min-h-[440px] overflow-hidden bg-lot-chalk text-lot-ink">
+    <div
+      role="region"
+      aria-label="Neighborhood 3D map"
+      tabIndex={0}
+      onKeyDown={handleViewportKeyDown}
+      className="relative h-full w-full min-h-[440px] overflow-hidden bg-lot-chalk text-lot-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink"
+    >
       {/* Cesium canvas target */}
       <div ref={containerRef} className="h-full w-full" data-testid="cesium-container" />
 
@@ -899,6 +979,7 @@ export default function CesiumNeighborhoodView({
             rightIcon={
               <ChevronDown
                 size={14}
+                aria-hidden="true"
                 className={`motion-safe:transition-transform motion-safe:duration-200 ${detailsOpen ? "rotate-180" : ""}`}
               />
             }
@@ -971,6 +1052,7 @@ export default function CesiumNeighborhoodView({
       {/* Explicit visible credit container outside canvas with legible chalk/carbon styling per Task 3 */}
       <div
         ref={creditContainerRef}
+        role="region"
         data-testid="cesium-credit-container"
         aria-label="Map data credits"
         className={`${styles.credits} pointer-events-auto absolute bottom-2 right-2 z-10 max-w-[calc(100%-1.5rem)] border border-lot-line bg-lot-chalk px-3 py-2 text-xs leading-normal text-lot-ink`}

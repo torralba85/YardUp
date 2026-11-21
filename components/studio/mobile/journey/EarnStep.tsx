@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { formatCurrency, type FeasibilityResult } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { discloseFeasibility } from "@/lib/feasibility-disclosure";
 import { MoneyFigure } from "@/components/ui/MoneyFigure";
@@ -60,7 +61,7 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
           <span className="font-display text-lg font-semibold text-lot-ink">
             {formatCurrency(disclosure.result.monthlyRent * 12)}
           </span>{" "}
-          a year in gross rent from a {result.aduSqft.toLocaleString()} sf backyard home.
+          a year in gross rent from a {formatNumber(result.aduSqft)}&nbsp;sf backyard home.
         </p>}
         <p className="mt-1 font-sans text-xs text-lot-stone">
           Estimated potential for rental income, guest space, or family living.

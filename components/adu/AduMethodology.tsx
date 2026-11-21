@@ -32,6 +32,7 @@ import {
 } from "@/lib/feasibility";
 import { bedroomClassForFootprint } from "@/lib/market/bedroom";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { formatNumber, formatPercent } from "@/lib/intl-format";
 import { resolveStaticMarket } from "@/lib/server/market/static-market";
 
 /** County and size used for the worked example. */
@@ -50,7 +51,7 @@ const HUD_FMR_URL = "https://www.huduser.gov/portal/datasets/fmr.html";
 const HCD_HANDBOOK_URL =
   "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf";
 
-const linkClass = "font-semibold text-lot-ink underline underline-offset-2";
+const linkClass = "font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink";
 const tableClass = "w-full border-collapse text-left text-sm";
 const thClass = "py-3 pr-4 align-top font-semibold text-lot-ink";
 const tdClass = "py-3 pr-4 text-right tabular-nums text-lot-ink";
@@ -58,11 +59,11 @@ const tdClass = "py-3 pr-4 text-right tabular-nums text-lot-ink";
 const BEDROOM_LABELS = { studio: "studio", "1br": "one-bedroom", "2br": "two-bedroom" } as const;
 
 function percent(value: number): string {
-  return `${Math.round(value * 1000) / 10}%`;
+  return formatPercent(value, { digits: 1, trimTrailingZero: true });
 }
 
 function sqft(size: number): string {
-  return `${size.toLocaleString("en-US")} sq ft`;
+  return `${formatNumber(size)} sq ft`;
 }
 
 /**
@@ -81,7 +82,7 @@ function bedroomClassSentence(sizes: readonly number[]): string {
     const label =
       groupSizes.length === 1
         ? sqft(groupSizes[0])
-        : `${groupSizes.slice(0, -1).map((size) => size.toLocaleString("en-US")).join(", ")} and ${sqft(groupSizes[groupSizes.length - 1])}`;
+        : `${groupSizes.slice(0, -1).map((size) => formatNumber(size)).join(", ")} and ${sqft(groupSizes[groupSizes.length - 1])}`;
     return `${label} ${groupSizes.length === 1 ? "uses" : "use"} the ${bedroom} FMR`;
   });
   return parts.length > 1
@@ -104,9 +105,9 @@ export function AduMethodology() {
   const exampleRow = aggregate.rows.find((row) => row.size === EXAMPLE_SIZE);
   if (!exampleRow) return null;
 
-  const softPercent = Math.round((assumptions.softCostMultiplier - 1) * 100);
-  const lowPercent = Math.round((1 - COST_RANGE_FACTORS.low) * 100);
-  const highPercent = Math.round((COST_RANGE_FACTORS.high - 1) * 100);
+  const softPercent = formatPercent(assumptions.softCostMultiplier - 1, { digits: 0 });
+  const lowPercent = formatPercent(1 - COST_RANGE_FACTORS.low, { digits: 0 });
+  const highPercent = formatPercent(COST_RANGE_FACTORS.high - 1, { digits: 0 });
   const finishes = Object.keys(assumptions.costPerSqft) as ExteriorFinish[];
 
   // Re-run the engine for the example so the page can show the line items

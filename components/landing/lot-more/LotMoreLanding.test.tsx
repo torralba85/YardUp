@@ -168,10 +168,10 @@ describe("landing address handoff", () => {
 
   it("changes the concrete pillar lead with the selection", () => {
     render(<LotMoreLanding scenarios={scenarios} />);
-    expect(screen.getByText("A 600 sq ft, one-bedroom concept.")).toBeVisible();
+    expect(screen.getByText(/A 600\s+sq\s+ft, 1-bedroom concept\./)).toBeVisible();
     fireEvent.click(screen.getByRole("radio", { name: "For income" }));
     expect(screen.getByText(`$${scenarios[1].rent.toLocaleString("en-US")}/mo estimated market rent in this demo.`)).toBeVisible();
-    expect(screen.queryByText("A 600 sq ft, one-bedroom concept.")).not.toBeInTheDocument();
+    expect(screen.queryByText(/A 600\s+sq\s+ft, 1-bedroom concept\./)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: /For what/ }));
     expect(screen.getByText("One concept, many uses over time.")).toBeVisible();
   });
@@ -207,6 +207,7 @@ describe("landing address handoff", () => {
     clearInitialParcel();
     window.localStorage.clear();
     window.sessionStorage.clear();
+    window.history.replaceState(null, "", "/");
     vi.stubGlobal(
       "IntersectionObserver",
       class {
@@ -289,10 +290,11 @@ describe("landing address handoff", () => {
     expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT - 1);
 
     window.sessionStorage.setItem("lf:pending-address", "Previous lot");
-    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    const openLink = screen.getByRole("link", { name: "Open in 3D" });
+    expect(openLink).toHaveAttribute("href", "/studio");
+    fireEvent.click(openLink);
     expect(peekInitialParcel()).toEqual(SAMPLE_LIVE_PARCEL);
     expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
-    expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
     expect(consumeEntrySource()).toBe("landing_cta");
   });
 
@@ -354,9 +356,10 @@ describe("landing address handoff", () => {
     await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(acquireMock).toHaveBeenCalledWith({ kind: "address", query: "456 Pine St, Denver, CO" }, null);
     window.sessionStorage.setItem("lf:pending-address", "Previous lot");
-    fireEvent.click(screen.getByRole("button", { name: "Open in 3D" }));
+    const openLink = screen.getByRole("link", { name: "Open in 3D" });
+    expect(openLink).toHaveAttribute("href", "/studio");
+    fireEvent.click(openLink);
     expect(window.sessionStorage.getItem("lf:pending-address")).toBeNull();
-    expect(push).toHaveBeenCalledExactlyOnceWith("/studio");
   });
 
   it("still resolves a remembered member when the guest allowance is spent", () => {
@@ -578,7 +581,7 @@ describe("landing address handoff", () => {
     );
     const sandbox = screen.getByLabelText("Interactive massing preview");
     expect(within(sandbox).getByText(`${expected600}% of lot`)).toBeVisible();
-    fireEvent.click(within(sandbox).getByRole("radio", { name: "800 sq ft" }));
+    fireEvent.click(within(sandbox).getByRole("radio", { name: /800\s+sq\s+ft/ }));
     expect(within(sandbox).getByText(`${expected800}% of lot`)).toBeVisible();
     fireEvent.click(within(sandbox).getByRole("radio", { name: "Gable" }));
     expect(within(sandbox).getByRole("radio", { name: "Gable" })).toHaveAttribute(

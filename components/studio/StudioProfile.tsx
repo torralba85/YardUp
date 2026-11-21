@@ -71,16 +71,16 @@ export default function StudioProfile() {
   const remainingCapacity = parcel.lotArea * parcel.maxLotCoveragePercent / 100 - parcel.existingHouseSqft - config.footprint;
 
   return (
-    <main className="min-h-screen space-y-4 bg-lot-chalk p-4 font-sans text-lot-ink">
+    <main id="main-content" tabIndex={-1} className="min-h-screen space-y-4 bg-lot-chalk p-4 font-sans text-lot-ink">
       <h1 className="font-display text-2xl">Local Studio profiling</h1>
       <p className="text-sm text-lot-stone">Direct scene workload. First render measures CPU submission; full Shape readiness and GPU completion remain separate. Idle samples exclude timing intervals but retain submitted frame counts.</p>
       <div className="flex flex-wrap items-end gap-3">
-        <label>Device description<Input className="block" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
-        <label>Thermal state<Input className="block" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
+        <label>Device description<Input name="deviceDescription" autoComplete="off" className="block" value={device} onChange={event => setDevice(event.target.value)} disabled={running} /></label>
+        <label>Thermal state<Input name="thermalState" autoComplete="off" className="block" value={thermal} onChange={event => setThermal(event.target.value)} disabled={running} /></label>
         <button className={primaryControl} onClick={start} disabled={running}>Start run</button>
         <button className={control} onClick={() => snapshot()} disabled={!run}>Snapshot</button>
         <button className={control} onClick={exportReport} disabled={!run}>Stop and export JSON</button>
-        <label>Sampling<Select value={active ? "active" : "idle"} onChange={event => setActive(event.target.value === "active")} disabled={!running}><option value="active">Active</option><option value="idle">Idle</option></Select></label>
+        <label>Sampling<Select name="samplingMode" value={active ? "active" : "idle"} onChange={event => setActive(event.target.value === "active")} disabled={!running}><option value="active">Active</option><option value="idle">Idle</option></Select></label>
         <button className={control} onClick={() => setCycle(value => value + 1)} disabled={!running || cycle >= 20}>Next edit cycle ({cycle}/20)</button>
         <button className={control} onClick={() => setRemount(value => value + 1)} disabled={!running}>Remount scene</button>
       </div>

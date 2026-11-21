@@ -19,6 +19,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <head>
+        <meta name="theme-color" content={COLOR["lot-chalk"]} />
         <style>{`a:focus-visible,button:focus-visible{outline:2px solid ${COLOR["lot-orange-ink"]};outline-offset:5px}button:hover{background:${COLOR["lot-orange-hover"]}!important}a:hover{background:${COLOR["lot-surface"]}!important}`}</style>
       </head>
       <body
@@ -36,7 +37,8 @@ export default function GlobalError({
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontSize: "1.75rem", letterSpacing: "-0.035em", lineHeight: 1.15, margin: 0 }}>Something went wrong</h1>
+        <main id="main-content" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <h1 style={{ fontSize: "1.75rem", letterSpacing: "-0.035em", lineHeight: 1.15, margin: 0, textWrap: "balance" }}>Something went wrong</h1>
         <p style={{ color: COLOR["lot-stone"], maxWidth: "28rem" }}>
           LotFoundry could not load this page. Retry or open Help.
         </p>
@@ -78,6 +80,7 @@ export default function GlobalError({
             Get help
           </a>
         </div>
+        </main>
       </body>
     </html>
   );

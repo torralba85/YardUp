@@ -1,11 +1,7 @@
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { cityMarketAggregate } from "@/lib/adu/market-aggregate";
 import type { JurisdictionContent } from "@/lib/adu/types";
-
-function formatDollars(value: number): string {
-  if (value >= 1000) return `$${Math.round(value / 1000)}K`;
-  return `$${value.toLocaleString("en-US")}`;
-}
+import { formatCompactDollars, formatNumber } from "@/lib/intl-format";
 
 /**
  * Build-cost bands at 400 / 600 / 800 / 1,200 sqft, computed by the Studio
@@ -37,10 +33,10 @@ export function CostBands({ content }: { content: JurisdictionContent }) {
             {aggregate.rows.map((row) => (
               <tr key={row.size} className="border-t border-lot-line">
                 <th scope="row" className="py-3 pr-4 align-top font-semibold text-lot-ink">
-                  {row.size.toLocaleString("en-US")} sq ft
+                  {formatNumber(row.size)} sq ft
                 </th>
-                <td className="py-3 text-lot-stone">
-                  {formatDollars(row.costLow)}–{formatDollars(row.costHigh)}{" "}
+                <td className="py-3 tabular-nums text-lot-stone">
+                  {formatCompactDollars(row.costLow, 0)}–{formatCompactDollars(row.costHigh, 0)}{" "}
                   <span className="mt-1 block text-xs leading-relaxed">estimate</span>
                 </td>
               </tr>

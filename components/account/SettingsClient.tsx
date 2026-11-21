@@ -61,12 +61,12 @@ export function SettingsClient() {
           </p>
           <Link
             href="/login?next=/settings"
-            className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover"
           >
             Sign in
           </Link>
           <div className="mt-4">
-            <Link href="/signup?next=/settings" className="text-sm font-medium text-lot-orange-ink">
+            <Link href="/signup?next=/settings" className="inline-flex min-h-11 items-center text-sm font-medium text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink">
               Create account
             </Link>
           </div>
@@ -83,7 +83,7 @@ export function SettingsClient() {
         actions={
           <Link
             href={buildersAllowed && profile.role === "builder" ? "/builder" : "/studio"}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink hover:underline"
           >
             Back to {buildersAllowed && profile.role === "builder" ? "dashboard" : "studio"}
           </Link>
@@ -132,7 +132,7 @@ export function SettingsClient() {
               </p>
               <Link
                 href="/builder"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink"
               >
                 Open builder dashboard
               </Link>
@@ -149,7 +149,7 @@ export function SettingsClient() {
             <div>
               <Link
                 href="/certificates"
-                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink"
+                className="inline-flex min-h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover"
               >
                 View your certificates
               </Link>
@@ -174,13 +174,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/help"
-                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink"
+                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-ink hover:bg-lot-surface"
               >
                 Get help
               </Link>
               <Link
                 href="/feedback"
-                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink"
+                className="inline-flex min-h-11 items-center rounded-control border border-lot-line bg-lot-chalk px-4 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-ink hover:bg-lot-surface"
               >
                 Send feedback
               </Link>
@@ -194,13 +194,13 @@ export function SettingsClient() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/terms"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink"
               >
                 Terms &amp; Conditions
               </Link>
               <Link
                 href="/privacy"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink"
               >
                 Privacy Policy
               </Link>

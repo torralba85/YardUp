@@ -33,7 +33,10 @@ export function DeleteAccountPageClient() {
         </ul>
         <p className="lf-body-sm text-lot-stone">
           Full details are in our{" "}
-          <Link href="/privacy" className="font-medium text-lot-orange-ink underline">
+          <Link
+            href="/privacy"
+            className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink"
+          >
             Privacy Policy
           </Link>
           .
@@ -41,15 +44,21 @@ export function DeleteAccountPageClient() {
       </section>
 
       {loading ? (
-        <p className="lf-body-sm text-lot-stone">Checking sign-in…</p>
+        <p role="status" aria-live="polite" className="lf-body-sm text-lot-stone">
+          Checking sign-in…
+        </p>
       ) : user ? (
         <section className="space-y-3 rounded-none border border-status-blocked/30 bg-status-blocked-soft p-5">
           <h2 className="lf-card-heading">Delete now</h2>
           <p className="lf-body-sm text-lot-stone">
             Signed in as{" "}
-            <strong className="text-lot-ink">
-              {profile?.email || user.email || "this account"}
-            </strong>
+            {profile?.email || user.email ? (
+              <strong translate="no" className="break-all text-lot-ink">
+                {profile?.email || user.email}
+              </strong>
+            ) : (
+              <strong className="text-lot-ink">this account</strong>
+            )}
             . Confirm twice to permanently delete.
           </p>
           <DeleteAccountButton tone="light" />
@@ -64,13 +73,13 @@ export function DeleteAccountPageClient() {
           <div className="flex flex-wrap gap-3">
             <Link
               href="/login?next=/delete-account"
-              className="inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-chalk"
+              className="inline-flex h-11 items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:bg-lot-orange-hover"
             >
               Sign in
             </Link>
             <Link
               href="/forgot-password"
-              className="inline-flex h-11 items-center justify-center rounded-control border border-lot-line px-5 text-sm font-semibold text-lot-ink"
+              className="inline-flex h-11 items-center justify-center rounded-control border border-lot-line px-5 text-sm font-semibold text-lot-ink motion-safe:transition-colors hover:border-lot-stone hover:bg-lot-surface"
             >
               Reset password
             </Link>
@@ -82,13 +91,20 @@ export function DeleteAccountPageClient() {
         <h2 className="lf-card-heading">Need help?</h2>
         <p className="lf-body-sm text-lot-stone">
           If you cannot access your account, email{" "}
-          <a href="mailto:support@lotfoundry.net" className="font-medium text-lot-orange-ink underline">
+          <a
+            href="mailto:support@lotfoundry.net"
+            translate="no"
+            className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink"
+          >
             support@lotfoundry.net
           </a>{" "}
           from the address on the account. Support is a fallback — most users can complete
           deletion above without waiting.
         </p>
-        <Link href="/help" className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink">
+        <Link
+          href="/help"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink"
+        >
           Visit Help center
         </Link>
       </section>

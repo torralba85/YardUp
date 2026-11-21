@@ -50,13 +50,13 @@ const CITY_BLURBS: Record<string, string> = {
   "imperial-beach":
     "The coastal-permit city: a $1,000 City coastal permit before most ADUs in the Coastal Zone, a parcel map that shows who issues it, and a pre-approved plan that cannot be used in a flood hazard area.",
   "la-mesa":
-    "The no-parking city: no ADU parking required anywhere, up to three ADUs plus a JADU on a single-family lot, and a 20-foot height measured to the plate line.",
+    "The no-parking city: no ADU parking required anywhere, up to 3 ADUs plus a JADU on a single-family lot, and a 20-foot height measured to the plate line.",
   "san-marcos":
     "The placement city: detached ADUs in the rear half of the lot, 10 feet from every structure, caps of 850 and 1,000 square feet, and a house-matching design rule.",
   "san-diego-county":
     "The unincorporated county: 1,200 sq ft and 25-foot detached ADUs, fire-district and septic reviews that shape the site plan, and an ordinance the state flagged in July 2026.",
   sacramento:
-    "The two-rulebook city: pick the City's local option (1,200 sq ft detached, 3-foot setbacks) or the state option (three units) for the whole lot, with no parking minimums anywhere.",
+    "The two-rulebook city: pick the City's local option (1,200 sq ft detached, 3-foot setbacks) or the state option (3 units) for the whole lot, with no parking minimums anywhere.",
   "san-jose":
     "The fire-access city: City or State standards for the whole project, 1,000 to 1,200 sq ft detached ADUs by lot size, and a fire-access check (150 feet from the curb, hydrant flow) before plans are approved.",
 };
@@ -139,7 +139,7 @@ export default function AduCaliforniaHubPage() {
           inside the house instead? Read the{" "}
           <Link
             href={jaduPath()}
-            className="underline underline-offset-2 hover:text-lot-ink"
+            className="underline underline-offset-2 hover:text-lot-orange-ink"
           >
             junior ADU (JADU) guide
           </Link>
@@ -147,14 +147,14 @@ export default function AduCaliforniaHubPage() {
           with the{" "}
           <Link
             href="/adu/ca/cost"
-            className="underline underline-offset-2 hover:text-lot-ink"
+            className="underline underline-offset-2 hover:text-lot-orange-ink"
           >
             California ADU cost guide
           </Link>
           , then compare rent and payback scenarios in the{" "}
           <Link
             href="/adu-cost-calculator"
-            className="underline underline-offset-2 hover:text-lot-ink"
+            className="underline underline-offset-2 hover:text-lot-orange-ink"
           >
             free ADU cost calculator
           </Link>
@@ -180,7 +180,7 @@ export default function AduCaliforniaHubPage() {
       </div>
 
       <section aria-labelledby="adu-start">
-        <h2 id="adu-start" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-start" className="lf-card-heading scroll-mt-20 text-lot-ink">
           Before you choose a floor plan
         </h2>
         <ol className="lf-body mt-4 list-decimal space-y-3 pl-6 text-lot-stone">
@@ -191,7 +191,7 @@ export default function AduCaliforniaHubPage() {
       </section>
 
       <section aria-labelledby="adu-floor" className="mt-12">
-        <h2 id="adu-floor" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-floor" className="lf-card-heading scroll-mt-20 text-lot-ink">
           California ADU laws: the state floor every city builds on
         </h2>
         <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
@@ -221,7 +221,7 @@ export default function AduCaliforniaHubPage() {
         const id = `adu-cities-${county.toLowerCase().replace(/[^a-z]+/g, "-")}`;
         return (
           <section key={county} aria-labelledby={id} className="mt-12">
-            <h2 id={id} className="lf-card-heading text-lot-ink">
+            <h2 id={id} className="lf-card-heading scroll-mt-20 text-lot-ink">
               City and county guides — {county}
             </h2>
             <ul className="mt-4 space-y-4">
@@ -254,7 +254,7 @@ export default function AduCaliforniaHubPage() {
       </div>
 
       <section aria-labelledby="adu-builders" className="mt-10 border-t border-lot-line pt-8">
-        <h2 id="adu-builders" className="lf-card-heading text-lot-ink">
+        <h2 id="adu-builders" className="lf-card-heading scroll-mt-20 text-lot-ink">
           For builders and designers
         </h2>
         <p className="lf-body mt-3 text-lot-stone">

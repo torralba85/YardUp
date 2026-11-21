@@ -46,7 +46,7 @@ export function SceneTools({
   return (
     <details className="group/tools shrink-0 border-t border-lot-line bg-lot-chalk text-lot-ink"
       onToggle={(event) => { if (!event.currentTarget.open) onUtilityModeChange(false); }}>
-      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between px-3 text-sm font-semibold motion-safe:transition-colors hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
         Tools
         <ChevronDown size={16} aria-hidden="true" className="group-open/tools:rotate-180" />
       </summary>
@@ -60,7 +60,7 @@ export function SceneTools({
           </Button>
           {utilityMode && (
             <p className="mt-2 text-xs leading-5 text-lot-stone">
-              Click the primary house in the 3D model to place a utility tie-in pin and estimate trench length and site-work cost.
+              Click the primary house in the 3D model—or focus the 3D scene and press Enter, then arrow keys to adjust—to place a utility tie-in pin and estimate trench length and site-work cost.
             </p>
           )}
         </div>
@@ -70,7 +70,7 @@ export function SceneTools({
             <>
               <Button variant="secondary" size="sm" className="min-h-11" disabled={exportState === "busy"}
                 onClick={() => void exportSitePlan()} leftIcon={<FileDown size={16} aria-hidden="true" />}>
-                {exportState === "busy" ? "Building site plan..." : "Export site plan PDF"}
+                {exportState === "busy" ? "Building site plan…" : "Export site plan PDF"}
               </Button>
               {exportState === "error" && <p role="alert" className="mt-2 text-xs text-status-blocked">Site plan export is unavailable until the 3D concept is loaded.</p>}
             </>
