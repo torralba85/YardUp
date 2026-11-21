@@ -266,11 +266,11 @@ export default function PrivacyPage() {
         <p>
           We retain personal information for as long as your account remains active. You may export
           your data or delete your account at any time within your{" "}
-          <Link href="/settings" className={linkClass}>
+          <Link href="/settings" prefetch={false} className={linkClass}>
             Account Settings
           </Link>{" "}
           or via our public{" "}
-          <Link href="/delete-account" className={linkClass}>
+          <Link href="/delete-account" prefetch={false} className={linkClass}>
             Delete Account
           </Link>{" "}
           portal (accessible without installing our mobile application).

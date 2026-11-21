@@ -331,17 +331,19 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
           apply across {city.county}. Rules and fees change at the city line:
           read the guide for the jurisdiction that reviews your property.
         </p>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
+        <ul className="lf-body mt-4 divide-y divide-lot-line border-y border-lot-line text-lot-stone">
           <li>
-            <Link href={`/adu/${city.state}/${city.slug}`} className={linkClass}>
-              ADU rules in {city.city}
+            <Link href={`/adu/${city.state}/${city.slug}`} className="inline-flex min-h-11 items-center py-2 font-medium text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink">
+              {city.slug === "san-diego" ? "City of San Diego ADU rules" : `ADU rules in ${city.city}`}
             </Link>{" "}
-            — setbacks, overlays and permit steps for the City of {city.city}
+            <span className="text-sm text-lot-stone">
+              — setbacks, overlays and permit steps for the City of {city.city}
+            </span>
           </li>
           {coveredCities.map((covered) => (
             <li key={covered.slug}>
-              <Link href={`/adu/${covered.state}/${covered.slug}`} className={linkClass}>
-                ADU rules in {covered.city}
+              <Link href={`/adu/${covered.state}/${covered.slug}`} className="inline-flex min-h-11 items-center py-2 font-medium text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink">
+                {covered.slug === "san-diego-county" ? "Unincorporated San Diego County ADU rules" : `ADU rules in ${covered.city}`}
               </Link>
             </li>
           ))}
@@ -375,7 +377,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         <p className="lf-body mt-3 text-lot-stone">
           Share homeowner feasibility snapshots with setback limits, utility assumptions, and
           bid-leveling checklists. Contractors serving {city.county} can join via{" "}
-          <Link href="/builder" className={linkClass}>
+          <Link href="/builder" prefetch={false} className={linkClass}>
             the LotFoundry builder portal
           </Link>
           .

@@ -5,9 +5,10 @@ import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { DataReuseNote } from "@/components/adu/DataReuseNote";
 import { PERMIT_DATASET_URL, PLAN_AREAS_DATASET_URL, SAN_DIEGO_PERMIT_STUDY as study } from "@/content/adu/ca/san-diego-permits";
-import { aduArticleJsonLd, opengraphImageUrl, permitStudyPath, permitStudyUrl, permitStudyCsvPath } from "@/lib/adu/content";
+import { aduArticleJsonLd, hubUrl, opengraphImageUrl, permitStudyPath, permitStudyUrl, permitStudyCsvPath } from "@/lib/adu/content";
 import { PERMIT_AREAS, PERMIT_AREA_PUBLISHED, findPermitArea, permitAreaComparisons, permitAreaDescription, permitAreaLastModified, permitAreaPath, permitAreaRank, permitAreaSlug, permitAreaTitle, permitAreaUrl, similarPermitAreas } from "@/lib/adu/permit-areas";
 import { formatNumber, formatPercent, formatUtcDate } from "@/lib/intl-format";
+import { SITE_NAME } from "@/lib/site-identity";
 
 type Props = { params: Promise<{ area: string }> };
 const number = (value: number) => formatNumber(value);
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // The share image comes from this segment's opengraph-image route.
   return {
     title, description, alternates: { canonical: permitAreaUrl(area) },
-    openGraph: { title, description, url: permitAreaUrl(area), type: "article" },
+    openGraph: { title, description, url: permitAreaUrl(area), siteName: SITE_NAME, type: "article" },
   };
 }
 
@@ -41,9 +42,11 @@ export default async function PermitAreaPage({ params }: Props) {
   const breadcrumbs = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "San Diego ADU rules", item: "https://lotfoundry.net/adu/ca/san-diego" },
-      { "@type": "ListItem", position: 2, name: "San Diego ADU permits", item: permitStudyUrl() },
-      { "@type": "ListItem", position: 3, name: area.name, item: permitAreaUrl(area) },
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://lotfoundry.net/" },
+      { "@type": "ListItem", position: 2, name: "California ADU rules", item: hubUrl() },
+      { "@type": "ListItem", position: 3, name: "City of San Diego ADU rules", item: "https://lotfoundry.net/adu/ca/san-diego" },
+      { "@type": "ListItem", position: 4, name: "San Diego ADU permits", item: permitStudyUrl() },
+      { "@type": "ListItem", position: 5, name: area.name, item: permitAreaUrl(area) },
     ],
   };
   return (

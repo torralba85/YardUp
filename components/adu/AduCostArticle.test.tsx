@@ -118,7 +118,7 @@ describe("AduArticle breadcrumb markup", () => {
       .find((entry) => entry["@type"] === "BreadcrumbList");
     const items = breadcrumb.itemListElement as { position: number; name: string; item: string }[];
     expect(items.map((entry) => entry.position)).toEqual([1, 2, 3]);
-    expect(items.map((entry) => entry.name)).toEqual(["Home", "California ADU rules", "San Diego"]);
+    expect(items.map((entry) => entry.name)).toEqual(["Home", "California ADU rules", "City of San Diego"]);
     expect(new Set(items.map((entry) => entry.item)).size).toBe(items.length);
   });
 });

@@ -387,7 +387,7 @@ export function CaliforniaAduCostGuide() {
         <p className="lf-body mt-3 text-lot-stone">
           Share standardized homeowner feasibility briefs and bid-leveling worksheets
           across California service areas via{" "}
-          <Link href="/builder" className={linkClass}>
+          <Link href="/builder" prefetch={false} className={linkClass}>
             the LotFoundry builder portal
           </Link>
           .

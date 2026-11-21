@@ -153,7 +153,7 @@ export default function TermsPage() {
           credentials confidential and for all activity under your account. Notify <SupportEmail />{" "}
           immediately of any unauthorized access. You may export your data or delete your account at
           any time in Settings or on our public{" "}
-          <Link href="/delete-account" className={linkClass}>
+          <Link href="/delete-account" prefetch={false} className={linkClass}>
             Delete Account
           </Link>{" "}
           page, which works without installing a mobile app.

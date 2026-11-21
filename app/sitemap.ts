@@ -24,11 +24,11 @@ const baseUrl = CANONICAL_ORIGIN;
  * their published versions, or a later edit that kept the version.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-11-14",
-  "/can-i-build-a-backyard-home": "2026-11-14",
-  "/studio": "2026-11-11",
-  "/about": "2026-11-16",
-  "/help": "2026-11-14",
+  "/": "2026-11-21",
+  "/can-i-build-a-backyard-home": "2026-11-21",
+  "/studio": "2026-11-20",
+  "/about": "2026-11-21",
+  "/help": "2026-11-21",
   "/feedback": "2026-11-16",
   // #362 added processors to both policies on 2026-11-03 without a new
   // version, /privacy was retitled on 2026-11-06, /terms added pre-approved

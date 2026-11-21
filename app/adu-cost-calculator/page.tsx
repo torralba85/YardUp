@@ -364,7 +364,7 @@ export default function AduCostCalculatorPage() {
         </h2>
         <p className="lf-body mt-3 text-lot-stone">
           Compare project scopes with homeowner feasibility briefs via{" "}
-          <Link href="/builder" className="underline underline-offset-2 hover:text-lot-ink">
+          <Link href="/builder" prefetch={false} className="underline underline-offset-2 hover:text-lot-ink">
             the LotFoundry builder portal
           </Link>
           .

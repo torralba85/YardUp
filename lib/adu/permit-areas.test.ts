@@ -1,4 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), prefetch: vi.fn() }),
+  notFound: () => {
+    throw new Error("notFound");
+  },
+}));
 import { SAN_DIEGO_PERMIT_STUDY as study } from "@/content/adu/ca/san-diego-permits";
 import type { PermitArea } from "@/content/adu/ca/san-diego-permits";
 import {
@@ -7,7 +15,8 @@ import {
 } from "./permit-areas";
 import { buildAduSitemapXml } from "@/app/sitemap-adu.xml/build-xml";
 import { buildLlmsTxt } from "@/app/llms.txt/build-text";
-import { generateMetadata, generateStaticParams } from "@/app/adu/ca/san-diego/permits/[area]/page";
+import { SITE_NAME } from "@/lib/site-identity";
+import PermitAreaPage, { generateMetadata, generateStaticParams } from "@/app/adu/ca/san-diego/permits/[area]/page";
 import { generateStaticParams as generateOgParams } from "@/app/adu/ca/san-diego/permits/[area]/opengraph-image";
 
 /** A published area with its yearly units replaced, for phrasing branches. */
@@ -92,9 +101,23 @@ describe("neighborhood permit pages", () => {
     expect(PERMIT_AREAS.every((area) => (inbound.get(area.name) ?? 0) >= 2)).toBe(true);
   });
 
-  it("gives every area its own share card and a lastmod covering the update", () => {
+  it("gives every area its own share card, og:site_name, 5-level breadcrumbs, and a lastmod covering the update", async () => {
     expect(generateOgParams()).toEqual(generateStaticParams());
-    expect(permitAreaLastModified()).toBe("2026-11-19");
-    expect(buildAduSitemapXml()).toContain(`<loc>${permitAreaUrl(PERMIT_AREAS[0])}</loc>\n    <lastmod>2026-11-19</lastmod>`);
+    expect(permitAreaLastModified()).toBe("2026-11-21");
+    expect(buildAduSitemapXml()).toContain(`<loc>${permitAreaUrl(PERMIT_AREAS[0])}</loc>\n    <lastmod>2026-11-21</lastmod>`);
+    for (const area of PERMIT_AREAS) {
+      const metadata = await generateMetadata({ params: Promise.resolve({ area: permitAreaSlug(area) }) });
+      expect(metadata.openGraph?.siteName).toBe(SITE_NAME);
+    }
+    const html = renderToStaticMarkup(await PermitAreaPage({ params: Promise.resolve({ area: "north-park" }) }));
+    const scripts = Array.from(html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g), (m) => JSON.parse(m[1]));
+    const bc = scripts.find((s) => s["@type"] === "BreadcrumbList");
+    expect(bc?.itemListElement.map((item: { position: number; item: string }) => [item.position, item.item])).toEqual([
+      [1, "https://lotfoundry.net/"],
+      [2, "https://lotfoundry.net/adu/ca"],
+      [3, "https://lotfoundry.net/adu/ca/san-diego"],
+      [4, "https://lotfoundry.net/adu/ca/san-diego/permits"],
+      [5, "https://lotfoundry.net/adu/ca/san-diego/permits/north-park"],
+    ]);
   });
 });

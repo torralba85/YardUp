@@ -25,7 +25,7 @@ export default function HelpPage() {
             landing page
           </Link>
           , enter your address to open the{" "}
-          <Link href="/studio" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
+          <Link href="/studio" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             studio
           </Link>
           . You can explore demo lots without an account; sign in to save concepts and purchase a
@@ -35,7 +35,7 @@ export default function HelpPage() {
       <LegalSection title="Account & settings">
         <p>
           Manage your profile, security, data export, and deletion from{" "}
-          <Link href="/settings" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
+          <Link href="/settings" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             Settings
           </Link>
           . The account menu on studio and builder surfaces links here too.
@@ -57,7 +57,7 @@ export default function HelpPage() {
       <WebBuilderOnly><LegalSection title="Builder leads">
         <p>
           Builders complete a profile on{" "}
-          <Link href="/builder" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
+          <Link href="/builder" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             /builder
           </Link>
           , review redacted lead previews, and unlock contact details with credits. Homeowners
@@ -74,7 +74,7 @@ export default function HelpPage() {
       <LegalSection title="Delete your account">
         <p>
           You can delete in-app from Settings or the account menu, or use the public{" "}
-          <Link href="/delete-account" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
+          <Link href="/delete-account" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             delete-account
           </Link>{" "}
           page (required for store users who have uninstalled the app).
@@ -87,7 +87,7 @@ export default function HelpPage() {
             support@lotfoundry.net
           </a>{" "}
           or use{" "}
-          <Link href="/feedback" className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
+          <Link href="/feedback" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             Feedback
           </Link>{" "}
           to open a ticket.

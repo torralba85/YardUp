@@ -3,8 +3,8 @@ import { permitStudyPath, permitStudyUrl } from "./content";
 import { laterDate } from "./dates";
 
 export const PERMIT_AREA_PUBLISHED = "2026-11-16";
-/** Search titles, comparisons and similar-area links added after launch. */
-export const PERMIT_AREA_UPDATED = "2026-11-19";
+/** Search titles, comparisons, OG siteName, breadcrumbs and similar-area links. */
+export const PERMIT_AREA_UPDATED = "2026-11-21";
 export const PERMIT_AREA_MIN_APPROVALS = 50;
 export const PERMIT_AREAS = SAN_DIEGO_PERMIT_STUDY.byArea.filter(
   (area) => area.approvals >= PERMIT_AREA_MIN_APPROVALS,

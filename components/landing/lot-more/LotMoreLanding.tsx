@@ -830,6 +830,7 @@ export function LotMoreLanding({
                       sizes="(max-width: 800px) 100vw, 60vw"
                       width={1536}
                       height={1024}
+                      fetchPriority="low"
                       loading="lazy"
                       decoding="async"
                       alt="Illustrative miniature lot with an existing house and an orange backyard home"
@@ -1044,13 +1045,13 @@ export function LotMoreLanding({
                     media="(max-width: 800px)"
                     srcSet={STUDIO_DEMO.mobile}
                     width={780}
-                    height={1046}
+                    height={1078}
                   />
                   {/* Pre-sized local captures preserve the actual demo UI. */}
                   <img
                     src={STUDIO_DEMO.desktop}
                     width={1200}
-                    height={1202}
+                    height={1069}
                     loading="lazy"
                     alt={`${demo.name} demo in the LotFoundry 3D studio, showing an existing home and a proposed backyard home`}
                   />

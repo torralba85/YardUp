@@ -21,8 +21,7 @@ import studioDemoMobile from "@/public/landing/studio-demo-mobile.webp";
  * visitor never keeps a stale copy, and the 1-day `public/` cache no longer
  * makes them download it again.
  *
- * Each photo has an AVIF twin (quality 55 from the WebP, about half the
- * bytes and visually matched) for `<picture>`, with the WebP as fallback. The
+ * Each photo has a smaller AVIF encode for `<picture>`, with WebP as fallback. The
  * `public/` copies stay for the share card, the Studio and the scripts.
  */
 
