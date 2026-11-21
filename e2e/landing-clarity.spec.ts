@@ -97,6 +97,7 @@ test("landing radios expose one tab stop, move focus, and update the associated 
     "Preview roof profile",
     "What would your backyard home be for?",
     "Demo rent assumption",
+    "Build cost layers",
     "Sample report pages",
   ];
   await expect(page.getByRole("radiogroup", { name: names[0], exact: true })).toBeVisible();

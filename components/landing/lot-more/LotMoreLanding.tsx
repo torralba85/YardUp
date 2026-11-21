@@ -49,6 +49,7 @@ import { defaultScenarioState, serializeScenarioParams } from "@/lib/scenario-ur
 import styles from "./LotMoreLanding.module.css";
 import { COLOR } from "@/lib/design-tokens";
 import { SampleCertificateDialog } from "./SampleCertificateDialog";
+import { CostStack } from "./CostStack";
 import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { landingDemos, type LandingDemo, type LandingCity } from "@/lib/landing-demo";
 import { constructionBudgetRows, type ConstructionBudget } from "@/lib/finance";
@@ -1178,6 +1179,13 @@ export function LotMoreLanding({
                 <strong>{(scenario.expenseRatio * 100).toFixed(1)}% of gross</strong>
               </div>
             </div>
+            {scenario.costBreakdown && (
+              <CostStack
+                budget={scenario.costBreakdown}
+                costLow={scenario.costLow}
+                costHigh={scenario.costHigh}
+              />
+            )}
             <div className={styles.numberNotes}>
               <details>
                 <summary>

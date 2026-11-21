@@ -1,0 +1,1030 @@
+/* The exploded cost stack inside the carbon numbers section. Without the pin
+   (reduced motion, short or narrow screens, no script) the drawing stands
+   exploded and the ledger picks the layer. Pinned, --stack-sep (0 assembled,
+   1 exploded) and --stack-progress come from scroll. */
+.stack {
+  --stack-sep: 1;
+  position: relative;
+  margin-top: 64px;
+  border-bottom: 1px solid var(--color-lot-line-dark);
+}
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6%;
+  padding-bottom: 56px;
+}
+.stack[data-pinned="true"] {
+  height: 260svh;
+}
+.stack[data-pinned="true"] .stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  padding: 40px 0;
+}
+
+/* Drawing */
+.figure {
+  position: relative;
+  margin: 0;
+  min-width: 0;
+}
+.drawing {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stack[data-pinned="true"] .drawing {
+  max-height: calc(100svh - 110px);
+}
+.figure figcaption {
+  margin-top: 10px;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.readout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  gap: 2px;
+}
+.readout span {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.readout strong {
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Every part moves by its own offset (--ox, --oy, px when fully exploded). */
+.part {
+  transform: translate(calc(var(--stack-sep) * var(--ox) * 1px), calc(var(--stack-sep) * var(--oy) * 1px));
+}
+.drawing {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+/* Exploded, the chosen layer comes forward and the others recede. */
+.stack:not([data-pinned="true"]) .layer[data-active="false"],
+.stack[data-exploded="true"] .layer[data-active="false"] {
+  filter: url(#cost-stack-recede);
+}
+.rails line {
+  opacity: calc(var(--stack-sep) * 0.9);
+  fill: none;
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+  stroke-opacity: 0.45;
+}
+.rails .railCenter {
+  stroke: var(--color-lot-orange);
+  stroke-opacity: 0.8;
+}
+
+/* Materials. The building is drawn in its real finishes (Andrew,
+   2026-11-21: "use more real-life accurate coloring rather than stay on
+   theme for the build of the ADU"): cedar board-and-batten, bronze trim,
+   standing-seam metal, fir framing, white oak, concrete and a paper permit
+   set. Each finish is defined once here and registered in
+   design/color-exceptions.json. The chrome around the drawing (rails,
+   callouts, ledger) stays on the palette. Light comes from the upper left. */
+.stack {
+  --m-cedar-1: #b97c49;
+  --m-cedar-2: #ad713f;
+  --m-cedar-3: #c48856;
+  --m-cedar-batten: #d09a69;
+  --m-cedar-shade-1: #8a5934;
+  --m-cedar-shade-2: #7f512e;
+  --m-cedar-shade-3: #95623b;
+  --m-cedar-batten-shade: #a06c42;
+  --m-cedar-gap: #5b3a20;
+  --m-cedar-end: #a26c40;
+  --m-fir-top: #d8b07c;
+  --m-fir-side: #bb9058;
+  --m-fir-front: #a27745;
+  --m-bronze: #3a332d;
+  --m-bronze-lit: #4c433a;
+  --m-bronze-dark: #26221e;
+  --m-trim: #403830;
+  --m-trim-top: #554b41;
+  --m-trim-shade: #2f2924;
+  --m-sconce: #ffd9a0;
+  --m-glass: #8db3c7;
+  --m-glass-shade: #5f8aa0;
+  --m-sky-glass: #7fa3b8;
+  --m-metal-1: #4a4f55;
+  --m-metal-2: #43484e;
+  --m-metal-rib: #737a82;
+  --m-metal-dark: #2b2f33;
+  --m-metal-edge: #808790;
+  --m-fascia: #33373c;
+  --m-fascia-lit: #3e4349;
+  --m-flashing: #5b6168;
+  --m-drywall: #f0ede7;
+  --m-drywall-shade: #dbd6cd;
+  --m-baseboard: #fbfaf7;
+  --m-oak-1: #cfa678;
+  --m-oak-2: #c39868;
+  --m-oak-3: #d9b588;
+  --m-oak-seam: #a57b4e;
+  --m-tile: #dfdcd5;
+  --m-grout: #b9b4aa;
+  --m-rug: #bca78e;
+  --m-rug-border: #8f7b64;
+  --m-rug-stripe: #d9cbb8;
+  --m-walnut-top: #9a6a45;
+  --m-walnut: #855b3a;
+  --m-walnut-shade: #6b472c;
+  --m-porcelain: #e6e6e1;
+  --m-porcelain-top: #f7f7f4;
+  --m-porcelain-shade: #cfcfc9;
+  --m-linen: #f6f4ee;
+  --m-linen-mid: #e4e0d7;
+  --m-linen-shade: #d0cbc1;
+  --m-duvet: #647a8f;
+  --m-duvet-mid: #55697b;
+  --m-duvet-shade: #475a6b;
+  --m-throw: #c9a36b;
+  --m-throw-shade: #a8864f;
+  --m-upholstery: #a39a8e;
+  --m-upholstery-top: #b5ada2;
+  --m-upholstery-shade: #887f74;
+  --m-fabric: #8f9aa0;
+  --m-fabric-top: #a3adb2;
+  --m-fabric-shade: #77828a;
+  --m-accent: #c98d3c;
+  --m-accent-top: #d9a052;
+  --m-accent-shade: #a87330;
+  --m-cabinet: #8a9784;
+  --m-cabinet-top: #9ba796;
+  --m-cabinet-shade: #76836f;
+  --m-cabinet-line: #66725f;
+  --m-toe-kick: #3e4439;
+  --m-quartz: #ece9e3;
+  --m-quartz-edge: #d3cfc7;
+  --m-steel: #b8bdc2;
+  --m-steel-top: #d0d4d8;
+  --m-steel-shade: #9ba1a7;
+  --m-steel-line: #80868c;
+  --m-basin: #8d949b;
+  --m-cooktop: #232528;
+  --m-burner: #5c6166;
+  --m-brass: #b8955a;
+  --m-lamp-shade: #efe6d4;
+  --m-lamp-top: #fff3dc;
+  --m-book-1: #8c3b2e;
+  --m-book-2: #2f4b5e;
+  --m-art-ochre: #c99a4a;
+  --m-art-teal: #4e7f7a;
+  --m-mirror: #a9c3cf;
+  --m-door: #31414d;
+  --m-door-groove: #23303a;
+  --m-leaf-1: #5d7e4c;
+  --m-leaf-2: #78985f;
+  --m-leaf-3: #47673b;
+  --m-terracotta: #b86a42;
+  --m-terracotta-shade: #985333;
+  --m-soil: #4b3a2b;
+  --m-teak: #a8794c;
+  --m-teak-shade: #8a6039;
+  --m-teak-dark: #6f4b2c;
+  --m-deck-1: #9b6a45;
+  --m-deck-2: #8d5e3c;
+  --m-deck-3: #a87450;
+  --m-deck-side: #75492d;
+  --m-deck-front: #664027;
+  --m-deck-end: #4e321f;
+  --m-doormat: #6d5a45;
+  --m-concrete-top: #bab6ad;
+  --m-concrete-side: #8e8a81;
+  --m-concrete-front: #a29e95;
+  --m-concrete-joint: #858178;
+  --m-bolt: #3b3b39;
+  --m-washer: #9a9a96;
+  --m-abs: #2b2b2b;
+  --m-abs-top: #4a4a4a;
+  --m-pex-red: #c2413a;
+  --m-pex-blue: #2f6db3;
+  --m-conduit: #8f959b;
+  --m-conduit-top: #b3b8bd;
+  --m-paper: #ece9e1;
+  --m-paper-2: #dcd8ce;
+  --m-paper-edge: #bdb8ae;
+  --m-ink: #3a3a37;
+  --m-ink-fine: #8e8b84;
+}
+
+.sheetPaper {
+  fill: var(--m-paper);
+}
+.sheetPaperB {
+  fill: var(--m-paper-2);
+}
+.sheetEdge {
+  fill: var(--m-paper-edge);
+}
+.sheetBorder {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 0.8;
+}
+.titleBlock {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 0.8;
+}
+.sheetFine {
+  fill: none;
+  stroke: var(--m-ink-fine);
+  stroke-width: 0.6;
+}
+.gridLine {
+  fill: none;
+  stroke: var(--m-ink-fine);
+  stroke-width: 0.7;
+  stroke-dasharray: 6 3 1 3;
+}
+.gridBubble {
+  fill: var(--m-paper);
+  stroke: var(--m-ink);
+  stroke-width: 0.8;
+}
+.northRing {
+  fill: var(--m-paper);
+  stroke: var(--m-ink);
+  stroke-width: 0.8;
+}
+.planWall {
+  fill: var(--m-ink);
+}
+.planGap {
+  fill: var(--m-paper);
+}
+.planLine {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 0.8;
+}
+.planSwing {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 0.7;
+  stroke-dasharray: 2 2;
+}
+.planFixture {
+  fill: none;
+  stroke: var(--m-ink-fine);
+  stroke-width: 0.7;
+}
+.planDim {
+  fill: none;
+  stroke: var(--m-ink);
+  stroke-width: 0.7;
+}
+.footing {
+  fill: none;
+  stroke: var(--m-ink-fine);
+  stroke-width: 0.8;
+  stroke-dasharray: 5 3;
+}
+.sheetText {
+  fill: var(--m-ink);
+  font-family: var(--font-lot-body), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.northArrow {
+  fill: var(--m-ink);
+}
+.scaleDark {
+  fill: var(--m-ink);
+}
+.scaleLight {
+  fill: var(--m-paper);
+  stroke: var(--m-ink);
+  stroke-width: 0.6;
+}
+.seal {
+  fill: var(--color-lot-orange);
+}
+.sealRing {
+  fill: none;
+  stroke: var(--color-lot-ink);
+  stroke-width: 0.9;
+}
+.concreteTop {
+  fill: var(--m-concrete-top);
+}
+.concreteSide {
+  fill: var(--m-concrete-side);
+}
+.concreteFront {
+  fill: var(--m-concrete-front);
+}
+.slabLine {
+  fill: none;
+  stroke: var(--m-concrete-joint);
+  stroke-width: 0.9;
+}
+.joint {
+  fill: none;
+  stroke: var(--m-concrete-joint);
+  stroke-width: 0.9;
+}
+.bolt {
+  fill: var(--m-bolt);
+}
+.washer {
+  fill: var(--m-washer);
+}
+.abs {
+  fill: var(--m-abs);
+}
+.absTop {
+  fill: var(--m-abs-top);
+}
+.pexRed {
+  fill: var(--m-pex-red);
+}
+.pexBlue {
+  fill: var(--m-pex-blue);
+}
+.conduit {
+  fill: var(--m-conduit);
+}
+.conduitTop {
+  fill: var(--m-conduit-top);
+}
+.oakA {
+  fill: var(--m-oak-1);
+  stroke: var(--m-oak-seam);
+  stroke-width: 0.35;
+}
+.oakB {
+  fill: var(--m-oak-2);
+  stroke: var(--m-oak-seam);
+  stroke-width: 0.35;
+}
+.oakC {
+  fill: var(--m-oak-3);
+  stroke: var(--m-oak-seam);
+  stroke-width: 0.35;
+}
+.oakEdge {
+  fill: var(--m-oak-seam);
+}
+.tile {
+  fill: var(--m-tile);
+}
+.grout {
+  fill: none;
+  stroke: var(--m-grout);
+  stroke-width: 0.5;
+}
+.drain {
+  fill: var(--m-steel-shade);
+}
+.rugBorder {
+  fill: var(--m-rug-border);
+}
+.rug {
+  fill: var(--m-rug);
+}
+.rugStripe {
+  fill: none;
+  stroke: var(--m-rug-stripe);
+  stroke-width: 1.1;
+}
+.contact {
+  fill: var(--color-lot-ink);
+  fill-opacity: 0.14;
+}
+.showerGlass {
+  fill: var(--m-glass);
+  fill-opacity: 0.28;
+  stroke: var(--m-steel-shade);
+  stroke-width: 0.6;
+}
+.deckA {
+  fill: var(--m-deck-1);
+}
+.deckB {
+  fill: var(--m-deck-2);
+}
+.deckC {
+  fill: var(--m-deck-3);
+}
+.deckSide {
+  fill: var(--m-deck-side);
+}
+.deckFront {
+  fill: var(--m-deck-front);
+}
+.deckEnd {
+  fill: none;
+  stroke: var(--m-deck-end);
+  stroke-width: 0.6;
+}
+.teak {
+  fill: var(--m-teak);
+}
+.teakShade {
+  fill: var(--m-teak-shade);
+}
+.teakDark {
+  fill: var(--m-teak-dark);
+}
+.soil {
+  fill: var(--m-soil);
+}
+.terracotta {
+  fill: var(--m-terracotta);
+}
+.terracottaShade {
+  fill: var(--m-terracotta-shade);
+}
+.leafA {
+  fill: var(--m-leaf-1);
+  stroke: var(--m-leaf-3);
+  stroke-width: 0.5;
+}
+.leafB {
+  fill: var(--m-leaf-2);
+  stroke: var(--m-leaf-1);
+  stroke-width: 0.5;
+}
+.leafC {
+  fill: var(--m-leaf-3);
+}
+.doormat {
+  fill: var(--m-doormat);
+}
+.drywall {
+  fill: var(--m-drywall);
+}
+.drywallShade {
+  fill: var(--m-drywall-shade);
+}
+.baseboard {
+  fill: var(--m-baseboard);
+}
+.artOchre {
+  fill: var(--m-art-ochre);
+}
+.artTeal {
+  fill: var(--m-art-teal);
+}
+.mirror {
+  fill: var(--m-mirror);
+}
+.backsplash {
+  fill: var(--m-tile);
+}
+.walnutTop {
+  fill: var(--m-walnut-top);
+}
+.walnut {
+  fill: var(--m-walnut);
+}
+.walnutShade {
+  fill: var(--m-walnut-shade);
+}
+.porcelainTop {
+  fill: var(--m-porcelain-top);
+  stroke: var(--m-porcelain-shade);
+  stroke-width: 0.4;
+}
+.porcelain {
+  fill: var(--m-porcelain);
+}
+.porcelainShade {
+  fill: var(--m-porcelain-shade);
+}
+.linen {
+  fill: var(--m-linen);
+}
+.linenMid {
+  fill: var(--m-linen-mid);
+}
+.linenShade {
+  fill: var(--m-linen-shade);
+}
+.duvet {
+  fill: var(--m-duvet);
+}
+.duvetMid {
+  fill: var(--m-duvet-mid);
+}
+.duvetShade {
+  fill: var(--m-duvet-shade);
+}
+.throwTop {
+  fill: var(--m-throw);
+}
+.throwShade {
+  fill: var(--m-throw-shade);
+}
+.upholsteryTop {
+  fill: var(--m-upholstery-top);
+}
+.upholstery {
+  fill: var(--m-upholstery);
+}
+.upholsteryShade {
+  fill: var(--m-upholstery-shade);
+}
+.fabricTop {
+  fill: var(--m-fabric-top);
+}
+.fabric {
+  fill: var(--m-fabric);
+}
+.fabricShade {
+  fill: var(--m-fabric-shade);
+}
+.accentTop {
+  fill: var(--m-accent-top);
+}
+.accent {
+  fill: var(--m-accent);
+}
+.accentShade {
+  fill: var(--m-accent-shade);
+}
+.cabinetTop {
+  fill: var(--m-cabinet-top);
+}
+.cabinet {
+  fill: var(--m-cabinet);
+}
+.cabinetShade {
+  fill: var(--m-cabinet-shade);
+}
+.cabinetLine {
+  fill: none;
+  stroke: var(--m-cabinet-line);
+  stroke-width: 0.6;
+}
+.toeKick {
+  fill: var(--m-toe-kick);
+}
+.quartz {
+  fill: var(--m-quartz);
+}
+.quartzEdge {
+  fill: var(--m-quartz-edge);
+}
+.steelTop {
+  fill: var(--m-steel-top);
+}
+.steel {
+  fill: var(--m-steel);
+}
+.steelShade {
+  fill: var(--m-steel-shade);
+}
+.steelLine {
+  fill: none;
+  stroke: var(--m-steel-line);
+  stroke-width: 0.6;
+}
+.basin {
+  fill: var(--m-basin);
+}
+.cooktop {
+  fill: var(--m-cooktop);
+}
+.burner {
+  fill: none;
+  stroke: var(--m-burner);
+  stroke-width: 0.8;
+}
+.faucet {
+  fill: none;
+  stroke: var(--m-steel-line);
+  stroke-width: 1.4;
+}
+.handle {
+  fill: none;
+  stroke: var(--m-steel-line);
+  stroke-width: 1.2;
+}
+.handleLight {
+  fill: none;
+  stroke: var(--m-steel-top);
+  stroke-width: 1.4;
+}
+.brass {
+  fill: var(--m-brass);
+}
+.lampShade {
+  fill: var(--m-lamp-shade);
+}
+.lampTop {
+  fill: var(--m-lamp-top);
+}
+.bookA {
+  fill: var(--m-book-1);
+}
+.bookB {
+  fill: var(--m-book-2);
+}
+.cedarLitA {
+  fill: var(--m-cedar-1);
+}
+.cedarLitB {
+  fill: var(--m-cedar-2);
+}
+.cedarLitC {
+  fill: var(--m-cedar-3);
+}
+.cedarShadeA {
+  fill: var(--m-cedar-shade-1);
+}
+.cedarShadeB {
+  fill: var(--m-cedar-shade-2);
+}
+.cedarShadeC {
+  fill: var(--m-cedar-shade-3);
+}
+.battenLit {
+  fill: var(--m-cedar-batten);
+}
+.battenShade {
+  fill: var(--m-cedar-batten-shade);
+}
+.battenGap {
+  fill: none;
+  stroke: var(--m-cedar-gap);
+  stroke-width: 0.6;
+  stroke-opacity: 0.7;
+}
+.cedarEnd {
+  fill: var(--m-cedar-end);
+}
+.cedarEndShade {
+  fill: var(--m-cedar-shade-2);
+}
+.trim {
+  fill: var(--m-trim);
+}
+.trimTop {
+  fill: var(--m-trim-top);
+}
+.trimShade {
+  fill: var(--m-trim-shade);
+}
+.reveal {
+  fill: var(--m-cedar-shade-1);
+}
+.revealSill {
+  fill: var(--m-cedar-batten);
+}
+.plate {
+  fill: var(--m-fir-top);
+  stroke: var(--m-fir-front);
+  stroke-width: 0.5;
+}
+.plateLine {
+  fill: none;
+  stroke: var(--m-drywall);
+  stroke-width: 0.8;
+}
+.bronze {
+  fill: var(--m-bronze);
+}
+.bronzeLit {
+  fill: var(--m-bronze-lit);
+}
+.sconce {
+  fill: var(--m-sconce);
+}
+.glass {
+  fill: var(--m-glass);
+  fill-opacity: 0.55;
+}
+.glassShade {
+  fill: var(--m-glass-shade);
+  fill-opacity: 0.35;
+}
+.glint {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.6;
+}
+.glintSoft {
+  fill: var(--color-lot-chalk);
+  fill-opacity: 0.22;
+}
+.frame {
+  fill: var(--m-bronze-dark);
+}
+.sash {
+  fill: var(--m-bronze);
+}
+.casing {
+  fill: var(--m-trim);
+}
+.door {
+  fill: var(--m-door);
+}
+.doorGroove {
+  fill: none;
+  stroke: var(--m-door-groove);
+  stroke-width: 0.9;
+}
+.lever {
+  fill: var(--m-brass);
+  stroke: var(--m-brass);
+  stroke-width: 1.3;
+}
+.firTop {
+  fill: var(--m-fir-top);
+}
+.firSide {
+  fill: var(--m-fir-side);
+}
+.firFront {
+  fill: var(--m-fir-front);
+}
+.metalA {
+  fill: var(--m-metal-1);
+}
+.metalB {
+  fill: var(--m-metal-2);
+}
+.rib {
+  fill: none;
+  stroke: var(--m-metal-rib);
+  stroke-width: 0.9;
+}
+.ribShadow {
+  fill: none;
+  stroke: var(--m-metal-dark);
+  stroke-width: 1.3;
+}
+.metalEdge {
+  fill: none;
+  stroke: var(--m-metal-edge);
+  stroke-width: 1.2;
+}
+.metalEdgeFill {
+  fill: var(--m-metal-edge);
+}
+.fascia {
+  fill: var(--m-fascia);
+}
+.fasciaLit {
+  fill: var(--m-fascia-lit);
+}
+.flashing {
+  fill: var(--m-flashing);
+}
+.skyGlass {
+  fill: var(--m-sky-glass);
+  fill-opacity: 0.85;
+}
+.gutterTop {
+  fill: var(--m-bronze-dark);
+  stroke: var(--m-bronze-lit);
+  stroke-width: 0.6;
+}
+.hanger {
+  fill: none;
+  stroke: var(--m-metal-edge);
+  stroke-width: 0.8;
+}
+
+/* Numbered callouts match the ledger rows. */
+.callout line {
+  stroke: var(--color-lot-stone-on-dark);
+  stroke-width: 1.2;
+}
+.calloutDot {
+  fill: var(--color-lot-chalk);
+}
+.callout circle:not(.calloutDot) {
+  fill: var(--color-lot-ink);
+  stroke: var(--color-lot-chalk);
+  stroke-width: 1.5;
+}
+.callout text {
+  fill: var(--color-lot-chalk);
+  font-family: var(--font-lot-body), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+.layer[data-active="true"] .callout circle:not(.calloutDot) {
+  fill: var(--color-lot-orange);
+  stroke: var(--color-lot-orange);
+}
+.layer[data-active="true"] .callout text {
+  fill: var(--color-lot-ink);
+}
+
+/* Ledger */
+.ledger {
+  min-width: 0;
+}
+.kicker {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.ledger h3 {
+  margin-top: 14px !important;
+  font-size: clamp(26px, 2.4vw, 34px);
+  letter-spacing: -0.045em;
+}
+.lead {
+  margin-top: 12px !important;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.rows {
+  display: grid;
+  margin-top: 26px;
+  border-top: 1px solid var(--color-lot-line-dark);
+}
+/* A ui/Button laid out as a ledger row; the landing's chalk focus outline on
+   carbon replaces the button's ring. */
+.row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  justify-content: stretch;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 13px 9px 13px 0;
+  border-bottom: 1px solid var(--color-lot-line-dark);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-lot-chalk);
+  font-weight: 400;
+  text-align: left;
+}
+.row:hover {
+  background: var(--color-lot-surface-dark);
+}
+.row:focus-visible {
+  box-shadow: none;
+}
+.row[aria-checked="true"] {
+  background: var(--color-lot-surface-dark);
+  box-shadow: inset 3px 0 0 var(--color-lot-orange);
+}
+.rowIndex {
+  justify-self: center;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.row[aria-checked="true"] .rowIndex {
+  color: var(--color-lot-orange);
+}
+.rowText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.rowTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+.rowDetail {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.rowAmount {
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 22px 0 0;
+}
+.total dt {
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+}
+.total dd {
+  margin: 4px 0 0;
+  font-family: var(--font-lot-display), sans-serif;
+  font-size: clamp(25px, 2.2vw, 31px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.total > div:last-child {
+  text-align: right;
+}
+.note {
+  margin-top: 18px !important;
+  color: var(--color-lot-stone-on-dark);
+  font-size: 13px;
+}
+.rail {
+  position: relative;
+  height: 2px;
+  margin-top: 22px;
+  background: var(--color-lot-line-dark);
+}
+.rail > span {
+  position: absolute;
+  inset: 0;
+  background: var(--color-lot-orange);
+  transform: scaleX(var(--stack-progress, 0));
+  transform-origin: left;
+}
+.stack:not([data-pinned="true"]) .rail {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .callout circle,
+  .callout text,
+  .rowIndex {
+    transition:
+      fill 180ms,
+      stroke 180ms,
+      color 180ms;
+  }
+  .row {
+    transition: background-color 180ms;
+  }
+}
+
+@media (max-width: 1150px) {
+  .stage {
+    gap: 4%;
+  }
+}
+
+@media (max-width: 800px) {
+  .stack {
+    margin-top: 44px;
+  }
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    padding-bottom: 40px;
+  }
+  /* In one column the drawing is too narrow to float the readout over it. */
+  .readout {
+    position: static;
+    margin-bottom: 10px;
+  }
+  .readout strong {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* The callout numerals would fall below the 9px floor; the dots and the
+     ledger carry the index. */
+  .callout text,
+  .sheetText {
+    display: none;
+  }
+  .row {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  .rowAmount {
+    font-size: 17px;
+  }
+  .total {
+    flex-direction: column;
+  }
+  .total > div:last-child {
+    text-align: left;
+  }
+}
