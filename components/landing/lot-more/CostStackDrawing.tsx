@@ -45,6 +45,9 @@ const pts = (list: readonly P3[]) =>
     })
     .join(" ");
 const loop = (list: readonly P3[]) => `M${pts(list).split(" ").join(" L")} Z`;
+const loops = (items: readonly (readonly P3[])[]) => items.map(loop).join(" ");
+const seg = (a: P3, b: P3) => `M${pts([a])} L${pts([b])}`;
+const segs = (items: readonly (readonly [P3, P3])[]) => items.map(([a, b]) => seg(a, b)).join(" ");
 
 const quadX = (x: number, y0: number, y1: number, z0: number, z1: number): P3[] => [
   [x, y0, z0],
@@ -180,9 +183,10 @@ const CLERESTORY: Hole = { u0: 2, u1: 7.5, z0: 8.9, z1: 10.5 };
 const WINDOW: Hole = { u0: 3, u1: 9, z0: 4, z1: 8 };
 const DOOR: Hole = { u0: 13, u1: 16, z0: FLOOR, z1: 8 };
 
-// Precomputed floor boards: 0.6 ft wide rows of white oak with staggered butt joints.
-const PLANKS = (() => {
-  const out: Array<{ points: string; tone: number }> = [];
+// Precomputed floor boards: 0.6 ft wide rows of white oak with staggered butt joints,
+// batched into one <path> per tone to keep homepage DOM size well under 1,500 elements.
+const PLANK_PATHS = (() => {
+  const byTone: [string[], string[], string[]] = [[], [], []];
   for (let row = 0; row * 0.6 < D - 1e-6; row++) {
     const y0 = row * 0.6;
     const y1 = Math.min(D, y0 + 0.6);
@@ -190,12 +194,12 @@ const PLANKS = (() => {
     let next = ((row * 3.7) % 5.5) + 1.2;
     for (let i = 0; x < W; i++) {
       const x1 = Math.min(W, next);
-      out.push({ points: pts(quadZ(FLOOR, x, x1, y0, y1)), tone: (row * 5 + i * 2) % 3 });
+      byTone[(row * 5 + i * 2) % 3].push(loop(quadZ(FLOOR, x, x1, y0, y1)));
       x = x1;
       next = x1 + 6.4 + ((row + i) % 3) * 0.9;
     }
   }
-  return out;
+  return [byTone[0].join(" "), byTone[1].join(" "), byTone[2].join(" ")] as const;
 })();
 
 function DrawingSheet({ x0, x1, y0, y1, paper, children }: { x0: number; x1: number; y0: number; y1: number; paper: string; children?: ReactNode }) {
@@ -212,11 +216,55 @@ function DrawingSheet({ x0, x1, y0, y1, paper, children }: { x0: number; x1: num
 
 function SoftCosts({ active }: { active: boolean }) {
   const wallRing = `${loop(quadZ(0, 0, W, 0, D))} ${loop(quadZ(0, T, W - T, T, D - T))}`;
-  const gaps: P3[][] = [
+  const gapsPath = loops([
     quadZ(0, W - T, W, SLIDER.u0, SLIDER.u1),
     quadZ(0, WINDOW.u0, WINDOW.u1, D - T, D),
     quadZ(0, DOOR.u0, DOOR.u1, D - T, D),
-  ];
+  ]);
+  const gridLinesPath = segs([
+    ...[0, 10, 20].map((x): [P3, P3] => [[x, -0.5, 0], [x, 32, 0]]),
+    ...[0, 10, 20, 30].map((y): [P3, P3] => [[-0.5, y, 0], [24, y, 0]]),
+  ]);
+  const gridBubblesPath = loops([
+    ...[0, 10, 20].map((x) => disc(x, 33, 0, 0.9)),
+    ...[0, 10, 20, 30].map((y) => disc(25.3, y, 0, 0.9)),
+  ]);
+  const joistsPath = segs(range(2, 18, 2).map((x): [P3, P3] => [[x, 0.5, 0], [x, 29.5, 0]]));
+  const planLinesPath = segs([
+    [[W - T / 2, SLIDER.u0, 0], [W - T / 2, SLIDER.u1, 0]],
+    [[W - T * 0.2, SLIDER.u0, 0], [W - T * 0.2, SLIDER.u1, 0]],
+    [[WINDOW.u0, D - T / 2, 0], [WINDOW.u1, D - T / 2, 0]],
+  ]);
+  const interiorWallsPath = loops([
+    quadZ(0, 8, 8.35, T, 9.35),
+    quadZ(0, T, 4.5, 9, 9.35),
+    quadZ(0, 7, 8.35, 9, 9.35),
+  ]);
+  const fixturesPath = [
+    loop(quadZ(0, 9.5, 15.5, 0.6, 7.5)),
+    seg([9.5, 3.2, 0], [15.5, 3.2, 0]),
+    loop(quadZ(0, T, 2.8, 12, 22)),
+    loop(quadZ(0, T, 3, 22.3, 25)),
+    loop(quadZ(0, 6, 9, 13, 17)),
+    loop(quadZ(0, 10, 12.8, 21.5, 28)),
+    loop(quadZ(0, 14, 16.2, 23, 26.5)),
+    loop(quadZ(0, T, 3.5, T, 3.5)),
+    loop(disc(1.4, 5.8, 0, 0.7, 14)),
+    loop(quadZ(0, 5, 7.6, T, 2.2)),
+  ].join(" ");
+  const dimsPath = segs([
+    [[0, -2, 0], [W, -2, 0]],
+    ...[0, 10, W].map((x): [P3, P3] => [[x - 0.35, -2.35, 0], [x + 0.35, -1.65, 0]]),
+    [[-2, 0, 0], [-2, D, 0]],
+    ...[0, 9.35, 22, D].map((y): [P3, P3] => [[-2.35, y - 0.35, 0], [-1.65, y + 0.35, 0]]),
+    [[W + 1.5, 12, 0], [W + 1.5, 20, 0]],
+  ]);
+  const scaleDarkPath = loops([0, 2].map((i) => quadZ(0, -1 + i * 1.5, 0.5 + i * 1.5, 31.6, 32.2)));
+  const scaleLightPath = loops([1, 3].map((i) => quadZ(0, -1 + i * 1.5, 0.5 + i * 1.5, 31.6, 32.2)));
+  const titleLinesPath = segs([
+    [[21.5, 30, 0], [27, 30, 0]],
+    [[21.5, 31.6, 0], [27, 31.6, 0]],
+  ]);
   return (
     <g className={styles.layer} data-active={active}>
       {/* S-101: foundation plan with the structural grid. */}
@@ -224,21 +272,9 @@ function SoftCosts({ active }: { active: boolean }) {
         <DrawingSheet x0={-3} x1={28} y0={-2} y1={35} paper={styles.sheetPaperB}>
           <polygon className={styles.planFixture} points={pts(quadZ(0, -0.5, W + 0.5, -0.5, D + 0.5))} />
           <polygon className={styles.footing} points={pts(quadZ(0, 0.4, W - 0.4, 0.4, D - 0.4))} />
-          {[0, 10, 20].map((x) => (
-            <g key={`gx${x}`}>
-              <Line className={styles.gridLine} a={[x, -0.5, 0]} b={[x, 32, 0]} />
-              <polygon className={styles.gridBubble} points={pts(disc(x, 33, 0, 0.9))} />
-            </g>
-          ))}
-          {[0, 10, 20, 30].map((y) => (
-            <g key={`gy${y}`}>
-              <Line className={styles.gridLine} a={[-0.5, y, 0]} b={[24, y, 0]} />
-              <polygon className={styles.gridBubble} points={pts(disc(25.3, y, 0, 0.9))} />
-            </g>
-          ))}
-          {range(2, 18, 2).map((x) => (
-            <Line key={`j${x}`} className={styles.sheetFine} a={[x, 0.5, 0]} b={[x, 29.5, 0]} />
-          ))}
+          <path className={styles.gridLine} d={gridLinesPath} />
+          <path className={styles.gridBubble} d={gridBubblesPath} />
+          <path className={styles.sheetFine} d={joistsPath} />
         </DrawingSheet>
       </Part>
 
@@ -246,56 +282,31 @@ function SoftCosts({ active }: { active: boolean }) {
       <Part at={OFFSET.sheetPlan}>
         <DrawingSheet x0={-4} x1={28} y0={-4} y1={34} paper={styles.sheetPaper}>
           <path className={styles.planWall} d={wallRing} fillRule="evenodd" />
-          {gaps.map((gap, i) => (
-            <polygon key={`gap${i}`} className={styles.planGap} points={pts(gap)} />
-          ))}
-          <Line className={styles.planLine} a={[W - T / 2, SLIDER.u0, 0]} b={[W - T / 2, SLIDER.u1, 0]} />
-          <Line className={styles.planLine} a={[W - T * 0.2, SLIDER.u0, 0]} b={[W - T * 0.2, SLIDER.u1, 0]} />
-          <Line className={styles.planLine} a={[WINDOW.u0, D - T / 2, 0]} b={[WINDOW.u1, D - T / 2, 0]} />
-          <polygon className={styles.planWall} points={pts(quadZ(0, 8, 8.35, T, 9.35))} />
-          <polygon className={styles.planWall} points={pts(quadZ(0, T, 4.5, 9, 9.35))} />
-          <polygon className={styles.planWall} points={pts(quadZ(0, 7, 8.35, 9, 9.35))} />
+          <path className={styles.planGap} d={gapsPath} />
+          <path className={styles.planLine} d={planLinesPath} />
+          <path className={styles.planWall} d={interiorWallsPath} />
           <polyline className={styles.planSwing} points={pts(arc(DOOR.u0, D - T, 3, 0, -Math.PI / 2))} />
           <Line className={styles.planLine} a={[DOOR.u0, D - T, 0]} b={[DOOR.u0, D - T - 3, 0]} />
           <polyline className={styles.planSwing} points={pts(arc(7, 9, 2.5, Math.PI, Math.PI * 1.5))} />
           <Line className={styles.planLine} a={[7, 9, 0]} b={[7, 6.5, 0]} />
           {/* Fixtures and furniture in outline. */}
-          <polygon className={styles.planFixture} points={pts(quadZ(0, 9.5, 15.5, 0.6, 7.5))} />
-          <Line className={styles.planFixture} a={[9.5, 3.2, 0]} b={[15.5, 3.2, 0]} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, T, 2.8, 12, 22))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, T, 3, 22.3, 25))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, 6, 9, 13, 17))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, 10, 12.8, 21.5, 28))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, 14, 16.2, 23, 26.5))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, T, 3.5, T, 3.5))} />
-          <polygon className={styles.planFixture} points={pts(disc(1.4, 5.8, 0, 0.7, 14))} />
-          <polygon className={styles.planFixture} points={pts(quadZ(0, 5, 7.6, T, 2.2))} />
-          {/* Dimension strings. */}
-          <Line className={styles.planDim} a={[0, -2, 0]} b={[W, -2, 0]} />
-          {[0, 10, W].map((x) => (
-            <Line key={`dx${x}`} className={styles.planDim} a={[x - 0.35, -2.35, 0]} b={[x + 0.35, -1.65, 0]} />
-          ))}
-          <Line className={styles.planDim} a={[-2, 0, 0]} b={[-2, D, 0]} />
-          {[0, 9.35, 22, D].map((y) => (
-            <Line key={`dy${y}`} className={styles.planDim} a={[-2.35, y - 0.35, 0]} b={[-1.65, y + 0.35, 0]} />
-          ))}
+          <path className={styles.planFixture} d={fixturesPath} />
+          {/* Dimension strings and section marker. */}
+          <path className={styles.planDim} d={dimsPath} />
           <PlanText at={[7.6, -2.5, 0]} size={1.1}>20&apos;-0&quot;</PlanText>
           <PlanText at={[-2.5, 18.2, 0]} size={1.1} along="y">30&apos;-0&quot;</PlanText>
           <PlanText at={[10.6, 4.6, 0]} size={0.85}>BEDROOM</PlanText>
           <PlanText at={[1.6, 7.6, 0]} size={0.85}>BATH</PlanText>
           <PlanText at={[4.5, 20, 0]} size={0.85}>KITCHEN</PlanText>
           <PlanText at={[13.4, 19.6, 0]} size={0.85}>LIVING</PlanText>
-          {/* Section marker and scale bar. */}
-          <Line className={styles.planDim} a={[W + 1.5, 12, 0]} b={[W + 1.5, 20, 0]} />
+          {/* Section marker bubble and scale bar. */}
           <polygon className={styles.gridBubble} points={pts(disc(W + 1.5, 11, 0, 0.9))} />
           <polygon className={styles.northArrow} points={pts([[W + 0.9, 20, 0], [W + 2.1, 20, 0], [W + 1.5, 21.2, 0]])} />
-          {[0, 1, 2, 3].map((i) => (
-            <polygon key={`sb${i}`} className={i % 2 ? styles.scaleLight : styles.scaleDark} points={pts(quadZ(0, -1 + i * 1.5, 0.5 + i * 1.5, 31.6, 32.2))} />
-          ))}
+          <path className={styles.scaleDark} d={scaleDarkPath} />
+          <path className={styles.scaleLight} d={scaleLightPath} />
           {/* Title block, north arrow and the engineer's seal. */}
           <polygon className={styles.titleBlock} points={pts(quadZ(0, 21.5, 27, 24, 33))} />
-          <Line className={styles.sheetFine} a={[21.5, 30, 0]} b={[27, 30, 0]} />
-          <Line className={styles.sheetFine} a={[21.5, 31.6, 0]} b={[27, 31.6, 0]} />
+          <path className={styles.sheetFine} d={titleLinesPath} />
           <PlanText at={[22.1, 28.8, 0]} size={1.5}>A-101</PlanText>
           <PlanText at={[22.1, 31, 0]} size={0.75}>FLOOR PLAN</PlanText>
           <PlanText at={[22.1, 32.6, 0]} size={0.75}>PERMIT SET</PlanText>
@@ -336,6 +347,20 @@ function CladWall({ plane, holes, sconces }: { plane: "x" | "y"; holes: readonly
   const clipId = `cost-stack-clad-${plane}`;
   const tones = isX ? CEDAR_SHADE : CEDAR_LIT;
   const boards = range(0, len - 0.5, 1);
+  const boardGroups: [string[], string[], string[]] = [[], [], []];
+  boards.forEach((u, i) => {
+    boardGroups[pick(BOARD_ORDER, i)].push(loop(band(u, Math.min(len, u + 1), () => FLOOR, top)));
+  });
+  const battensPath = loops(boards.slice(1).map((u) => band(u - 0.08, u + 0.08, () => FLOOR, top, 0.06)));
+  const battenGapsPath = segs(boards.slice(1).map((u): [P3, P3] => [at(u + 0.09, FLOOR, 0.02), at(u + 0.09, top(u + 0.09), 0.02)]));
+  const clipTrimPath = loops([
+    band(0, len, () => FLOOR, () => FLOOR + 0.55, 0.08),
+    band(0, len, (u) => top(u) - 0.55, top, 0.08),
+  ]);
+  const cornerTrimPath = loops([
+    band(0, 0.4, () => FLOOR, top, 0.09),
+    band(len - 0.4, len, () => FLOOR, top, 0.09),
+  ]);
   return (
     <>
       <defs>
@@ -350,21 +375,15 @@ function CladWall({ plane, holes, sconces }: { plane: "x" | "y"; holes: readonly
         <polygon className={styles.cedarEndShade} points={pts([[W, D - T, FLOOR], [W, D, FLOOR], [W, D, wallTop(W)], [W, D - T, wallTop(W)]])} />
       )}
       <g clipPath={`url(#${clipId})`}>
-        {boards.map((u, i) => (
-          <polygon key={`bd${u}`} className={pick(tones, pick(BOARD_ORDER, i))} points={pts(band(u, Math.min(len, u + 1), () => FLOOR, top))} />
-        ))}
-        {boards.slice(1).map((u) => (
-          <g key={`bt${u}`}>
-            <polygon className={isX ? styles.battenShade : styles.battenLit} points={pts(band(u - 0.08, u + 0.08, () => FLOOR, top, 0.06))} />
-            <Line className={styles.battenGap} a={at(u + 0.09, FLOOR, 0.02)} b={at(u + 0.09, top(u + 0.09), 0.02)} />
-          </g>
-        ))}
-        <polygon className={isX ? styles.trimShade : styles.trim} points={pts(band(0, len, () => FLOOR, () => FLOOR + 0.55, 0.08))} />
-        <polygon className={isX ? styles.trimShade : styles.trim} points={pts(band(0, len, (u) => top(u) - 0.55, top, 0.08))} />
+        {boardGroups.map((group, toneIdx) =>
+          group.length > 0 ? <path key={`bg${toneIdx}`} className={tones[toneIdx]} d={group.join(" ")} /> : null,
+        )}
+        <path className={isX ? styles.battenShade : styles.battenLit} d={battensPath} />
+        <path className={styles.battenGap} d={battenGapsPath} />
+        <path className={isX ? styles.trimShade : styles.trim} d={clipTrimPath} />
       </g>
       {/* Corner boards. */}
-      <polygon className={isX ? styles.trimShade : styles.trim} points={pts(band(0, 0.4, () => FLOOR, top, 0.09))} />
-      <polygon className={isX ? styles.trimShade : styles.trim} points={pts(band(len - 0.4, len, () => FLOOR, top, 0.09))} />
+      <path className={isX ? styles.trimShade : styles.trim} d={cornerTrimPath} />
       {/* Reveals: the near jamb and the sill show the wall's thickness. */}
       {holes.map((h, i) => (
         <g key={`r${i}`}>
@@ -391,6 +410,49 @@ function CladWall({ plane, holes, sconces }: { plane: "x" | "y"; holes: readonly
 }
 
 function Shell({ active }: { active: boolean }) {
+  const slabJointsPath = segs([
+    ...[10, 20].map((y): [P3, P3] => [[-0.5, y, 0.9], [W + 0.5, y, 0.9]]),
+    [[10, -0.5, 0.9], [10, D + 0.5, 0.9]],
+  ]);
+  const anchorPoints: readonly [number, number][] = [
+    ...range(2, 18, 4).flatMap((x): [number, number][] => [[x, 0.25], [x, D - 0.25]]),
+    ...range(4, 26, 4).flatMap((y): [number, number][] => [[0.25, y], [W - 0.25, y]]),
+  ];
+  const washersPath = loops(anchorPoints.map(([x, y]) => disc(x, y, 0.91, 0.26, 10)));
+  const boltK = 0.09 / Math.SQRT2;
+  const boltsPath = loops(
+    anchorPoints.flatMap(([x, y]) => [
+      disc(x, y, 0.91, 0.09, 14),
+      [[x + boltK, y - boltK, 0.91], [x - boltK, y + boltK, 0.91], [x - boltK, y + boltK, 1.3], [x + boltK, y - boltK, 1.3]] as P3[],
+      disc(x, y, 1.3, 0.09, 14),
+    ]),
+  );
+  const bathGroutPath = segs([
+    ...range(T + 1, 7.5, 1).map((x): [P3, P3] => [[x, T, FLOOR + 0.012], [x, 9, FLOOR + 0.012]]),
+    ...range(T + 1, 8.5, 1).map((y): [P3, P3] => [[T, y, FLOOR + 0.012], [8, y, FLOOR + 0.012]]),
+  ]);
+  const rugStripesPath = segs(range(22, 27.5, 1.1).map((y): [P3, P3] => [[9.9, y, FLOOR + 0.02], [17.1, y, FLOOR + 0.02]]));
+  const deckGroups: [string[], string[], string[]] = [[], [], []];
+  range(W, W + 6.55, 0.45).forEach((x, i) => {
+    deckGroups[pick(BOARD_ORDER, i)].push(loop(quadZ(FLOOR, x + 0.04, x + 0.41, 9, 23)));
+  });
+  const deckEndsPath = segs(range(W + 0.45, W + 6.6, 0.45).map((x): [P3, P3] => [[x, 23, 0.1], [x, 23, FLOOR]]));
+  const backsplashGroutPath = segs([
+    ...range(4.48, 7.1, 0.33).map((z): [P3, P3] => [[T + 0.03, 12, z], [T + 0.03, 22, z]]),
+    ...range(12.67, 21.4, 0.67).flatMap((y, i) =>
+      range(4.15, 7.07, 0.33).flatMap((z, j): [P3, P3][] =>
+        (i + j) % 2 === 0 ? [[[T + 0.03, y, z], [T + 0.03, y, Math.min(7.4, z + 0.33)]]] : [],
+      ),
+    ),
+  ]);
+  const upperHandlesPath = segs([13.6, 14.2, 15.45, 16.05].map((y): [P3, P3] => [[1.82, y, 7.6], [1.82, y, 8.2]]));
+  const baseCabinetLinesPath = segs([
+    [[2.81, 12, 3.3], [2.81, 22, 3.3]],
+    ...range(14.5, 19.5, 2.5).map((y): [P3, P3] => [[2.81, y, FLOOR + 0.35], [2.81, y, 3.9]]),
+  ]);
+  const lowerHandlesPath = segs([13.25, 15.75, 18.25, 20.75].map((y): [P3, P3] => [[2.83, y - 0.4, 3.6], [2.83, y + 0.4, 3.6]]));
+  const burnersPath = loops([[1.25, 18.6], [2.15, 18.6], [1.25, 19.7], [2.15, 19.7]].map(([x, y]) => disc(x, y, 4.17, 0.32, 12)));
+  const fridgeHandlesPath = segs([[23.45, 5.6, 7.3], [23.85, 5.6, 7.3], [23.65, 3.2, 4.9]].map(([y, z0, z1]): [P3, P3] => [[3.03, y, z0], [3.03, y, z1]]));
   return (
     <g className={styles.layer} data-active={active}>
       {/* Slab: thickened edge, control joints, anchor bolts and the plumbing and power stub-outs. */}
@@ -398,19 +460,9 @@ function Shell({ active }: { active: boolean }) {
         <Box b={[-0.5, W + 0.5, -0.5, D + 0.5, -1.2, 0.9]} top={styles.concreteTop} side={styles.concreteSide} front={styles.concreteFront} />
         <Line className={styles.slabLine} a={[W + 0.5, -0.5, 0]} b={[W + 0.5, D + 0.5, 0]} />
         <Line className={styles.slabLine} a={[-0.5, D + 0.5, 0]} b={[W + 0.5, D + 0.5, 0]} />
-        {[10, 20].map((y) => (
-          <Line key={`cj${y}`} className={styles.joint} a={[-0.5, y, 0.9]} b={[W + 0.5, y, 0.9]} />
-        ))}
-        <Line className={styles.joint} a={[10, -0.5, 0.9]} b={[10, D + 0.5, 0.9]} />
-        {[
-          ...range(2, 18, 4).flatMap((x) => [[x, 0.25], [x, D - 0.25]]),
-          ...range(4, 26, 4).flatMap((y) => [[0.25, y], [W - 0.25, y]]),
-        ].map(([x, y]) => (
-          <g key={`ab${x}-${y}`}>
-            <polygon className={styles.washer} points={pts(disc(x, y, 0.91, 0.26, 10))} />
-            <Cylinder cx={x} cy={y} r={0.09} z0={0.91} z1={1.3} side={styles.bolt} top={styles.bolt} />
-          </g>
-        ))}
+        <path className={styles.joint} d={slabJointsPath} />
+        <path className={styles.washer} d={washersPath} />
+        <path className={styles.bolt} d={boltsPath} />
         <Cylinder cx={1.4} cy={5.8} r={0.3} z0={0.9} z1={1.2} side={styles.abs} top={styles.absTop} />
         <Cylinder cx={2} cy={2} r={0.22} z0={0.9} z1={1.15} side={styles.abs} top={styles.absTop} />
         <Cylinder cx={6.3} cy={1.2} r={0.2} z0={0.9} z1={1.3} side={styles.abs} top={styles.absTop} />
@@ -429,34 +481,25 @@ function Shell({ active }: { active: boolean }) {
       {/* Finished floor, deck, landing and everything on the floor plane. */}
       <Part at={OFFSET.floor}>
         <Box b={[0, W, 0, D, 0.9, FLOOR]} top={styles.oakA} side={styles.oakEdge} front={styles.oakEdge} />
-        {PLANKS.map((p, i) => (
-          <polygon key={`pk${i}`} className={pick([styles.oakA, styles.oakB, styles.oakC], p.tone)} points={p.points} />
-        ))}
+        <path className={styles.oakA} d={PLANK_PATHS[0]} />
+        <path className={styles.oakB} d={PLANK_PATHS[1]} />
+        <path className={styles.oakC} d={PLANK_PATHS[2]} />
         {/* Bath: porcelain tile floor and the shower tray. */}
         <polygon className={styles.tile} points={pts(quadZ(FLOOR + 0.01, T, 8, T, 9))} />
-        {range(T + 1, 7.5, 1).map((x) => (
-          <Line key={`tx${x}`} className={styles.grout} a={[x, T, FLOOR + 0.012]} b={[x, 9, FLOOR + 0.012]} />
-        ))}
-        {range(T + 1, 8.5, 1).map((y) => (
-          <Line key={`ty${y}`} className={styles.grout} a={[T, y, FLOOR + 0.012]} b={[8, y, FLOOR + 0.012]} />
-        ))}
+        <path className={styles.grout} d={bathGroutPath} />
         <polygon className={styles.porcelainTop} points={pts(quadZ(FLOOR + 0.05, T, 3.5, T, 3.5))} />
         <polygon className={styles.drain} points={pts(disc(2, 2, FLOOR + 0.06, 0.22, 10))} />
         {/* Living rug. */}
         <polygon className={styles.rugBorder} points={pts(quadZ(FLOOR + 0.01, 9.5, 17.5, 20.5, 29))} />
         <polygon className={styles.rug} points={pts(quadZ(FLOOR + 0.015, 9.9, 17.1, 20.9, 28.6))} />
-        {range(22, 27.5, 1.1).map((y) => (
-          <Line key={`rs${y}`} className={styles.rugStripe} a={[9.9, y, FLOOR + 0.02]} b={[17.1, y, FLOOR + 0.02]} />
-        ))}
+        <path className={styles.rugStripe} d={rugStripesPath} />
 
         {/* Redwood deck on the slider side: boards with gaps, a rim and two steps. */}
         <Box b={[W, W + 7, 9, 23, 0.1, FLOOR]} top={styles.deckA} side={styles.deckSide} front={styles.deckFront} />
-        {range(W, W + 6.55, 0.45).map((x, i) => (
-          <polygon key={`db${x}`} className={pick([styles.deckA, styles.deckB, styles.deckC], pick(BOARD_ORDER, i))} points={pts(quadZ(FLOOR, x + 0.04, x + 0.41, 9, 23))} />
-        ))}
-        {range(W + 0.45, W + 6.6, 0.45).map((x) => (
-          <Line key={`de${x}`} className={styles.deckEnd} a={[x, 23, 0.1]} b={[x, 23, FLOOR]} />
-        ))}
+        <path className={styles.deckA} d={deckGroups[0].join(" ")} />
+        <path className={styles.deckB} d={deckGroups[1].join(" ")} />
+        <path className={styles.deckC} d={deckGroups[2].join(" ")} />
+        <path className={styles.deckEnd} d={deckEndsPath} />
         <Box b={[W + 7, W + 8.3, 12.5, 19.5, 0.05, 0.62]} top={styles.deckB} side={styles.deckSide} front={styles.deckFront} />
         <Box b={[W + 8.3, W + 9.6, 12.5, 19.5, 0, 0.28]} top={styles.deckA} side={styles.deckSide} front={styles.deckFront} />
         {/* Two teak lounge chairs, a side table and a planter. */}
@@ -523,47 +566,29 @@ function Shell({ active }: { active: boolean }) {
       <Part at={OFFSET.floor}>
         {/* Kitchen: tile backsplash, uppers, range hood, base run, quartz top, sink, cooktop and fridge. */}
         <polygon className={styles.backsplash} points={pts(quadX(T + 0.02, 12, 22, 4.15, 7.4))} />
-        {range(4.48, 7.1, 0.33).map((z) => (
-          <Line key={`bz${z}`} className={styles.grout} a={[T + 0.03, 12, z]} b={[T + 0.03, 22, z]} />
-        ))}
-        {range(12.67, 21.4, 0.67).map((y, i) =>
-          range(4.15, 7.07, 0.33).map((z, j) =>
-            (i + j) % 2 === 0 ? <Line key={`bv${y}-${z}`} className={styles.grout} a={[T + 0.03, y, z]} b={[T + 0.03, y, Math.min(7.4, z + 0.33)]} /> : null,
-          ),
-        )}
+        <path className={styles.grout} d={backsplashGroutPath} />
         <Box b={[T, 1.8, 12, 17.6, 7.4, 10]} top={styles.cabinetTop} side={styles.cabinetShade} front={styles.cabinet} />
         {[13.9, 15.75].map((y) => (
           <Line key={`uc${y}`} className={styles.cabinetLine} a={[1.8, y, 7.4]} b={[1.8, y, 10]} />
         ))}
-        {[13.6, 14.2, 15.45, 16.05].map((y) => (
-          <Line key={`uh${y}`} className={styles.handle} a={[1.82, y, 7.6]} b={[1.82, y, 8.2]} />
-        ))}
+        <path className={styles.handle} d={upperHandlesPath} />
         <Box b={[T, 1.1, 18.6, 19.6, 7.6, wallTop(1)]} top={styles.steelTop} side={styles.steelShade} front={styles.steel} />
         <Box b={[T, 1.8, 17.9, 20.3, 6.7, 7.6]} top={styles.steelTop} side={styles.steelShade} front={styles.steel} />
         <Box b={[T, 1.8, 20.6, 22, 7.4, 10]} top={styles.cabinetTop} side={styles.cabinetShade} front={styles.cabinet} />
         <Contact x0={T} x1={3} y0={12} y1={25} />
         <Box b={[T, 2.8, 12, 22, FLOOR, 3.9]} top={styles.cabinetTop} side={styles.cabinetShade} front={styles.cabinet} />
         <polygon className={styles.toeKick} points={pts(quadX(2.81, 12, 22, FLOOR, FLOOR + 0.35))} />
-        <Line className={styles.cabinetLine} a={[2.81, 12, 3.3]} b={[2.81, 22, 3.3]} />
-        {range(14.5, 19.5, 2.5).map((y) => (
-          <Line key={`bc${y}`} className={styles.cabinetLine} a={[2.81, y, FLOOR + 0.35]} b={[2.81, y, 3.9]} />
-        ))}
-        {[13.25, 15.75, 18.25, 20.75].map((y) => (
-          <Line key={`dh${y}`} className={styles.handle} a={[2.83, y - 0.4, 3.6]} b={[2.83, y + 0.4, 3.6]} />
-        ))}
+        <path className={styles.cabinetLine} d={baseCabinetLinesPath} />
+        <path className={styles.handle} d={lowerHandlesPath} />
         <Box b={[T, 3, 11.9, 22.1, 3.9, 4.15]} top={styles.quartz} side={styles.quartzEdge} front={styles.quartzEdge} />
         <polygon className={styles.basin} points={pts(quadZ(4.16, 1, 2.4, 13.9, 16))} />
         <polyline className={styles.faucet} points={pts([[0.8, 14.95, 4.16], [0.8, 14.95, 5.25], [1.15, 14.95, 5.35], [1.4, 14.95, 4.95]])} />
         <polygon className={styles.cooktop} points={pts(quadZ(4.16, 0.75, 2.65, 18.1, 20.2))} />
-        {[[1.25, 18.6], [2.15, 18.6], [1.25, 19.7], [2.15, 19.7]].map(([x, y]) => (
-          <polygon key={`ck${x}-${y}`} className={styles.burner} points={pts(disc(x, y, 4.17, 0.32, 12))} />
-        ))}
+        <path className={styles.burner} d={burnersPath} />
         <Box b={[T, 3, 22.3, 25, FLOOR, 7.8]} top={styles.steelTop} side={styles.steelShade} front={styles.steel} />
         <Line className={styles.steelLine} a={[3.01, 22.3, 5.2]} b={[3.01, 25, 5.2]} />
         <Line className={styles.steelLine} a={[3.01, 23.65, 5.2]} b={[3.01, 23.65, 7.8]} />
-        {[[23.45, 5.6, 7.3], [23.85, 5.6, 7.3], [23.65, 3.2, 4.9]].map(([y, z0, z1]) => (
-          <Line key={`fh${y}-${z0}`} className={styles.handle} a={[3.03, y, z0]} b={[3.03, y, z1]} />
-        ))}
+        <path className={styles.handle} d={fridgeHandlesPath} />
         <Box b={[T, 2.6, 22.3, 25, 8, 10]} top={styles.cabinetTop} side={styles.cabinetShade} front={styles.cabinet} />
 
         {/* Dining: walnut table, four chairs, a vase. */}
@@ -729,6 +754,13 @@ function Roof({ active }: { active: boolean }) {
   const top = (x: number, y: number, lift = 0): P3 => [x, y, zTop(x) + lift];
   const curb = { x0: 4, x1: 9, y0: 8, y1: 13, h: 0.35 };
   const seams = range(y0 + 1.25, y1 - 1, 1.25);
+  const metalPanels: [string[], string[]] = [[], []];
+  [y0, ...seams].forEach((y, i) => {
+    metalPanels[i % 2].push(loop([top(x0, y), top(x1, y), top(x1, Math.min(y1, y + 1.25)), top(x0, Math.min(y1, y + 1.25))]));
+  });
+  const ribShadowsPath = segs(seams.map((y): [P3, P3] => [top(x0, y + 0.09), top(x1, y + 0.09)]));
+  const ribsPath = segs(seams.map((y): [P3, P3] => [top(x0, y, 0.12), top(x1, y, 0.12)]));
+  const hangersPath = segs(range(y0 + 1, y1 - 1, 2.5).map((y): [P3, P3] => [[x1, y, zTop(x1) - 0.12], [x1 + 0.55, y, zTop(x1) - 0.12]]));
   const rafter = (ry: number) => {
     const ry1 = ry + 0.28;
     return (
@@ -751,15 +783,10 @@ function Roof({ active }: { active: boolean }) {
         <polygon className={styles.fascia} points={pts([[x1, y0, zTop(x1) - RT], [x1, y1, zTop(x1) - RT], top(x1, y1), top(x1, y0)])} />
         <polygon className={styles.fasciaLit} points={pts([[x0, y1, zTop(x0) - RT], [x1, y1, zTop(x1) - RT], top(x1, y1), top(x0, y1)])} />
         {/* Standing-seam panels with raised ribs. */}
-        {[y0, ...seams].map((y, i) => (
-          <polygon key={`pn${y}`} className={i % 2 ? styles.metalB : styles.metalA} points={pts([top(x0, y), top(x1, y), top(x1, Math.min(y1, y + 1.25)), top(x0, Math.min(y1, y + 1.25))])} />
-        ))}
-        {seams.map((y) => (
-          <g key={`sm${y}`}>
-            <Line className={styles.ribShadow} a={top(x0, y + 0.09)} b={top(x1, y + 0.09)} />
-            <Line className={styles.rib} a={top(x0, y, 0.12)} b={top(x1, y, 0.12)} />
-          </g>
-        ))}
+        <path className={styles.metalA} d={metalPanels[0].join(" ")} />
+        <path className={styles.metalB} d={metalPanels[1].join(" ")} />
+        <path className={styles.ribShadow} d={ribShadowsPath} />
+        <path className={styles.rib} d={ribsPath} />
         <Line className={styles.metalEdge} a={top(x0, y1)} b={top(x1, y1)} />
         <Line className={styles.metalEdge} a={top(x1, y0)} b={top(x1, y1)} />
         {/* Ridge cap flashing on the high edge. */}
@@ -776,9 +803,7 @@ function Roof({ active }: { active: boolean }) {
         <Cylinder cx={3} cy={24} r={0.22} z0={zTop(3)} z1={zTop(3) + 1.4} side={styles.abs} top={styles.absTop} />
         {/* Gutter along the low edge, with hangers. */}
         <Box b={[x1, x1 + 0.55, y0, y1, zTop(x1) - 0.55, zTop(x1) - 0.12]} top={styles.gutterTop} side={styles.bronze} front={styles.bronzeLit} />
-        {range(y0 + 1, y1 - 1, 2.5).map((y) => (
-          <Line key={`gh${y}`} className={styles.hanger} a={[x1, y, zTop(x1) - 0.12]} b={[x1 + 0.55, y, zTop(x1) - 0.12]} />
-        ))}
+        <path className={styles.hanger} d={hangersPath} />
         <Callout at={top(x1, y0)} dx={36} dy={-8} label="01" />
       </Part>
     </g>

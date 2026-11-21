@@ -63,4 +63,11 @@ describe("CostStack", () => {
     expect(separationAtProgress(1)).toBe(0);
     expect([0.1, 0.4, 0.6, 0.9].map(layerAtProgress)).toEqual(["roof", "openings", "shell", "soft"]);
   });
+
+  it("batches repeated SVG primitives so the drawing stays well under Lighthouse's DOM budget", () => {
+    const { container } = renderStack();
+    const svg = container.querySelector("svg");
+    expect(svg).not.toBeNull();
+    expect(svg!.querySelectorAll("*").length).toBeLessThan(700);
+  });
 });

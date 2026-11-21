@@ -232,7 +232,7 @@ export default function AduCaliforniaHubPage() {
                 >
                   <Link
                     href={`/adu/${city.state}/${city.slug}`}
-                    className="font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+                    className="inline-flex min-h-11 items-center py-1 font-display text-xl font-bold text-lot-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
                   >
                     {city.h1 ?? `ADU Rules in ${city.city} (2026)`}
                   </Link>
@@ -260,7 +260,7 @@ export default function AduCaliforniaHubPage() {
         <p className="lf-body mt-3 text-lot-stone">
           Contractors and ADU designers across California can receive homeowner
           feasibility snapshots through{" "}
-          <Link href="/builder" className="font-medium text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink">
+          <Link href="/builder" prefetch={false} className="font-medium text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink">
             the LotFoundry builder portal
           </Link>
           .

@@ -500,7 +500,7 @@ export function AduMethodology() {
           </li>
           <li>
             Found a figure that does not match its source? Send it through the{" "}
-            <Link href="/feedback" className={linkClass}>
+            <Link href="/feedback" prefetch={false} className={linkClass}>
               feedback page
             </Link>{" "}
             with a link to the source, and we will check it.

@@ -116,12 +116,19 @@ describe("adu cost pages", () => {
     }
   });
 
-  it("titles the San Diego guide for rules now that cost has its own page", () => {
+  it("titles City of San Diego and Unincorporated San Diego County distinctly to avoid cannibalization", () => {
     const sanDiego = getCity("ca", "san-diego");
-    const title = String(sanDiego && buildCityMetadata(sanDiego).title);
-    expect(title).toBe("ADU Rules in San Diego, CA (2026): Size, Setbacks & Permits");
-    expect(sanDiego?.h1).toBeUndefined();
+    const county = getCity("ca", "san-diego-county");
+    const cityTitle = String(sanDiego && buildCityMetadata(sanDiego).title);
+    const countyTitle = String(county && buildCityMetadata(county).title);
+    expect(cityTitle).toBe("City of San Diego ADU Rules (2026): Setbacks, Size & Permits");
+    expect(cityTitle.length).toBeLessThanOrEqual(60);
+    expect(sanDiego?.h1).toBe("City of San Diego ADU Rules (2026)");
     expect(String(sanDiego?.metaDescription).length).toBeLessThanOrEqual(160);
+    expect(countyTitle).toBe("Unincorporated San Diego County ADU Rules & Setbacks (2026)");
+    expect(countyTitle.length).toBeLessThanOrEqual(60);
+    expect(String(county?.metaDescription).length).toBeLessThanOrEqual(160);
+    expect(String(county?.metaDescription)).not.toContain("City of San Diego");
   });
 
   it("scopes the San Diego fire-zone setback to High and Very High zones, as SDMC 141.0302(b)(9) does", () => {

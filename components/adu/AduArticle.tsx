@@ -69,13 +69,13 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       {
         "@type": "ListItem",
         position: 3,
-        name: content.city,
+        name: content.slug === "san-diego" ? "City of San Diego" : content.city,
         item: cityUrl(content),
       },
     ],
   };
   const articleJsonLd = aduArticleJsonLd({
-    headline: `ADU Rules in ${content.city}, ${content.stateName} (2026)`,
+    headline: content.h1 ?? `ADU Rules in ${content.city}, ${content.stateName} (2026)`,
     image: opengraphImageUrl(cityUrl(content)),
     datePublished: content.published,
     dateModified: cityLastModified(content.slug, content.asOf),
@@ -112,39 +112,43 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </div>
 
       {content.slug === "san-diego-county" ? (
-        <p className="lf-body mt-6 text-lot-stone">
-          Inside City of San Diego limits? Read the{" "}
-          <Link
-            href="/adu/ca/san-diego"
-            className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
-          >
-            City of San Diego ADU guide
-          </Link>
-          . Inside Carlsbad? Read the{" "}
-          <Link
-            href="/adu/ca/carlsbad"
-            className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
-          >
-            Carlsbad ADU rules and permits
-          </Link>
-          . The county rules below apply to unincorporated properties.
-        </p>
+        <aside aria-label="Jurisdiction check" className="mt-6 border border-lot-line bg-lot-surface px-5 py-4">
+          <p className="lf-kicker-dense text-lot-orange-ink">Jurisdiction scope · County PDS</p>
+          <p className="lf-body mt-2 text-lot-ink">
+            These rules apply only to <strong>unincorporated San Diego County</strong> parcels reviewed by County Planning &amp; Development Services (PDS). Inside City limits? Read the{" "}
+            <Link
+              href="/adu/ca/san-diego"
+              className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
+            >
+              City of San Diego ADU guide (SDMC § 141.0302)
+            </Link>
+            {" "}or{" "}
+            <Link
+              href="/adu/ca/carlsbad"
+              className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
+            >
+              Carlsbad ADU rules and permits
+            </Link>
+            .
+          </p>
+        </aside>
       ) : null}
 
       {content.slug === "san-diego" ? (
         <div className="mt-8 space-y-6">
-          <p className="lf-body text-lot-stone">
-            This guide covers the City of San Diego, not every property in
-            San Diego County. For a lot outside city limits, read the{" "}
-            <Link
-              href="/adu/ca/san-diego-county"
-              className="font-semibold text-lot-ink underline underline-offset-2 hover:text-lot-orange-ink"
-            >
-              unincorporated San Diego County ADU guide
-            </Link>
-            . Confirm your jurisdiction and overlays with the permitting
-            authority before using these rules for a specific lot.
-          </p>
+          <aside aria-label="Jurisdiction check" className="border border-lot-line bg-lot-surface px-5 py-4">
+            <p className="lf-kicker-dense text-lot-orange-ink">Jurisdiction scope · City of San Diego DSD</p>
+            <p className="lf-body mt-2 text-lot-ink">
+              This guide covers parcels inside <strong>City of San Diego</strong> municipal limits under SDMC § 141.0302, not unincorporated county areas. For a lot outside city limits (such as Fallbrook, Ramona, Alpine, Lakeside, or Spring Valley), read the{" "}
+              <Link
+                href="/adu/ca/san-diego-county"
+                className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
+              >
+                Unincorporated San Diego County ADU guide
+              </Link>
+              . Confirm your jurisdiction and overlays with the permitting authority before using these rules for a specific lot.
+            </p>
+          </aside>
           <nav aria-label="On this San Diego guide" className="flex flex-wrap gap-x-5 gap-y-2">
             {[["adu-glance", "Rules at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
               <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
