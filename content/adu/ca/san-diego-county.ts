@@ -7,8 +7,9 @@
  * Ordinance Section 6156 x; the PDS ADU Handbook (April 2024); the County ADU
  * and Dwelling Unit Building Plans pages; the Director's Determination of
  * January 29, 2025 on state housing law; the Building Division's permit
- * summary PDS 441A; and HCD's July 7, 2026 findings letter on the County
- * ordinance.
+ * summary PDS 441A; HCD's July 7, 2026 findings letter on the County
+ * ordinance; and the Green Building Incentive Program brochure PDS 273
+ * (Rev. 06/12/2026) with the program page it summarizes.
  *
  * HCD found five provisions of Section 6156 x out of step with state ADU
  * law, and PDS-611 still repeats two of them (JADU owner-occupancy and JADU
@@ -82,7 +83,9 @@ export const sanDiegoCounty: JurisdictionContent = {
     paragraphs: [
       "The County's trial ADU fee waiver ran from January 9, 2019 to January 9, 2024 and has ended, so new ADU projects pay the usual County fees. The Building Division invoices plan check fees at submittal and does not begin plan check until they are paid. PDS publishes a building fee estimator, and its handbook advises estimating County fees once you have chosen a design.",
       "Other fees come from other agencies. The Building Division lists transportation impact fees, park fees, school fees, fire mitigation fees and water and sewer charges among those that may be collected before a permit is issued. State law exempts an ADU of 750 square feet of interior livable space or less from local impact fees and scales them for larger units, but school districts and utilities set their own charges.",
-      "Budget for site work a city lot might not need. The County's handbook lists septic upgrades and septic analysis, separate utility meters and building on a slope among the items that raise ADU costs, and notes that a new detached ADU needs a solar system. The County's Green Building Incentive Program offers faster plan check and lower building permit fees for qualifying projects.",
+      "Budget for site work a city lot might not need. The County's handbook lists septic upgrades and septic analysis, separate utility meters and building on a slope among the items that raise ADU costs, and notes that a new detached ADU needs a solar system.",
+      "Building beyond the code can lower the County's own fees. Under the Green Building Incentive Program, which the Board of Supervisors updated in 2026, a project that meets CALGreen Tier 1 energy performance (or an equal benchmark, including a third-party certification the Building Official accepts) gets 7.5% off plan check and building permit fees, and CALGreen Tier 2 gets 15%. A graywater system for landscape irrigation, which also needs a permit from the Department of Environmental Health and Quality, earns 7.5%, as do straw bale exterior walls or recycled-content building materials that meet the County's thresholds. Qualifying projects also get faster plan check.",
+      "The discounts do not stack, do not reduce impact fees or any other agency's fees, and lapse for any measure that later becomes mandatory under the building code. Tell County staff at the permit counter when you submit, and they decide whether the project qualifies.",
     ],
     bullets: [
       "Plan check and building permit fees: estimate with the PDS fee estimator; plan check starts after the invoice is paid",
@@ -90,7 +93,7 @@ export const sanDiegoCounty: JurisdictionContent = {
       "Impact fees: exempt at 750 sq ft of interior livable space or less; proportional above",
       "School, fire, water and sewer agency fees: confirm with each agency",
       "Septic: OWTS professional's design plus any new tank or system",
-      "Green Building Incentive Program: faster plan check and lower building permit fees if eligible",
+      "Green Building Incentive Program: 7.5% off plan check and building permit fees, or 15% at CALGreen Tier 2, plus faster plan check; discounts do not stack",
     ],
   },
   processIntro:
@@ -163,6 +166,11 @@ export const sanDiegoCounty: JurisdictionContent = {
         "No. The County's trial fee waiver ran from January 9, 2019 to January 9, 2024. ADUs now pay County plan check and permit fees, plus any agency fees. State law still exempts ADUs of 750 square feet of interior livable space or less from local impact fees.",
     },
     {
+      question: "Can I lower my ADU permit fees in unincorporated San Diego County?",
+      answer:
+        "Possibly, through the County's Green Building Incentive Program. Meeting CALGreen Tier 1 energy performance cuts the County's plan check and building permit fees by 7.5%, and Tier 2 by 15%. A permitted graywater system, straw bale exterior walls or qualifying recycled-content materials each earn 7.5%. The discounts do not stack and do not cover impact, school or utility fees, so ask County staff at the permit counter whether your project qualifies.",
+    },
+    {
       question: "Does San Diego County have free pre-approved ADU plans?",
       answer:
         "Yes. The County offers six dwelling unit plans for ADU use, from a 600 square foot one-bedroom to 1,200 square foot two- and three-bedroom designs. They are about 85% complete, so you still add site-specific information using the County's Dwelling Unit Checklist.",
@@ -211,6 +219,14 @@ export const sanDiegoCounty: JurisdictionContent = {
     {
       label: "County of San Diego — map of unincorporated areas (PDF)",
       url: "https://www.sandiegocounty.gov/content/dam/sdc/pds/bldg/adu_info/UnincorporatedMap.pdf",
+    },
+    {
+      label: "County of San Diego PDS 273, Green Building Incentive Program (Rev. 06/12/2026, PDF)",
+      url: "https://www.sandiegocounty.gov/content/dam/sdc/pds/docs/pds273.pdf",
+    },
+    {
+      label: "County of San Diego — Green Building Incentive Program",
+      url: "https://www.sandiegocounty.gov/content/sdc/pds/greenbuildings.html",
     },
   ],
 };
