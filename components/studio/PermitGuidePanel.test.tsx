@@ -9,7 +9,7 @@ describe("PermitGuidePanel component", () => {
     expect(screen.getByText(/Denver ADU Starter Guide/i)).toBeInTheDocument();
     
     // Checklist step should render
-    expect(screen.getByText(/Check if residential zone contains 'G' suffix/i)).toBeInTheDocument();
+    expect(screen.getByText(/Confirm residential zone district form standards/i)).toBeInTheDocument();
   });
 
   it("handles checkbox toggles locally", () => {
