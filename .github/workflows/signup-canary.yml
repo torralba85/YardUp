@@ -24,6 +24,10 @@ jobs:
        (github.event.workflow_run.event == 'push' ||
         github.event.workflow_run.event == 'workflow_dispatch'))
     runs-on: ubuntu-latest
+    # The canary signs in with FIREBASE_SERVICE_ACCOUNT, an environment secret.
+    environment:
+      name: firebase-production
+      deployment: false
     timeout-minutes: 10
     steps:
       - name: Confirm CI deployed production
