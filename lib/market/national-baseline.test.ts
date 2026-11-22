@@ -5,6 +5,8 @@ import { NATIONAL_MARKET_BASELINE } from "./national-baseline";
 describe("NATIONAL_MARKET_BASELINE", () => {
   it("mirrors the national row of fmr.json exactly", () => {
     expect(NATIONAL_MARKET_BASELINE.rentByBedroom).toEqual(fmrData.national);
+    expect(NATIONAL_MARKET_BASELINE.asOf).toBe(fmrData.asOf);
+    expect(NATIONAL_MARKET_BASELINE.components?.rent.sourceAsOf).toBe(fmrData.asOf);
     expect(NATIONAL_MARKET_BASELINE.source).toBe("national");
     expect(NATIONAL_MARKET_BASELINE.area).toBe("U.S. average");
     expect(NATIONAL_MARKET_BASELINE.confidence).toBe("low");

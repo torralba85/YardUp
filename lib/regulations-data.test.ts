@@ -47,4 +47,25 @@ describe("regulations data layers", () => {
     expect(guide.permitSteps.length).toBeGreaterThan(0);
     expect(guide.citations.length).toBeGreaterThan(0);
   });
+
+  it("keeps every starter regulation guide within the 90-day verification window", () => {
+    const todayMs = Date.now();
+    const maxAgeDays = 90;
+    for (const [id, guide] of Object.entries(regulationGuides)) {
+      expect(guide.verifiedAt, `${id} verifiedAt format`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      const verifiedMs = Date.parse(`${guide.verifiedAt}T00:00:00Z`);
+      const ageDays = (todayMs - verifiedMs) / (1000 * 60 * 60 * 24);
+      expect(ageDays, `${id} guide is ${Math.round(ageDays)}d old (max ${maxAgeDays}d)`).toBeLessThanOrEqual(maxAgeDays);
+    }
+  });
+
+  it("reflects Austin HOME separation repeal and Denver citywide ADU legalization", () => {
+    const austinText = [regulationGuides["compact-lot"].summary, ...regulationGuides["compact-lot"].permitSteps].join(" ");
+    expect(austinText).toContain("HOME");
+    expect(austinText).not.toContain("Verify 10-foot separation");
+
+    const denverText = [regulationGuides["denver"].summary, ...regulationGuides["denver"].permitSteps].join(" ");
+    expect(denverText).toContain("all residential zone districts");
+    expect(denverText).not.toContain("'G' suffix");
+  });
 });
