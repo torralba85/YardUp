@@ -455,9 +455,15 @@ Component package providing domain logic and interface implementations for lib.
 - `parcel-types.ts:ParcelDataQuality` - TypeScript Interface
 - `parcel-types.ts:Parcel` - TypeScript Interface
 - `parcel-types.ts:LiveParcelData` - TypeScript Interface
+- `parcel-types.ts:ParcelPermitAuthority` - TypeScript Interface
 - `parcel-types.ts:FireHazardZone` - Type Definition
 - `parcel-types.ts:ParcelFireHazard` - TypeScript Interface
 - `parcel-types.ts:GeoJsonPolygon` - TypeScript Interface
+- `permit-authority.ts:PermitJurisdiction` - TypeScript Interface
+- `permit-authority.ts:pickPermitAuthority` - Exported Function
+- `permit-authority.ts:parcelPermitAuthority` - Exported Function
+- `permit-authority.ts:resolvePermitAuthority` - Exported Function
+- `permit-authority.ts:isSanDiegoName` - Exported Function
 - `placement-validation.ts:PLACEMENT_TOLERANCE_FT` - Exported constant / variable
 - `placement-validation.ts:REVIEW_SEPARATION_FT` - Exported constant / variable
 - `placement-validation.ts:buildSetbackEnvelope` - Exported Function

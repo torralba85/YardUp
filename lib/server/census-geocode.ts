@@ -17,6 +17,12 @@
 const CENSUS_API = "https://geocoding.geo.census.gov/geocoder/geographies";
 const BENCHMARK = "Public_AR_Current";
 const VINTAGE = "Current_Current";
+/**
+ * Named explicitly, not left to the default set, so a response without an
+ * `Incorporated Places` entry means the point is in no incorporated place
+ * rather than that the layer was never asked for.
+ */
+const LAYERS = "States,Counties,Incorporated Places,Census Designated Places";
 const TIMEOUT_MS = 4000;
 
 export interface CensusLocation {
@@ -26,6 +32,10 @@ export interface CensusLocation {
   zip: string;
   /** County name without "County", e.g. "King". */
   county?: string;
+  /** Incorporated place (city or town) at the point, e.g. "San Diego". Absent outside every one. */
+  place?: string;
+  /** Census Designated Place, an unincorporated community, e.g. "Spring Valley". */
+  community?: string;
 }
 
 /**
@@ -65,6 +75,7 @@ async function lookupByAddress(
   url.searchParams.set("address", address);
   url.searchParams.set("benchmark", BENCHMARK);
   url.searchParams.set("vintage", VINTAGE);
+  url.searchParams.set("layers", LAYERS);
   url.searchParams.set("format", "json");
 
   const json = await getJson(url, timeoutMs);
@@ -91,6 +102,7 @@ async function lookupByCoordinates(
   url.searchParams.set("y", String(lat));
   url.searchParams.set("benchmark", BENCHMARK);
   url.searchParams.set("vintage", VINTAGE);
+  url.searchParams.set("layers", LAYERS);
   url.searchParams.set("format", "json");
 
   const json = await getJson(url, timeoutMs);
@@ -101,8 +113,9 @@ async function lookupByCoordinates(
 }
 
 /**
- * Pull the state abbreviation and county name out of a geographies bag.
- * Returns null without a state — a county alone cannot key the market index.
+ * Pull the state abbreviation, county name and place names out of a
+ * geographies bag. Returns null without a state — a county alone cannot key
+ * the market index.
  */
 function readGeographies(
   geographies: unknown,
@@ -127,8 +140,25 @@ function readGeographies(
   const county = rawCounty
     ? rawCounty.replace(/\s+County$/i, "").trim() || undefined
     : undefined;
+  const place = placeName(bag["Incorporated Places"]);
+  const community = placeName(bag["Census Designated Places"]);
 
-  return { state, county };
+  return {
+    state,
+    county,
+    ...(place ? { place } : {}),
+    ...(community ? { community } : {}),
+  };
+}
+
+/**
+ * A place layer's first match, by BASENAME ("San Diego"), not NAME, which
+ * carries the legal suffix ("San Diego city", "Spring Valley CDP").
+ */
+function placeName(layer: unknown): string | undefined {
+  const record = asArray(layer)[0] as Record<string, unknown> | undefined;
+  const name = String(record?.BASENAME ?? "").trim();
+  return name || undefined;
 }
 
 /**

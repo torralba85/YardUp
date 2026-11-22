@@ -16,6 +16,7 @@ import type { Pose2D } from "./scene-model";
 import { normalizePlanReference, type PreapprovedPlanReference } from "./preapproved-plans";
 import type { ExistingBuildingGeometry, GeoJsonPolygon, LiveParcelData, ParcelFireHazard } from "./parcel-types";
 import { FIRE_HAZARD_ZONES } from "./fire-hazard";
+import { pickPermitAuthority } from "./permit-authority";
 import type { AIProjectBrief, AIRiskLevel } from "./ai-types";
 
 /** `localStorage` key under which the saved-scenario array is persisted. */
@@ -179,6 +180,7 @@ export function isValidLiveParcelData(value: unknown): value is LiveParcelData {
     (value.marketData === undefined || isRecord(value.marketData)) &&
     (value.dataQuality === undefined || isRecord(value.dataQuality)) &&
     (value.fireHazard === undefined || pickFireHazard(value.fireHazard) !== undefined) &&
+    (value.permitAuthority === undefined || pickPermitAuthority(value.permitAuthority) !== undefined) &&
     (value.bearingDeg === undefined || (isFiniteNumber(value.bearingDeg) && value.bearingDeg >= 0 && value.bearingDeg <= 360)) &&
     // Observed geometry is optional: normalizeLiveParcel drops a malformed
     // snapshot rather than rejecting the parcel it came with.
@@ -411,6 +413,9 @@ export function normalizeLiveParcel(value: unknown): LiveParcelData | null {
   // reads as "not checked", which the setback rules already treat cautiously.
   const fireHazard = pickFireHazard(value.fireHazard);
   if (fireHazard) normalized.fireHazard = fireHazard;
+  // Same for the permitting jurisdiction: absent falls back to the mailing city.
+  const permitAuthority = pickPermitAuthority(value.permitAuthority);
+  if (permitAuthority) normalized.permitAuthority = permitAuthority;
   return isValidLiveParcelData(normalized) ? normalized : null;
 }
 

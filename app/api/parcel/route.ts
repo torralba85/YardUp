@@ -37,6 +37,7 @@ import {
   verifyParcelAddressAtPoint,
 } from "@/lib/server/county-parcels";
 import { resolveMarketData } from "@/lib/server/market/resolve-market";
+import { resolvePermitAuthority } from "@/lib/permit-authority";
 import {
   extractRegridLocation,
   inferStateFromCountySource,
@@ -414,6 +415,7 @@ async function resolveParcel(
         );
     const zoningObserved = typeof fields.zoning === "string" && fields.zoning.trim() !== "";
     const addressObserved = Boolean(fields.saddress ?? fields.address);
+    const permitAuthority = resolvePermitAuthority({ census, checkedAt: retrievedAt });
 
     const parcelData: LiveParcelData = {
       address: formatAddress(fields, requestedAddress, lat, lng),
@@ -435,6 +437,7 @@ async function resolveParcel(
       county: loc.county,
       marketData,
       ...(fireHazard ? { fireHazard } : {}),
+      ...(permitAuthority ? { permitAuthority } : {}),
       dataQuality: {
         version: 1,
         fields: {
@@ -532,6 +535,10 @@ function mergeVerifiedPointParcel(
       : {}),
     ...(situsParcel.zoning ?? pointParcel.zoning
       ? { zoning: situsParcel.zoning ?? pointParcel.zoning }
+      : {}),
+    // Same lot, so the county layer's jurisdiction code still describes it.
+    ...(situsParcel.jurisdiction ?? pointParcel.jurisdiction
+      ? { jurisdiction: situsParcel.jurisdiction ?? pointParcel.jurisdiction }
       : {}),
   };
 }
@@ -860,6 +867,11 @@ async function countyGisResponse(
     : undefined;
   const countyBuildingSqft = positiveNumber(countyParcel.buildingSqft);
   const countyZoning = stringValue(countyParcel.zoning);
+  const permitAuthority = resolvePermitAuthority({
+    parcelRecord: countyParcel.jurisdiction,
+    census,
+    checkedAt: retrievedAt,
+  });
 
   const footprint = assembleCountyFootprint({
     structures,
@@ -900,6 +912,7 @@ async function countyGisResponse(
     county: loc.county,
     marketData,
     ...(fireHazard ? { fireHazard } : {}),
+    ...(permitAuthority ? { permitAuthority } : {}),
     dataQuality: {
       version: 1,
       fields: {
@@ -1034,6 +1047,8 @@ async function presetFallbackResponse(
     provider: "LotFoundry",
     dataset: `Demo parcel preset: ${preset.id}`,
   };
+  // The preset lends dimensions only; the jurisdiction is the searched point's own.
+  const permitAuthority = resolvePermitAuthority({ census, checkedAt: retrievedAt });
   const fallback: LiveParcelData = {
     address: location.address,
     city: location.city,
@@ -1053,6 +1068,7 @@ async function presetFallbackResponse(
     county: loc.county,
     marketData,
     ...(fireHazard ? { fireHazard } : {}),
+    ...(permitAuthority ? { permitAuthority } : {}),
     dataQuality: {
       version: 1,
       fields: {

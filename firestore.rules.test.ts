@@ -814,6 +814,35 @@ describe.skipIf(!hasFirestoreEmulator)("users/{userId}/savedScenarios/{scenarioI
     );
   });
 
+  it("rejects a malformed permitting jurisdiction", async () => {
+    const db = rulesEnv().authenticatedContext(OWNER_ID).firestore();
+    const scenarioRef = doc(db, "users", OWNER_ID, "savedScenarios", SCENARIO_ID);
+    const valid = SAMPLE_LIVE_PARCEL_MAX.permitAuthority;
+
+    // The rule checks only what the expression budget allows; the other
+    // fields are checked on read (pickPermitAuthority, saved-scenarios tests).
+    for (const permitAuthority of [
+      "county",
+      { ...valid, kind: "town" },
+      { ...valid, name: 7 },
+      { ...valid, name: "n".repeat(101) },
+      { ...valid, code: "CN" },
+    ]) {
+      await assertFails(
+        setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ permitAuthority }) })),
+      );
+    }
+    // Scenarios are create-only, so each accepted record gets its own document.
+    const city = { kind: "city", name: "Poway", basis: "parcel-record", checkedAt: valid.checkedAt };
+    await assertSucceeds(
+      setDoc(doc(db, "users", OWNER_ID, "savedScenarios", "city-authority"),
+        sampleScenario({ liveParcel: sampleLiveParcel({ permitAuthority: city }) })),
+    );
+    await assertSucceeds(
+      setDoc(scenarioRef, sampleScenario({ liveParcel: sampleLiveParcel({ permitAuthority: valid }) })),
+    );
+  });
+
   it("rejects update on existing scenarios", async () => {
     await rulesEnv().withSecurityRulesDisabled(async (context) => {
       await setDoc(

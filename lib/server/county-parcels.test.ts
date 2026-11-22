@@ -655,3 +655,48 @@ describe("fetchCountyParcel — statewide backstop", () => {
     expect(result!.county).toBe("Albany");
   });
 });
+
+describe("fetchCountyParcel — San Diego County jurisdiction codes", () => {
+  // Unincorporated 4S Ranch: a "San Diego, CA 92127" mailing address on County land.
+  const FOUR_S_RANCH = { lat: 33.0215, lng: -117.1142 };
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("asks for SITUS_JURIS and decodes CN as unincorporated County land", async () => {
+    const fetchSpy = vi.fn().mockResolvedValue(
+      geojsonResponse(polygonAt(FOUR_S_RANCH), { ACREAGE: 0.14, SITUS_JURIS: "CN" }),
+    );
+    vi.stubGlobal("fetch", fetchSpy);
+    const result = await fetchCountyParcel(FOUR_S_RANCH.lat, FOUR_S_RANCH.lng);
+    expect(result!.county).toBe("San Diego");
+    expect(result!.jurisdiction).toEqual({ kind: "county", name: "San Diego" });
+    const outFields = new URL(String(fetchSpy.mock.calls[0][0])).searchParams.get("outFields");
+    expect(outFields).toBe("ACREAGE,SITUS_JURIS");
+  });
+
+  it("decodes a city code, trimming and ignoring case", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      geojsonResponse(polygonAt(FOUR_S_RANCH), { ACREAGE: 0.14, SITUS_JURIS: " sd " }),
+    ));
+    const result = await fetchCountyParcel(FOUR_S_RANCH.lat, FOUR_S_RANCH.lng);
+    expect(result!.jurisdiction).toEqual({ kind: "city", name: "San Diego" });
+  });
+
+  it("leaves the jurisdiction unset for a missing or unlisted code", async () => {
+    for (const properties of [{ ACREAGE: 0.14 }, { ACREAGE: 0.14, SITUS_JURIS: "ZZ" }, { ACREAGE: 0.14, SITUS_JURIS: "constructor" }]) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(geojsonResponse(polygonAt(FOUR_S_RANCH), properties)));
+      const result = await fetchCountyParcel(FOUR_S_RANCH.lat, FOUR_S_RANCH.lng);
+      expect(result).not.toBeNull();
+      expect(result).not.toHaveProperty("jurisdiction");
+    }
+  });
+
+  it("registers all 19 codes the layer publishes: 18 cities plus CN", () => {
+    const sanDiego = COUNTY_GIS_SOURCES.find((source) => source.county === "San Diego");
+    const codes = sanDiego?.jurisdictionCodes ?? {};
+    expect(Object.keys(codes).sort()).toEqual([
+      "CB", "CN", "CO", "CV", "DM", "EC", "EN", "ES", "IB", "LG", "LM", "NC", "OC", "PW", "SD", "SM", "SO", "ST", "VS",
+    ]);
+    expect(Object.values(codes).filter((entry) => entry.kind === "county")).toEqual([{ kind: "county", name: "San Diego" }]);
+  });
+});

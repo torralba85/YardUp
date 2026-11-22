@@ -526,6 +526,20 @@ service cloud.firestore {
         fire.checkedAt is string;
     }
 
+    // Bounded by budget invariant 2 above: the key allowlist, the `kind` the
+    // fee and setback rules branch on, and a capped name. A fully populated
+    // parcel left room for no more (2026-11-21: also checking `checkedAt`
+    // failed the plan-reference budget test). pickPermitAuthority in
+    // lib/permit-authority.ts checks every field when the scenario is read
+    // and drops a malformed record, so it falls back to the mailing city.
+    function isValidPermitAuthority(authority) {
+      return authority is map &&
+        authority.keys().hasOnly(["kind", "name", "community", "basis", "checkedAt"]) &&
+        authority.kind in ["city", "county"] &&
+        authority.name is string &&
+        authority.name.size() <= 100;
+    }
+
     function isValidLiveParcel(parcel) {
       return parcel is map &&
         parcel.keys().hasOnly([
@@ -548,6 +562,7 @@ service cloud.firestore {
           "marketData",
           "dataQuality",
           "fireHazard",
+          "permitAuthority",
           "bearingDeg",
           "existingBuilding"
         ]) &&
@@ -579,6 +594,7 @@ service cloud.firestore {
         (!("marketData" in parcel) || isValidMarketData(parcel.marketData)) &&
         (!("dataQuality" in parcel) || parcel.dataQuality is map) &&
         (!("fireHazard" in parcel) || isValidFireHazard(parcel.fireHazard)) &&
+        (!("permitAuthority" in parcel) || isValidPermitAuthority(parcel.permitAuthority)) &&
         (!("bearingDeg" in parcel) || parcel.bearingDeg is number) &&
         (!("existingBuilding" in parcel) || parcel.existingBuilding is map);
     }

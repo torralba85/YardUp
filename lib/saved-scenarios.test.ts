@@ -305,6 +305,36 @@ describe("createSavedScenarioStore", () => {
     })).toBe(false);
   });
 
+  it("keeps the permitting jurisdiction, picked down to the fields the rules allow", () => {
+    const permitAuthority = {
+      kind: "county" as const,
+      name: "San Diego",
+      community: "Spring Valley",
+      basis: "parcel-record" as const,
+      checkedAt: "2026-11-21T00:00:00.000Z",
+    };
+    expect(normalizeLiveParcel({ ...liveParcel, permitAuthority })?.permitAuthority).toEqual(permitAuthority);
+    expect(isValidSavedScenario({
+      id: "s1", name: "x", createdAt: "2026-11-21", parcelId: "live",
+      liveParcel: { ...liveParcel, permitAuthority }, config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+    })).toBe(true);
+    expect(normalizeLiveParcel({
+      ...liveParcel,
+      permitAuthority: { ...permitAuthority, code: "CN" },
+    })?.permitAuthority).toEqual(permitAuthority);
+  });
+
+  it.each([
+    ["an unknown kind", { kind: "town", name: "X", basis: "parcel-record", checkedAt: "2026-11-21" }],
+    ["no name", { kind: "county", basis: "parcel-record", checkedAt: "2026-11-21" }],
+    ["an unknown basis", { kind: "county", name: "San Diego", basis: "guess", checkedAt: "2026-11-21" }],
+    ["not a record", "county"],
+  ])("drops a permitting jurisdiction with %s but keeps the parcel", (_label, permitAuthority) => {
+    const normalized = normalizeLiveParcel({ ...liveParcel, permitAuthority });
+    expect(normalized).not.toBeNull();
+    expect(normalized).not.toHaveProperty("permitAuthority");
+  });
+
   it("keeps legacy empty boundaries readable", () => {
     expect(normalizeLiveParcel({
       ...liveParcel,

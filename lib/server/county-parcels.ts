@@ -9,6 +9,7 @@
  */
 import type { GeoJsonPolygon } from "@/lib/parcel-types";
 import type { ProviderAttempt, ProviderOutcome } from "@/lib/data-evidence";
+import type { PermitJurisdiction } from "@/lib/permit-authority";
 import {
   FT_PER_DEG_LAT,
   distanceToPolygonFt,
@@ -81,6 +82,12 @@ export interface CountyGisSource {
   /** Optional attribute holding the parcel's zoning designation. */
   zoningField?: string;
   /**
+   * Optional attribute holding the code of the jurisdiction that permits the
+   * parcel, decoded through `jurisdictionCodes`. An unlisted code is ignored.
+   */
+  jurisdictionField?: string;
+  jurisdictionCodes?: Readonly<Record<string, PermitJurisdiction>>;
+  /**
    * Official address-enriched endpoint for verifying that a parcel belongs to
    * a searched street address. Registered only where a publisher provides one;
    * a source without it is never address-verified and no address data is
@@ -88,6 +95,35 @@ export interface CountyGisSource {
    */
   situs?: SitusEndpoint;
 }
+
+/**
+ * San Diego County's `SITUS_JURIS` codes: `CN` for unincorporated County land
+ * and one code per incorporated city, all 19 the layer publishes. Each code's
+ * meaning was checked against the ZIPs of its parcels (2026-11-21); mailing
+ * cities cross the lines both ways (unincorporated 4S Ranch is "San Diego
+ * 92127", and some City of San Diego parcels are "Poway 92064").
+ */
+export const SAN_DIEGO_JURISDICTION_CODES: Readonly<Record<string, PermitJurisdiction>> = {
+  CN: { kind: "county", name: "San Diego" },
+  CB: { kind: "city", name: "Carlsbad" },
+  CO: { kind: "city", name: "Coronado" },
+  CV: { kind: "city", name: "Chula Vista" },
+  DM: { kind: "city", name: "Del Mar" },
+  EC: { kind: "city", name: "El Cajon" },
+  EN: { kind: "city", name: "Encinitas" },
+  ES: { kind: "city", name: "Escondido" },
+  IB: { kind: "city", name: "Imperial Beach" },
+  LG: { kind: "city", name: "Lemon Grove" },
+  LM: { kind: "city", name: "La Mesa" },
+  NC: { kind: "city", name: "National City" },
+  OC: { kind: "city", name: "Oceanside" },
+  PW: { kind: "city", name: "Poway" },
+  SD: { kind: "city", name: "San Diego" },
+  SM: { kind: "city", name: "San Marcos" },
+  SO: { kind: "city", name: "Solana Beach" },
+  ST: { kind: "city", name: "Santee" },
+  VS: { kind: "city", name: "Vista" },
+};
 
 /**
  * Ordered candidate list: county services first (more current and more
@@ -160,6 +196,8 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
       "https://gis-public.sandiegocounty.gov/arcgis/rest/services/cosd_warehouse/parcels_all_for_public_use/MapServer/0/query",
     areaField: "ACREAGE",
     areaUnit: "acres",
+    jurisdictionField: "SITUS_JURIS",
+    jurisdictionCodes: SAN_DIEGO_JURISDICTION_CODES,
   },
   {
     county: "Orange",
@@ -346,6 +384,8 @@ export interface CountyParcelResult {
   buildingSqft?: number | null;
   /** Zoning designation when published by the county layer. */
   zoning?: string | null;
+  /** The jurisdiction that permits the parcel, when the layer publishes a known code. */
+  jurisdiction?: PermitJurisdiction;
 }
 
 export interface CountyParcelLookup {
@@ -444,6 +484,7 @@ async function queryGisSource(
     source.countyField,
     ...(source.buildingSqftFields ?? []),
     source.zoningField,
+    source.jurisdictionField,
   ].filter(Boolean);
   if (outFields.length > 0) params.set("outFields", outFields.join(","));
 
@@ -553,6 +594,9 @@ function buildParcelResult(
   const zoning =
     readZoningField(feature.properties, source) ??
     readZoningField(feature.attributes, source);
+  const jurisdiction =
+    readJurisdictionField(feature.properties, source) ??
+    readJurisdictionField(feature.attributes, source);
 
   return {
     county,
@@ -561,6 +605,7 @@ function buildParcelResult(
     areaBasis: partCount === 1 && providerArea !== null ? "reported" : "geometry",
     ...(buildingSqft !== null ? { buildingSqft } : {}),
     ...(zoning !== null ? { zoning } : {}),
+    ...(jurisdiction !== null ? { jurisdiction } : {}),
   };
 }
 
@@ -1418,6 +1463,17 @@ function readZoningField(
   if (/^(?:UNKNOWN|UNZND|UNZONED|N\/?A|NONE|NULL)$/i.test(trimmed)) return null;
   if (/^(?:CITY|TOWN)\s+OF\b/i.test(trimmed)) return null;
   return trimmed;
+}
+
+/** Decode the parcel's jurisdiction code; null when absent or not in the source's table. */
+function readJurisdictionField(
+  properties: Record<string, unknown> | undefined,
+  source: CountyGisSource,
+): PermitJurisdiction | null {
+  const raw = readPropertyCaseInsensitive(properties, source.jurisdictionField);
+  if (typeof raw !== "string" || !source.jurisdictionCodes) return null;
+  const code = raw.trim().toUpperCase();
+  return Object.hasOwn(source.jurisdictionCodes, code) ? source.jurisdictionCodes[code] : null;
 }
 
 /**
