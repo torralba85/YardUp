@@ -1517,3 +1517,67 @@ describe("GET /api/parcel — Parcel Evidence assembly, pairing, and date hygien
   });
 });
 
+
+describe("GET /api/parcel — permitting jurisdiction", () => {
+  // Unincorporated 4S Ranch, whose mailing addresses read "San Diego, CA 92127".
+  const FOUR_S = { lat: 33.0215, lng: -117.1142 };
+  const FOUR_S_LOT = rotatedRectPolygon(FOUR_S.lat, FOUR_S.lng, 60, 100, 0);
+
+  /** A Census coordinate match that can name an incorporated place or a community. */
+  function censusPlaces(places: { place?: string; community?: string } = {}) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        result: {
+          geographies: {
+            States: [{ STUSAB: "CA" }],
+            Counties: [{ BASENAME: "San Diego" }],
+            ...(places.place ? { "Incorporated Places": [{ BASENAME: places.place }] } : {}),
+            ...(places.community ? { "Census Designated Places": [{ BASENAME: places.community }] } : {}),
+          },
+        },
+      }),
+    };
+  }
+
+  it("takes the County parcel's own jurisdiction code over the Census boundary", async () => {
+    stubProviders({
+      census: censusPlaces({ place: "San Diego" }),
+      countyGis: countyGisResponse(FOUR_S_LOT, { ACREAGE: 0.14, SITUS_JURIS: "CN" }),
+    });
+    const data = (await (await GET(makeGuestRequest(FOUR_S.lat, FOUR_S.lng))).json()) as LiveParcelData;
+    expect(data.source).toBe("county-gis");
+    expect(data.permitAuthority).toEqual({
+      kind: "county", name: "San Diego", basis: "parcel-record", checkedAt: expect.any(String),
+    });
+  });
+
+  it("falls back to the Census boundary, keeping the unincorporated community", async () => {
+    stubProviders({
+      census: censusPlaces({ community: "Spring Valley" }),
+      countyGis: countyGisResponse(FOUR_S_LOT, { ACREAGE: 0.14 }),
+    });
+    const data = (await (await GET(makeGuestRequest(FOUR_S.lat, FOUR_S.lng))).json()) as LiveParcelData;
+    expect(data.permitAuthority).toMatchObject({ kind: "county", name: "San Diego", community: "Spring Valley", basis: "place-boundary" });
+  });
+
+  it("names the city on the Regrid path from the Census boundary", async () => {
+    stubProviders({
+      regrid: regridResponse({ ll_gisacre: 0.14, scity: "San Diego", state2: "CA" }, FOUR_S_LOT),
+      census: censusPlaces({ place: "San Diego" }),
+    });
+    const data = (await (await GET(makeRequest(FOUR_S.lat, FOUR_S.lng))).json()) as LiveParcelData;
+    expect(data.source).toBe("regrid");
+    expect(data.permitAuthority).toMatchObject({ kind: "city", name: "San Diego", basis: "place-boundary" });
+  });
+
+  it("omits the jurisdiction when the Census lookup fails and the parcel publishes no code", async () => {
+    stubProviders({
+      census: { ok: false, status: 503, json: async () => ({}) },
+      countyGis: countyGisResponse(FOUR_S_LOT, { ACREAGE: 0.14 }),
+    });
+    const data = (await (await GET(makeGuestRequest(FOUR_S.lat, FOUR_S.lng))).json()) as LiveParcelData;
+    expect(data).not.toHaveProperty("permitAuthority");
+  });
+});

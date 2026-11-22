@@ -210,3 +210,62 @@ describe("fetchCensusLocation — failure modes (must all return null, never thr
     expect(await fetchCensusLocation(SEATTLE)).toBeNull();
   });
 });
+
+describe("fetchCensusLocation — incorporated places", () => {
+  // Trimmed from live `Current_Current` payloads (2026-11-21) for the layers
+  // the adapter requests by name.
+  const SAN_DIEGO_COUNTY = [{ BASENAME: "San Diego", NAME: "San Diego County" }];
+  const CALIFORNIA = [{ STUSAB: "CA", NAME: "California" }];
+
+  it("asks for the place layers by name on both endpoints", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(NO_ADDRESS_MATCH);
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCensusLocation({ ...SEATTLE, address: "1 Main St" });
+    for (const [url] of fetchMock.mock.calls) {
+      expect(new URL(String(url)).searchParams.get("layers")).toBe(
+        "States,Counties,Incorporated Places,Census Designated Places",
+      );
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("names the incorporated city by BASENAME (North Park, City of San Diego)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      result: { geographies: {
+        States: CALIFORNIA,
+        "Incorporated Places": [{ BASENAME: "San Diego", NAME: "San Diego city", LSADC: "25", FUNCSTAT: "A" }],
+        Counties: SAN_DIEGO_COUNTY,
+      } },
+    })));
+    expect(await fetchCensusLocation({ lat: 32.7484, lng: -117.1297 })).toEqual({
+      state: "CA", zip: "", county: "San Diego", place: "San Diego",
+    });
+  });
+
+  it("reports the unincorporated community when no city covers the point (Spring Valley)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      result: { geographies: {
+        States: CALIFORNIA,
+        "Census Designated Places": [{ BASENAME: "Spring Valley", NAME: "Spring Valley CDP", LSADC: "57", FUNCSTAT: "S" }],
+        Counties: SAN_DIEGO_COUNTY,
+      } },
+    })));
+    expect(await fetchCensusLocation({ lat: 32.7448, lng: -116.9989 })).toEqual({
+      state: "CA", zip: "", county: "San Diego", community: "Spring Valley",
+    });
+  });
+
+  it("returns no place for an unincorporated address with a San Diego mailing city (4S Ranch)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      result: { addressMatches: [{
+        matchedAddress: "10433 RESERVE DR, SAN DIEGO, CA, 92127",
+        geographies: { States: CALIFORNIA, Counties: SAN_DIEGO_COUNTY },
+      }] },
+    })));
+    const result = await fetchCensusLocation({
+      lat: 33.0215, lng: -117.1142, address: "10433 Reserve Dr, San Diego, CA 92127",
+    });
+    expect(result).toEqual({ state: "CA", zip: "92127", county: "San Diego" });
+    expect(result).not.toHaveProperty("place");
+  });
+});

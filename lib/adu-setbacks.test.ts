@@ -119,3 +119,41 @@ describe("ADU setbacks in placement and the verdict", () => {
     expect(row?.detail).toBe("4′ side · 20′ front · 4′ rear. California caps ADU side and rear setbacks at 4 ft");
   });
 });
+
+describe("aduSetbacks — permitting jurisdiction", () => {
+  const checkedAt = "2026-11-21T00:00:00.000Z";
+  // Unincorporated 4S Ranch: a "San Diego" mailing address on County land.
+  const fourSRanch = {
+    ...sanDiego,
+    city: "San Diego, CA 92127",
+    permitAuthority: { kind: "county", name: "San Diego", basis: "parcel-record", checkedAt },
+  } as Parcel;
+
+  it("reproduces the old behavior: a San Diego mailing address alone earns the City's 0 ft", () => {
+    expect(aduSetbacks({ ...fourSRanch, permitAuthority: undefined } as Parcel, low).rule).toBe("san-diego-low");
+  });
+
+  it("gives a County lot with a San Diego mailing address 4 ft, never the City's 0 ft", () => {
+    const result = aduSetbacks(fourSRanch, low);
+    expect(result).toEqual({ front: 20, rear: CALIFORNIA_ADU_SIDE_REAR_CAP_FT, side: CALIFORNIA_ADU_SIDE_REAR_CAP_FT, rule: "san-diego-county" });
+    expect(aduSetbacks(fourSRanch, tall).rule).toBe("san-diego-county");
+    expect(aduSetbackNote("san-diego-county")).toMatch(/outside city limits.*4 ft/);
+  });
+
+  it("applies the City's rules where the lookup places a non-San Diego address inside the City", () => {
+    const powayAddress = {
+      ...sanDiego,
+      city: "Poway, CA 92064",
+      permitAuthority: { kind: "city", name: "San Diego", basis: "parcel-record", checkedAt },
+    } as Parcel;
+    expect(aduSetbacks(powayAddress, low).rule).toBe("san-diego-low");
+  });
+
+  it("caps another city's lot at California's 4 ft even with a San Diego mailing address", () => {
+    const chulaVista = {
+      ...sanDiego,
+      permitAuthority: { kind: "city", name: "Chula Vista", basis: "place-boundary", checkedAt },
+    } as Parcel;
+    expect(aduSetbacks(chulaVista, low).rule).toBe("california");
+  });
+});

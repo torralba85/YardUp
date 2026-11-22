@@ -187,3 +187,50 @@ describe("permit audit labels", () => {
     expect(permitAuditPreviewLines("other").join(" ")).not.toMatch(/SB 13|Title 24/);
   });
 });
+
+describe("permitting jurisdiction", () => {
+  const checkedAt = "2026-11-21T00:00:00.000Z";
+  const county = (community?: string) => ({
+    ...sanDiego,
+    city: "San Diego, CA 92127",
+    permitAuthority: { kind: "county", name: "San Diego", ...(community ? { community } : {}), basis: "parcel-record", checkedAt },
+  }) as Parcel;
+
+  it("prefers the resolved jurisdiction over the mailing-address city", () => {
+    expect(feeJurisdiction(county())).toBe("san-diego-county");
+    expect(feeJurisdiction({ ...base, state: "CA", permitAuthority: { kind: "city", name: "San Diego", basis: "place-boundary", checkedAt } } as Parcel)).toBe("san-diego");
+    expect(feeJurisdiction({ ...sanDiego, permitAuthority: { kind: "county", name: "Riverside", basis: "place-boundary", checkedAt } } as Parcel)).toBe("california");
+    // Without a resolved jurisdiction the mailing city still decides, as before.
+    expect(feeJurisdiction(sanDiego)).toBe("san-diego");
+  });
+
+  it("keeps California rules outside California whatever the lookup says", () => {
+    expect(feeJurisdiction({ ...parcelPresets[0], permitAuthority: { kind: "county", name: "San Diego", basis: "parcel-record", checkedAt } } as Parcel)).toBe("other");
+  });
+
+  it("gives a County lot the County lines and none of the City's", () => {
+    const audit = buildPermitFeeAudit({ parcel: county("Spring Valley"), aduSqft: 600 });
+    const titles = audit.feeLines.map((line) => line.title);
+    expect(audit.jurisdiction).toBe("san-diego-county");
+    expect(titles).toContain("Permit: unincorporated San Diego County");
+    expect(titles).toContain("Green Building Incentive Program: up to 15% off County permit fees");
+    expect(titles).toContain("County fees: the ADU fee waiver has ended");
+    expect(titles).not.toContain("City of San Diego: first two ADUs exempt from DIF");
+    expect(audit.feeLines.find((line) => line.title.startsWith("Permit:"))?.detail).toMatch(/outside city limits, in Spring Valley/);
+    expect(audit.zoningChecklist[0]).toMatch(/outside city limits/);
+    expect(audit.zoningChecklist.join(" ")).not.toMatch(/0 ft up to 16 ft/);
+    expect(audit.submittalChecklist.join(" ")).toMatch(/PDS 658/);
+    expect(audit.sources.map((source) => source.url)).toEqual(expect.arrayContaining([
+      "https://www.sandiegocounty.gov/content/sdc/pds/greenbuildings.html",
+      expect.stringMatching(/\/adu\/ca\/san-diego-county$/),
+    ]));
+    expect(audit.sources.map((source) => source.url).join(" ")).not.toMatch(/sandiego\.gov/);
+  });
+
+  it("names the County's receipt for school fees, and previews the County analysis", () => {
+    const audit = buildPermitFeeAudit({ parcel: county(), aduSqft: 700 });
+    expect(audit.feeLines.find((line) => line.title.startsWith("School"))?.detail).toMatch(/The County needs/);
+    expect(permitAuditPreviewLines("san-diego-county").join(" ")).toMatch(/Green Building/);
+    expect(permitAuditTitle("san-diego-county")).toBe("750 sq ft impact-fee & permit audit");
+  });
+});

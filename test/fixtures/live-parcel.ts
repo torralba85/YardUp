@@ -79,4 +79,12 @@ export const SAMPLE_LIVE_PARCEL_MAX = {
     source: "City of San Diego FHSZ map (2025), CAL FIRE LRA FHSZ map (2025) and CAL FIRE SRA FHSZ map (2024)",
     checkedAt: "2026-10-16T00:00:00.000Z",
   },
+  // The fullest jurisdiction record the lookup writes: County land with its community.
+  permitAuthority: {
+    kind: "county",
+    name: "San Diego",
+    community: "Spring Valley",
+    basis: "parcel-record",
+    checkedAt: "2026-11-21T00:00:00.000Z",
+  },
 } as const;

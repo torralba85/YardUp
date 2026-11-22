@@ -13,8 +13,12 @@ import { buildAduHeightModel } from "./scene-model";
  * Severity Zones need 4 ft at any height (SDMC § 141.0302(b)(9), summarized in
  * `content/adu/ca/san-diego.ts`). The fire zone comes from the parcel lookup
  * (`fireHazard` on a live parcel); a San Diego lot whose zone was not checked
- * gets the 4 ft, never the 0 ft. Outside California the parcel's own setbacks
- * apply. The front setback always comes from the parcel.
+ * gets the 4 ft, never the 0 ft. Unincorporated San Diego County requires 4 ft
+ * for a new ADU (`content/adu/ca/san-diego-county.ts`), so a county lot with a
+ * San Diego mailing address never gets the City's 0 ft either; which side of
+ * the city line a lot is on comes from `permitAuthority` on a live parcel.
+ * Outside California the parcel's own setbacks apply. The front setback always
+ * comes from the parcel.
  *
  * @module adu-setbacks
  */
@@ -34,7 +38,8 @@ export const SAN_DIEGO_FIRE_ZONE_SETBACK_FT = 4;
  * fire zone); or the City of San Diego's, which is the 16 ft height line
  * outside fire zones (`san-diego-low` at or under, `san-diego-tall` over),
  * 4 ft in a High or Very High zone (`san-diego-fire`), and 4 ft when the zone
- * was not checked (`san-diego-unchecked`).
+ * was not checked (`san-diego-unchecked`); or unincorporated San Diego
+ * County's 4 ft (`san-diego-county`).
  */
 export type AduSetbackRule =
   | "parcel"
@@ -43,7 +48,8 @@ export type AduSetbackRule =
   | "san-diego-low"
   | "san-diego-tall"
   | "san-diego-fire"
-  | "san-diego-unchecked";
+  | "san-diego-unchecked"
+  | "san-diego-county";
 
 export interface AduSetbacks {
   front: number;
@@ -82,6 +88,7 @@ export function aduSetbacks(parcel: Parcel, config?: AduShape | null): AduSetbac
     rear: Math.min(rear, CALIFORNIA_ADU_SIDE_REAR_CAP_FT),
     side: Math.min(side, CALIFORNIA_ADU_SIDE_REAR_CAP_FT),
   };
+  if (jurisdiction === "san-diego-county") return { ...capped, rule: "san-diego-county" };
   const fireZone = parcelFireZone(parcel);
   if (jurisdiction === "san-diego") {
     const fireSetbacks = { front, rear: SAN_DIEGO_FIRE_ZONE_SETBACK_FT, side: SAN_DIEGO_FIRE_ZONE_SETBACK_FT };
@@ -119,6 +126,8 @@ export function aduSetbackNote(rule: AduSetbackRule): string | null {
       return "City of San Diego: 4 ft side and rear setbacks at any height, because this lot is mapped in a High or Very High fire hazard zone.";
     case "san-diego-unchecked":
       return "City of San Diego: 4 ft side and rear setbacks, because the fire hazard zone wasn't checked. Outside High and Very High zones, a backyard home 16 ft tall or less needs none.";
+    case "san-diego-county":
+      return "Unincorporated San Diego County: this lot appears to be outside city limits, so the County's 4 ft side and rear setbacks apply, plus any your fire protection district requires. Confirm on the County's map of unincorporated areas.";
     default:
       return null;
   }

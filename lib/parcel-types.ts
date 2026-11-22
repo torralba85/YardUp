@@ -131,6 +131,35 @@ export interface LiveParcelData extends Parcel {
    * `unknown` both mean "not checked", never "outside every zone".
    */
   fireHazard?: ParcelFireHazard;
+  /**
+   * Who issues the building permit: an incorporated city, or the county for
+   * land outside every city's limits. A mailing address's city is not
+   * evidence of either (a "San Diego" address can be county land). Absent on
+   * presets, on scenarios saved before the lookup existed, and when neither
+   * signal answered; absent means "not checked".
+   */
+  permitAuthority?: ParcelPermitAuthority;
+}
+
+/**
+ * The permitting jurisdiction of a parcel, as resolved by /api/parcel.
+ *
+ * `basis` says which signal decided: `parcel-record` is the county parcel
+ * layer's own jurisdiction code for this lot (San Diego County publishes
+ * one), and wins over `place-boundary`, the Census Bureau's incorporated-place
+ * boundaries at the searched point, which are redrawn once a year and
+ * generalized along city lines.
+ */
+export interface ParcelPermitAuthority {
+  /** `city`: inside an incorporated city. `county`: unincorporated county land. */
+  kind: "city" | "county";
+  /** The city's name, or the county's without "County", e.g. "San Diego". */
+  name: string;
+  /** Unincorporated community the point falls in, e.g. "Spring Valley". County only, when known. */
+  community?: string;
+  basis: "parcel-record" | "place-boundary";
+  /** ISO timestamp of the lookup. */
+  checkedAt: string;
 }
 
 /**
