@@ -22,6 +22,7 @@ export const GOOGLE_ADS_PURCHASE_SEND_TO =
 // conversion call below — do not redeclare it here (TS2717).
 
 import { isAnalyticsSuppressed, readConsent } from "./consent";
+import { sendOrQueueGtagEvent } from "./gtag";
 
 /** Input for {@link trackPurchase}. */
 export interface TrackPurchaseInput {
@@ -39,19 +40,23 @@ export interface TrackPurchaseInput {
 /**
  * Report one billable purchase to Google Ads.
  *
- * Silently does nothing when the tag has not loaded (no consent yet), when
- * the transaction id is blank, or when the value is not a finite number, so
- * call sites never need to guard.
+ * Silently does nothing when consent has not been granted, when analytics is
+ * unconfigured or suppressed, when the transaction id is blank, or when the
+ * value is not a finite number, so call sites never need to guard.
+ *
+ * When consent is already granted on a hard page load (such as returning from
+ * Stripe Checkout) before `window.gtag` has initialized, the conversion is
+ * held in memory and flushed once `GTAG_READY_EVENT` fires.
  */
 export function trackPurchase(opts: TrackPurchaseInput): void {
-  if (typeof window === "undefined" || !window.gtag) return;
+  if (typeof window === "undefined") return;
   if (isAnalyticsSuppressed()) return;
   if (readConsent() !== "granted") return;
   const transactionId = opts.transactionId.trim();
   if (!transactionId) return;
   if (!Number.isFinite(opts.value)) return;
 
-  window.gtag("event", "conversion", {
+  sendOrQueueGtagEvent("conversion", {
     send_to: GOOGLE_ADS_PURCHASE_SEND_TO,
     value: opts.value,
     currency: opts.currency ?? "USD",

@@ -167,19 +167,7 @@ export function pageview(url: string): void {
     send_to: id,
   };
 
-  if (window.gtag) {
-    window.gtag("event", "page_view", payload);
-    return;
-  }
-
-  // On a hard load a route or PageViewTracker can emit before the afterInteractive tag
-  // defines `window.gtag`. Consent is already granted, so hold the page view in memory
-  // and send it when the tag's init script announces itself.
-  if (pendingEvents.length < MAX_PENDING_EVENTS) pendingEvents.push({ name: "page_view", params: payload });
-  if (!flushListenerAttached) {
-    flushListenerAttached = true;
-    window.addEventListener(GTAG_READY_EVENT, flushPendingEvents, { once: true });
-  }
+  sendOrQueueGtagEvent("page_view", payload);
 }
 
 /**
@@ -220,15 +208,31 @@ export function trackEvent(
     ...(referrer ? { page_referrer: referrer } : {}),
     send_to: id,
   };
+  sendOrQueueGtagEvent(name, payload);
+}
+
+/**
+ * Send an event immediately when `window.gtag` is ready, or hold it in memory
+ * until `GTAG_READY_EVENT` fires on a hard load where consent is already granted.
+ *
+ * Shared by GA4 page views, GA4 custom events, and Google Ads purchase
+ * conversions so withdrawal via `disableAnalytics()` clears all pending events
+ * together and re-checks consent at flush time.
+ */
+export function sendOrQueueGtagEvent(
+  name: string,
+  payload: Record<string, unknown>,
+): void {
+  if (typeof window === "undefined") return;
+  if (!canMeasure()) return;
   if (window.gtag) {
     window.gtag("event", name, payload);
     return;
   }
 
-  // On a hard load a route can emit before the afterInteractive tag defines
-  // `window.gtag` (e.g. `studio_opened`). Consent is already granted, so hold
-  // the event in memory and send it when the tag's init script announces itself.
-  if (pendingEvents.length < MAX_PENDING_EVENTS) pendingEvents.push({ name, params: payload });
+  if (pendingEvents.length < MAX_PENDING_EVENTS) {
+    pendingEvents.push({ name, params: payload });
+  }
   if (!flushListenerAttached) {
     flushListenerAttached = true;
     window.addEventListener(GTAG_READY_EVENT, flushPendingEvents, { once: true });

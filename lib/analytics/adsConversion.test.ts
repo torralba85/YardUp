@@ -5,6 +5,7 @@ import {
   trackPurchase,
 } from "./adsConversion";
 import { INTERNAL_ANALYTICS_MARKER, clearConsent, writeConsent } from "./consent";
+import { GTAG_READY_EVENT, disableAnalytics } from "./gtag";
 
 describe("adsConversion", () => {
   beforeEach(() => {
@@ -15,6 +16,7 @@ describe("adsConversion", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     delete window.gtag;
+    window.dispatchEvent(new Event(GTAG_READY_EVENT));
     window.sessionStorage.clear();
     clearConsent();
   });
@@ -26,11 +28,40 @@ describe("adsConversion", () => {
     );
   });
 
-  it("does nothing when the tag has not loaded", () => {
-    // No window.gtag: consent was refused, or the script has not run yet.
+  it("queues a consented conversion before the tag initializes and sends it when ready", () => {
     expect(() =>
       trackPurchase({ value: 29, transactionId: "owner-1_abc" }),
     ).not.toThrow();
+
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+    expect(gtag).toHaveBeenCalledTimes(1);
+    expect(gtag).toHaveBeenCalledWith("event", "conversion", {
+      send_to: GOOGLE_ADS_PURCHASE_SEND_TO,
+      value: 29,
+      currency: "USD",
+      transaction_id: "owner-1_abc",
+    });
+
+    // Sent once: a subsequent ready signal does not replay the conversion.
+    window.dispatchEvent(new Event(GTAG_READY_EVENT));
+    expect(gtag).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops a queued conversion if consent is withdrawn before the tag is ready", () => {
+    trackPurchase({ value: 29, transactionId: "owner-1_abc" });
+
+    writeConsent("denied");
+    disableAnalytics();
+    writeConsent("granted");
+
+    const gtag = vi.fn();
+    window.gtag = gtag;
+    window.dispatchEvent(new Event(GTAG_READY_EVENT));
+
+    expect(gtag).not.toHaveBeenCalled();
   });
 
   it("does nothing when consent is not granted", () => {
