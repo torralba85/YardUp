@@ -79,9 +79,10 @@ Google Cloud before closing; no key value is recorded here.
 - Alert #2, the Places browser key in the removed Playwright log: rotated in
   Google Cloud to `next_public_google_places_key (rotated 2026-11-21)` with the
   same API and website restrictions, then closed as revoked. The previous key
-  (`New next_public_google_places_key`) keeps working until it is deleted.
-  Delete it once local `.env.local` files and, if it holds the old value, the
-  `NEXT_PUBLIC_GOOGLE_PLACES_KEY` Actions secret use the new key.
+  (`New next_public_google_places_key`) was deleted the same day; Google Cloud
+  can restore it for 30 days. The live client bundle carried no Places browser
+  key, so production did not depend on it. Local `.env.local` files need the
+  new key for Places autocomplete.
 - Alert #3, the legacy `adu-advisor` Firebase key in historical `app.json`
   (branch `backup/expo-main`) and `app.config.ts` commits: left open. The project belongs to a
   different Google account. On that account, confirm the key's API allowlist
