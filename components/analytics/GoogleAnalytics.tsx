@@ -26,7 +26,49 @@ function PageViewTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    pageview(pathname);
+    let sent = false;
+    let observer: MutationObserver | null = null;
+    let fallbackTimer: number | null = null;
+
+    const send = () => {
+      if (sent) return;
+      sent = true;
+      observer?.disconnect();
+      observer = null;
+      if (fallbackTimer !== null) {
+        window.clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+      pageview(pathname);
+    };
+
+    // Defer one macrotask so Next.js App Router finishes committing route
+    // metadata. If `<title>` is briefly empty during streaming reconciliation,
+    // wait up to 250ms for `<head>` to populate it before sending.
+    const tickTimer = window.setTimeout(() => {
+      if (document.title.trim()) {
+        send();
+        return;
+      }
+      if (typeof MutationObserver !== "undefined" && document.head) {
+        observer = new MutationObserver(() => {
+          if (document.title.trim()) send();
+        });
+        observer.observe(document.head, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+      }
+      fallbackTimer = window.setTimeout(send, 250);
+    }, 0);
+
+    return () => {
+      sent = true;
+      window.clearTimeout(tickTimer);
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
+      observer?.disconnect();
+    };
   }, [pathname]);
 
   return null;

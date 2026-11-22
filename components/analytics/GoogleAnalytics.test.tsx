@@ -151,6 +151,32 @@ describe("GoogleAnalytics", () => {
     await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/studio"));
   });
 
+  it("cancels a pending page view if unmounted before the tick completes", async () => {
+    grantConsent();
+    navigation.pathname = "/about";
+
+    const { unmount } = render(<GoogleAnalytics />);
+    unmount();
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    expect(pageview).not.toHaveBeenCalled();
+  });
+
+  it("waits briefly for document.title to populate on route transitions before sending", async () => {
+    grantConsent();
+    navigation.pathname = "/about";
+    document.title = "";
+
+    render(<GoogleAnalytics />);
+    setTimeout(() => {
+      document.title = "About LotFoundry";
+    }, 20);
+
+    await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/about"));
+    expect(document.title).toBe("About LotFoundry");
+    document.title = "";
+  });
+
   it("sanitizes the path and strips query parameters from page views", async () => {
     grantConsent();
     navigation.pathname = "/builder";

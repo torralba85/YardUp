@@ -56,6 +56,9 @@ test.beforeEach(async ({ page }) => {
       get: () => false,
     });
   });
+  // Keep automated verification traffic out of production GA4 while still
+  // loading gtag.js and exercising real outgoing /g/collect hits.
+  await page.route("**/g/collect**", (route) => route.fulfill({ status: 204, body: "" }));
   if (analyticsEnabled === null) {
     await page.goto("/");
     analyticsEnabled = await analyticsConfigured(page);
@@ -122,6 +125,82 @@ test.describe("analytics consent", () => {
       ad_personalization: "denied",
       analytics_storage: "granted",
     });
+  });
+
+  test("records one sanitized page_view on initial load and on client-side navigation", async ({ page }) => {
+    const collectRequests: { en: string | null; dl: string | null; dp: string | null; dt: string | null; tid: string | null }[] = [];
+    page.on("request", (request) => {
+      const url = request.url();
+      if (!url.includes("/g/collect")) return;
+      const parsed = new URL(url);
+      collectRequests.push({
+        en: parsed.searchParams.get("en"),
+        dl: parsed.searchParams.get("dl"),
+        dp: parsed.searchParams.get("dp"),
+        dt: parsed.searchParams.get("dt"),
+        tid: parsed.searchParams.get("tid"),
+      });
+    });
+
+    await page.goto("/?q=123+Secret+Main+St&email=test@example.com");
+    await page.getByRole("button", { name: /^accept$/i }).click();
+
+    await expect
+      .poll(async () =>
+        page.evaluate(() =>
+          (window.dataLayer ?? [])
+            .map((entry) => Array.from(entry as ArrayLike<unknown>))
+            .filter((entry) => entry[0] === "event" && entry[1] === "page_view")
+            .map((entry) => entry[2] as Record<string, unknown>),
+        ),
+      )
+      .toHaveLength(1);
+
+    const initialViews = await page.evaluate(() =>
+      (window.dataLayer ?? [])
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((entry) => entry[0] === "event" && entry[1] === "page_view")
+        .map((entry) => entry[2] as Record<string, unknown>),
+    );
+    expect(initialViews[0]).toMatchObject({
+      page_path: "/",
+      page_location: expect.stringMatching(/\/$/),
+    });
+    expect(JSON.stringify(initialViews[0])).not.toMatch(/Secret|Main|test@example\.com/);
+
+    // Client-side SPA navigation should emit exactly one additional sanitized page_view.
+    await page.locator('a[href="/about"]').first().click();
+    await page.waitForURL("**/about");
+
+    await expect
+      .poll(async () =>
+        page.evaluate(() =>
+          (window.dataLayer ?? [])
+            .map((entry) => Array.from(entry as ArrayLike<unknown>))
+            .filter((entry) => entry[0] === "event" && entry[1] === "page_view")
+            .map((entry) => entry[2] as Record<string, unknown>),
+        ),
+      )
+      .toHaveLength(2);
+
+    const allViews = await page.evaluate(() =>
+      (window.dataLayer ?? [])
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((entry) => entry[0] === "event" && entry[1] === "page_view")
+        .map((entry) => entry[2] as Record<string, unknown>),
+    );
+    expect(allViews[1]).toMatchObject({
+      page_path: "/about",
+      page_location: expect.stringMatching(/\/about$/),
+    });
+    expect(String(allViews[1].page_title ?? "").trim().length).toBeGreaterThan(0);
+
+    await expect
+      .poll(() => collectRequests.filter((r) => r.en === "page_view").length)
+      .toBeGreaterThanOrEqual(2);
+    for (const hit of collectRequests) {
+      expect(hit.dl ?? "").not.toMatch(/Secret|Main|test@example\.com/);
+    }
   });
 
   test("the privacy page can turn analytics back off", async ({ page }) => {
