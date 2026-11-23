@@ -6,10 +6,10 @@ which also fails the existing `verify` job and blocks deployment.
 The scanner covers all fetched Git refs and their history; it does not scan
 ignored local environment files, GitHub discussions, or unreachable Git objects.
 
-GitHub's hosted secret scanning is currently unavailable for this private,
-personally owned repository. This CI check provides detection after a push; it
-does not claim to provide GitHub's server-side push protection. See
-[GitHub's eligibility requirements](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/detect-secret-leaks/enable-secret-scanning).
+GitHub's hosted secret scanning now runs on this repository and reports its
+findings as public leaks; see [GitHub alert review](#github-alert-review-2026-11-21).
+This CI check still provides detection after a push; it does not claim to
+provide GitHub's server-side push protection.
 
 The repository's current plan also rejects private branch-protection/ruleset
 requests with HTTP 403 and an upgrade requirement. CI therefore does not enforce
@@ -55,7 +55,8 @@ The 2026-10-26 review found public client identifiers and synthetic fixtures:
 - A Maps/Places browser key in an old, removed Playwright log: matched to
   `New next_public_google_places_key` in `yardup-2026`; its four website
   restrictions were verified, and its API list was reduced from 33 to Maps
-  JavaScript API, Places API and Places API (New). No key value was changed.
+  JavaScript API, Places API and Places API (New). No key value was changed
+  then; it was rotated on 2026-11-21 (see below).
 - Legacy `adu-advisor` Firebase client configuration: intentionally public
   configuration in historical mobile commits. The current Google account
   cannot access that project, so its live restrictions remain an owner follow-up.
@@ -63,6 +64,29 @@ The 2026-10-26 review found public client identifiers and synthetic fixtures:
 - Cloudflare's public analytics beacon identifier, the published IndexNow
   verification key, synthetic Cesium/certificate test fixtures, and a
   local-storage key name.
+
+## GitHub alert review (2026-11-21)
+
+GitHub raised three Google API key alerts. Each was matched to its key in
+Google Cloud before closing; no key value is recorded here.
+
+- Alert #1, the `yardup-2026` Firebase browser key (`lib/firebase.ts` and the
+  two Firebase smoke scripts): closed as won't fix. It also ships in the live
+  client bundle, so rotation would not hide it. Its 25-API Firebase allowlist
+  still excludes Maps and the Gemini Developer API, and App Check is enforced
+  for Cloud Firestore, Authentication and Firebase AI Logic. The checked-in
+  fallback stays, because CI builds, e2e and the signup canary rely on it.
+- Alert #2, the Places browser key in the removed Playwright log: rotated in
+  Google Cloud to `next_public_google_places_key (rotated 2026-11-21)` with the
+  same API and website restrictions, then closed as revoked. The previous key
+  (`New next_public_google_places_key`) was deleted the same day; Google Cloud
+  can restore it for 30 days. The live client bundle carried no Places browser
+  key, so production did not depend on it. Local `.env.local` files need the
+  new key for Places autocomplete.
+- Alert #3, the legacy `adu-advisor` Firebase key in historical `app.json`
+  (branch `backup/expo-main`) and `app.config.ts` commits: left open. The project belongs to a
+  different Google account. On that account, confirm the key's API allowlist
+  excludes the Gemini Developer API, then close the alert as won't fix.
 
 Do not generate new ignore entries automatically. Review each finding's exact
 context and provider restrictions, document the reason, and keep the fingerprint
