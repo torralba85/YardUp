@@ -16,7 +16,7 @@ export const NATIONAL_MARKET_BASELINE: MarketData = {
   operatingExpenseRatio: 0.325,
   source: "national",
   area: "U.S. average",
-  asOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
+  asOf: "HUD FY2026 FMR (effective 2025-10-01; seed extract 2026-05-21)",
   sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
   confidence: "low",
   components: {
@@ -27,7 +27,7 @@ export const NATIONAL_MARKET_BASELINE: MarketData = {
         dataset: "Fair Market Rents",
         sourceUrl: "https://www.huduser.gov/portal/datasets/fmr.html",
       },
-      sourceAsOf: "HUD FY2026 FMR (effective 2026-05-21; seed extract)",
+      sourceAsOf: "HUD FY2026 FMR (effective 2025-10-01; seed extract 2026-05-21)",
       retrievedAt: baselineRetrievedAt,
       confidence: "low",
       warnings: ["No local market record was available; this is a national benchmark derived across HUD FMR seed areas."],
