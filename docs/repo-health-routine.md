@@ -7,8 +7,9 @@ routine below is sized for that, not for a large open-source project.
 
 ## Weekly
 
-- **Dependabot PRs** (`.github/dependabot.yml` — npm root, `functions/`, and
-  GitHub Actions, grouped minor/patch, weekly): review and merge grouped
+- **Dependabot PRs** (`.github/dependabot.yml` — npm in `/` and `functions/`,
+  GitHub Actions, and Android Gradle in `native/android`, grouped minor/patch,
+  monthly with cooldown; security updates immediate): review and merge grouped
   minor/patch PRs after CI passes. Do not batch-merge major-version bumps —
   review each individually against `CLAUDE.md` → Critical Gotchas (e.g. the
   PostCSS/Next.js advisory tracked in `SECURITY.md`).

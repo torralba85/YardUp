@@ -109,9 +109,10 @@ Order of operations before touching code:
 
 **Weekly**
 
-- Review open Dependabot PRs (`.github/dependabot.yml` runs weekly for
-  root, `functions/`, and GitHub Actions); merge grouped minor/patch PRs
-  after CI passes, review major-version bumps manually.
+- Review open Dependabot PRs (`.github/dependabot.yml` runs monthly with a
+  cooldown for npm in `/` and `functions/`, GitHub Actions, and Android Gradle
+  in `native/android`, while security updates open immediately); merge grouped
+  minor/patch PRs after CI passes, review major-version bumps manually.
 - Confirm the latest `master` CI run (`.github/workflows/ci.yml`) is green;
   review newly opened issues and the issue-triggered `ai-maintainer.yml`
   intake comments, and investigate the first failure rather than re-running blind.

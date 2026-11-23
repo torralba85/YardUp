@@ -1,10 +1,21 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+      - "/functions"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 10
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
+    labels:
+      - "type: chore"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -16,32 +27,26 @@ updates:
         update-types:
           - "patch"
           - "minor"
-      minor-and-patch:
+      shared-runtime:
         patterns:
-          - "*"
+          - "next"
+          - "react"
+          - "react-dom"
+          - "firebase-admin"
+          - "firebase-functions"
+          - "resend"
+          - "stripe"
+        group-by: dependency-name
         update-types:
           - "minor"
           - "patch"
-
-  - package-ecosystem: "npm"
-    directory: "/functions"
-    schedule:
-      interval: "monthly"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    groups:
-      security-patches:
-        applies-to: security-updates
-        patterns:
-          - "*"
+      production-minor-and-patch:
+        dependency-type: "production"
         update-types:
-          - "patch"
           - "minor"
-      minor-and-patch:
-        patterns:
-          - "*"
+          - "patch"
+      development-minor-and-patch:
+        dependency-type: "development"
         update-types:
           - "minor"
           - "patch"
@@ -50,7 +55,17 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 5
+    labels:
+      - "type: chore"
+      - "area: ci"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -62,15 +77,27 @@ updates:
         update-types:
           - "patch"
           - "minor"
-      actions:
+      actions-minor-and-patch:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "gradle"
     directory: "/native/android"
     schedule:
       interval: "monthly"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 5
+    labels:
+      - "type: chore"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -82,3 +109,9 @@ updates:
         update-types:
           - "patch"
           - "minor"
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
