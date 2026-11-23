@@ -47,10 +47,10 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.2",
     "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
-    "@remotion/google-fonts": "^4.0.484",
-    "@remotion/player": "^4.0.484",
-    "@sparkjsdev/spark": "2.2.0",
+    "@react-three/fiber": "^9.8.2",
+    "@remotion/google-fonts": "^4.0.545",
+    "@remotion/player": "^4.0.545",
+    "@sparkjsdev/spark": "2.4.0",
     "clsx": "^2.1.1",
     "egm96-universal": "^1.1.1",
     "firebase": "^12.14.0",
@@ -59,13 +59,13 @@
     "lucide-react": "^0.553.0",
     "motion": "^12.40.0",
     "next": "^16.4.6",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
-    "remotion": "^4.0.484",
-    "resend": "^6.34.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.545",
+    "resend": "^6.38.1",
     "stripe": "22.5.0",
-    "tailwind-merge": "^3.3.1",
-    "three": "0.180.0",
+    "tailwind-merge": "^3.7.1",
+    "three": "0.187.0",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
@@ -74,13 +74,13 @@
     "@remotion/cli": "^4.0.545",
     "@tailwindcss/postcss": "4.3.5",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "0.180.0",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.4.6",
@@ -93,7 +93,7 @@
     "vitest": "^4.1.12"
   },
   "optionalDependencies": {
-    "@rolldown/binding-linux-x64-gnu": "1.2.13"
+    "@rolldown/binding-linux-x64-gnu": "1.3.2"
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.5",

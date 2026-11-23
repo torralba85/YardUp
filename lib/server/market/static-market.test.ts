@@ -101,6 +101,16 @@ describe("resolveStaticMarket", () => {
     expect(sd.components?.rent.sourceAsOf).toBe(sd.asOf);
     const king = resolveStaticMarket({ lat: 47.6, lng: -122.3, county: "King", state: "WA" });
     expect(king.asOf).toContain("seed extract");
+    expect(king.asOf).toContain("effective 2025-10-01");
+  });
+
+  it("uses HUD's October 1 fiscal-year effective date in every FMR vintage string", () => {
+    for (const label of [fmr.asOf, fmr.californiaCountiesAsOf]) {
+      const match = label.match(/HUD FY(\d{4}) FMR \(effective (\d{4}-\d{2}-\d{2})/);
+      expect(match, `HUD FMR label format: ${label}`).not.toBeNull();
+      const fiscalYear = Number(match![1]);
+      expect(match![2], `effective date for FY${fiscalYear}`).toBe(`${fiscalYear - 1}-10-01`);
+    }
   });
 
   it("marks the national fallback low-confidence with provenance intact", () => {
