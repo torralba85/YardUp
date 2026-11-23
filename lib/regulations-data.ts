@@ -95,20 +95,20 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
   "compact-lot": {
     jurisdiction: "compact-lot",
     title: "Austin ADU Starter Guide",
-    summary: "Under Austin's HOME Initiative, standard single-family residential lots (SF-1, SF-2, SF-3) allow up to three units by right, with small-lot subdivisions down to 1,800 sf and no zoning-mandated 10-foot separation between structures.",
+    summary: "Austin HOME Phase 1 allows up to three dwellings on eligible SF-1, SF-2, and SF-3 lots. Phase 2 allows one dwelling per small lot of at least 1,800 sf and under 5,750 sf.",
     permitSteps: [
-      "Confirm single-family zoning eligibility (SF-1/SF-2/SF-3) and whether you are adding units on an existing lot or using HOME small-lot rules.",
-      "Check maximum building coverage (40%) and impervious cover (45%) limits.",
+      "Confirm zoning and minimum lot area for the proposed use. Two- and three-unit projects generally require at least 5,750 sf.",
+      "For duplexes and two- or three-unit uses, check 40% building coverage, 45% impervious cover, and base-zone height limits. Check the separate standards for small-lot single-family use.",
       "Verify building-code (IRC/IBC) fire-rating and wall-opening spacing between structures (the prior 10-foot zoning separation rule was repealed).",
     ],
     blockers: [
       "Protected heritage trees (19 inches or greater in diameter).",
-      "Subchapter F (McMansion) tent/height and compatibility rules.",
+      "Floor-area ratio limits within the Subchapter F area and any applicable deed restrictions.",
     ],
-    verifiedAt: "2026-11-21",
+    verifiedAt: "2026-11-23",
     confidence: "high",
     citations: [
-      { label: "Austin Planning Department", url: "https://www.austintexas.gov/planning" }
+      { label: "Austin HOME Amendments", url: "https://www.austintexas.gov/development-services/home-amendments" }
     ],
   },
   "los-angeles": {
@@ -133,20 +133,20 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
   "san-diego": {
     jurisdiction: "san-diego",
     title: "San Diego ADU Starter Guide",
-    summary: "City of San Diego SDMC § 141.0302 permits detached and attached ADUs from 150 to 1,200 sf (JADUs up to 500 sf), with 0-foot side and rear setbacks up to 16 feet tall outside High/Very High Fire Hazard Severity Zones (4 feet over 16 feet or in fire zones).",
+    summary: "San Diego Municipal Code § 141.0302 generally allows new attached and detached ADUs from 150 to 1,200 sf and JADUs up to 500 sf. Interior side and rear setbacks depend on fire zone, height, and adjoining use.",
     permitSteps: [
-      "Check Coastal Overlay Zone, High/Very High Fire Hazard Severity Zone, and Transit Priority Area maps first (2025–2026 amendments apply outside the Coastal Zone until certified).",
-      "Confirm setbacks (0 ft side/rear up to 16 ft outside fire zones; 4 ft over 16 ft or in fire zones) and whether you will use City-accepted preapproved standard plans.",
+      "Check the Coastal Overlay Zone, fire hazard, and Transit Priority Area maps. Confirm which rules are certified for coastal parcels.",
+      "Outside High and Very High Fire Hazard Severity Zones, there is generally no minimum interior side or rear setback. For ADUs over 16 ft along an adjoining residential property line, use 4 ft or the base-zone minimum, whichever is less.",
       "Submit architectural, structural, Title 24 energy, and soils documents per Development Services Information Bulletin 400 and check fees in IB-501.",
     ],
     blockers: [
-      "Coastal Overlay Zone parcels remain under prior certified rules and require Coastal Commission review.",
-      "High/Very High Fire Hazard Severity Zones enforce 4-foot minimum setbacks at any height, and RS-1-1 through RS-1-4 / RS-1-8 through RS-1-11 bonus-program restrictions apply outside High/Highest Opportunity Areas.",
+      "In the Coastal Overlay Zone, check whether the project requires a Coastal Development Permit. Qualifying projects can receive a City-issued Coastal Development Permit, and some projects are exempt.",
+      "High and Very High Fire Hazard Severity Zones require at least 4 ft for interior side and rear setbacks. The Fire Code Official may require greater setbacks. Check bonus-program eligibility separately in RS-1-1 through RS-1-4 and RS-1-8 through RS-1-11.",
     ],
-    verifiedAt: "2026-11-03",
+    verifiedAt: "2026-11-23",
     confidence: "high",
     citations: [
-      { label: "San Diego DSD Companion & Junior Units", url: "https://www.sandiego.gov/development-services/news-programs/programs/companion-junior-units" },
+      { label: "San Diego Development Services Information Bulletin 400", url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/400" },
       { label: "San Diego Municipal Code § 141.0302", url: "https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art01Division03.pdf" }
     ],
   },
@@ -197,9 +197,11 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
   sacramento: {
     jurisdiction: "sacramento",
     title: "Sacramento ADU Starter Guide",
-    summary: "Sacramento City Code § 17.228.105 offers two non-mixable rulebooks: the local option (up to 2 units, 1,200 sf detached, 3-foot setbacks, zone height) or the state option (3 units including an 800 sf detached ADU, 4-foot setbacks). No minimum off-street parking is required citywide.",
+    summary: "Sacramento City Code § 17.228.105 offers local and state pathways. Choose one for the whole lot. No minimum off-street parking is required citywide.",
     permitSteps: [
-      "Choose either the City local option (§ 17.228.105(B)) or the state option (§ 17.228.105(C)) for the whole lot, or pick one of the City's free Shelf Ready plans.",
+      "Local option (§ 17.228.105(B)): up to two units, with a 1,200 sf combined cap for detached ADUs. Check the base-zone height limit and the City's 3-ft interior side and rear setbacks, which vary by story and distance from the front lot line.",
+      "State option (§ 17.228.105(C)): on a single-unit lot, check eligibility for one conversion, one JADU, and one detached ADU up to 800 sf with 4-ft interior side and rear setbacks. Multifamily lots follow separate state rules.",
+      "Check whether one of the City's free Shelf Ready plans fits the pathway you chose.",
       "Use the optional free zoning review (form CDD-0009) to check setbacks, historic-district rules, and EA-2/EA-3 overlay limits.",
       "Coordinate water, sewer (City or SASD), and SMUD electric service early, then submit building plans online.",
     ],
@@ -207,30 +209,31 @@ export const regulationGuides: Record<JurisdictionId, RegulationGuide> = {
       "Historic districts (31 districts with ADU design standards) and EA-2/EA-3 overlays (capped at one ADU).",
       "Levee setbacks, protected trees, and stormwater detention when adding over 500 sf of net new impervious area.",
     ],
-    verifiedAt: "2026-10-28",
+    verifiedAt: "2026-11-23",
     confidence: "high",
     citations: [
-      { label: "City of Sacramento ADU Resource Center", url: "https://adu.cityofsacramento.org/plan/step-1.html" },
+      { label: "City of Sacramento ADU Resource Center", url: "https://adu.cityofsacramento.org/plan/step-1" },
       { label: "Sacramento Shelf Ready ADU Plans", url: "https://adu.cityofsacramento.org/Shelf-ready-plans" }
     ],
   },
   denver: {
     jurisdiction: "denver",
     title: "Denver ADU Starter Guide",
-    summary: "Under Denver's citywide ADU reform and Colorado HB 24-1152, ADUs are permitted by right in all residential zone districts without owner-occupancy or off-street parking minimums.",
+    summary: "Denver allows ADUs in districts that allow new single-unit dwellings. Check the zone district for permit and design standards.",
     permitSteps: [
-      "Confirm residential zone district form standards (detached ADUs typically sit in the rear 35% of the lot, capped at 864 sf on lots ≤7,000 sf or 1,000 sf on larger lots).",
-      "Verify 5-foot side and rear setbacks (alley setbacks may allow 0–5 feet depending on door swing and building form) and 24-foot / 2-story height limits.",
+      "Confirm residential zone district form standards. In Urban districts, detached ADUs generally sit in the rear 35% of the lot. The U-SU footprint cap is 864 sf on lots up to 7,000 sf and 1,000 sf on larger lots.",
+      "In a single-unit zone district, an owner must live in the existing main house when applying for the ADU permit. This requirement does not apply when the main house and ADU are built together.",
+      "Check district-specific setbacks and height limits. Urban side setbacks are 3 or 5 ft, depending on district and lot width. Rear alley setbacks depend on whether a garage door faces the alley.",
       "Prepare zoning and building permit application files for Denver Community Planning and Development (CPD).",
     ],
     blockers: [
       "Historic landmark districts, bulk-plane constraints, or HOA/covenant restrictions.",
       "Utility connection and alley access conflicts.",
     ],
-    verifiedAt: "2026-11-21",
+    verifiedAt: "2026-11-23",
     confidence: "high",
     citations: [
-      { label: "Denver CPD ADU Guide", url: "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Denver-Zoning-Code/Accessory-Dwelling-Units" }
+      { label: "Denver CPD ADU Guide", url: "https://www.denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Community-Planning-and-Development/Plan-Review-Permits-and-Inspections/Single-Family-and-Duplex-Projects/Project-Checklists/ADU-Permits" }
     ],
   },
   "local-review": {
