@@ -1,23 +1,21 @@
 # brand
 
 ## Overview
+
 Brand asset generation and render scripts.
 
 ## Interface
-- `render_plate.py:q` - Function
-- `render_plate.py:font` - Function
-- `render_plate.py:tracked` - Function
-- `render_plate.py:dline` - Function
-- `render_plate.py:drect` - Function
-- `render_plate.py:rot_text` - Function
-- `render_plate.py:Q` - Function
-- `render_plate.py:inside_lot` - Function
+
+- [`render_plate.py`](./render_plate.py) — `q`, `font`, `tracked`, `dline`, `drect`, `rot_text`, `Q`, `inside_lot`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+- [`render_plate.py`](./render_plate.py) — out.save writes the rendered plate to public/hero-cadastral-plate.png.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

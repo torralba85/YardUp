@@ -1,7 +1,23 @@
 # scenario-link
 
 ## Overview
+
 Server API route handler providing backend endpoints for studio/scenario-link.
 
-## Subdirectories & Boundaries
-- [[token]](<./[token]/README.md>): Server API route handler providing backend endpoints for studio/scenario-link/[token].
+## Interface
+
+### Subdirectories & Boundaries
+
+- [\[token\]](./%5Btoken%5D/README.md) — Handles GET requests at `/api/studio/scenario-link/[token]`. Returns the stored layout associated with a valid bearer token.
+
+## Invariants
+
+See the linked child contracts.
+
+## Side Effects
+
+See the linked child contracts.
+
+## Verification
+
+Run `npm test` from the YardUp repository root.

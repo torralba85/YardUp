@@ -392,14 +392,17 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(new URLSearchParams(window.location.search).has("plan")).toBe(false);
   });
 
-  it.each(["same", "different"])("restores a checkout return to the %s lot with the correct plan scope", async (destination) => {
+  it.each(["same", "different"])("restores a checkout return to the %s lot with the correct pose and plan scope", async (destination) => {
     authMocks.user = { uid: "owner-1", email: "owner@example.test", displayName: "Owner", getIdToken: async () => "test-token" };
     savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: "2026-11-06T00:00:00Z" }));
     const originalLot = getParcelById("coyote-brush");
     const targetLot = destination === "same" ? originalLot : getParcelById("oak-street");
+    const originalPose = { x: 2, z: -26, rotationDeg: 15 };
+    const expectedPose = destination === "same" ? originalPose : defaultPose(targetLot, defaultAduConfig);
     const plan = { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" };
     const query = new URLSearchParams(serializeScenarioParams({
       parcelId: originalLot.id, config: defaultAduConfig, assumptions: defaultFinancialAssumptions,
+      pose: originalPose,
       preapprovedPlan: plan, preapprovedPlanScope: planScopeForLot(originalLot, "preset"),
     }));
     query.set("cert", certificateKey(targetLot));
@@ -409,6 +412,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(stepButton(/Design/));
     const params = new URLSearchParams(window.location.search);
     expect(params.get("parcel")).toBe(targetLot.id);
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-pose", JSON.stringify(expectedPose));
     if (destination === "same") {
       expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
       expect(params.get("plan")).toBe(plan.planId);
@@ -419,6 +423,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     }
     fireEvent.click(screen.getByRole("button", { name: "Save this design" }));
     await waitFor(() => expect(savedMocks.save).toHaveBeenCalled());
+    expect(savedMocks.save.mock.calls[0][1].pose).toEqual(expectedPose);
     expect(savedMocks.save.mock.calls[0][1].preapprovedPlan).toEqual(destination === "same" ? plan : undefined);
   });
 

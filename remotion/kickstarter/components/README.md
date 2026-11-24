@@ -1,17 +1,22 @@
 # components
 
 ## Overview
+
 Programmatic video rendering composition and visual scenes for kickstarter/components.
 
 ## Interface
-- `Captions.tsx:Captions` - Exported constant / variable
-- `KickstarterFrame.tsx:KickstarterFrame` - Exported constant / variable
+
+- [`Captions.tsx`](./Captions.tsx) — `Captions`
+- [`KickstarterFrame.tsx`](./KickstarterFrame.tsx) — `KickstarterFrame`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

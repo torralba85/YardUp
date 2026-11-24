@@ -1,24 +1,21 @@
 # hooks
 
 ## Overview
+
 Custom React state, layout, and event hooks.
 
 ## Interface
-- `useSignupFormState.ts:SIGNUP_FORM_STORAGE_KEY` - Exported constant / variable
-- `useSignupFormState.ts:SignupRole` - Type Definition
-- `useSignupFormState.ts:UseSignupFormStateOptions` - TypeScript Interface
-- `useSignupFormState.ts:SignupFormState` - TypeScript Interface
-- `useSignupFormState.ts:parseStoredSignupFormState` - Exported Function
-- `useSignupFormState.ts:clearPersistedSignupFormState` - Exported Function
-- `useSignupFormState.ts:useSignupFormState` - Exported Function
+
+- [`useSignupFormState.ts`](./useSignupFormState.ts) — `SIGNUP_FORM_STORAGE_KEY`, `SignupRole`, `UseSignupFormStateOptions`, `SignupFormState`, `parseStoredSignupFormState`, `clearPersistedSignupFormState`, `useSignupFormState`
 
 ## Invariants
-- `useSignupFormState.ts:JSON.parse` - Schema / validation invariant
+
+- [`useSignupFormState.ts`](./useSignupFormState.ts) — SignupRole accepts user, builder. The module declares the React client boundary with "use client".
 
 ## Side Effects
-- `useSignupFormState.ts:window.sessionStorage.getItem` - External call or state mutation
-- `useSignupFormState.ts:window.sessionStorage.setItem` - External call or state mutation
-- `useSignupFormState.ts:window.sessionStorage.removeItem` - External call or state mutation
+
+- [`useSignupFormState.ts`](./useSignupFormState.ts) — event listener registration or cleanup via window.addEventListener, window.removeEventListener. browser storage updates via window.sessionStorage.setItem, window.sessionStorage.removeItem.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

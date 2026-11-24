@@ -1,20 +1,25 @@
 # adu-concept
 
 ## Overview
-Server API route handler providing backend endpoints for ai/adu-concept.
+
+Handles POST requests at `/api/ai/adu-concept`. Generates an ADU concept from the submitted design request.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:POST` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `POST`
 
 ## Invariants
-- `route.ts:throw` - new OpenAIProviderError("OpenAI returned no style output.")
-- `route.ts:throw` - new OpenAIProviderError("OpenAI returned no generated image.")
-- `route.ts:JSON.parse` - Schema / validation invariant
-- `route.ts:throw` - new OpenAIProviderError("OpenAI returned an invalid style analysis.")
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". requireApiAuth checks the caller. Response branches explicitly set HTTP 400.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Submits the concept request through createOpenAIResponse.
+
+## Configuration
+
+- [`route.ts`](./route.ts) — Reads `OPENAI_TEXT_MODEL` (defaults to `"gpt-5.6-sol"`) for architectural style analysis and `OPENAI_IMAGE_MODEL` (defaults to `"gpt-5.6-sol"`) for concept image generation.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

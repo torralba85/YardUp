@@ -1,17 +1,21 @@
 # active
 
 ## Overview
-Server API route handler providing backend endpoints for builders/active.
+
+Handles GET requests at `/api/builders/active`. Returns active builders for the authenticated request.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:GET` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `GET`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". requireApiAuth checks the caller.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Reads the builders collection with get.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

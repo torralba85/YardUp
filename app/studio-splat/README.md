@@ -1,18 +1,25 @@
 # studio-splat
 
 ## Overview
-Next.js App Router surface and view for studio-splat.
+
+Renders `/studio-splat` through `SplatWorkbenchPage`.
 
 ## Interface
-- `page.tsx:metadata` - Exported constant / variable
-- `page.tsx:dynamic` - Exported constant / variable
-- `page.tsx:SplatWorkbenchPage` - Exported Function (default)
+
+- [`page.tsx`](./page.tsx) — `metadata`, `dynamic`, `SplatWorkbenchPage (default)`
 
 ## Invariants
-- None
+
+- [`page.tsx`](./page.tsx) — dynamic = "force-dynamic". Calls `notFound()` unless `STUDIO_SPLAT_BETA === "true"`.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
+
+## Configuration
+
+- [`page.tsx`](./page.tsx) — Reads `STUDIO_SPLAT_BETA` (must equal `"true"` to render `SplatWorkbench`; otherwise triggers `notFound()`).
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.
