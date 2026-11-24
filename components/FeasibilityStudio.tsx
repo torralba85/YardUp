@@ -53,6 +53,7 @@ import {
 } from "@/lib/scenarios-firestore";
 import { ParcelProvider, useParcel } from "@/lib/parcel-context";
 import { takeIncomingAddress } from "@/lib/studio-handoff";
+import { poseScopeForLot, poseScopeMatchesLot } from "@/lib/pose-scope";
 import { certificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { Select } from "@/components/ui/Field";
@@ -642,9 +643,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       : parcelMode === "preset" && !initialScenario?.liveParcel;
     const restoredPlan = parsed.clearPreapprovedPlan ? undefined
       : queryPlanMatchesLot && parsed.preapprovedPlan ? parsed.preapprovedPlan : initialScenario?.preapprovedPlan;
+    // A URL pose holds coordinates for the lot that wrote it. Real lots carry this
+    // tab's opaque label (never the address); `parcel` already pins a preset's pose.
+    const queryPoseMatchesLot = parsed.poseScope
+      ? parcelMode !== "preset" && poseScopeMatchesLot(parsed.poseScope, hydrationParcel, parcelMode)
+      : parcelMode === "preset" && !initialScenario?.liveParcel;
     // Explicit placement from the URL or a restored layout takes precedence;
     // otherwise calculate placement from the active parcel (preset or live).
-    const explicitPose = parsed.pose ?? initialScenario?.pose ?? null;
+    const explicitPose = (queryPoseMatchesLot ? parsed.pose : undefined) ?? initialScenario?.pose ?? null;
     const certParam = incomingCertRef.current ?? params.get("cert");
     const stepParam = params.get("step");
     const parsedStep = parseStepParam(stepParam);
@@ -775,7 +781,8 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     if (!isValidAduConfig(config) || !isValidFinancialAssumptions(assumptions) || !isValidPose(pose)) {
       return;
     }
-    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, version:2, heightConvention:"wall", ...(preapprovedPlan ? { preapprovedPlan, preapprovedPlanScope: planScopeForLot(activeParcel, parcelMode) } : initialScenario?.preapprovedPlan ? { clearPreapprovedPlan: true } : {}) });
+    const poseScope = parcelMode === "preset" ? undefined : poseScopeForLot(activeParcel, parcelMode);
+    const serialized = serializeScenarioParams({ parcelId, config, assumptions, pose, poseScope, version:2, heightConvention:"wall", ...(preapprovedPlan ? { preapprovedPlan, preapprovedPlanScope: planScopeForLot(activeParcel, parcelMode) } : initialScenario?.preapprovedPlan ? { clearPreapprovedPlan: true } : {}) });
     const currentParams = new URLSearchParams(window.location.search);
     const certParam = currentParams.get("cert");
     const layoutParam = initialScenario?.liveParcel && certificateKey(initialScenario.liveParcel) === certificateKey(activeParcel)

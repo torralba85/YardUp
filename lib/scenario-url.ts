@@ -30,6 +30,8 @@ export interface ScenarioState {
   version?: 2;
   heightConvention?: "wall";
   pose?: Pose2D;
+  /** URL-only random label for the lot `pose` was made on (see `pose-scope.ts`); never address-derived. */
+  poseScope?: string;
   /** Id of the selected parcel preset. */
   parcelId: string;
   /** The ADU design configuration. */
@@ -140,6 +142,7 @@ export function serializeScenarioParams(state: ScenarioState): string {
   params.set("x", String(pose.x));
   params.set("z", String(pose.z));
   params.set("rotation", String(pose.rotationDeg));
+  if (/^[a-f0-9]{16}$/.test(state.poseScope ?? "")) params.set("poseScope", state.poseScope!);
   params.set("size", String(state.config.footprint));
   params.set("roof", state.config.roof);
   params.set("finish", state.config.finish);
@@ -185,6 +188,8 @@ function parseCurrentParams(params: URLSearchParams): Partial<ScenarioState> {
     partial.heightConvention = HEIGHT_CONVENTION;
     partial.config = config;
     partial.pose = pose;
+    const poseScope = params.get("poseScope");
+    if (poseScope && /^[a-f0-9]{16}$/.test(poseScope)) partial.poseScope = poseScope;
   }
   const assumptions = {
     costPerSqft: Object.fromEntries(validFinishes.map((finish) => [finish, number(`cost_${finish}`)])),
