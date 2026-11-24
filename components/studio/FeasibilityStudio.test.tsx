@@ -24,6 +24,7 @@ import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
 import { defaultPose } from "@/lib/scenario";
 import { serializeScenarioParams } from "@/lib/scenario-url";
 import { planScopeForLot } from "@/lib/preapproved-plans";
+import { poseScopeForLot } from "@/lib/pose-scope";
 
 const briefFixture: AIProjectBrief = {
   headline: "Recorded garden studio study", summary: "Saved planning snapshot", bestFit: "Detached ADU",
@@ -273,6 +274,54 @@ describe("FeasibilityStudio (guided spine)", () => {
     const pose = JSON.parse(scene.getAttribute("data-pose")!);
     expect(pose).toBeDefined();
     expect(pose).toEqual(defaultPose(EMAIL_SCENARIO.liveParcel!, defaultAduConfig));
+  });
+
+  describe("URL placement belongs to the lot that wrote it", () => {
+    const urlPose = { x: 2, z: -26, rotationDeg: 15 };
+    const liveScope = () => poseScopeForLot(EMAIL_SCENARIO.liveParcel!, "live");
+    const studioUrl = (poseScope?: string) => `/studio?${serializeScenarioParams({
+      parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, pose: urlPose,
+      ...(poseScope ? { poseScope } : {}),
+    })}`;
+    const renderedPose = async () => JSON.parse((await screen.findByTestId("parcel-scene")).getAttribute("data-pose")!);
+
+    it("drops a demo lot's unscoped pose when a live parcel handoff opens Studio", async () => {
+      stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+      window.history.replaceState(null, "", studioUrl());
+      render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+      expect(await renderedPose()).toEqual(defaultPose(EMAIL_SCENARIO.liveParcel!, defaultAduConfig));
+    });
+
+    it("drops a live lot's pose when a reload without the handoff opens the demo lot", async () => {
+      window.history.replaceState(null, "", studioUrl(liveScope()));
+      render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+      expect(await renderedPose()).toEqual(defaultPose(getParcelById("coyote-brush"), defaultAduConfig));
+    });
+
+    it("drops a live pose labelled in another tab or device", async () => {
+      stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+      window.history.replaceState(null, "", studioUrl("0123456789abcdef"));
+      render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+      expect(await renderedPose()).toEqual(defaultPose(EMAIL_SCENARIO.liveParcel!, defaultAduConfig));
+    });
+
+    it("keeps a pose this tab labelled for the lot that opens, and never puts an address-derived label in the URL", async () => {
+      const scope = liveScope();
+      stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
+      window.history.replaceState(null, "", studioUrl(scope));
+      render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+      expect(await renderedPose()).toEqual(urlPose);
+      await waitFor(() => expect(new URLSearchParams(window.location.search).get("poseScope")).toBe(scope));
+      expect(scope).not.toBe(planScopeForLot(EMAIL_SCENARIO.liveParcel!, "live"));
+    });
+
+    it("writes no lot label for a demo lot", async () => {
+      window.history.replaceState(null, "", studioUrl());
+      render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
+      expect(await renderedPose()).toEqual(urlPose);
+      await waitFor(() => expect(new URLSearchParams(window.location.search).get("x")).toBe("2"));
+      expect(new URLSearchParams(window.location.search).has("poseScope")).toBe(false);
+    });
   });
 
   it("offers free capture on desktop Rules & Fit and mobile Check while withholding it on Design and demo parcels", async () => {

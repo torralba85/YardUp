@@ -94,6 +94,18 @@ describe("serializeScenarioParams", () => {
     expect(parsed.config?.includeOpenings).toBe(false);
     expect(parsed.assumptions?.rentScenario).toBe("optimistic");
   });
+
+  it("round-trips a pose scope only alongside a valid pose", () => {
+    const scope = "0123456789abcdef";
+    const params = new URLSearchParams(serializeScenarioParams({ ...defaultScenarioState, pose: { x: 2, z: -26, rotationDeg: 15 }, poseScope: scope }));
+    expect(params.get("poseScope")).toBe(scope);
+    expect(parseScenarioParams(params).poseScope).toBe(scope);
+    // A scope is lot identity, not a design choice, so it never makes a link non-default.
+    expect(isNonDefaultScenario(parseScenarioParams(new URLSearchParams(serializeScenarioParams({ ...defaultScenarioState, poseScope: scope }))))).toBe(false);
+    expect(new URLSearchParams(serializeScenarioParams({ ...defaultScenarioState, poseScope: "not-a-scope" })).has("poseScope")).toBe(false);
+    params.set("rotation", "nope");
+    expect(parseScenarioParams(params).poseScope).toBeUndefined();
+  });
 });
 
 describe("mergeScenarioPartial", () => {
@@ -209,6 +221,8 @@ describe("canonical email scenario links", () => {
     const restored = mergeScenarioPartial(parseScenarioParams(url.searchParams));
     expect(restored.config).toEqual(EMAIL_SCENARIO.config);
     expect(restored.pose).toEqual(EMAIL_SCENARIO.pose);
+    // The layout snapshot restores the placement, so the link carries no lot label at all.
+    expect(url.searchParams.has("poseScope")).toBe(false);
   });
 
   it.each([
