@@ -1,21 +1,26 @@
 # scene
 
 ## Overview
+
 Programmatic video rendering composition and visual scenes for scene.
 
 ## Interface
-- `AduCast.tsx:AduCast` - Exported constant / variable
-- `AerialBase.tsx:AerialBase` - Exported constant / variable
-- `BuildableEnvelope.tsx:BuildableEnvelope` - Exported constant / variable
-- `CadastralBoundary.tsx:CadastralBoundary` - Exported constant / variable
-- `Pin.tsx:Pin` - Exported constant / variable
-- `RentChip.tsx:RentChip` - Exported constant / variable
+
+- [`AduCast.tsx`](./AduCast.tsx) — `AduCast`
+- [`AerialBase.tsx`](./AerialBase.tsx) — `AerialBase`
+- [`BuildableEnvelope.tsx`](./BuildableEnvelope.tsx) — `BuildableEnvelope`
+- [`CadastralBoundary.tsx`](./CadastralBoundary.tsx) — `CadastralBoundary`
+- [`Pin.tsx`](./Pin.tsx) — `Pin`
+- [`RentChip.tsx`](./RentChip.tsx) — `RentChip`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

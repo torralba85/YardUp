@@ -1,17 +1,21 @@
 # certificates
 
 ## Overview
-Authenticated Firebase user route and interface for certificates.
+
+Renders `/certificates` through `CertificatesPage`.
 
 ## Interface
-- `page.tsx:metadata` - Exported constant / variable
-- `page.tsx:CertificatesPage` - Exported Function (default)
+
+- [`page.tsx`](./page.tsx) — `metadata`, `CertificatesPage (default)`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

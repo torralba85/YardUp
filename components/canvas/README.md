@@ -1,22 +1,25 @@
 # canvas
 
 ## Overview
+
 Reusable user interface components and presentation widgets for canvas.
 
 ## Interface
-- `SetbackEnvelope.tsx:SetbackEnvelopeProps` - TypeScript Interface
-- `SetbackEnvelope.tsx:setbackEnvelopeStyle` - Exported Function
-- `SetbackEnvelope.tsx:SetbackEnvelope` - Exported Function
-- `UtilityAnchorPoint.tsx:UtilityAnchorPoint` - Exported Function
-- `UtilityTrenchLine.tsx:nearestPointOnAdu` - Exported Function
-- `UtilityTrenchLine.tsx:utilityRunDistanceFt` - Exported Function
-- `UtilityTrenchLine.tsx:UtilityTrenchLine` - Exported Function
+
+- [`SetbackEnvelope.tsx`](./SetbackEnvelope.tsx) — `SetbackEnvelopeProps`, `setbackEnvelopeStyle`, `SetbackEnvelope`
+- [`UtilityAnchorPoint.tsx`](./UtilityAnchorPoint.tsx) — `UtilityAnchorPoint`
+- [`UtilityTrenchLine.tsx`](./UtilityTrenchLine.tsx) — `nearestPointOnAdu`, `utilityRunDistanceFt`, `UtilityTrenchLine`
 
 ## Invariants
-- None
+
+- [`SetbackEnvelope.tsx`](./SetbackEnvelope.tsx) — The module declares the React client boundary with "use client".
+- [`UtilityAnchorPoint.tsx`](./UtilityAnchorPoint.tsx) — The module declares the React client boundary with "use client".
+- [`UtilityTrenchLine.tsx`](./UtilityTrenchLine.tsx) — The module declares the React client boundary with "use client".
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

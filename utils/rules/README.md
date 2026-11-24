@@ -1,19 +1,21 @@
 # rules
 
 ## Overview
+
 Specialized mathematical, geometric, and export utilities for rules.
 
 ## Interface
-- `californiaAduRules.ts:residentialZoningCode` - Re-exported symbol
-- `californiaAduRules.ts:RuleCheck` - Type Definition
-- `californiaAduRules.ts:CaliforniaAduEvaluation` - TypeScript Interface
-- `californiaAduRules.ts:evaluateCaliforniaAduRules` - Exported Function
+
+- [`californiaAduRules.ts`](./californiaAduRules.ts) — `residentialZoningCode`, `RuleCheck`, `CaliforniaAduEvaluation`, `evaluateCaliforniaAduRules`
 
 ## Invariants
-- None
+
+- [`californiaAduRules.ts`](./californiaAduRules.ts) — RuleCheck accepts yes, no, unknown.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

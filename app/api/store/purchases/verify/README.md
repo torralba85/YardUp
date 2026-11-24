@@ -1,17 +1,21 @@
 # verify
 
 ## Overview
-Server API route handler providing backend endpoints for store/purchases/verify.
+
+Handles POST requests at `/api/store/purchases/verify`. Verifies a submitted store purchase and applies eligible grants.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:POST` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `POST`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". requireApiAuth checks the caller. Response branches explicitly set HTTP 400.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — verifyAndGrantPurchase verifies the submitted purchase and applies eligible grants.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

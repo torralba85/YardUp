@@ -1,21 +1,22 @@
 # canvas
 
 ## Overview
+
 Specialized mathematical, geometric, and export utilities for canvas.
 
 ## Interface
-- `drawSiteDimensions.ts:SitePlanAnnotationInput` - TypeScript Interface
-- `drawSiteDimensions.ts:drawSiteDimensions` - Exported Function
-- `exportOrthographicView.ts:SITE_PLAN_MARGIN_FT` - Exported constant / variable
-- `exportOrthographicView.ts:SITE_PLAN_EXPORT_PX` - Exported constant / variable
-- `exportOrthographicView.ts:exportOrthographicView` - Exported Function
+
+- [`drawSiteDimensions.ts`](./drawSiteDimensions.ts) — `SitePlanAnnotationInput`, `drawSiteDimensions`
+- [`exportOrthographicView.ts`](./exportOrthographicView.ts) — `SITE_PLAN_MARGIN_FT`, `SITE_PLAN_EXPORT_PX`, `exportOrthographicView`
 
 ## Invariants
-- `drawSiteDimensions.ts:throw` - new Error("Canvas 2D context is unavailable for site plan annotation.")
-- `exportOrthographicView.ts:throw` - new Error("Canvas 2D context is unavailable for site-plan export.")
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

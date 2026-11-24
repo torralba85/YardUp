@@ -1,19 +1,21 @@
 # [city]
 
 ## Overview
-Next.js App Router surface and view for sample-certificate/[city].
+
+Handles GET requests at `/sample-certificate/[city]`.
 
 ## Interface
-- `route.ts:dynamic` - Exported constant / variable
-- `route.ts:dynamicParams` - Exported constant / variable
-- `route.ts:generateStaticParams` - Exported Function
-- `route.ts:GET` - Exported Function
+
+- [`route.ts`](./route.ts) — `dynamic`, `dynamicParams`, `generateStaticParams`, `GET`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — dynamic = "force-static". dynamicParams = false.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

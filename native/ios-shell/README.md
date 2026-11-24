@@ -30,13 +30,17 @@ Signing, App Store Connect listing, tax/banking, and review credentials are
 human-only. See `{SCRATCH}/human-gates.md` and `docs/store-deployment-readiness.md`.
 
 ## Interface
-- `LotFoundryStoreBridge.js:main` - Executable entrypoint / script
+
+- [`LotFoundryStoreBridge.js`](./LotFoundryStoreBridge.js) — `window.LotFoundryNative`, `window.LotFoundryStore`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+- [`LotFoundryStoreBridge.js`](./LotFoundryStoreBridge.js) — native bridge messages via handler.postMessage.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

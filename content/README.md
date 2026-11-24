@@ -1,7 +1,23 @@
 # content
 
 ## Overview
-Component package providing domain logic and interface implementations for content.
 
-## Subdirectories & Boundaries
-- [adu](<./adu/README.md>): Static structured domain content and regulatory data for adu.
+Typed source data for the ADU guides.
+
+## Interface
+
+### Subdirectories & Boundaries
+
+- [adu](./adu/README.md) — Static structured domain content and regulatory data for adu.
+
+## Invariants
+
+See the linked child contracts.
+
+## Side Effects
+
+See the linked child contracts.
+
+## Verification
+
+Run `npm test` from the YardUp repository root.
