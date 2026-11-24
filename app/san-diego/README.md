@@ -1,17 +1,21 @@
 # san-diego
 
 ## Overview
-Next.js App Router surface and view for san-diego.
+
+Renders `/san-diego` through `Page`.
 
 ## Interface
-- `page.tsx:metadata` - Exported constant / variable
-- `page.tsx:Page` - Exported Function (default)
+
+- [`page.tsx`](./page.tsx) — `metadata`, `Page (default)`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

@@ -1,17 +1,21 @@
 # [token]
 
 ## Overview
-Server API route handler providing backend endpoints for studio/scenario-link/[token].
+
+Handles GET requests at `/api/studio/scenario-link/[token]`. Returns the stored layout associated with a valid bearer token.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:GET` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `GET`
 
 ## Invariants
-- `route.ts:JSON.parse` - Schema / validation invariant
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". checkRateLimit applies the request limit. Response branches explicitly set HTTP 404, 503.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Reads the stored design through getAdminDb().collection("studioScenarioLeads").doc(token).get().
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

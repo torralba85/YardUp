@@ -1,17 +1,21 @@
 # feedback
 
 ## Overview
-Server API route handler providing backend endpoints for feedback.
+
+Handles POST requests at `/api/feedback`. Records submitted product feedback.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:POST` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `POST`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". requireApiAuth checks the caller. Response branches explicitly set HTTP 400, 500.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Writes submissions to the feedback collection with add.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

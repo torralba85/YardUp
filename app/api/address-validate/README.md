@@ -1,19 +1,25 @@
 # address-validate
 
 ## Overview
-Server API route handler providing backend endpoints for address-validate.
+
+Handles POST requests at `/api/address-validate`.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:AddressValidateRequestBody` - TypeScript Interface
-- `route.ts:POST` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `AddressValidateRequestBody`, `POST`
 
 ## Invariants
-- `route.ts:throw` - new Error(`Google metadata token endpoint returned ${response.status}`)
-- `route.ts:throw` - new Error("Google metadata token endpoint returned no access token")
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". checkRateLimit applies the request limit. Response branches explicitly set HTTP 400.
 
 ## Side Effects
-- `route.ts:fetch` - External call or state mutation
+
+- [`route.ts`](./route.ts) — HTTP requests via fetch.
+
+## Configuration
+
+- [`route.ts`](./route.ts) — Reads `GOOGLE_CLOUD_PROJECT` or `GCLOUD_PROJECT` (in precedence order) to authenticate via Google runtime OAuth (`X-Goog-User-Project`), falling back to an API key (`X-Goog-Api-Key`) from `GOOGLE_PLACES_SERVER_KEY`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_GEOCODING_KEY`, or `VITE_GOOGLE_MAPS_API_KEY` (ignored when `NODE_ENV === "test"`). Degrades to `buildFallbackValidation` when neither OAuth nor an API key is available.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

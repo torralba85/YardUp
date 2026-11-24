@@ -1,16 +1,21 @@
 # geometry
 
 ## Overview
+
 Specialized mathematical, geometric, and export utilities for geometry.
 
 ## Interface
-- `polygonInset.ts:polygonInset` - Exported Function
+
+- [`polygonInset.ts`](./polygonInset.ts) — `polygonInset`
 
 ## Invariants
-- None
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

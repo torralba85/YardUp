@@ -1,17 +1,21 @@
 # adu-permits-by-planning-area.csv
 
 ## Overview
-Next.js App Router surface and view for adu/ca/san-diego/permits/adu-permits-by-planning-area.csv.
+
+Handles GET requests at `/adu/ca/san-diego/permits/adu-permits-by-planning-area.csv`.
 
 ## Interface
-- `route.ts:dynamic` - Exported constant / variable
-- `route.ts:GET` - Exported Function
+
+- [`route.ts`](./route.ts) — `dynamic`, `GET`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — dynamic = "force-static".
 
 ## Side Effects
-- None
+
+None identified in the direct source.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

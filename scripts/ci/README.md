@@ -1,59 +1,45 @@
 # ci
 
 ## Overview
+
 Build, CI, design auditing, and automation scripts for ci.
 
 ## Interface
-- `analytics.checks.mjs:main` - Executable entrypoint / script
-- `attom-canary.mjs:verifyAttomOnProduction` - Exported Function
-- `deployment.mjs:recordDeployment` - Exported Function
-- `github.mjs:githubApi` - Exported Function
-- `github.mjs:deploymentEnvironment` - Exported constant / variable
-- `github.mjs:deploymentMarker` - Exported constant / variable
-- `google-sign-in.checks.mjs:main` - Executable entrypoint / script
-- `google-sign-in.mjs:productionAuthDomain` - Exported constant / variable
-- `google-sign-in.mjs:productionProjectId` - Exported constant / variable
-- `google-sign-in.mjs:productionWebClientId` - Exported constant / variable
-- `google-sign-in.mjs:signInConfig` - Exported Function
-- `google-sign-in.mjs:checkDns` - Exported Function
-- `google-sign-in.mjs:checkAuthHandler` - Exported Function
-- `google-sign-in.mjs:checkFirebaseInit` - Exported Function
-- `google-sign-in.mjs:decodeAuthError` - Exported Function
-- `google-sign-in.mjs:oauthProbeUrl` - Exported Function
-- `google-sign-in.mjs:checkOAuthRedirect` - Exported Function
-- `google-sign-in.mjs:withRetries` - Exported Function
-- `google-sign-in.mjs:verifyGoogleSignIn` - Exported Function
-- `scope.checks.mjs:main` - Executable entrypoint / script
-- `scope.mjs:isDocumentation` - Exported Function
-- `scope.mjs:affectsProduction` - Exported Function
-- `scope.mjs:gitDiff` - Exported Function
-- `scope.mjs:productionEvent` - Exported Function
-- `scope.mjs:deploymentDefinition` - Exported Function
-- `scope.mjs:productionChanged` - Exported Function
-- `scope.mjs:getDeploymentBaseline` - Exported Function
-- `scope.mjs:determineScope` - Exported Function
-- `scope.mjs:verificationPassed` - Exported Function
-- `serving-revision.checks.mjs:main` - Executable entrypoint / script
-- `serving-revision.mjs:assertServingRevision` - Exported Function
-- `serving-revision.mjs:describeServingRevision` - Exported Function
-- `serving-revision.mjs:verifyServingRevisions` - Exported Function
-- `verify-analytics.mjs:productionMeasurementId` - Exported constant / variable
-- `verify-analytics.mjs:verifyAnalyticsBundle` - Exported Function
+
+- [`analytics.checks.mjs`](./analytics.checks.mjs) — script entry point.
+- [`attom-canary.mjs`](./attom-canary.mjs) — `verifyAttomOnProduction`
+- [`deployment.mjs`](./deployment.mjs) — `recordDeployment`
+- [`github.mjs`](./github.mjs) — `githubApi`, `deploymentEnvironment`, `deploymentMarker`
+- [`google-sign-in.checks.mjs`](./google-sign-in.checks.mjs) — script entry point.
+- [`google-sign-in.mjs`](./google-sign-in.mjs) — `productionAuthDomain`, `productionProjectId`, `productionWebClientId`, `signInConfig`, `checkDns`, `checkAuthHandler`, `checkFirebaseInit`, `checkAuthIframe`, `decodeAuthError`, `oauthProbeUrl`, `checkOAuthRedirect`, `withRetries`, `verifyGoogleSignIn`
+- [`production-headers.checks.mjs`](./production-headers.checks.mjs) — script entry point.
+- [`scope.checks.mjs`](./scope.checks.mjs) — script entry point.
+- [`scope.mjs`](./scope.mjs) — `isDocumentation`, `affectsProduction`, `gitDiff`, `productionEvent`, `deploymentDefinition`, `productionChanged`, `getDeploymentBaseline`, `determineScope`, `verificationPassed`
+- [`serving-revision.checks.mjs`](./serving-revision.checks.mjs) — script entry point.
+- [`serving-revision.mjs`](./serving-revision.mjs) — `assertServingRevision`, `describeServingRevision`, `verifyServingRevisions`
+- [`verify-analytics.mjs`](./verify-analytics.mjs) — `productionMeasurementId`, `verifyAnalyticsBundle`
+- [`verify-production-headers.mjs`](./verify-production-headers.mjs) — `PRODUCTION_ORIGIN`, `EXPECTED_HSTS_FRAGMENTS`, `assertProductionHeaders`, `findStaticAssetUrl`, `selectSampleSitemapUrls`, `hashHtml`, `verifyFreshHtml`, `verifyProductionHeaders`
 
 ## Invariants
-- `analytics.checks.mjs:assert.throws` - Schema / validation invariant
-- `analytics.checks.mjs:assert.equal` - Schema / validation invariant
-- `attom-canary.mjs:throw` - new Error("ATTOM canary requires a signed-in disposable account.")
-- `attom-canary.mjs:throw` - new Error("ATTOM production API request failed or timed out.")
-- `attom-canary.mjs:throw` - new Error(`ATTOM production API returned HTTP ${response.status}.`)
-- `attom-canary.mjs:throw` - new Error("ATTOM production API returned invalid JSON.")
-- `attom-canary.mjs:throw` - new Error(`ATTOM live address check failed: ${reason}.`)
-- `deployment.mjs:throw` - new Error("Production records can only be written by master push/dispatch runs")
+
+None identified in the direct source.
 
 ## Side Effects
-- `attom-canary.mjs:fetchImpl` - External call or state mutation
-- `github.mjs:fetcher` - External call or state mutation
-- `google-sign-in.mjs:fetchImpl` - External call or state mutation
+
+- [`analytics.checks.mjs`](./analytics.checks.mjs) — filesystem writes via mkdirSync, writeFileSync, rmSync.
+- [`deployment.mjs`](./deployment.mjs) — filesystem writes via appendFileSync.
+- [`google-sign-in.checks.mjs`](./google-sign-in.checks.mjs) — filesystem reads via readFileSync.
+- [`scope.checks.mjs`](./scope.checks.mjs) — filesystem reads via readFileSync. subprocess execution via execFileSync. filesystem writes via mkdirSync, writeFileSync, rmSync.
+- [`scope.mjs`](./scope.mjs) — subprocess execution via execFileSync. filesystem reads via readFileSync. filesystem writes via appendFileSync.
+- [`serving-revision.checks.mjs`](./serving-revision.checks.mjs) — filesystem reads via readFileSync.
+- [`serving-revision.mjs`](./serving-revision.mjs) — subprocess execution via execFileSync.
+- [`verify-analytics.mjs`](./verify-analytics.mjs) — filesystem reads via readdirSync, readFileSync.
+
+## Configuration
+
+- [`deployment.mjs`](./deployment.mjs) — appends `id=<deployment_id>` to `GITHUB_OUTPUT` on `start`, and reads `GITHUB_EVENT_NAME`, `GITHUB_REF`, `GITHUB_SERVER_URL`, `GITHUB_REPOSITORY`, `GITHUB_RUN_ID`, `GITHUB_SHA`, `DEPLOYMENT_ID`, `DEPLOYMENT_OUTCOME`.
+- [`scope.mjs`](./scope.mjs) — reads `CI_NEEDS`, `GITHUB_EVENT_PATH`, `GITHUB_EVENT_NAME`, `GITHUB_REF`, `GITHUB_SHA` and appends scope outputs and markdown summaries to `GITHUB_OUTPUT` and `GITHUB_STEP_SUMMARY`.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

@@ -1,17 +1,25 @@
 # studio-profile
 
 ## Overview
-Next.js App Router surface and view for studio-profile.
+
+Renders `/studio-profile` through `StudioProfilePage`.
 
 ## Interface
-- `page.tsx:metadata` - Exported constant / variable
-- `page.tsx:StudioProfilePage` - Exported Function (default)
+
+- [`page.tsx`](./page.tsx) — `metadata`, `StudioProfilePage (default)`
 
 ## Invariants
-- None
+
+- [`page.tsx`](./page.tsx) — Calls `notFound()` unless `NEXT_PUBLIC_PROFILE_STUDIO === "true"`.
 
 ## Side Effects
-- None
+
+None identified in the direct source.
+
+## Configuration
+
+- [`page.tsx`](./page.tsx) — Reads `NEXT_PUBLIC_PROFILE_STUDIO` (must equal `"true"` to render `StudioProfile`; otherwise triggers `notFound()`).
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

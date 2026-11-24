@@ -1,30 +1,25 @@
 # design
 
 ## Overview
+
 Build, CI, design auditing, and automation scripts for design.
 
 ## Interface
-- `audit.mjs:root` - Exported constant / variable
-- `audit.mjs:sourceFiles` - Exported Function
-- `audit.mjs:authoredText` - Exported Function
-- `audit.mjs:inspect` - Exported Function
-- `audit.mjs:audit` - Exported Function
-- `audit.mjs:literalGrowth` - Exported Function
-- `checks.mjs:main` - Executable entrypoint / script
-- `generate.mjs:main` - Executable entrypoint / script
+
+- [`audit.mjs`](./audit.mjs) — `root`, `sourceFiles`, `authoredText`, `inspect`, `audit`, `literalGrowth`; CLI supports `--inventory`.
+- [`checks.mjs`](./checks.mjs) — script entry point.
+- [`generate.mjs`](./generate.mjs) — script entry point; CLI supports `--check`.
 
 ## Invariants
-- `audit.mjs:postcss.parse` - Schema / validation invariant
-- `audit.mjs:JSON.parse` - Schema / validation invariant
-- `checks.mjs:JSON.parse` - Schema / validation invariant
-- `checks.mjs:assert.ok` - Schema / validation invariant
-- `checks.mjs:assert.equal` - Schema / validation invariant
-- `checks.mjs:assert.deepEqual` - Schema / validation invariant
-- `checks.mjs:assert.doesNotMatch` - Schema / validation invariant
-- `checks.mjs:assert.match` - Schema / validation invariant
+
+None identified in the direct source.
 
 ## Side Effects
-- None
+
+- [`audit.mjs`](./audit.mjs) — filesystem reads via readdirSync, readFileSync.
+- [`checks.mjs`](./checks.mjs) — filesystem reads via readFileSync.
+- [`generate.mjs`](./generate.mjs) — filesystem reads via readFileSync. filesystem writes via writeFileSync.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

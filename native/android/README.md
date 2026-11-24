@@ -202,17 +202,20 @@ These are not Play App Signing key credentials. Google retains the App Signing
 private key; the workflow needs only the upload key that Play Console accepts.
 
 ## Interface
-- None
 
-### Subdirectories
-- [app](./app/README.md) - Native mobile application wrapper, build configuration, and bridge for android/app.
-- [scripts](./scripts/README.md) - Native mobile application wrapper, build configuration, and bridge for android/scripts.
+### Subdirectories & Boundaries
+
+- [app](./app/README.md) — Native mobile application wrapper, build configuration, and bridge for android/app.
+- [scripts](./scripts/README.md) — Native mobile application wrapper, build configuration, and bridge for android/scripts.
 
 ## Invariants
-- None
+
+See the linked child contracts.
 
 ## Side Effects
-- None
+
+See the linked child contracts.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

@@ -1,8 +1,24 @@
 # native
 
 ## Overview
-Component package providing domain logic and interface implementations for native.
 
-## Subdirectories & Boundaries
-- [android](<./android/README.md>): Native mobile application wrapper, build configuration, and bridge for android.
-- [ios-shell](<./ios-shell/README.md>): Native mobile application wrapper, build configuration, and bridge for ios-shell.
+Native Android and iOS store integration.
+
+## Interface
+
+### Subdirectories & Boundaries
+
+- [android](./android/README.md) — Groups `app`, `scripts`.
+- [ios-shell](./ios-shell/README.md) — Source modules for `native/ios-shell`.
+
+## Invariants
+
+See the linked child contracts.
+
+## Side Effects
+
+See the linked child contracts.
+
+## Verification
+
+Run `npm test` from the YardUp repository root.

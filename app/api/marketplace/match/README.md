@@ -1,17 +1,21 @@
 # match
 
 ## Overview
-Server API route handler providing backend endpoints for marketplace/match.
+
+Handles POST requests at `/api/marketplace/match`. Returns builder matches for the submitted criteria.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:POST` - Exported Function
+
+- [`route.ts`](./route.ts) — `runtime`, `POST`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". Response branches explicitly set HTTP 400, 500.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Reads the builders collection with get to select potential matches.
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.

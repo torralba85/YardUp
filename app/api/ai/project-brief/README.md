@@ -1,18 +1,21 @@
 # project-brief
 
 ## Overview
-Server API route handler providing backend endpoints for ai/project-brief.
+
+Handles POST requests at `/api/ai/project-brief`. Produces a project brief through the shared AI panel pipeline.
 
 ## Interface
-- `route.ts:runtime` - Exported constant / variable
-- `route.ts:maxDuration` - Exported constant / variable
-- `route.ts:POST` - Exported constant / variable
+
+- [`route.ts`](./route.ts) — `runtime`, `maxDuration`, `POST`
 
 ## Invariants
-- None
+
+- [`route.ts`](./route.ts) — runtime = "nodejs". maxDuration = 90.
 
 ## Side Effects
-- None
+
+- [`route.ts`](./route.ts) — Delegates the project brief request and its provider calls to createAIPanelRoute(projectBriefDef).
 
 ## Verification
-- Run: `npm test`
+
+Run `npm test` from the YardUp repository root.
