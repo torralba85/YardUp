@@ -212,7 +212,7 @@ function LandingAddressForm({
         </p>
       )}
       <p id={`${id}-note`} className={styles.formNote}>
-        Free to explore. No account needed for up to 3 addresses.
+        Free to explore. Search up to three addresses without an account.
       </p>
     </form>
   );
@@ -719,8 +719,8 @@ export function LotMoreLanding({
               <h1 className={styles.heroLead}>Explore an ADU on your lot in 3D.</h1>
               <p className={styles.heroDescription}>
                 {city === "san-diego"
-                  ? "Check any California address to see what could fit, compare estimated build costs, and explore rental potential."
-                  : "See what could fit, compare estimated build costs, and explore rental potential."}
+                  ? "Enter a California address to explore a backyard-home layout and see an estimated rent range where data is available."
+                  : "Explore a backyard-home layout and see an estimated rent range where data is available."}
               </p>
               {heroLotAnswer()}
             </div>
@@ -1010,7 +1010,7 @@ export function LotMoreLanding({
               <div>
                 <Eyebrow>INSIDE THE STUDIO</Eyebrow>
                 <h2 id="how-title">
-                  See the studio.
+                  See the Studio.
                   <br />
                   Try the same lot.
                 </h2>
@@ -1319,7 +1319,7 @@ export function LotMoreLanding({
                   <Plus size={17} aria-hidden="true" />
                 </summary>
                 <p>
-                  The curated {demo.name} demo in {demo.city}, calculated by the studio engine: 600&nbsp;sq&nbsp;ft, cedar finish, shed roof, openings included. Base
+                  The curated {demo.name} demo in {demo.city}, calculated by the Studio engine: 600&nbsp;sq&nbsp;ft, cedar finish, shed roof, openings included. Base
                   construction is $340/sq&nbsp;ft, with an 18% soft-cost allowance.
                   Operating expenses use{" "}
                   {formatPercent(scenario.expenseRatio, { digits: 1 })} of gross rent;
@@ -1359,12 +1359,12 @@ export function LotMoreLanding({
               <dl className={styles.offerComparison}>
                 <div>
                   <dt>
-                    <span>Explore in the studio</span>
+                    <span>Explore in the Studio</span>
                     <strong>Free</strong>
                   </dt>
                   <dd>
-                    3D layout exploration, build cost, payback, and an estimated
-                    monthly rent range. Up to 3 addresses need no account.
+                    Try a 3D layout and see an estimated monthly rent range where data is available.
+                    Search up to three addresses without an account.
                   </dd>
                 </div>
                 <div>
@@ -1376,10 +1376,9 @@ export function LotMoreLanding({
                     </strong>
                   </dt>
                   <dd>
-                    A property-specific packet: build costs, net income, payback,
-                    financing scenarios, a fee and permit audit for its size, and a
-                    scope checklist for three builders. Print or save
-                    as PDF, export CSV, or share a permanent link.
+                    See property-specific build-cost estimates, payback, financing scenarios,
+                    fee and permit checks to confirm locally, and a checklist for comparing
+                    builder quotes. Print or save as PDF, export CSV, or share a link.
                   </dd>
                 </div>
               </dl>
@@ -1551,8 +1550,7 @@ export function LotMoreLanding({
                 </div>
               </article>
               <p className={styles.previewNote}>
-                Sample Certificate of Feasibility summary. Create yours in the
-                studio.
+                Sample Certificate of Feasibility summary. Create yours in the Studio.
               </p>
             </div>
             <div className={styles.reportActions}>
@@ -1565,8 +1563,8 @@ export function LotMoreLanding({
               </a>
               </div>
               <p className={styles.reportPrice}>
-                The complete certificate is an optional one-time purchase.
-                Review it in the studio before checkout.
+                The complete Certificate is an optional one-time purchase.
+                Review it in the Studio before checkout.
               </p>
             </div>
           </section>
@@ -1596,11 +1594,11 @@ export function LotMoreLanding({
                 ],
                 [
                   "Can I check my address?",
-                  "Yes. Up to 3 address lookups need no account — enter yours above for an instant lot summary and open it in the 3D studio. Create a free account to look up more. Available parcel and market detail varies by location, and the studio identifies its assumptions and anything missing. Seattle, Portland, Austin, and San Diego demo lots are always open.",
+                  "Search up to three addresses without an account. Create a free account to look up more. Available parcel and market detail varies by location. The Studio shows its assumptions and flags missing information. Seattle, Portland, Austin, and San Diego demo lots are always open.",
                 ],
                 [
                   "How are the estimates calculated?",
-                  "The studio combines the proposed size and finish with construction assumptions, rent inputs, and operating expenses. Live-address results show their market basis when available. Demo figures use curated assumptions, and all results need local confirmation.",
+                  "The Studio combines the proposed size and finish with construction assumptions, rent inputs, and operating expenses. Live-address results show their market basis when available. Demo figures use curated assumptions, and all results need local confirmation.",
                 ],
                 [
                   "Does this mean I can build?",
@@ -1608,7 +1606,7 @@ export function LotMoreLanding({
                 ],
                 [
                   "What is free, and what costs extra?",
-                  `Exploring the 3D concept and monthly rent range is free. The complete Certificate of Feasibility is a one-time${certificatePrice ? ` ${certificatePrice}` : ""} purchase. You can review what is included before checkout.`,
+                  `Exploring the 3D concept and viewing the estimated monthly rent range where available are free. The complete Certificate of Feasibility is a one-time${certificatePrice ? ` ${certificatePrice}` : ""} purchase. You can review what is included before checkout.`,
                 ],
               ].map(([question, answer]) => (
                 <details key={question}>
@@ -1678,7 +1676,7 @@ export function LotMoreLanding({
                 <h3>Explore</h3>
                 <ul>
                   <li><Link href="/can-i-build-a-backyard-home">Can I build a backyard home?</Link></li>
-                  <li><Link href="/studio" prefetch={false} onClick={() => stashEntrySource("landing_cta")}>The studio</Link></li>
+                  <li><Link href="/studio" prefetch={false} onClick={() => stashEntrySource("landing_cta")}>The Studio</Link></li>
                   <li><Link href="/adu-cost-calculator">ADU cost calculator</Link></li>
                   <li><a href={GOOGLE_PLAY_URL} rel="noopener" aria-label="Android app on Google Play">Google Play</a></li>
                 </ul>

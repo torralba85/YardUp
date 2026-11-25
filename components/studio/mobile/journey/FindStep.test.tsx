@@ -94,7 +94,7 @@ describe("FindStep", () => {
 
     expect(
       screen.getByText(
-        /We only use your address to fetch lot geometry and zoning rules\. We don't save your address or contact you unless you create an account\./i,
+        /Enter an address to look up available parcel and zoning information/i,
       ),
     ).toBeInTheDocument();
 

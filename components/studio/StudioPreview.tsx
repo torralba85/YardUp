@@ -45,7 +45,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       </div>
       <div>
         <h2 className="font-display text-xl font-medium text-lot-ink">What’s behind your rental potential?</h2>
-        <p className="mt-1.5 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. Unlock this property’s financial model and planning breakdown in your Certificate of Feasibility.</p>
+        <p className="mt-1.5 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. The Certificate of Feasibility adds property-specific cost estimates, payback, and financing scenarios.</p>
       </div>
       <div className="grid grid-cols-2 gap-px border border-lot-line bg-lot-line">
         {[
@@ -61,7 +61,7 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
           </div>
         ))}
       </div>
-      <p className="text-sm leading-6 text-lot-stone">Answer whether rent covers your loan payment and whether your builder’s scope is complete. Includes cost allowances, financing comparisons, local permit steps, items to verify, a scope checklist, and a site plan PDF.</p>
+      <p className="text-sm leading-6 text-lot-stone">Compare estimated cash flow after operating costs and loan payments. Use the scope checklist to see what each builder’s quote includes. The Certificate also includes cost allowances, fee and permit checks to confirm locally, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="pb-1 text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>

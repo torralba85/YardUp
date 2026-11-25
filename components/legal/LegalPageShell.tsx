@@ -29,7 +29,7 @@ export function LegalPageShell({
         <p className="lf-kicker text-lot-orange-ink">Free lot check</p>
         <h2 className="lf-card-heading mt-2 text-lot-ink">Test your address in 3D</h2>
         <p className="mt-2 text-sm leading-6 text-lot-ink">
-          Check parcel boundaries, modeled setbacks, build cost, and rental potential for up to 3 addresses with no account.
+          Explore a 3D layout and see an estimated rent range where data is available. Search up to three addresses without an account.
         </p>
         <div className="mt-4 flex flex-col gap-2.5">
           <Link
@@ -37,7 +37,7 @@ export function LegalPageShell({
             prefetch={false}
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control bg-lot-orange px-4 py-2.5 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
-            <span>Open 3D studio</span>
+            <span>Open 3D Studio</span>
             <ArrowRight size={15} aria-hidden="true" />
           </Link>
           <Link

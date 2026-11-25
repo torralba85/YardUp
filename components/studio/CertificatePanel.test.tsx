@@ -349,7 +349,7 @@ describe("CertificatePanel", () => {
     mocks.recoveryStatus = "unverified";
     render(<CertificatePanel {...createProps()} />);
     expect(screen.getByText(/This does not mean your payment failed/)).toBeVisible();
-    expect(screen.queryByRole("button", { name: /Unlock property certificate/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Get your Certificate/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Certificate access unverified" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Check again" }));
     expect(mocks.refresh).toHaveBeenCalled();
@@ -362,7 +362,7 @@ describe("CertificatePanel", () => {
     mocks.access.purchased = false;
     render(<CertificatePanel {...createProps({ result: { ...result, remainingCapacity: -380 } })} />);
     expect(screen.getByText(/This concept exceeds the modeled size allowance/)).toBeInTheDocument();
-    expect(screen.getByText(/Unlocks this property permanently/)).toBeInTheDocument();
+    expect(screen.getByText(/Includes Certificate access for this property/)).toBeInTheDocument();
   });
 
   describe("agent pass", () => {
@@ -391,7 +391,7 @@ describe("CertificatePanel", () => {
       request.mockReturnValueOnce(pending);
       render(<CertificatePanel {...createProps()} />);
       const claim = screen.getByRole("button", { name: "Get this certificate free" });
-      const buy = screen.getByRole("button", { name: /Unlock property certificate/ });
+      const buy = screen.getByRole("button", { name: /Get your Certificate/ });
       fireEvent.click(operation === "pass" ? claim : buy);
       await waitFor(() => expect(request).toHaveBeenCalledOnce());
       expect(claim).toBeDisabled();
@@ -423,14 +423,14 @@ describe("CertificatePanel", () => {
       rememberAgentPass("SMITH-ELM");
       const { unmount } = render(<CertificatePanel {...createProps()} />);
       const claim = screen.getByRole("button", { name: "Get this certificate free" });
-      const buy = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      const buy = screen.getByRole("button", { name: "Get your Certificate — $29" });
       expect(claim.compareDocumentPosition(buy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       unmount();
 
       clearAgentPass();
       render(<CertificatePanel {...createProps()} />);
       const typed = screen.getByText("Have an agent code?");
-      const buyAgain = screen.getByRole("button", { name: "Unlock property certificate — $29" });
+      const buyAgain = screen.getByRole("button", { name: "Get your Certificate — $29" });
       expect(buyAgain.compareDocumentPosition(typed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
@@ -523,23 +523,23 @@ describe("CertificatePanel", () => {
       for (const text of ["Rear setback", "4 ranked risks to verify", "6-stage permit path", "12–18 week typical approval timeline"]) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
-      expect(screen.getByText(/local permit steps, items to verify, a scope checklist, and a site plan PDF/)).toBeInTheDocument();
+      expect(screen.getByText(/fee and permit checks to confirm locally, and a site plan PDF/)).toBeInTheDocument();
     });
 
     it("uses one transaction CTA for the blurred preview", async () => {
       mocks.startCertificateCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.test/s" });
       const assign = stubLocationAssign();
       render(<CertificatePanel {...createProps()} />);
-      fireEvent.click(screen.getByRole("button", { name: "Unlock property certificate — $29" }));
+      fireEvent.click(screen.getByRole("button", { name: "Get your Certificate — $29" }));
       await waitFor(() => expect(assign).toHaveBeenCalledWith("https://checkout.stripe.test/s"));
       expect(mocks.startCertificateCheckout).toHaveBeenCalledTimes(1);
       expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
     });
 
-    it("names the exact web price, permanent unlock and estimate limits", () => {
+    it("names the exact web price, property access and estimate limits", () => {
       render(<CertificatePanel {...createProps()} />);
-      expect(screen.getByRole("button", { name: "Unlock property certificate — $29" })).toBeInTheDocument();
-      expect(screen.getByText("One-time $29 · No subscription · Unlocks this property permanently")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Get your Certificate — $29" })).toBeInTheDocument();
+      expect(screen.getByText("One-time $29 · No subscription · Includes Certificate access for this property")).toBeInTheDocument();
       expect(screen.getByText(/Not permit approval or guaranteed income/)).toBeInTheDocument();
     });
 
@@ -643,10 +643,10 @@ describe("CertificatePanel", () => {
       render(<CertificatePanel {...createProps()} />);
 
       expect(
-        screen.getByRole("button", { name: "Unlock property certificate — $28.99" }),
+        screen.getByRole("button", { name: "Get your Certificate — $28.99" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("One-time $28.99 · No subscription · Unlocks this property permanently"),
+        screen.getByText("One-time $28.99 · No subscription · Includes Certificate access for this property"),
       ).toBeInTheDocument();
       expect(screen.queryByText(/\$29\b/)).not.toBeInTheDocument();
     });
@@ -665,9 +665,9 @@ describe("CertificatePanel", () => {
       render(<CertificatePanel {...createProps()} />);
 
       expect(
-        screen.getByText("One-time purchase · No subscription · Unlocks this property permanently"),
+        screen.getByText("One-time purchase · No subscription · Includes Certificate access for this property"),
       ).toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: "Unlock property certificate" }));
+      fireEvent.click(screen.getByRole("button", { name: "Get your Certificate" }));
 
       await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
       expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
@@ -677,7 +677,7 @@ describe("CertificatePanel", () => {
       mocks.access.purchased = true;
       render(<CertificatePanel {...createProps()} />);
 
-      expect(screen.getByText(/certificate unlocked/i)).toBeInTheDocument();
+      expect(screen.getByText(/certificate available/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "View complete certificate" })).toBeInTheDocument();
       expect(screen.queryByRole("list", { name: "Included in your certificate" })).not.toBeInTheDocument();
       expect(screen.queryByText(/no subscription/i)).not.toBeInTheDocument();
@@ -697,7 +697,7 @@ describe("CertificatePanel", () => {
       });
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
       await waitFor(() =>
         expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_live_123"),
@@ -888,7 +888,7 @@ describe("CertificatePanel", () => {
       );
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
       expect(await screen.findByText("Payments are temporarily unavailable.")).toBeInTheDocument();
       expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
@@ -899,7 +899,7 @@ describe("CertificatePanel", () => {
       mocks.getIdToken.mockRejectedValueOnce(new Error("auth unavailable"));
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
       expect(await screen.findByText("Could not start checkout. Please try again.")).toBeInTheDocument();
       expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
@@ -916,7 +916,7 @@ describe("CertificatePanel", () => {
       );
       try {
         render(<CertificatePanel {...createProps()} />);
-        fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+        fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
         expect(await screen.findByText("Could not start checkout. Please try again.")).toBeInTheDocument();
         expect(analyticsEvents.trackCertificateCheckoutStarted).toHaveBeenCalledTimes(1);
         expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
@@ -931,7 +931,7 @@ describe("CertificatePanel", () => {
       mocks.startCertificateCheckout.mockResolvedValueOnce({ kind: "granted", demo: true });
       render(<CertificatePanel {...createProps()} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
       await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
       expect(analyticsEvents.trackCertificateCheckoutRedirected).not.toHaveBeenCalled();
@@ -981,7 +981,7 @@ describe("CertificatePanel", () => {
       render(<CertificatePanel {...createProps()} />);
       expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
       await waitFor(() => expect(screen.queryByText(/checkout cancelled/i)).not.toBeInTheDocument());
       expect(mocks.acknowledgeCancellation).toHaveBeenCalledTimes(1);
@@ -992,7 +992,7 @@ describe("CertificatePanel", () => {
       mocks.startCertificateCheckout.mockRejectedValueOnce(new Error("Fixture failure"));
       const view = render(<CertificatePanel {...createProps()} />);
       expect(await screen.findByText(/checkout cancelled/i)).toBeInTheDocument();
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
       await screen.findByText("Could not start checkout. Please try again.");
       view.unmount();
       render(<CertificatePanel {...createProps()} />);
@@ -1009,7 +1009,7 @@ describe("CertificatePanel", () => {
       });
       render(<CertificatePanel {...createProps({ projectBriefPreview: briefPreview })} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+      fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
       await waitFor(() => expect(assign).toHaveBeenCalled());
 
       const calls = [
@@ -1053,7 +1053,7 @@ describe("CertificatePanel", () => {
 
     render(<CertificatePanel {...props} />);
 
-    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/certificate available/i)).toBeInTheDocument();
     expect(onGenerateProjectBrief).not.toHaveBeenCalled();
     expect(onOpenCertificate).not.toHaveBeenCalled();
   });
@@ -1118,7 +1118,7 @@ describe("CertificatePanel", () => {
     mocks.access.loading = false;
     rerender(<CertificatePanel {...props} />);
 
-    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/certificate available/i)).toBeInTheDocument();
     expect(onOpenCertificate).not.toHaveBeenCalled();
     expect(onGenerateProjectBrief).not.toHaveBeenCalled();
   });
@@ -1183,7 +1183,7 @@ describe("CertificatePanel", () => {
 
     render(<CertificatePanel {...props} />);
 
-    expect(await screen.findByText(/certificate unlocked/i)).toBeInTheDocument();
+    expect(await screen.findByText(/certificate available/i)).toBeInTheDocument();
     expect(mocks.trackPurchase).not.toHaveBeenCalled();
   });
 
@@ -1213,13 +1213,13 @@ describe("CertificatePanel", () => {
     const props = createProps();
     render(<CertificatePanel {...props} />);
 
-    const button = screen.getByRole("button", { name: /unlock property certificate/i });
+    const button = screen.getByRole("button", { name: /get your Certificate/i });
     fireEvent.click(button);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not connect to payment processor. Please try again.",
     );
-    expect(screen.getByRole("button", { name: /unlock property certificate/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /get your Certificate/i })).toBeEnabled();
   });
 
   it("says it is opening secure checkout while the session is created, not that it is preparing a certificate", async () => {
@@ -1233,7 +1233,7 @@ describe("CertificatePanel", () => {
     stubLocationAssign();
     render(<CertificatePanel {...createProps()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /unlock property certificate/i }));
+    fireEvent.click(screen.getByRole("button", { name: /get your Certificate/i }));
 
     const busy = await screen.findByRole("button", { name: "Opening secure checkout…" });
     expect(busy).toHaveAttribute("aria-busy", "true");
@@ -1464,7 +1464,7 @@ describe("CertificatePanel", () => {
     render(<CertificatePanel {...createProps()} />);
 
     expect(
-      screen.getByText(/Answer whether rent covers your loan payment and whether your builder/i),
+      screen.getByText(/use the scope checklist to compare builder quotes/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

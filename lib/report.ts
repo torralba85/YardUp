@@ -617,8 +617,8 @@ function buildPermitAuditHtml(audit: PermitFeeAudit): string {
       ? ""
       : `<span class="data-chip ${audit.threshold.isExempt ? "tone-clear" : "tone-medium"}">${
           audit.threshold.isExempt
-            ? "Within 750 sq ft"
-            : `${audit.threshold.sqftOverLimit.toLocaleString()} sq ft over 750`
+            ? "Footprint within 750 sq ft"
+            : `Footprint ${audit.threshold.sqftOverLimit.toLocaleString()} sq ft above 750`
         }</span>`;
   const checklist = (heading: string, items: string[]) =>
     `<div><h3>${escapeHtml(heading)}</h3><ul class="boxes">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
@@ -966,7 +966,7 @@ function certificatePacketCsvRows(
   if (audit.jurisdiction !== "other") {
     rows.push([
       "Impact Fee Exemption (750 sq ft)",
-      audit.threshold.isExempt ? "Within the limit" : `${audit.threshold.sqftOverLimit} sq ft over the limit`,
+      audit.threshold.isExempt ? "Footprint within the threshold" : `Footprint ${audit.threshold.sqftOverLimit} sq ft above the threshold`,
     ]);
   }
   rows.push(

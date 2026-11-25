@@ -7,7 +7,7 @@ test("landing explains the tool before address entry, then shows the model, with
   await page.emulateMedia({ reducedMotion: "reduce" });
   const hero = page.locator("#start");
   const explanation = hero.getByText(
-    /see what could fit, compare estimated build costs/i,
+    /explore a backyard-home layout/i,
   );
   const address = hero.getByLabel("Property address", { exact: true });
   // Since the cinematic hero (2026-11-01) the parcel illustration lives in the
@@ -169,8 +169,11 @@ test("actual Studio preview loads and the example opens without an account promp
     page.getByText("Certificate of Feasibility", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Explore in the studio", { exact: true }),
+    page.getByText("Explore in the Studio", { exact: true }),
   ).toBeVisible();
+  const freeOffer = page.getByText("Explore in the Studio", { exact: true }).locator("../..");
+  await expect(freeOffer).toContainText(/estimated monthly rent range/);
+  await expect(freeOffer).not.toContainText(/build cost|payback/i);
   await page.getByRole("link", { name: "Try the Coyote Brush Court demo" }).click();
   await expect(page).toHaveURL(
     (url) =>

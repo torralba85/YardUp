@@ -281,8 +281,8 @@ export function proFormaTableRows(proForma: CashFlowProForma): ProFormaRow[] {
  */
 export function proFormaSummary(proForma: CashFlowProForma): string {
   const lead = leadScenario(proForma);
-  const equity = `about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal paid down in year 1, equity you keep`;
-  const opening = `Best option: ${lead.scenario.label}, ${formatSignedRange(lead.netLow, lead.netHigh)}/mo after the loan and operating costs, plus ${equity}.`;
+  const equity = `about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal paid down in year 1`;
+  const opening = `Higher modeled monthly cash flow in this example: ${lead.scenario.label}, ${formatSignedRange(lead.netLow, lead.netHigh)}/mo after the loan and operating costs, plus ${equity}.`;
   if (lead.netLow >= 0) return opening;
   const rent = lead.breakEvenRentHigh === null ? null : `${WHOLE_DOLLARS.format(lead.breakEvenRentHigh)}/mo rent`;
   const cash = `${WHOLE_DOLLARS.format(lead.breakEvenCashInHigh)} total cash in`;

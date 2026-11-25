@@ -131,7 +131,6 @@ Component package providing domain logic and interface implementations for lib.
 - `certificate-permit-audit.ts:feeJurisdiction` - Exported Function
 - `certificate-permit-audit.ts:ImpactFeeThreshold` - TypeScript Interface
 - `certificate-permit-audit.ts:assessImpactFeeThreshold` - Exported Function
-- `certificate-permit-audit.ts:proportionalFeeSharePercent` - Exported Function
 - `certificate-permit-audit.ts:AuditTone` - Type Definition
 - `certificate-permit-audit.ts:AuditLine` - TypeScript Interface
 - `certificate-permit-audit.ts:AuditSource` - TypeScript Interface

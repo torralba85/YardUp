@@ -81,7 +81,7 @@ describe("landing address handoff", () => {
     expect(String(homeMetadata.title)).toContain("California");
     expect(String(homeMetadata.title).length).toBeLessThanOrEqual(60);
     expect(homeMetadata.description).toContain("California");
-    expect(screen.getByText(/Check any California address/i)).toBeVisible();
+    expect(screen.getByText(/Enter a California address/i)).toBeVisible();
     expect(screen.getByText("COYOTE BRUSH COURT DEMO, SAN DIEGO · 600 SQ FT · 1 BED CONCEPT")).toBeVisible();
     expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
   });

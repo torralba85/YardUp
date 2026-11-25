@@ -1,7 +1,6 @@
 import { CANONICAL_ORIGIN } from "./canonical-origin";
 import type { Parcel } from "./feasibility";
 import { fireZoneLabel, isHighFireZone, parcelFireHazard } from "./fire-hazard";
-import { parcelConfidence } from "./parcel-confidence";
 import { isSanDiegoName, parcelPermitAuthority } from "./permit-authority";
 import { STATE_BASELINE_SOURCES } from "@/content/adu/state-baseline";
 
@@ -114,16 +113,6 @@ export function assessImpactFeeThreshold(sqft: number): ImpactFeeThreshold {
   };
 }
 
-/**
- * Above 750 sq ft, impact fees must be proportional to the main house: the
- * ADU's share of the fee for a new home the main house's size, as a whole
- * percentage. `null` when the main house's size is unknown.
- */
-export function proportionalFeeSharePercent(aduSqft: number, mainHouseSqft: number): number | null {
-  if (!(mainHouseSqft > 0) || !(aduSqft > 0)) return null;
-  return Math.round((aduSqft / mainHouseSqft) * 100);
-}
-
 /** Tone of an audit line; status is always carried by a label and icon too. */
 export type AuditTone = "clear" | "review" | "info";
 
@@ -167,15 +156,15 @@ export function permitAuditPreviewLines(jurisdiction: FeeJurisdiction): string[]
   }
   if (jurisdiction === "san-diego-county") {
     return [
-      "SB 13 impact-fee analysis and County Green Building fee discounts",
+      "State impact-fee threshold and County Green Building fee discounts",
       "Unincorporated San Diego County counter submittal checklist: site plan, Title 24, septic and fire district",
       "Zoning & overlay verification checklist",
     ];
   }
   return [
     jurisdiction === "san-diego"
-      ? "SB 13 and City of San Diego impact-fee (DIF) analysis"
-      : "SB 13 impact-fee (DIF) analysis",
+      ? "State and City of San Diego impact-fee checks"
+      : "California impact-fee threshold check",
     `${jurisdiction === "san-diego" ? "San Diego" : "California"} counter submittal checklist: site plan, Title 24, utility connections`,
     "Zoning & overlay verification checklist",
   ];
@@ -185,24 +174,18 @@ function formatFeet(value: number): string {
   return `${Number(value.toFixed(1))} ft`;
 }
 
-function impactFeeLine(threshold: ImpactFeeThreshold, parcel: Parcel): AuditLine {
+function impactFeeLine(threshold: ImpactFeeThreshold): AuditLine {
   const size = `${threshold.sqft.toLocaleString()} sq ft`;
   if (threshold.isExempt) {
     return {
       title: "Impact fees: exempt under state law",
-      detail: `At ${size}, this layout is within California's 750 sq ft impact-fee exemption (SB 13), so local agencies, special districts and water corporations can't charge it impact fees.`,
+      detail: `The modeled ${size} footprint is within California’s exemption for ADUs with 750 sq ft or less of interior livable space (Gov. Code § 66311.5(c)(1)). Permit, school, and utility charges follow separate rules.`,
       tone: "clear",
     };
   }
-  const share = parcelConfidence(parcel).footprintKnown
-    ? proportionalFeeSharePercent(threshold.sqft, parcel.existingHouseSqft)
-    : null;
-  const proportional = share === null
-    ? "Above it, impact fees must be proportional to the size of the main house."
-    : `Above it, impact fees must be proportional to the main house: about ${share}% of the fee for a new home its size (using its modeled ${parcel.existingHouseSqft.toLocaleString()} sq ft footprint).`;
   return {
-    title: `Impact fees: ${threshold.sqftOverLimit.toLocaleString()} sq ft over the exemption`,
-    detail: `At ${size}, this layout is over California's 750 sq ft impact-fee exemption (SB 13). ${proportional} State law counts interior livable space and this is the outside footprint, so check the livable area on your plans. Trimming ${threshold.sqftOverLimit.toLocaleString()} sq ft of footprint keeps the layout within the exemption.`,
+    title: "Impact fees: modeled footprint above 750 sq ft",
+    detail: `The modeled ${size} outside footprint is above the state threshold. The exemption uses interior livable space. Check that area on your plans and ask your permitting agency how it will assess any impact fees.`,
     tone: "review",
   };
 }
@@ -328,12 +311,12 @@ export function buildPermitFeeAudit(input: {
 
   const sanDiego = jurisdiction === "san-diego";
   const county = jurisdiction === "san-diego-county";
-  const feeLines: AuditLine[] = [impactFeeLine(threshold, parcel)];
+  const feeLines: AuditLine[] = [impactFeeLine(threshold)];
   if (sanDiego) {
     feeLines.push({
-      title: "City of San Diego: first two ADUs exempt from DIF",
-      detail: "If this lot is inside City of San Diego limits, the City's DIF FAQ exempts the first two ADUs on a lot from Development Impact Fees regardless of size, and any ADU under 750 sq ft of gross floor area. A San Diego mailing address can be county land, so confirm the permitting jurisdiction first.",
-      tone: "clear",
+      title: "City of San Diego: check local development impact fees",
+      detail: "The City generally exempts the first two ADUs on a lot from its development impact fees. Some bonus-program units have separate rules. Confirm the permitting jurisdiction and applicable fees. School and utility charges follow separate rules.",
+      tone: "review",
     });
   }
   if (county) feeLines.push(...sanDiegoCountyLines(parcel));

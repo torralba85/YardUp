@@ -515,7 +515,7 @@ function CertificatePermitAuditSection({ audit }: { audit: PermitFeeAudit }) {
         {audit.jurisdiction !== "other" && (
           <StatusChip
             status={threshold.isExempt ? "clear" : "review"}
-            label={threshold.isExempt ? "Within 750 sq ft" : `${formatNumber(threshold.sqftOverLimit)} sq ft over 750`}
+            label={threshold.isExempt ? "Footprint within 750 sq ft" : `Footprint ${formatNumber(threshold.sqftOverLimit)} sq ft above 750`}
           />
         )}
       </div>

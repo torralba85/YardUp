@@ -81,7 +81,7 @@ export const BACKYARD_HOME_FAQS = [
   {
     question: "Does the 750 sq ft impact-fee waiver apply to backyard homes?",
     answer:
-      "Yes. Under California Government Code §66324(c), ADUs smaller than 750 sq ft are exempt from local development impact fees. Units at 750 sq ft or larger pay impact fees scaled proportionally to the main house.",
+      "California Government Code § 66311.5(c)(1) exempts ADUs with 750 sq ft or less of interior livable space from specified impact fees. Permit, school, and utility charges follow separate rules. Confirm which fees apply with your permitting agency.",
   },
   {
     question: "Does a passing quiz guarantee city permit approval?",
@@ -158,7 +158,7 @@ export function BackyardHomeLanding() {
     <div className="min-h-dvh overflow-x-hidden bg-lot-chalk text-lot-ink">
       <PublicHeader
         studioHref="/studio?parcel=coyote-brush&size=600"
-        studioLabel="Open 3D studio"
+        studioLabel="Open 3D Studio"
       />
 
       <main id="main-content">
@@ -175,14 +175,12 @@ export function BackyardHomeLanding() {
                 Can I build a backyard home?
               </h1>
               <p className="lf-body max-w-prose text-lot-ink">
-                For most residential lots in California—including San Diego—the
-                short answer is yes. State law protects your right to add an{" "}
+                California law allows many homeowners to add an{" "}
                 <strong className="font-semibold text-lot-ink">
                   accessory dwelling unit (ADU)
                 </strong>{" "}
-                ministerially, often with 4-foot (or 0-foot in San Diego) yard
-                setbacks. Screen your property in 5 quick checks, then verify
-                your exact lot in 3D.
+                through a streamlined review. Take five quick checks and explore a 3D concept on your lot.
+                Confirm site conditions and local requirements before planning to build.
               </p>
 
               <dl className="grid grid-cols-2 gap-4 border-t border-lot-line pt-5 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(0,1.2fr)]">
@@ -373,12 +371,12 @@ export function BackyardHomeLanding() {
                   <strong className="font-semibold text-lot-chalk">
                     {costRange600}
                   </strong>
-                  ). Units under{" "}
+                  ). California exempts ADUs with{" "}
                   <strong className="font-semibold text-lot-chalk">
-                    750 sq ft
+                    750 sq ft or less of interior livable space
                   </strong>{" "}
-                  are exempt from municipal development impact fees under Gov.
-                  Code §66324(c).
+                  from specified impact fees (Gov. Code § 66311.5(c)(1)). Permit,
+                  school, and utility charges follow separate rules.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 lg:justify-self-end">

@@ -135,10 +135,10 @@ export default function AduCostCalculatorPage() {
           <p>
             A 600 sq ft detached ADU models at{" "}
             {formatDollars(sample600.costLow)}–{formatDollars(sample600.costHigh)}{" "}
-            with design and permit soft costs, paying back in{" "}
+            with design and permit soft costs, with an estimated simple payback of{" "}
             {formatNumber(Math.round(Math.min(...paybacks600)))}–
             {formatNumber(Math.round(Math.max(...paybacks600)))}{" "}
-            years on HUD county rent. Adjust county, size, finish, rent, or add
+            years using HUD county rent. Adjust county, size, finish, rent, or add
             a loan below—free, no account required.
           </p>
         ) : null}

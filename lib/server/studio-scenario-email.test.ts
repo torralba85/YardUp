@@ -29,7 +29,7 @@ it("emails a return link and paid offer without giving away financial or fee ana
       expect(body).toContain("Open Your 3D Lot Layout");
       expect(body).toContain("View the $29 Certificate");
       expect(body).toContain("step=certificate");
-      expect(body).toContain("does not unlock the paid analysis");
+      expect(body).toContain("The paid analysis is separate.");
       expect(body).toContain("not been subscribed to marketing");
       expect(body).not.toMatch(/Estimated build range|rent range|Rent basis:|750|sq ft|exemption|impact.fee/i);
       expect(body.match(/\$[\d,]+/g)?.every((amount) => amount === "$29")).toBe(true);

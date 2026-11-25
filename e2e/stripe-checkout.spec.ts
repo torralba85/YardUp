@@ -19,7 +19,7 @@ async function signIn(page: Page) {
 }
 
 function unlockButton(page: Page) {
-  return page.getByRole("button", { name: /Unlock property certificate/ }).filter({ visible: true }).first();
+  return page.getByRole("button", { name: /Get your Certificate/ }).filter({ visible: true }).first();
 }
 
 async function openCertificateStep(page: Page, query = "parcel=oak-street&step=certificate") {

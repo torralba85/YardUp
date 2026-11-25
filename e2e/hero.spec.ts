@@ -196,7 +196,7 @@ test.describe("A lot more landing", () => {
     await page.getByRole("radio", { name: "Next steps", exact: true }).click();
     await expect(report.getByText(/Confirm property boundaries/)).toBeVisible();
     await expect(
-      page.getByText("The complete certificate is an optional one-time purchase. Review it in the studio before checkout."),
+      page.getByText("The complete Certificate is an optional one-time purchase. Review it in the Studio before checkout."),
     ).toBeVisible();
     await page
       .getByText("Does this mean I can build?", { exact: true })
