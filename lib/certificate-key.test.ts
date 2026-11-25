@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { certificateKey } from "./certificate-key";
+import { certificateKey, isPresetCertificateKey } from "./certificate-key";
 
 describe("certificateKey", () => {
   it("derives a stable, url-safe slug from the address and city", () => {
@@ -27,5 +27,15 @@ describe("certificateKey", () => {
   it("falls back to a non-empty key when the address is empty", () => {
     const key = certificateKey({ address: "", city: "" });
     expect(key.length).toBeGreaterThan(0);
+  });
+});
+
+describe("isPresetCertificateKey", () => {
+  it("recognises every demo lot and nothing else", () => {
+    expect(isPresetCertificateKey("1234-coyote-brush-court-san-diego-ca-92117")).toBe(true);
+    expect(isPresetCertificateKey("1234-oak-street-seattle-wa-98115")).toBe(true);
+    expect(isPresetCertificateKey("812-linden-avenue-portland-or-97212")).toBe(true);
+    expect(isPresetCertificateKey("44-mesa-court-austin-tx-78704")).toBe(true);
+    expect(isPresetCertificateKey("413-elmwood-ave-seattle")).toBe(false);
   });
 });

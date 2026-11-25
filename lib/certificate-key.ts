@@ -6,6 +6,8 @@
  * never drift between where it's charged and where it's read.
  */
 
+import { parcelPresets } from "./feasibility";
+
 /** The minimal parcel identity a certificate key is derived from. */
 export interface CertificateKeyParcel {
   address: string;
@@ -25,4 +27,15 @@ export function certificateKey(parcel: CertificateKeyParcel): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug || "lot";
+}
+
+/** Certificate keys of the built-in demo lots, which are fictional or illustrative. */
+const PRESET_CERTIFICATE_KEYS = new Set(parcelPresets.map((preset) => certificateKey(preset)));
+
+/**
+ * Whether a certificate key belongs to a demo lot. A certificate is a record for a
+ * real property, so demo lots can be explored but never bought.
+ */
+export function isPresetCertificateKey(certKey: string): boolean {
+  return PRESET_CERTIFICATE_KEYS.has(certKey);
 }
