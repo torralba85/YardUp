@@ -5,6 +5,7 @@ import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { aduCtaEvent, type AduCtaPlacement } from "@/lib/adu/types";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { playStoreCityUrl } from "@/lib/app-store-links";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 
 /**
  * Address-entry call to action for ADU jurisdiction and cost pages.
@@ -23,12 +24,14 @@ export function AduStudioCta({
   slug,
   placement,
   heading = "These are the rules. Here is what they mean for your lot.",
+  compactHeading,
 }: {
   city: string;
   slug: string;
   placement: AduCtaPlacement;
   /** Overrides the rules-page heading, e.g. on a cost page. */
   heading?: string;
+  compactHeading?: string;
 }) {
   const isCompactTop = placement === "top";
   const surface =
@@ -55,7 +58,7 @@ export function AduStudioCta({
               : "font-display text-2xl font-medium tracking-tight text-lot-chalk"
           }
         >
-          {isCompactTop ? `Check your ${city} address in 3D` : heading}
+          {isCompactTop ? (compactHeading ?? `Check your ${city} address in 3D`) : heading}
         </p>
       )}
       <p
@@ -67,8 +70,8 @@ export function AduStudioCta({
       >
         Free: lot fit, 3D concept, and rent range — no account needed for up
         to 3 addresses. Optional $29 Certificate of Feasibility: build cost,
-        net income and payback, financing scenarios, a fee and permit audit, an
-        AI Project Brief, and a 3-builder scope checklist.{" "}
+        net income and payback, financing scenarios, fee and permit checks to confirm locally,
+        an AI Project Brief, and a checklist for comparing builder quotes.{" "}
         <Link
           href="/#report"
           className={
@@ -86,12 +89,8 @@ export function AduStudioCta({
         tone={isCompactTop ? "light" : "dark"}
         inputId={`adu-studio-address-${placement}`}
         inputLabel={`Your ${city} street address`}
-        placeholder={
-          city === "California"
-            ? "e.g., 1234 Main St, San Diego, CA…"
-            : `e.g., 1234 Main St, ${city}…`
-        }
-        submitLabel="Check my address"
+        placeholder={city === "California" ? "Street address, city, CA" : `Street address, ${city}`}
+        submitLabel={PRIMARY_CTA_LABEL}
         onLookupStart={() => trackEvent(aduCtaEvent(placement), { city_slug: slug })}
         className="mt-4"
       />

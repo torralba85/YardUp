@@ -149,7 +149,7 @@ Anonymous visitors get three real address lookups before the account ask (`lib/g
 - AI routes: `app/api/ai/*` require auth and are rate-limited via `lib/server/ai-rate-limit.ts` + `lib/server/api-auth.ts`. Keep the OpenAI client server-only (`lib/server/openai.ts`); never import it into client bundles.
 - Stripe: the webhook (`app/api/stripe/webhook/route.ts`) must verify signatures with `STRIPE_WEBHOOK_SECRET` and read the raw request body; lead unlocks are granted through `lib/server/lead-unlocks.ts`, gated by Firestore rules.
 - Firestore: data access is constrained by `firestore.rules`; update and `npm run deploy:rules` (or include in deploy) when adding collections. Server reads/writes go through `lib/server/firebase-admin.ts`.
-- Analytics: `lib/analytics/*` and `components/analytics/*` are consent-gated GA4; the tag loads only after opt-in and only when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set.
+- Analytics: load GA4 only when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set. Queue denied storage defaults before loading the tag. Allow cookieless page views before opt-in. Analytics and Ads cookies, custom product events, and the Google Ads destination require opt-in.
 - Worktree location: commit from the repo worktree, not the outer `C:\Users\torra\Downloads\Repos\AR ADU` container.
 
 ## Testing Guidance

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
 import { pageOpenGraph } from "@/lib/og-images";
 
-const title = "About LotFoundry: Free California ADU Feasibility Check";
+const title = "About LotFoundry | Explore a Backyard Home in 3D";
 const description =
-  "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners check ADU rent, build cost and payback estimates for a lot they already own.";
+  "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners explore a backyard-home concept in 3D and compare early planning estimates.";
 
 export const metadata: Metadata = {
   title,
@@ -19,9 +19,10 @@ export default function AboutPage() {
     <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners" layout="editorial">
       <LegalSection title="What we do">
         <p>
-          LotFoundry is an ADU feasibility studio. Enter an address to explore estimated rent
-          potential, build cost ranges, and payback for an accessory dwelling unit on a lot you
-          already own — then connect with builders when you are ready.
+          LotFoundry helps you explore a backyard home, also called an accessory dwelling unit (ADU).
+          In the Studio, try a 3D layout and see an estimated rent range where data is available.
+          The optional Certificate of Feasibility adds property-specific build-cost, payback,
+          and financing estimates.
         </p>
       </LegalSection>
       {/* Same facts as the JSON-LD legalName and the public Crunchbase profile,
@@ -35,26 +36,25 @@ export default function AboutPage() {
       </LegalSection>
       <LegalSection title="Who it is for">
         <p>
-          Homeowners deciding whether their backyard can earn, and{" "}
+          Homeowners exploring space for family, rental income, or future needs, and{" "}
           <Link href="/builder" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             ADU builders and designers
           </Link>{" "}
-          who want consented feasibility snapshots matched to their service areas.
+          who want to review planning snapshots that homeowners choose to share.
         </p>
       </LegalSection>
-      <LegalSection title="How the studio works">
+      <LegalSection title="How the Studio works">
         <p>
           Start with an address or sample lot. LotFoundry brings the first questions homeowners
           usually ask into one place: what may fit, what it could cost, what it could rent for, and
-          how long the investment may take to pay back. The studio combines parcel context,
+          how long the investment may take to pay back. The Studio combines parcel context,
           configurable ADU dimensions, local-rule signals, and financial assumptions so you can
           compare a scenario before paying for detailed design work.
         </p>
         <p>
-          As you change the ADU size or assumptions, the feasibility and financial estimates update
-          with the scenario. You can review lot coverage and setback signals, compare the projected
-          rent and build-cost range, and save or share an early snapshot when you have a direction
-          worth discussing with a designer, contractor, lender, or city planner.
+          Change the size or layout to review modeled lot coverage and setbacks. The Certificate
+          adds build-cost and financing estimates you can discuss with a designer, contractor,
+          lender, or city planner.
         </p>
       </LegalSection>
       <LegalSection title="How we research and verify our guides">

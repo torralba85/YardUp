@@ -4,8 +4,7 @@ import { expect, test } from "@playwright/test";
  * Internal-beta Photoreal Scan coverage (Task 10 of the 3DGS Studio beta plan).
  *
  * The curated scan is registered for the `oak-street` demo parcel only
- * (`lib/splat-registry.ts`), and that preset is the Studio's default, so a guest
- * landing on /studio already has Scan in scope.
+ * (`lib/splat-registry.ts`). Open that preset explicitly to test Scan.
  *
  * These specs assert the product contract — selector availability, provenance
  * copy, calibration behaviour, and the fallback path. They deliberately do not
@@ -29,7 +28,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("registered demo parcel offers Scan beside the other views", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
 
     const views = parcelViews(page);
     await expect(views.getByRole("radio", { name: "3D model" })).toBeVisible();
@@ -42,9 +41,9 @@ test.describe("Studio photoreal scan (beta)", () => {
 
   test("a parcel with no registered scan hides Scan entirely", async ({ page }) => {
     test.setTimeout(60_000);
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     // The sample-property picker lives on Your Lot; the Studio opens on Rules & Fit.
-    await page.getByRole("button", { name: "Your Lot" }).click();
+    await page.getByRole("button", { name: "Your lot" }).click();
 
     const views = parcelViews(page);
     await expect(views.getByRole("radio", { name: /^Scan/ })).toBeVisible();
@@ -57,7 +56,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("entering Scan states the sample provenance and keeps 3D reachable", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
 
     const views = parcelViews(page);
     await views.getByRole("radio", { name: /^Scan/ }).click();
@@ -86,7 +85,7 @@ test.describe("Studio photoreal scan (beta)", () => {
       "internal tool: build with NEXT_PUBLIC_SCAN_CALIBRATION=true",
     );
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     await parcelViews(page).getByRole("radio", { name: /^Scan/ }).click();
 
     const openCalibration = page.getByRole("button", { name: "Calibrate Scan" });
@@ -129,11 +128,12 @@ test.describe("Studio photoreal scan (beta)", () => {
   });
 
   test("a failed scan load leaves the Studio usable", async ({ page }) => {
+    test.setTimeout(60_000);
     await page.route(SCAN_ASSET, (route) => route.abort());
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     const views = parcelViews(page);
     await views.getByRole("radio", { name: /^Scan/ }).click();
 
@@ -148,7 +148,7 @@ test.describe("Studio photoreal scan (beta)", () => {
 
   test("ADU design choices survive a 3D to Scan round trip", async ({ page }) => {
     test.setTimeout(60_000);
-    await page.goto("/studio");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /Design/i }).click();
 
     const sizes = page.getByRole("radiogroup", { name: "ADU footprint size" });

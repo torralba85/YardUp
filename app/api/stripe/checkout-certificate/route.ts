@@ -17,6 +17,7 @@ import {
   wasCertificateTransferredFrom,
 } from "@/lib/server/certificate-purchases";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { isPresetCertificateKey } from "@/lib/certificate-key";
 import { CHECKOUT_CANCELLED, CHECKOUT_RETURNED, CHECKOUT_RETURN_PARAM } from "@/lib/checkout-return";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
@@ -158,6 +159,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "This certificate was recovered to another account. Sign in to that account to open it." },
       { status: 409 },
+    );
+  }
+
+  // Demo lots are fictional or illustrative, so a certificate for one would sell a
+  // record for a property nobody owns. Grants made before this guard still resolve above.
+  if (isPresetCertificateKey(certKey)) {
+    return NextResponse.json(
+      { error: "Demo lots can't be purchased. Search your own address to get its certificate." },
+      { status: 400 },
     );
   }
 

@@ -32,7 +32,7 @@ export const sanDiego: JurisdictionContent = {
     tallRule: "4 ft side and rear",
   },
   introAnswer: [
-    "Enter your City of San Diego address and see what fits on your lot — buildable area, setbacks, a placed ADU in 3D, and what it costs against what it rents for.",
+    "Enter your City of San Diego address and see what fits on your lot — buildable area, setbacks, a placed ADU in 3D and a free rent range. The $29 certificate adds build cost, net income and payback.",
     "Under San Diego Municipal Code § 141.0302 (administered by the City of San Diego Development Services Department), the City is one of the more permissive ADU jurisdictions in California, with detached and attached ADUs from 150 to 1,200 sq ft, junior ADUs up to 500 sq ft, and a zero side-and-rear setback rule for units up to 16 feet tall outside designated High and Very High fire hazard zones.",
   ],
   metaSizeNote: "150 to 1,200 sq ft",

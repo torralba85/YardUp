@@ -90,7 +90,7 @@ export default function CheckStep({
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lot-orange-ink">Step 4 · Check</p>
+      <p className="lf-kicker text-lot-orange-ink">Step 4 · Rules & fit</p>
 
       <div className="mt-3 flex items-center gap-2.5">
         <Icon size={28} style={{ color: tone.color }} aria-hidden="true" />

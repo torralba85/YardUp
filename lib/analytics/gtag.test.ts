@@ -76,13 +76,15 @@ describe("gtag helpers", () => {
       vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-ABC1234567");
     });
 
-    it("does nothing when consent is not granted", () => {
+    it("sends only a sanitized GA4 page view when consent is not granted", () => {
       const gtag = vi.fn();
       window.gtag = gtag;
 
       pageview("/studio");
 
-      expect(gtag).not.toHaveBeenCalled();
+      expect(gtag).toHaveBeenCalledWith("event", "page_view", expect.objectContaining({
+        page_path: "/studio", send_to: "G-ABC1234567",
+      }));
     });
 
     it("sends a page_view with sanitized path and location when consent is granted", () => {
@@ -158,6 +160,7 @@ describe("gtag helpers", () => {
         market: "seattle",
         page_location: expect.stringMatching(/\/$/),
         page_path: "/",
+        page_referrer: "",
         send_to: "G-ABC1234567",
       });
     });
@@ -178,6 +181,7 @@ describe("gtag helpers", () => {
         auth_state: "guest",
         page_location: expect.stringMatching(/\/studio$/),
         page_path: "/studio",
+        page_referrer: "",
         send_to: "G-ABC1234567",
       });
       window.history.replaceState(null, "", "/");
@@ -220,6 +224,7 @@ describe("gtag helpers", () => {
         auth_state: "guest",
         page_location: expect.stringMatching(/\/studio$/),
         page_path: "/studio",
+        page_referrer: "",
         send_to: "G-ABC1234567",
       });
 
@@ -335,7 +340,7 @@ describe("gtag helpers", () => {
       expect(gtag).not.toHaveBeenCalled();
     });
 
-    it("holds no pageview without consent", () => {
+    it("does not replay an undecided pageview with granted consent", () => {
       pageview("/studio");
 
       writeConsent("granted");

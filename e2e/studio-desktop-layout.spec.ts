@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
       "lf-analytics-consent",
-      JSON.stringify({ decision: "denied", version: 2, decidedAt: new Date().toISOString() }),
+      JSON.stringify({ decision: "denied", version: 3, decidedAt: new Date().toISOString() }),
     );
   });
 });
@@ -44,7 +44,7 @@ test("desktop Studio fits one viewport and every pane reaches its last control",
   const overview = page.getByTestId("studio-overview");
   await expect(overview).toBeVisible();
 
-  for (const step of [/Your Lot/, /Rules & Fit/, /Design/, /Certificate/, /Builders/]) {
+  for (const step of [/Your lot/, /Rules & fit/, /Design/, /Certificate/, /Builders/]) {
     await openStep(page, step);
     const geometry = await stepGeometry(page);
     expect(geometry.documentHeight, `${step} page scroll`).toBeLessThanOrEqual(geometry.viewportHeight);
@@ -58,7 +58,7 @@ test("desktop Studio fits one viewport and every pane reaches its last control",
 
 test("Rules & Fit stage fills its column and the certificate CTA stays in view", async ({ page }) => {
   await page.goto("/studio?parcel=coyote-brush");
-  await openStep(page, /Rules & Fit/);
+  await openStep(page, /Rules & fit/);
 
   const scene = page.getByRole("region", { name: "Parcel massing scene" });
   await expect(scene).toBeVisible();
@@ -97,7 +97,7 @@ test("a signed-in real lot leaves no blank page below the Studio", async ({ page
   const card = page.getByRole("region", { name: "Save your layout link" }).filter({ visible: true }).first();
   await expect(card).toBeVisible({ timeout: 15_000 });
 
-  for (const step of [/Certificate/, /Rules & Fit/]) {
+  for (const step of [/Certificate/, /Rules & fit/]) {
     await openStep(page, step);
     if (String(step).includes("Certificate")) {
       await expect(page.locator("summary").filter({ hasText: "Email this layout for later" })).toBeVisible();

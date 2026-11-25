@@ -300,6 +300,22 @@ export function getParcelById(parcelId: string) {
 }
 
 /**
+ * The demo lot the Studio opens on: San Diego, because every marketing surface
+ * sells California and San Diego lots. `parcelPresets[0]` (Seattle) stays the
+ * internal fallback for unknown ids and estimated parcels.
+ */
+export const DEFAULT_PARCEL_ID = "coyote-brush";
+
+/** The Studio's default demo parcel. */
+export const defaultParcelPreset: ParcelPreset = getParcelById(DEFAULT_PARCEL_ID);
+
+/** The demo lots in the order the Studio offers them: the default first. */
+export const demoPresets: ParcelPreset[] = [
+  defaultParcelPreset,
+  ...parcelPresets.filter((preset) => preset.id !== DEFAULT_PARCEL_ID),
+];
+
+/**
  * Apply a footprint preset to an existing ADU config, updating the footprint
  * value along with the width and length that match it.
  *

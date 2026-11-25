@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { AlertTriangle, Check, CheckCircle2, Circle, MapPin, Search } from "lucide-react";
@@ -743,7 +744,11 @@ export default function AddressSearch({
 
       {showPrivacyNote && (
         <p className="mt-2 text-xs leading-5 text-lot-stone">
-          We only use your address to fetch lot geometry and zoning rules. We don&apos;t save your address or contact you unless you create an account.
+          Enter an address to look up available parcel and zoning information. See our{" "}
+          <Link href="/privacy" prefetch={false} className="underline underline-offset-2">
+            Privacy Policy
+          </Link>{" "}
+          for how we use address information.
         </p>
       )}
     </form>

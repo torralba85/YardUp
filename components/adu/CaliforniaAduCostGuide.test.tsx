@@ -32,7 +32,7 @@ describe("CaliforniaAduCostGuide", () => {
     });
     expect(within(table).getByText("$231K-$289K")).toBeInTheDocument();
     expect(within(table).getByText("$453K-$566K")).toBeInTheDocument();
-    expect(screen.getByLabelText("County")).toHaveValue("los-angeles");
+    expect(screen.getByLabelText("County")).toHaveValue("san-diego");
   });
 
   it("separates the national construction base from county rent data", () => {

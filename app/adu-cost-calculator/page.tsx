@@ -120,6 +120,7 @@ export default function AduCostCalculatorPage() {
       title="ADU Cost Calculator for California"
       kicker="Build cost · Rental income · Payback"
       layout="editorial"
+      currentPath="/adu-cost-calculator"
     >
       <script
         type="application/ld+json"
@@ -135,10 +136,10 @@ export default function AduCostCalculatorPage() {
           <p>
             A 600 sq ft detached ADU models at{" "}
             {formatDollars(sample600.costLow)}–{formatDollars(sample600.costHigh)}{" "}
-            with design and permit soft costs, paying back in{" "}
+            with design and permit soft costs, with an estimated simple payback of{" "}
             {formatNumber(Math.round(Math.min(...paybacks600)))}–
             {formatNumber(Math.round(Math.max(...paybacks600)))}{" "}
-            years on HUD county rent. Adjust county, size, finish, rent, or add
+            years using HUD county rent. Adjust county, size, finish, rent, or add
             a loan below—free, no account required.
           </p>
         ) : null}
@@ -294,8 +295,6 @@ export default function AduCostCalculatorPage() {
         </p>
       </section>
 
-      <AduStudioCta city="California" slug="adu-cost-calculator" placement="mid" />
-
       <section aria-labelledby="adu-estimate-method">
         <h2 id="adu-estimate-method" className="lf-card-heading scroll-mt-20 text-lot-ink">
           What does the calculator estimate include?
@@ -373,7 +372,12 @@ export default function AduCostCalculatorPage() {
 
       <AduPlanningLinks current="/adu-cost-calculator" />
 
-      <AduStudioCta city="California" slug="adu-cost-calculator" placement="end" />
+      <AduStudioCta
+        city="California"
+        slug="adu-cost-calculator"
+        placement="end"
+        heading="Countywide numbers are a start. Check your own lot."
+      />
     </LegalPageShell>
   );
 }

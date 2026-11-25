@@ -460,6 +460,12 @@ export function buildReportHtml({
       font-size: 11px;
     }
     @media (max-width: 680px) {
+      /* The print sheet's 9–11px micro-print is unreadable on a phone, where most
+         shared certificates are opened. Lift every label to 12px on small screens. */
+      .eyebrow, .serial, .hero-money .caption, h2, .ledger th, .snapshot th, .status,
+      .brief-total span, .brief-label, .data-chip, .stage-index, .stage-weeks, .stage-status,
+      .risk-row p, .track-basis, .stage-copy, .brief-disclaimer, .fine,
+      .pro-forma thead th, .checklists h3, .rfq thead th, .rfq th[scope="row"] span, footer { font-size: 12px; }
       main { padding: 20px 10px; }
       .frame-inner { padding: 28px 18px 84px; }
       h1 { font-size: 30px; }
@@ -510,20 +516,20 @@ export function buildReportHtml({
         <h2>Annual Ledger</h2>
         <table class="ledger" aria-label="Annual income and cost ledger">
           <thead>
-            <tr><th>Income (annual)</th><th></th><th>Costs (annual)</th><th></th></tr>
+            <tr><th>Income (annual)</th><th></th><th>Costs</th><th></th></tr>
           </thead>
           <tbody>
             <tr>
               <td>Gross rent, ${result.aduSqft.toLocaleString()} sf ADU</td>
               <td class="amt">${escapeHtml(formatCurrency(grossAnnualRent))}</td>
-              <td>Operating allowance (${operatingPct}%)</td>
+              <td>Operating allowance (${operatingPct}%): vacancy, maintenance, insurance &amp; tax</td>
               <td class="amt">${escapeHtml(formatCurrency(operatingAllowance))}</td>
             </tr>
             <tr>
+              <td>Net operating margin</td>
+              <td class="amt">${escapeHtml(String(Math.round((100 - operatingPct) * 10) / 10))}%</td>
               <td>Build investment (one-time)</td>
               <td class="amt">${escapeHtml(formatCurrency(result.costLow))}&ndash;${escapeHtml(formatCurrency(result.costHigh))}</td>
-              <td>Vacancy, maintenance, insurance &amp; tax delta</td>
-              <td class="amt">within allowance</td>
             </tr>
             <tr class="balance">
               <td>Yearly net income</td>
@@ -536,7 +542,7 @@ export function buildReportHtml({
 
         ${result.costBreakdown ? `<h2>Hard &amp; Soft Cost Allowances</h2>
         <table class="snapshot allowances"><tbody>
-          ${constructionBudgetRows(result.costBreakdown).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(formatCurrency(value))}</td></tr>`).join("")}
+          ${constructionBudgetRows(result.costBreakdown).filter(([, value]) => value !== 0).map(([label, value]) => `<tr><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(formatCurrency(value))}</td></tr>`).join("")}
           <tr><th scope="row">Central project estimate</th><td>${escapeHtml(formatCurrency(result.costBreakdown.total))}</td></tr>
         </tbody></table><p>${escapeHtml(constructionBudgetNote)}</p>` : ""}
 
@@ -572,7 +578,7 @@ export function buildReportHtml({
 
         ${buildBidChecklistHtml(parcel)}
 
-        <div class="motto">&ldquo;See what your backyard can earn.&rdquo;</div>
+        <div class="motto">&ldquo;A little land. A lot of possibility.&rdquo;</div>
         <div class="stamp">Concept &middot; Not a Permit</div>
       </div>
     </div>
@@ -617,8 +623,8 @@ function buildPermitAuditHtml(audit: PermitFeeAudit): string {
       ? ""
       : `<span class="data-chip ${audit.threshold.isExempt ? "tone-clear" : "tone-medium"}">${
           audit.threshold.isExempt
-            ? "Within 750 sq ft"
-            : `${audit.threshold.sqftOverLimit.toLocaleString()} sq ft over 750`
+            ? "Footprint within 750 sq ft"
+            : `Footprint ${audit.threshold.sqftOverLimit.toLocaleString()} sq ft above 750`
         }</span>`;
   const checklist = (heading: string, items: string[]) =>
     `<div><h3>${escapeHtml(heading)}</h3><ul class="boxes">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
@@ -966,7 +972,7 @@ function certificatePacketCsvRows(
   if (audit.jurisdiction !== "other") {
     rows.push([
       "Impact Fee Exemption (750 sq ft)",
-      audit.threshold.isExempt ? "Within the limit" : `${audit.threshold.sqftOverLimit} sq ft over the limit`,
+      audit.threshold.isExempt ? "Footprint within the threshold" : `Footprint ${audit.threshold.sqftOverLimit} sq ft above the threshold`,
     ]);
   }
   rows.push(

@@ -135,7 +135,7 @@ export default function LoginForm() {
             spellCheck={false}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com…"
+            placeholder="you@example.com"
           />
         </div>
 
@@ -149,7 +149,7 @@ export default function LoginForm() {
             </label>
             <Link
               href="/forgot-password"
-              className="lf-body-sm text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink"
+              className="relative lf-body-sm text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink before:absolute before:-inset-x-2 before:-inset-y-2.5 before:content-['']"
             >
               Forgot password?
             </Link>

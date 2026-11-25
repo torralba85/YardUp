@@ -29,7 +29,7 @@ test.describe("A lot more landing", () => {
     await page.goto("/");
     await page.locator("#hero-address").fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
     await page.getByRole("region", { name: "Explore your lot", exact: true })
-      .getByRole("button", { name: "Explore my lot" }).click();
+      .getByRole("button", { name: "Check my lot" }).click();
 
     const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
     await expect(answer).toBeVisible();
@@ -69,7 +69,7 @@ test.describe("A lot more landing", () => {
       name: "Explore your lot",
       exact: true,
     });
-    await hero.getByRole("button", { name: "Explore my lot" }).click();
+    await hero.getByRole("button", { name: "Check my lot" }).click();
     await expect(hero.getByRole("alert")).toHaveText(
       "Enter an address to explore your lot.",
     );
@@ -84,7 +84,7 @@ test.describe("A lot more landing", () => {
     );
     await page
       .locator('[aria-labelledby="closing-title"]')
-      .getByRole("button", { name: "Explore my lot" })
+      .getByRole("button", { name: "Check my lot" })
       .click();
 
     // A first-time visitor reaches the studio without an account prompt; the
@@ -111,7 +111,7 @@ test.describe("A lot more landing", () => {
     await hero
       .getByLabel("Property address", { exact: true })
       .fill("456 Pine St, Denver, CO");
-    await hero.getByRole("button", { name: "Explore my lot" }).click();
+    await hero.getByRole("button", { name: "Check my lot" }).click();
 
     const dialog = page
       .getByRole("dialog")
@@ -121,7 +121,7 @@ test.describe("A lot more landing", () => {
     await page.keyboard.press("Escape");
     await expect(dialog).not.toBeVisible();
     await expect(
-      hero.getByRole("button", { name: "Explore my lot" }),
+      hero.getByRole("button", { name: "Check my lot" }),
     ).toBeFocused();
     await expect(
       hero.getByLabel("Property address", { exact: true }),
@@ -166,7 +166,7 @@ test.describe("A lot more landing", () => {
     await numbers.locator("summary").click();
     await expect(
       numbers.getByText(
-        /curated Coyote Brush Court demo in San Diego, calculated by the studio engine/,
+        /curated Coyote Brush Court demo in San Diego, calculated by the Studio engine/i,
       ),
     ).toBeVisible();
     await expect(
@@ -196,7 +196,7 @@ test.describe("A lot more landing", () => {
     await page.getByRole("radio", { name: "Next steps", exact: true }).click();
     await expect(report.getByText(/Confirm property boundaries/)).toBeVisible();
     await expect(
-      page.getByText("The complete certificate is an optional one-time purchase. Review it in the studio before checkout."),
+      page.getByText("The complete Certificate is an optional one-time purchase. Review it in the Studio before checkout."),
     ).toBeVisible();
     await page
       .getByText("Does this mean I can build?", { exact: true })
@@ -236,7 +236,7 @@ test.describe("A lot more landing", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Open menu" }).click();
     const menu = page.getByRole("navigation", { name: "Mobile navigation" });
-    await menu.getByRole("link", { name: "What’s included", exact: true }).focus();
+    await menu.getByRole("link", { name: "ADU guides", exact: true }).focus();
     await page.keyboard.press("Escape");
     await expect(menu).not.toBeVisible();
     await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();

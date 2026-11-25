@@ -5,6 +5,7 @@ import {
   defaultAduConfig,
   defaultFinancialAssumptions,
   getParcelById,
+  defaultParcelPreset,
   parcelPresets,
   type ADUConfig,
   type FinancialAssumptions,
@@ -313,7 +314,7 @@ export function evaluatePlanSizing(
 }
 
 export function createScenarioState(): StudioScenarioState {
-  const initialParcel = parcelPresets[0];
+  const initialParcel = defaultParcelPreset;
   return {
     sceneKey: initialParcel.id,
     parcelId: initialParcel.id,

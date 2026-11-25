@@ -25,8 +25,8 @@ export interface DerivedStep extends StudioStepMeta {
 
 /** The ordered spine — the single source of truth for the studio's navigation. */
 export const STUDIO_STEPS: StudioStepMeta[] = [
-  { id: "lot", label: "Your Lot", revenue: false, requiresParcel: false },
-  { id: "feasibility", label: "Rules & Fit", revenue: false, requiresParcel: false },
+  { id: "lot", label: "Your lot", revenue: false, requiresParcel: false },
+  { id: "feasibility", label: "Rules & fit", revenue: false, requiresParcel: false },
   { id: "design", label: "Design", revenue: false, requiresParcel: false },
   { id: "certificate", label: "Certificate", revenue: true, requiresParcel: true },
   { id: "builders", label: "Builders", revenue: false, requiresParcel: true },
@@ -36,6 +36,12 @@ export const STUDIO_STEPS: StudioStepMeta[] = [
 export interface StepStateInput {
   /** Whether a real address/parcel has been resolved (not the demo default). */
   hasParcel: boolean;
+  /**
+   * Steps the visitor has opened. An earlier step they jumped past stays
+   * `upcoming` instead of showing a completed check. Omit to treat every
+   * earlier step as done.
+   */
+  visited?: ReadonlySet<StudioStep>;
 }
 
 /**
@@ -53,7 +59,7 @@ export function deriveStepStates(activeStep: StudioStep, input: StepStateInput):
     if (index === activeIndex) {
       state = "current";
     } else if (index < activeIndex) {
-      state = "done";
+      state = !input.visited || input.visited.has(step.id) ? "done" : "upcoming";
     } else if (step.requiresParcel && !input.hasParcel) {
       state = "locked";
     } else {

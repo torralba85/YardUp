@@ -5,19 +5,11 @@ import Link from "next/link";
 import { useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import { SITE_NAV_LINKS } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
-// `firebase: true` marks a route inside the `(firebase)` group. This header
-// renders on Firebase-free pages too, so those links opt out of Next's
-// automatic prefetch (see `SiteFooter`).
-const SITE_NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/studio", label: "Studio", firebase: true },
-  { href: "/adu/ca", label: "ADU guides" },
-  { href: "/adu-cost-calculator", label: "Cost calculator" },
-  { href: "/about", label: "About" },
-  { href: "/help", label: "Help" },
-] as const;
+// The same links and labels as PublicHeader and the landing (lib/site-nav). The
+// logo links home; the page's own action reaches the Studio.
 
 // The header is page-level chrome, so it remounts on every navigation and the
 // path only needs reading once per mount. Reading `location` directly (rather
@@ -87,7 +79,6 @@ export function SiteHeader({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    prefetch={"firebase" in link ? false : undefined}
                     aria-current={current ? "page" : undefined}
                     className={linkClass(current)}
                   >
@@ -130,7 +121,6 @@ export function SiteHeader({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    prefetch={"firebase" in link ? false : undefined}
                     aria-current={current ? "page" : undefined}
                     className={cn(linkClass(current), "flex w-full text-base")}
                     onClick={() => setOpen(false)}

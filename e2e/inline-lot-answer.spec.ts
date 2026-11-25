@@ -19,7 +19,7 @@ test("guide visitors get an inline answer and reuse the parcel in Studio", async
   });
   await page.goto("/adu/ca/san-diego");
   await page.getByRole("textbox", { name: /street address/i }).first().fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
-  await page.getByRole("button", { name: "Check my address" }).first().click();
+  await page.getByRole("button", { name: "Check my lot" }).first().click();
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await expect(answer).toContainText("Early planning estimates");

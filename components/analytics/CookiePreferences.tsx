@@ -49,7 +49,7 @@ export function CookiePreferences() {
             }
           }}
         >
-          {isGranted ? "Turn off measurement" : "Turn on measurement"}
+          {isGranted ? "Turn off measurement cookies" : "Turn on measurement cookies"}
         </Button>
         {consent !== "unset" && (
           <Button variant="ghost" size="sm" onClick={clearConsent}>

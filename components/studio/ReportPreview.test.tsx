@@ -206,15 +206,15 @@ describe("ReportPreview certificate packet", () => {
       expect(within(table).getByRole("rowheader", { name })).toBeInTheDocument();
     }
     // The stronger option leads the summary and the first column.
-    expect(within(table).getByText(/^Best option: 20% down construction-to-perm/)).toBeInTheDocument();
+    expect(within(table).getByText(/^Higher modeled monthly cash flow in this example: 20% down construction-to-perm/)).toBeInTheDocument();
     expect(within(table).getAllByRole("columnheader")[1]).toHaveTextContent("20% down construction-to-perm");
   });
 
   it("audits the 750 sq ft threshold, fees, submittals and modeled height for a California lot", () => {
     renderPacket();
     const audit = screen.getByRole("heading", { name: "750 sq ft impact-fee & permit audit" }).closest("section")!;
-    expect(within(audit).getByText("50 sq ft over 750")).toBeInTheDocument();
-    expect(within(audit).getByText("Impact fees: 50 sq ft over the exemption")).toBeInTheDocument();
+    expect(within(audit).getByText("Footprint 50 sq ft above 750")).toBeInTheDocument();
+    expect(within(audit).getByText("Impact fees: modeled footprint above 750 sq ft")).toBeInTheDocument();
     expect(within(audit).getByText(/^Height:/)).toBeInTheDocument();
     expect(within(audit).getByText("Counter submittal checklist")).toBeInTheDocument();
     expect(within(audit).getByRole("link", { name: /HCD ADU Handbook/ })).toHaveAttribute("target", "_blank");

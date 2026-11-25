@@ -1,21 +1,28 @@
 import { expect, test, type Page } from "@playwright/test";
 
 async function openDesign(page: Page, isMobile: boolean) {
-  if (isMobile) await page.getByRole("button", { name: "Shape your ADU" }).click();
-  else await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+  if (isMobile) {
+    const demo = page.getByRole("button", { name: /See (?:a|the) San Diego example/i });
+    const design = page.getByRole("button", { name: "Shape your ADU" });
+    await expect(demo.or(design)).toBeVisible({ timeout: 20_000 });
+    if (await demo.isVisible()) await demo.click();
+    await design.click();
+  } else {
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
+  }
 }
 
 const openCatalog = (page: Page) => page.locator("summary").filter({ hasText: /^Pre-approved plans/ }).click();
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("lf-analytics-consent", JSON.stringify({ decision: "denied", version: 2, decidedAt: new Date().toISOString() }));
+    localStorage.setItem("lf-analytics-consent", JSON.stringify({ decision: "denied", version: 3, decidedAt: new Date().toISOString() }));
   });
 });
 
 test("uses a plan's real footprint in the 3D model, restores it on reload and keeps the model when removed", async ({ page, isMobile }, testInfo) => {
   test.setTimeout(90_000);
-  await page.goto("/studio?parcel=coyote-brush");
+  await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
   await openDesign(page, isMobile);
   await expect(page.locator("summary").filter({ hasText: /^Pre-approved plans/ })).toContainText("6 plans for San Diego, CA");
   await openCatalog(page);
@@ -55,7 +62,8 @@ test("uses a plan's real footprint in the 3D model, restores it on reload and ke
 });
 
 test("browses another authority's catalog but only uses plans for a confirmed authority", async ({ page, isMobile }) => {
-  await page.goto("/studio?parcel=coyote-brush");
+  test.setTimeout(60_000);
+  await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
   await openDesign(page, isMobile);
   await openCatalog(page);
   const browser = page.getByRole("region", { name: "Pre-approved plan browser" });

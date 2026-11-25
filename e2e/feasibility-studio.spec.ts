@@ -17,7 +17,7 @@ test.describe("Public LotFoundry flows", () => {
       page.getByRole("heading", { name: /It starts with your address/i }),
     ).toBeVisible();
     // Survey-instrument search is the hero CTA.
-    await expect(page.getByRole("button", { name: /Explore my lot/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Check my lot/i }).first()).toBeVisible();
 
     await page.screenshot({
       path: testInfo.outputPath("landing-page.png"),
@@ -125,7 +125,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.goto("/studio");
     await page.getByRole("radio", { name: /Seattle/i }).click();
     await page.getByRole("button", { name: "See the Seattle example" }).click();
-    await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /could rent for/i })).toBeVisible();
 
     await page.getByRole("button", { name: /Shape your ADU/i }).click();
     // ShapeStep's own <h2> is "Pick a direction." — the word "Shape" only
@@ -136,6 +136,6 @@ test.describe("Public LotFoundry flows", () => {
     await page.goBack();
 
     // The study survives: we land on the previous reveal, still inside the app.
-    await expect(page.getByRole("heading", { name: /could earn/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /could rent for/i })).toBeVisible();
   });
 });

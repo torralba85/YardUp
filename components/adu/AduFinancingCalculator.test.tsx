@@ -31,7 +31,18 @@ describe("AduFinancingCalculator", () => {
     expect(result("Monthly cash after loan payment")).toHaveTextContent("$500");
   });
 
-  it.each([["Loan amount ($)", ""], ["Loan amount ($)", "-1"], ["Loan amount ($)", "200001"],
+  it("preserves the dollars and cents of a pasted loan amount", () => {
+    render(<AduFinancingCalculator projectCost={200000} annualNoi={24000} />);
+    const amount = screen.getByLabelText("Loan amount ($)");
+    fireEvent.change(amount, { target: { value: "$1,000.50" } });
+    fireEvent.change(screen.getByLabelText("Annual interest rate (%)"), { target: { value: "0" } });
+    fireEvent.change(screen.getByLabelText("Loan term (years)"), { target: { value: "1" } });
+
+    expect(amount).toHaveValue("1,000.50");
+    expect(result("Monthly loan payment")).toHaveTextContent("$83");
+  });
+
+  it.each([["Loan amount ($)", ""], ["Loan amount ($)", "200001"], ["Loan amount ($)", "1000.123"],
     ["Annual interest rate (%)", "-1"], ["Annual interest rate (%)", ""],
     ["Loan term (years)", "0"], ["Loan term (years)", "1.5"]])("withholds output for invalid %s = %s", (label, value) => {
     render(<AduFinancingCalculator projectCost={200000} annualNoi={24000} />);
@@ -43,9 +54,9 @@ describe("AduFinancingCalculator", () => {
   it("follows revised budgets until the visitor supplies a loan amount", () => {
     const { rerender } = render(<AduFinancingCalculator projectCost={200000} annualNoi={24000} />);
     rerender(<AduFinancingCalculator projectCost={250000} annualNoi={24000} />);
-    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue(200000);
+    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue("200,000");
     fireEvent.change(screen.getByLabelText("Loan amount ($)"), { target: { value: "150000" } });
     rerender(<AduFinancingCalculator projectCost={300000} annualNoi={24000} />);
-    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue(150000);
+    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue("150,000");
   });
 });

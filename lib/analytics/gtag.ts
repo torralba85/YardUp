@@ -2,8 +2,7 @@
  * Thin typed wrapper over Google Analytics 4 (`gtag.js`).
  *
  * The tag itself is injected by `components/analytics/GoogleAnalytics.tsx` and
- * only after the visitor accepts, so every helper here is a no-op until then.
- * Nothing in this module loads a script or writes a cookie on its own.
+ * can send cookieless page views. Custom events require opt-in.
  */
 
 import { isAnalyticsSuppressed, readConsent } from "./consent";
@@ -90,11 +89,54 @@ export function measurementContext(path?: string): Record<string, string> {
   const referrer = sanitizeReferrer(document.referrer);
   return {
     page_location: `${window.location.origin}${sanitizePath(path ?? window.location.href)}`,
-    ...(referrer ? { page_referrer: referrer } : {}),
-    // No pre-consent storage or collection. Only fixed public campaign labels
-    // are interpreted after opt-in; all URL query strings remain stripped.
-    ...(canMeasure() ? approvedCampaign(window.location.search) : {}),
+    page_referrer: referrer,
+    ...(canMeasure() ? measuredCampaign() : {}),
   };
+}
+
+const CAMPAIGN_KEY = "lf:analytics-campaign";
+const CAMPAIGN_MAX_AGE_MS = 30 * 60 * 1000;
+
+/** Keep approved labels across a consented landing-to-Studio navigation in this tab. */
+function measuredCampaign(): Record<string, string> {
+  const current = approvedCampaign(window.location.search);
+  try {
+    if (current.campaign_name) {
+      const labels = new URLSearchParams({
+        utm_source: current.campaign_source,
+        utm_medium: current.campaign_medium,
+        utm_campaign: current.campaign_name,
+        utm_content: current.campaign_content ?? "",
+      });
+      window.sessionStorage.setItem(CAMPAIGN_KEY, JSON.stringify({
+        labels: labels.toString(),
+        expiresAt: Date.now() + CAMPAIGN_MAX_AGE_MS,
+      }));
+    } else {
+      const raw = window.sessionStorage.getItem(CAMPAIGN_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as { labels?: unknown; expiresAt?: unknown };
+        if (typeof saved.labels === "string" && typeof saved.expiresAt === "number" && saved.expiresAt > Date.now()) {
+          return approvedCampaign(saved.labels);
+        }
+        window.sessionStorage.removeItem(CAMPAIGN_KEY);
+      }
+    }
+  } catch {
+    // Attribution on the current page still works when storage is unavailable.
+  }
+  return current;
+}
+
+export function clearMeasurementSession(): void {
+  if (!canMeasure()) pendingEvents = [];
+  try {
+    window.sessionStorage.removeItem(CAMPAIGN_KEY);
+    window.sessionStorage.removeItem("lf:analytics-entry-source");
+    window.sessionStorage.removeItem("lf:analytics-pending-lead-unlock");
+  } catch {
+    // sessionStorage unavailable
+  }
 }
 
 /**
@@ -103,23 +145,13 @@ export function measurementContext(path?: string): Record<string, string> {
  */
 export function disableAnalytics(): void {
   if (typeof window === "undefined") return;
-  // A withdrawal discards events held for a tag that has not initialized, so
-  // a later re-grant cannot upload them. The guard keeps a consented visitor's
-  // held events when this runs during hydration, before the stored decision
-  // reaches the consent hook.
-  if (!canMeasure()) pendingEvents = [];
   const id = getMeasurementId();
   if (id) {
     (window as unknown as Record<string, boolean>)[`ga-disable-${id}`] = true;
   }
   (window as unknown as Record<string, boolean>)[`ga-disable-${GOOGLE_ADS_ID}`] = true;
   clearAnalyticsCookies();
-  try {
-    window.sessionStorage.removeItem("lf:analytics-entry-source");
-    window.sessionStorage.removeItem("lf:analytics-pending-lead-unlock");
-  } catch {
-    // sessionStorage unavailable
-  }
+  clearMeasurementSession();
 }
 
 /**
@@ -143,7 +175,7 @@ export function enableAnalytics(): void {
  * being counted twice.
  *
  * Enforces:
- * - Current configured and granted consent.
+ * - A configured tag and an unsuppressed browser.
  * - Sanitized path and location: query parameters and fragments are stripped
  *   so property addresses never reach GA4.
  * - Sanitized referrer: queries are stripped.
@@ -152,7 +184,7 @@ export function enableAnalytics(): void {
  */
 export function pageview(url: string): void {
   if (typeof window === "undefined") return;
-  if (!canMeasure()) return;
+  if (!isAnalyticsConfigured() || isAnalyticsSuppressed()) return;
   const id = getMeasurementId();
   if (!id) return;
 
@@ -215,7 +247,7 @@ export function trackEvent(
  * Send an event immediately when `window.gtag` is ready, or hold it in memory
  * until `GTAG_READY_EVENT` fires on a hard load where consent is already granted.
  *
- * Shared by GA4 page views, GA4 custom events, and Google Ads purchase
+ * Shared by GA4 page views, custom events, and Google Ads purchase
  * conversions so withdrawal via `disableAnalytics()` clears all pending events
  * together and re-checks consent at flush time.
  */
@@ -224,14 +256,16 @@ export function sendOrQueueGtagEvent(
   payload: Record<string, unknown>,
 ): void {
   if (typeof window === "undefined") return;
-  if (!canMeasure()) return;
+  if (!isAnalyticsConfigured() || isAnalyticsSuppressed()) return;
+  const consentGranted = readConsent() === "granted";
+  if (name !== "page_view" && !consentGranted) return;
   if (window.gtag) {
     window.gtag("event", name, payload);
     return;
   }
 
   if (pendingEvents.length < MAX_PENDING_EVENTS) {
-    pendingEvents.push({ name, params: payload });
+    pendingEvents.push({ name, params: payload, consentGranted });
   }
   if (!flushListenerAttached) {
     flushListenerAttached = true;
@@ -240,14 +274,14 @@ export function sendOrQueueGtagEvent(
 }
 
 /**
- * Fired on `window` by the tag's inline init script once `window.gtag` exists.
+ * Fired after the command queue and destinations are configured.
  * See `components/analytics/GoogleAnalytics.tsx`.
  */
 export const GTAG_READY_EVENT = "lf:gtag-ready";
 
 /** Upper bound on events held before the tag initializes. */
 const MAX_PENDING_EVENTS = 20;
-let pendingEvents: { name: string; params: Record<string, unknown> }[] = [];
+let pendingEvents: { name: string; params: Record<string, unknown>; consentGranted: boolean }[] = [];
 let flushListenerAttached = false;
 
 function canMeasure(): boolean {
@@ -259,14 +293,17 @@ function flushPendingEvents(): void {
   flushListenerAttached = false;
   const held = pendingEvents;
   pendingEvents = [];
-  if (typeof window === "undefined" || !window.gtag || !canMeasure()) return;
-  for (const { name, params } of held) window.gtag("event", name, params);
+  if (typeof window === "undefined" || !window.gtag || !isAnalyticsConfigured() || isAnalyticsSuppressed()) return;
+  const consentGranted = readConsent() === "granted";
+  for (const event of held) {
+    if (event.consentGranted === consentGranted) window.gtag("event", event.name, event.params);
+  }
 }
 
 /**
  * Delete first-party GA4 and Google Ads measurement cookies on this host.
  *
- * Unmounting the tag stops new collection, but the `_ga` client-ID cookie
+ * Withdrawing consent stops cookie-based measurement, but the `_ga` cookie
  * survives on its own two-year expiry — so withdrawing consent would still
  * leave the visitor identifiable to a later re-grant. Expiring them here makes
  * "Decline" mean what the privacy page says it means.

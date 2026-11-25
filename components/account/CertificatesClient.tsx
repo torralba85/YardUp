@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { SiteHeader } from "@/components/legal/SiteHeader";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import {
   useUserPurchasedCertificates,
   formatCertKeyFallback,
@@ -92,7 +93,7 @@ export function CertificatesClient() {
               href="/studio"
               className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink hover:underline"
             >
-              Open studio
+              {PRIMARY_CTA_LABEL}
             </Link>
           }
         />
@@ -138,7 +139,7 @@ export function CertificatesClient() {
               href="/studio"
               className="hidden min-h-11 items-center text-sm font-semibold text-lot-orange-ink hover:underline sm:inline-flex"
             >
-              Open 3D Studio
+              {PRIMARY_CTA_LABEL}
             </Link>
             <AccountMenu
               displayName={displayName}

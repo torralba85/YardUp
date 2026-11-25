@@ -701,7 +701,7 @@ export function AuthModal({
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 className="w-full bg-lot-chalk border border-lot-stone rounded-control min-h-11 py-2 pl-10 pr-3 text-base sm:text-sm text-lot-ink placeholder:text-lot-stone motion-safe:transition-colors focus-visible:outline-none focus-visible:border-lot-orange-ink focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-                placeholder="Alma Reyes…"
+                placeholder="Alma Reyes"
               />
             </div>
           </div>
@@ -766,7 +766,7 @@ export function AuthModal({
           loading={loading}
           className="mt-2 font-semibold"
         >
-          {loading ? (isSignUp ? "Creating account…" : "Signing in…") : isSignUp ? "Create free account" : "Sign In"}
+          {loading ? (isSignUp ? "Creating account…" : "Signing in…") : isSignUp ? "Create free account" : "Sign in"}
         </Button>
       </form>
 

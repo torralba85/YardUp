@@ -43,7 +43,7 @@ test.describe("Accessibility smoke", () => {
     await page.goto("/");
 
     const focusLabels: string[] = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 14; i++) {
       await page.keyboard.press("Tab");
       const activeText = await page.evaluate(
         () => (document.activeElement as HTMLElement | null)?.textContent?.trim() ?? "",
@@ -51,6 +51,6 @@ test.describe("Accessibility smoke", () => {
       if (activeText) focusLabels.push(activeText);
     }
 
-    expect(focusLabels.some((label) => /Sign in|Estimate my lot|Estimate/i.test(label))).toBe(true);
+    expect(focusLabels.some((label) => /^Check my lot$/i.test(label))).toBe(true);
   });
 });

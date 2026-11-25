@@ -27,7 +27,7 @@ import {
   trackCertificatePurchase,
   type FeasibilityStatus,
 } from "@/lib/analytics/events";
-import { certificateKey } from "@/lib/certificate-key";
+import { certificateKey, isPresetCertificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
@@ -94,6 +94,11 @@ export interface CertificatePanelProps {
   projectBriefError: string | null;
   /** Generate the parcel + timeline brief with the signed-in user's token. */
   onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBriefResponse>;
+  /**
+   * Send the visitor to the address search. On a demo lot the purchase action
+   * becomes this, because a Certificate is a record for a real property.
+   */
+  onSearchAddress?: () => void;
 }
 
 /**
@@ -118,6 +123,7 @@ export default function CertificatePanel({
   projectBriefLoading,
   projectBriefError,
   onGenerateProjectBrief,
+  onSearchAddress,
 }: CertificatePanelProps) {
   const {
     user,
@@ -130,6 +136,10 @@ export default function CertificatePanel({
   } = useAuth();
   const activeCheckoutUser = checkoutUser ?? user;
   const certKey = certificateKey(parcel);
+  // Demo lots are explorable but never sold; /api/stripe/checkout-certificate
+  // refuses them too. Play Billing charges before the server sees the purchase,
+  // so this guard is what keeps a store shell from selling one.
+  const demoLot = isPresetCertificateKey(certKey);
   const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -431,11 +441,11 @@ export default function CertificatePanel({
     if (recovery.intent && recovery.intent.kind !== "cancel") return;
     if (!hasCertificatePurchaseIntent(certKey)) return;
     clearCertificatePurchaseIntent();
-    if (profile?.role === "builder" || purchased) return;
+    if (profile?.role === "builder" || purchased || demoLot) return;
     // Resuming follows an explicit purchase click and a completed sign-in.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void beginCheckout(user);
-  }, [authLoading, beginCheckout, certKey, loading, profile, purchased, recovery, user]);
+  }, [authLoading, beginCheckout, certKey, demoLot, loading, profile, purchased, recovery, user]);
 
   const redeemPass = useCallback(async (authenticatedUser: FirebaseUser, code: string) => {
     if (purchaseOperation.current) return;
@@ -510,6 +520,10 @@ export default function CertificatePanel({
     if (recoveryActive && !purchased && activeCheckoutUser) return;
     if (purchased) {
       await prepareAndOpenCertificate();
+      return;
+    }
+    if (demoLot) {
+      onSearchAddress?.();
       return;
     }
     if (!user) {
@@ -593,21 +607,25 @@ export default function CertificatePanel({
         : "Preparing certificate…"
     : purchased
     ? "View complete certificate"
+    : demoLot
+    ? "Search your address"
     : !user
       ? certPrice.exact
         ? `${guestPurchaseAction} — ${price}`
         : guestPurchaseAction
       : certPrice.exact
-        ? `Unlock property certificate — ${price}`
-        : "Unlock property certificate";
+        ? `Get your Certificate — ${price}`
+        : "Get your Certificate";
   // Purchase terms beside the decision. Every channel sells a one-time,
   // per-property unlock; the amount is named only where it is the one billed.
   const ctaNote = purchased || recoveryPending
     ? undefined
-    : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Unlocks this property permanently`;
+    : demoLot
+    ? "This is a demo lot. A Certificate covers your own property: search its address to get one."
+    : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Includes Certificate access for this property`;
 
   // Web only: a store shell sells digital goods through its own billing.
-  const showPassOffer = !purchased && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
+  const showPassOffer = !purchased && !demoLot && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
   const passOffer = (
     <AgentPassOffer
       linkedCode={linkedPassCode}
@@ -624,7 +642,7 @@ export default function CertificatePanel({
     />
   );
 
-  const guestConsentControl = !purchased && !recoveryPending && !user && isWebChannel ? (
+  const guestConsentControl = !purchased && !demoLot && !recoveryPending && !user && isWebChannel ? (
     <label htmlFor={guestConsentId} className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
       <Checkbox
         ref={guestConsentRef}
@@ -668,7 +686,7 @@ export default function CertificatePanel({
         <p className="lf-kicker text-lot-orange-ink">{eyebrow}</p>
         <h2 className="lf-section-heading mt-2 text-lot-ink">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lot-stone">
-          Will rent cover your loan payment, and is your builder&apos;s scope complete? Unlock your financing cash flow model, itemized cost allowances, scope checklist, and site plan PDF.
+          Compare estimated cash flow after operating costs and loan payments. Review itemized cost allowances and the site plan PDF, and use the scope checklist to compare builder quotes.
         </p>
       </div>
 
@@ -788,13 +806,12 @@ export default function CertificatePanel({
             <ShieldCheck size={20} className="mt-0.5 shrink-0 text-status-eligible" aria-hidden="true" />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-lot-ink">Certificate unlocked</h3>
+                <h3 className="text-sm font-semibold text-lot-ink">Certificate available</h3>
                 <StatusChip status="clear" label={amount === 0 ? "Complimentary" : "Purchased"} />
               </div>
               <p className="lf-body-sm mt-1 text-lot-stone">
                 Your complete Certificate of Feasibility for {parcelName} is ready to print,
-                download, or share. This property remains unlocked when you revise the concept
-                and regenerate the certificate.
+                download, or share. You can revise the concept and generate an updated Certificate for this property.
               </p>
               {projectBrief ? (
                 <div className="mt-3 flex items-start gap-2 border-t border-lot-line pt-3">

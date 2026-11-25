@@ -28,11 +28,11 @@ export interface DerivedJourneyStep extends MobileJourneyStepMeta {
 
 /** The ordered five reveals — the single source of truth for the journey. */
 export const MOBILE_JOURNEY_STEPS: MobileJourneyStepMeta[] = [
-  { id: "find", label: "Find" },
-  { id: "earn", label: "Earn" },
-  { id: "shape", label: "Shape" },
-  { id: "check", label: "Check" },
-  { id: "act", label: "Act" },
+  { id: "find", label: "Your lot" },
+  { id: "earn", label: "Rent" },
+  { id: "shape", label: "Design" },
+  { id: "check", label: "Rules & fit" },
+  { id: "act", label: "Certificate" },
 ];
 
 /** Index of a step in the journey order. */

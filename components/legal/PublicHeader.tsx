@@ -4,13 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-
-const PUBLIC_NAV_LINKS = [
-  { href: "/can-i-build-a-backyard-home", label: "Lot quiz" },
-  { href: "/adu/ca", label: "ADU rules" },
-  { href: "/adu-cost-calculator", label: "Calculator" },
-  { href: "/about", label: "About" },
-] as const;
+import { PRIMARY_CTA_LABEL, SITE_NAV_LINKS } from "@/lib/site-nav";
 
 /**
  * Shared Firebase-free public header used across editorial guides, calculators,
@@ -19,7 +13,7 @@ const PUBLIC_NAV_LINKS = [
  */
 export function PublicHeader({
   studioHref = "/studio",
-  studioLabel = "Open studio",
+  studioLabel = PRIMARY_CTA_LABEL,
 }: {
   studioHref?: string;
   studioLabel?: string;
@@ -54,7 +48,7 @@ export function PublicHeader({
           aria-label="Primary navigation"
           className="hidden items-center gap-5 md:flex"
         >
-          {PUBLIC_NAV_LINKS.map((item) => (
+          {SITE_NAV_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -102,7 +96,7 @@ export function PublicHeader({
           className="border-t border-lot-line bg-lot-chalk px-5 py-3 md:hidden"
         >
           <ul className="divide-y divide-lot-line">
-            {PUBLIC_NAV_LINKS.map((item) => (
+            {SITE_NAV_LINKS.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

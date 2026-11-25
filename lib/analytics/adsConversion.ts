@@ -1,10 +1,8 @@
 /**
  * Google Ads purchase-conversion helper.
  *
- * The Ads tag rides the same consent-gated `gtag.js` loader as GA4 (see
- * `components/analytics/GoogleAnalytics.tsx`): every function here is a no-op
- * until the visitor accepts and the tag has loaded, so call sites never need
- * to guard.
+ * The Ads destination and purchase events require opt-in, even though
+ * GA4 can load before that choice.
  */
 
 /** Google Ads account, configured on the tag alongside the GA4 property. */
