@@ -140,6 +140,8 @@ export interface JurisdictionContent {
   processSteps: AduProcessStep[];
   /** The city's official ADU page or permit portal entry point. */
   permitPortal: AduSource;
+  /** Official resources that answer the guide's main question near the top of the page. */
+  quickSources?: { heading: string; links: AduSource[] };
   /**
    * Prominent overlay warning, e.g. the Coastal Zone amendment carve-out.
    * Rendered as a callout directly after the at-a-glance table. Omit when

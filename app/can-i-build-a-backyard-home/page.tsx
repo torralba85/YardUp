@@ -4,9 +4,9 @@ import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { pageOpenGraph, SITE_OG_IMAGE } from "@/lib/og-images";
 
 const PAGE_PATH = "/can-i-build-a-backyard-home";
-const PAGE_TITLE = "Can I Build a Backyard Home? CA & San Diego ADU Guide";
+const PAGE_TITLE = "Can I Build a Backyard Home? 60-Second ADU Lot Quiz";
 const PAGE_DESCRIPTION =
-  "Can I build a backyard home or ADU on my lot? Check San Diego setback rules, California ADU cost ranges, and test your address in the free 3D studio.";
+  "Answer five quick questions about your California lot, then try the free address check. Includes San Diego examples for setbacks and property fit.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,

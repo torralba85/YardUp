@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { CURRENT_LEGAL_CONSENT } from "@/lib/legal-consent";
-import { laterDate } from "@/lib/adu/dates";
+import { laterDate, SEARCH_CONSOLE_AUDIT_UPDATED } from "@/lib/adu/dates";
 
 const baseUrl = CANONICAL_ORIGIN;
 
@@ -24,8 +24,8 @@ const baseUrl = CANONICAL_ORIGIN;
  * their published versions, or a later edit that kept the version.
  */
 const lastModified: Record<string, string> = {
-  "/": "2026-11-21",
-  "/can-i-build-a-backyard-home": "2026-11-21",
+  "/": SEARCH_CONSOLE_AUDIT_UPDATED,
+  "/can-i-build-a-backyard-home": SEARCH_CONSOLE_AUDIT_UPDATED,
   "/studio": "2026-11-20",
   "/about": "2026-11-21",
   "/help": "2026-11-21",

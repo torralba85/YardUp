@@ -121,7 +121,7 @@ describe("adu cost pages", () => {
     const county = getCity("ca", "san-diego-county");
     const cityTitle = String(sanDiego && buildCityMetadata(sanDiego).title);
     const countyTitle = String(county && buildCityMetadata(county).title);
-    expect(cityTitle).toBe("City of San Diego ADU Rules (2026): Setbacks, Size & Permits");
+    expect(cityTitle).toBe("City of San Diego ADU Rules, Setbacks & Handbook (2026)");
     expect(cityTitle.length).toBeLessThanOrEqual(60);
     expect(sanDiego?.h1).toBe("City of San Diego ADU Rules (2026)");
     expect(String(sanDiego?.metaDescription).length).toBeLessThanOrEqual(160);

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StudioOfferSummary } from "@/components/studio/StudioOfferSummary";
-import { SITE_NAME } from "@/lib/site-identity";
+import { SITE_NAME, SOFTWARE_APPLICATION_JSON_LD } from "@/lib/site-identity";
+
+const studioJsonLd = {
+  "@context": "https://schema.org",
+  ...SOFTWARE_APPLICATION_JSON_LD,
+};
 
 // Matches the page's H1, "ADU Feasibility Studio", so the title leads with ADU.
 const title = "ADU Feasibility Studio: Your Lot in 3D | LotFoundry";
@@ -49,6 +54,10 @@ export default function StudioLayout({
   // a second scroll that slid the Studio's top controls out of view.
   return (
     <div className="bg-lot-ground-dark lg:[--studio-guide-bar:3rem]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(studioJsonLd) }}
+      />
       {children}
       <section
         data-testid="studio-overview"

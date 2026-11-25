@@ -31,7 +31,7 @@ export const sanDiegoCounty: JurisdictionContent = {
   metaTitle: "Unincorporated San Diego County ADU Rules & Setbacks (2026)",
   metaDescription:
     "Unincorporated San Diego County ADU rules & setbacks: 4 ft side/rear, 1,200 sq ft, 25 ft tall, fire & septic checks under County PDS outside city limits.",
-  h1: "ADU Rules in Unincorporated San Diego County (2026)",
+  h1: "Unincorporated San Diego County ADU Setbacks & Rules (2026)",
   introAnswer: [
     "New ADUs in unincorporated San Diego County generally need 4 feet of clearance from side and rear property lines. Check for additional fire setbacks before choosing a location. The County allows detached ADUs up to 1,200 square feet, independent of the main home's size.",
     "These rules apply where County Planning & Development Services issues permits, including unincorporated communities such as Alpine, Fallbrook, Lakeside, Ramona, Spring Valley and Valley Center. Confirm your lot's jurisdiction, fire district and any septic or grading requirements before paying for plans.",

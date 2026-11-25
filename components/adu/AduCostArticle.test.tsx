@@ -151,7 +151,7 @@ describe("AduArticle article markup and related guides", () => {
     render(<AduArticle content={sanJose} />);
     const nav = screen.getByRole("navigation", { name: "Neighboring jurisdictions" });
     expect(within(nav).getByRole("heading", { name: "ADU rules elsewhere in California" })).toBeInTheDocument();
-    expect(within(nav).getByRole("link", { name: "ADU rules in San Diego" })).toHaveAttribute("href", "/adu/ca/san-diego");
+    expect(within(nav).getByRole("link", { name: "City of San Diego ADU rules" })).toHaveAttribute("href", "/adu/ca/san-diego");
     expect(within(nav).getByRole("link", { name: "ADU rules in Sacramento" })).toHaveAttribute("href", "/adu/ca/sacramento");
   });
 

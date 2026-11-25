@@ -57,13 +57,14 @@ describe("/can-i-build-a-backyard-home", () => {
     cleanup();
   });
 
-  it("exports bounded SEO metadata targeting backyard home, San Diego, and California ADU queries", () => {
+  it("describes the interactive lot quiz and its California and San Diego scope", () => {
     const title = String(metadata.title);
     const description = String(metadata.description);
 
     expect(title).toMatch(/backyard home/i);
-    expect(title).toMatch(/san diego/i);
+    expect(title).toMatch(/lot quiz/i);
     expect(title).toMatch(/\bADU\b/);
+    expect(description).toMatch(/California.*San Diego/);
     expect(title.length).toBeLessThanOrEqual(60);
     expect(description.length).toBeGreaterThanOrEqual(70);
     expect(description.length).toBeLessThanOrEqual(155);

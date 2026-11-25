@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   CALCULATOR_COUNTIES,
@@ -18,6 +19,8 @@ import { formatDecimal, formatNumber } from "@/lib/intl-format";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
 import { stashAddressQuery } from "@/lib/address-handoff";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
+import { formatUsdCents } from "@/lib/credit-packs";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { aduCtaEvent } from "@/lib/adu/types";
 import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
@@ -608,18 +611,18 @@ export function AduCostCalculator({
 
         {/* Free address check below the breakdown */}
         {showAddressCheck ? (
-          <div className="border border-lot-line bg-lot-chalk p-5 sm:p-6">
+          <section aria-labelledby="calculator-address-heading" className="border border-lot-line bg-lot-chalk p-5 sm:p-6">
             <div>
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-lot-stone">
                 Parcel-Specific Check
               </span>
-              <h3 className="font-display text-xl font-semibold text-lot-ink mt-1">
+              <h3 id="calculator-address-heading" className="font-display text-xl font-semibold text-lot-ink mt-1">
                 Free address check
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-lot-stone">
                 Countywide tools can&apos;t check lot boundaries or setbacks.
                 Enter your California address to see property lines, base-zone
-                setbacks, and a placed ADU in 3D.
+                setbacks, a placed ADU in 3D and an estimated rent range where available.
               </p>
             </div>
 
@@ -658,7 +661,23 @@ export function AduCostCalculator({
                 Up to 3 free guest searches · No account or credit card needed
               </p>
             </form>
-          </div>
+            <dl className="mt-5 border-t border-lot-line pt-4 text-sm">
+              <dt className="font-semibold text-lot-ink">
+                Certificate of Feasibility · {formatUsdCents(CERTIFICATE_PRICE_CENTS)} one-time
+              </dt>
+              <dd className="mt-1 leading-relaxed text-lot-stone">
+                Add a shareable report with property-specific build-cost estimates, net income,
+                payback, financing scenarios, and fee and permit checks to confirm locally.
+              </dd>
+            </dl>
+            <Link
+              href="/sample-certificate/san-diego"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            >
+              View a sample certificate
+            </Link>
+          </section>
         ) : null}
       </div>
     </section>

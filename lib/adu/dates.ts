@@ -11,20 +11,21 @@ export const PLANNING_LINKS_UPDATED = "2026-11-06";
 export const PLANS_SECTION_ADDED = "2026-11-08";
 export const AUDIT_GUIDES_UPDATED = "2026-11-13";
 export const SEO_AUDIT_20261121_UPDATED = "2026-11-21";
+export const SEARCH_CONSOLE_AUDIT_UPDATED = "2026-11-25";
 export const ELIGIBILITY_GUIDE_PUBLISHED = "2026-11-13";
 export const ELIGIBILITY_GUIDE_AS_OF = "2026-11-13";
 
 /** Per-guide changes made without a new local ordinance review, by slug. */
 export const CITY_NAV_UPDATED: Record<string, string> = {
-  "san-diego-county": SEO_AUDIT_20261121_UPDATED,
-  "san-diego": SEO_AUDIT_20261121_UPDATED,
-  carlsbad: AUDIT_GUIDES_UPDATED,
+  "san-diego-county": SEARCH_CONSOLE_AUDIT_UPDATED,
+  "san-diego": SEARCH_CONSOLE_AUDIT_UPDATED,
+  carlsbad: SEARCH_CONSOLE_AUDIT_UPDATED,
   "chula-vista": AUDIT_GUIDES_UPDATED,
   "el-cajon": AUDIT_GUIDES_UPDATED,
   encinitas: AUDIT_GUIDES_UPDATED,
   escondido: AUDIT_GUIDES_UPDATED,
   "imperial-beach": AUDIT_GUIDES_UPDATED,
-  "la-mesa": AUDIT_GUIDES_UPDATED,
+  "la-mesa": SEARCH_CONSOLE_AUDIT_UPDATED,
   oceanside: AUDIT_GUIDES_UPDATED,
   sacramento: AUDIT_GUIDES_UPDATED,
   "san-jose": AUDIT_GUIDES_UPDATED,
@@ -39,11 +40,11 @@ export function cityLastModified(slug: string, asOf: string): string {
 
 /** Single source of truth for a cost guide's Article.dateModified and sitemap lastmod. */
 export function costPageLastModified(asOf: string): string {
-  return laterDate(asOf, SEO_AUDIT_20261121_UPDATED);
+  return laterDate(asOf, SEARCH_CONSOLE_AUDIT_UPDATED);
 }
 
 export function stateCostLastModified(asOf = "2026-10-07"): string {
-  return laterDate(asOf, AUDIT_GUIDES_UPDATED);
+  return laterDate(asOf, SEARCH_CONSOLE_AUDIT_UPDATED);
 }
 
 export function hubLastModified(): string {
@@ -51,7 +52,7 @@ export function hubLastModified(): string {
 }
 
 export function calculatorLastModified(): string {
-  return AUDIT_GUIDES_UPDATED;
+  return SEARCH_CONSOLE_AUDIT_UPDATED;
 }
 
 export function eligibilityLastModified(): string {

@@ -17,6 +17,16 @@
  */
 import type { JurisdictionContent } from "@/lib/adu/types";
 
+const laMesaAduProgram = {
+  label: "City of La Mesa — Accessory Dwelling Units",
+  url: "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+};
+
+const laMesaDevelopmentMatrix = {
+  label: "City of La Mesa ADU and JADU Development Matrix (2026, PDF)",
+  url: "https://www.cityoflamesa.gov/DocumentCenter/View/26946",
+};
+
 export const laMesa: JurisdictionContent = {
   state: "ca",
   stateName: "California",
@@ -25,9 +35,10 @@ export const laMesa: JurisdictionContent = {
   county: "San Diego County",
   asOf: "2026-10-24",
   published: "2026-10-24",
-  metaTitle: "La Mesa ADU Rules (2026): Size, Height & No Parking",
+  metaTitle: "La Mesa ADU Requirements (2026): Setbacks & Permits",
+  h1: "La Mesa ADU Requirements and Permits (2026)",
   metaDescription:
-    "La Mesa ADU rules: up to 3 ADUs plus a JADU on a single-family lot, 1,200 sq ft detached, 20 ft height, no parking required. Check what fits your lot.",
+    "Check La Mesa ADU requirements for size, setbacks, height and parking. Read the City’s 2026 development matrix and see how to apply for a permit.",
   introAnswer: [
     "Yes — La Mesa's 2026 ADU matrix allows up to three ADUs on a single-family lot plus a junior ADU: one under the state's general ADU rules, one converted from existing space, and one new detached unit of up to 800 square feet. A detached ADU can be up to 1,200 square feet.",
     "La Mesa requires no parking for ADUs. No new, additional or replacement spaces are required anywhere in the city, so a garage converted to an ADU does not have to be replaced with another space.",
@@ -124,9 +135,10 @@ export const laMesa: JurisdictionContent = {
         "After the permit is issued, schedule the City's inspections. The ADU's certificate of occupancy cannot be issued before the main house's.",
     },
   ],
-  permitPortal: {
-    label: "City of La Mesa — Accessory Dwelling Units",
-    url: "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
+  permitPortal: laMesaAduProgram,
+  quickSources: {
+    heading: "Official La Mesa ADU requirements",
+    links: [laMesaDevelopmentMatrix, laMesaAduProgram],
   },
   faqs: [
     {
@@ -176,10 +188,7 @@ export const laMesa: JurisdictionContent = {
       label: "City of La Mesa — Accessory Dwelling Units",
       url: "https://www.cityoflamesa.gov/1821/Accessory-Dwelling-Units",
     },
-    {
-      label: "City of La Mesa ADU and JADU Development Matrix (updated 2026, PDF)",
-      url: "https://www.cityoflamesa.gov/DocumentCenter/View/26946",
-    },
+    laMesaDevelopmentMatrix,
     {
       label: "La Mesa Municipal Code Chapter 24.05, §24.05.020(D)(8)–(9): ADUs and JADUs",
       url: "https://library.municode.com/ca/la_mesa/codes/code_of_ordinances?nodeId=TIT24ZO_CH24.05REZODEST",
