@@ -252,9 +252,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.total > div:last-child {
-  text-align: right;
-}
 .note {
   margin-top: 18px !important;
   color: var(--color-lot-stone-on-dark);
@@ -334,11 +331,5 @@
   }
   .rowAmount {
     font-size: 17px;
-  }
-  .total {
-    flex-direction: column;
-  }
-  .total > div:last-child {
-    text-align: left;
   }
 }
