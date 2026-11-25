@@ -4,7 +4,7 @@ test.describe("mobile studio journey", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "mobile-only suite");
 
   test("golden path: five reveals from find to act", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     // Reveal 1 · Find — the journey replaces the old sheet composition.
     await expect(page.getByTestId("mobile-journey")).toBeVisible();
@@ -13,7 +13,7 @@ test.describe("mobile studio journey", () => {
       page.getByRole("heading", { name: /start with your address/i }),
     ).toBeVisible();
     // With no address typed, the single primary action opens the San Diego example.
-    await page.getByRole("button", { name: "See a San Diego example" }).click();
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
 
     // Reveal 2 · Earn — the money figure appears immediately with a
     // confidence teaser citing the market basis.
@@ -47,7 +47,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("progress targets stay labeled and at least 44px at narrow widths", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
     for (const width of [320, 390, 440, 768]) {
       await page.setViewportSize({ width, height: 844 });
       const rail = page.getByRole("navigation", { name: "Journey progress" });
@@ -65,8 +65,8 @@ test.describe("mobile studio journey", () => {
   });
 
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
-    await page.goto("/studio");
-    await page.getByRole("button", { name: "See a San Diego example" }).click();
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
 
     await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
@@ -91,8 +91,8 @@ test.describe("mobile studio journey", () => {
   });
 
   test("closing fine-tune restores focus when exit animation events are lost", async ({ page }) => {
-    await page.goto("/studio");
-    await page.getByRole("button", { name: "See a San Diego example" }).click();
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
     const trigger = page.getByRole("button", { name: /fine-tune dimensions/i });
     await trigger.click();
@@ -110,8 +110,8 @@ test.describe("mobile studio journey", () => {
   });
 
   test("the rail travels back to completed reveals only", async ({ page }) => {
-    await page.goto("/studio");
-    await page.getByRole("button", { name: "See a San Diego example" }).click();
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await expect(
       page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
@@ -126,7 +126,7 @@ test.describe("mobile studio journey", () => {
     // rail's upcoming steps are inert.
     await expect(
       page.getByRole("navigation", { name: "Journey progress" }).getByRole("button", {
-        name: /check/i,
+        name: /rules & fit/i,
       }),
     ).toBeDisabled();
   });
@@ -151,7 +151,7 @@ test.describe("mobile studio journey", () => {
   });
 
   test("a default-scenario URL still begins at the Find reveal", async ({ page }) => {
-    await page.goto("/studio?parcel=oak-street&size=600&roof=shed&finish=cedar&rent=conservative&openings=1");
+    await page.goto("/studio?parcel=coyote-brush&size=600&roof=shed&finish=cedar&rent=conservative&openings=1", { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByRole("heading", { name: /start with your address/i }),
@@ -163,7 +163,7 @@ test.describe("desktop studio regression", () => {
   test.skip(({ viewport }) => !viewport || viewport.width < 1024, "desktop-only suite");
 
   test("desktop shows the guided spine and never the mobile journey", async ({ page }) => {
-    await page.goto("/studio");
+    await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Rules & fit" })).toBeVisible();

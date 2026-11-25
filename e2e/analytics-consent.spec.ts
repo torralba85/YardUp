@@ -95,7 +95,7 @@ test.describe("analytics consent", () => {
     ]));
   });
 
-  test("records one sanitized page_view on initial load and on client-side navigation", async ({ page }) => {
+  test("records one sanitized page_view on initial load and on client-side navigation", async ({ page, isMobile }) => {
     await page.unroute("https://www.googletagmanager.com/gtag/js?**");
     const collectRequests: { en: string | null; dl: string | null; dp: string | null; dt: string | null; tid: string | null; gcs: string | null }[] = [];
     page.on("request", (request) => {
@@ -141,7 +141,8 @@ test.describe("analytics consent", () => {
     expect(JSON.stringify(initialViews[0])).not.toMatch(/Secret|Main|test@example\.com/);
 
     // Client-side SPA navigation should emit exactly one additional sanitized page_view.
-    await page.locator('a[href="/about"]').first().click();
+    if (isMobile) await page.getByRole("button", { name: "Open menu", exact: true }).click();
+    await page.getByRole("link", { name: "About", exact: true }).filter({ visible: true }).first().click();
     await page.waitForURL("**/about");
 
     await expect

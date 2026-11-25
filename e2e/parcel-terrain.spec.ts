@@ -20,7 +20,7 @@ test("terrain renders relief, placement controls and provenance on desktop and p
   await page.route("**/api/parcel-terrain", async (route) => { requests++; await route.fulfill({ json: terrain }); });
   await page.goto("/");
   await page.evaluate((value) => sessionStorage.setItem("lf:initial-live-parcel", JSON.stringify(value)), parcel);
-  await page.goto("/studio");
+  await page.goto("/studio", { waitUntil: "domcontentloaded" });
   if (viewport && viewport.width < 1024) await page.getByRole("button", { name: /shape your adu/i }).click();
   await page.getByRole("radio", { name: "Terrain", exact: true }).click();
   await expect(page.getByTestId("terrain-canvas").locator("canvas")).toBeVisible();
@@ -47,9 +47,8 @@ test("demo terrain never invents ground elevations", async ({ page, viewport }) 
   test.setTimeout(90_000);
   let requested = false;
   await page.route("**/api/parcel-terrain", async (route) => { requested = true; await route.abort(); });
-  await page.goto("/studio?parcel=oak-street");
+  await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
   if (viewport && viewport.width < 1024) {
-    await page.getByRole("button", { name: "See the Seattle example" }).click();
     await page.getByRole("button", { name: /shape your adu/i }).click();
   }
   await page.getByRole("radio", { name: "Terrain", exact: true }).click();

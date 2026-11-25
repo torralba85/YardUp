@@ -2473,6 +2473,15 @@
 .hero .formNote {
   color: var(--hero-text-muted);
 }
+
+@media (max-width: 800px) {
+  .hero .formNote {
+    width: fit-content;
+    padding-inline: 4px;
+    background: var(--ink);
+    color: var(--chalk);
+  }
+}
 .hero .formError {
   color: var(--chalk);
 }

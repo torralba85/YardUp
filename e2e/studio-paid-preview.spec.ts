@@ -4,9 +4,10 @@ import { expect, test } from "@playwright/test";
 // payback and financed cash flow stay in the certificate (2026-11-18 reversal
 // of the 2026-11-01 unblur).
 test("free Studio shows the rent range while cost, income and payback stay paid", async ({ page }, testInfo) => {
-  await page.goto("/studio?parcel=coyote-brush");
+  await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
   const mobile = testInfo.project.name.includes("mobile");
   if (mobile) {
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await expect(page.getByText("$2,335–$2,919")).toBeVisible();
     await page.getByRole("button", { name: /Shape your ADU/ }).click();
     await expect(page.getByRole("radiogroup", { name: "ADU size", exact: true })).toBeVisible();

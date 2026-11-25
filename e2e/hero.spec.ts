@@ -166,7 +166,7 @@ test.describe("A lot more landing", () => {
     await numbers.locator("summary").click();
     await expect(
       numbers.getByText(
-        /curated Coyote Brush Court demo in San Diego, calculated by the studio engine/,
+        /curated Coyote Brush Court demo in San Diego, calculated by the Studio engine/i,
       ),
     ).toBeVisible();
     await expect(
