@@ -175,7 +175,7 @@ describe("AuthModal focus restore", () => {
     expect(checkbox).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Continue with Google" })).toHaveAccessibleDescription(/confirmation above to enable/);
     expect(screen.getByRole("button", { name: "Continue with Apple" })).toHaveAccessibleDescription(/confirmation above to enable/);
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Continue with Google" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Continue with Apple" })).toBeDisabled();
 
@@ -266,7 +266,7 @@ describe("AuthModal focus restore", () => {
 
     // Email/password flow: the modal closes as soon as signIn resolves,
     // while the trigger is still mounted — focus is restored to it.
-    fireEvent.click(within(dialog).getByRole("button", { name: "Sign In" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(trigger));
 
@@ -393,7 +393,7 @@ describe("AuthModal focus restore", () => {
     fireEvent.change(within(dialog).getByPlaceholderText("••••••••"), {
       target: { value: "hunter2" },
     });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Sign In" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(trigger.isConnected).toBe(true);
 

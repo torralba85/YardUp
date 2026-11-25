@@ -140,7 +140,7 @@ export default function StudioShell({
                 onClick={onReset}
                 className="mt-3 border border-lot-line-dark text-xs font-medium text-lot-chalk hover:border-lot-stone hover:bg-lot-surface-dark-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
               >
-                Reset Project
+                Reset project
               </Button>
             </div>
 
@@ -226,7 +226,7 @@ export default function StudioShell({
                 onClick={() => setIsAuthModalOpen(true)}
                 className="border border-lot-stone-on-dark text-sm font-semibold text-lot-chalk hover:bg-lot-surface-dark focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
               >
-                Sign In
+                Sign in
               </Button>
             )}
           </div>

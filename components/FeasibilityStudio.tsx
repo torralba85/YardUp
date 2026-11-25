@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import {
   getParcelById,
+  DEFAULT_PARCEL_ID,
+  defaultParcelPreset,
+  demoPresets,
   parcelPresets,
   type ADUConfig,
   type FinancialAssumptions,
@@ -183,7 +186,7 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
  *   starts at the Earn reveal instead of asking them to find a lot again.
  */
 export default function FeasibilityStudio({ demoChosen = false, nativeShell = false, initialScenario }: { demoChosen?: boolean; nativeShell?: boolean; initialScenario?: SavedScenario } = {}) {
-  const initialPreset = parcelPresets[0];
+  const initialPreset = defaultParcelPreset;
   return (
     <ParcelProvider initialPreset={initialPreset}>
       <FeasibilityStudioInner demoChosen={demoChosen} nativeShell={nativeShell} initialScenario={initialScenario} />
@@ -227,6 +230,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
     }
     return "feasibility";
   });
+  // Steps the visitor has opened, so the rail never shows a skipped step as
+  // done. A lot is always loaded on desktop, so "lot" starts complete.
+  const [visitedSteps, setVisitedSteps] = useState<ReadonlySet<StudioStep>>(
+    () => new Set<StudioStep>(["lot", activeStep]),
+  );
+  if (!visitedSteps.has(activeStep)) {
+    setVisitedSteps(new Set(Array.from(visitedSteps).concat(activeStep)));
+  }
   // Focus target for the active step body — moved to on step change so keyboard
   // and screen-reader users land on the new content, not back at the rail.
   const stepBodyRef = useRef<HTMLDivElement | null>(null);
@@ -860,7 +871,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
 
   function resetScenario(): boolean {
     if (!window.confirm("Reset this project? Unsaved changes to your lot, design and assumptions will be discarded.")) return false;
-    resetToPreset(parcelPresets[0]);
+    resetToPreset(defaultParcelPreset);
     dispatchScenario({ type: "reset" });
     setReportOpen(false);
     setBuilderLeadOpen(false);
@@ -1279,7 +1290,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                   <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
                   <Button
                     variant="secondary"
-                    onClick={() => switchToPreset(parcelPresets[0].id)}
+                    onClick={() => switchToPreset(DEFAULT_PARCEL_ID)}
                   >
                     Explore demo lot
                   </Button>
@@ -1525,7 +1536,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onClick={() => setJourneyStep("find")}
                 className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
-                Evaluate My Lot
+                Check my lot
               </button>
             </div>
           )}
@@ -1602,7 +1613,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // P1 keeps the whole journey explorable on any loaded lot (presets included);
   // the paid preconditions (certificate purchase, builder charge) are enforced
   // at those actions in later phases, not as navigation locks.
-  const steps = deriveStepStates(activeStep, { hasParcel: true });
+  const steps = deriveStepStates(activeStep, { hasParcel: true, visited: visitedSteps });
   const currentStepMeta = STUDIO_STEPS.find((s) => s.id === activeStep)!;
   // Project context follows the lot step; detailed figures open on demand.
   const showsVerdictBand = activeStep !== "lot";
@@ -1643,7 +1654,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 onClick={handleChangeAddress}
                 className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
-                Evaluate My Lot
+                Check my lot
               </button>
             )}
           </div>
@@ -2082,7 +2093,7 @@ function LotStep({
           <label className="block pb-4 text-sm text-lot-stone">
             Sample Property
             <Select name="parcelPreset" autoComplete="off" value={parcelId} onChange={(event) => onPresetChange(event.target.value)} className="mt-2 block">
-              {parcelPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({formatNumber(preset.lotArea)} sf)</option>)}
+              {demoPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name} ({formatNumber(preset.lotArea)} sf)</option>)}
             </Select>
           </label>
         </details>
@@ -2093,7 +2104,7 @@ function LotStep({
               <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-lot-ink">{monthlyRent}<span className="ml-2 text-sm font-normal">/mo</span></p>
             </div>}
             <Button variant="commit" rightIcon={<ArrowRight size={16} />} onClick={onContinue}>
-              Continue to Rules &amp; Fit
+              Continue to rules &amp; fit
             </Button>
           </div>
       </div>

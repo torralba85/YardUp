@@ -52,7 +52,7 @@ export default function ActStep({
       <div className="border-b border-lot-line bg-lot-surface px-5 pb-6 pt-7">
         <p className="lf-kicker flex items-center gap-1.5 text-status-eligible">
           <Sparkles size={13} aria-hidden="true" />
-          Step 5 · Act
+          Step 5 · Certificate
         </p>
         <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
           Your feasibility study is ready.

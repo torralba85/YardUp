@@ -10,6 +10,7 @@ import {
   finishLabels,
   footprintOptions,
   formatCurrency,
+  demoPresets,
   parcelPresets,
   roofLabels,
 } from "@/lib/feasibility";
@@ -376,7 +377,7 @@ export default function FeasibilityInspector({
                     value={parcelId}
                     onChange={(event) => onParcelChange(event.target.value)}
                   >
-                    {parcelPresets.map((preset) => (
+                    {demoPresets.map((preset) => (
                       <option key={preset.id} value={preset.id}>
                         {preset.name} ({formatNumber(preset.lotArea)} sf)
                       </option>

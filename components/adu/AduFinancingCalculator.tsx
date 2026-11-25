@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/Field";
 import { calculateMonthlyPayment } from "@/lib/certificate-pro-forma";
 import { formatCurrency } from "@/lib/feasibility";
+import { formatNumber } from "@/lib/intl-format";
 
 export function AduFinancingCalculator({
   projectCost,
@@ -45,15 +46,13 @@ export function AduFinancingCalculator({
               name="loanAmount"
               autoComplete="off"
               inputMode="numeric"
-              type="number"
-              min="0"
-              max={projectCost}
-              step="1"
-              value={loan}
+              type="text"
+              value={loan === "" ? "" : formatNumber(Number(loan))}
               aria-invalid={!loanValid}
               aria-describedby={!loanValid ? "adu-loan-error" : "adu-financing-note"}
               onChange={(event) => {
-                setCustomLoan(event.target.value);
+                // Shown with thousands separators; stored as digits only.
+                setCustomLoan(event.target.value.replace(/[^0-9]/g, ""));
               }}
             />
           </label>

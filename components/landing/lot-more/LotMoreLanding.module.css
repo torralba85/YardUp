@@ -1568,8 +1568,11 @@
     background:
       linear-gradient(180deg, color-mix(in srgb, var(--ink) 80%, transparent) 0%, color-mix(in srgb, var(--ink) 66%, transparent) 46%, color-mix(in srgb, var(--ink) 38%, transparent) 70%, color-mix(in srgb, var(--ink) 82%, transparent) 100%);
   }
+  /* A phone shows a narrow slice of the photo. 40% 55% frames the cottage's
+     corner, window, chairs and deck; 70% landed on the dark interior, so the
+     hero read as a brown texture rather than a backyard home. */
   .heroPhoto {
-    object-position: 70% 50%;
+    object-position: 40% 55%;
   }
   .heroAside {
     align-items: stretch;

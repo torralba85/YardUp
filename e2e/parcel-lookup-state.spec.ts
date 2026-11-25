@@ -20,7 +20,7 @@ test("failed parcel lookup hides sample figures and retry restores property resu
   await expect(page.getByText("Parcel data is unavailable for this address. Please try again.")).toBeVisible();
   await expect(page.getByTestId("demo-mode-banner")).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Free property preview" })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "What your backyard could earn" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "What a backyard home could rent for" })).toHaveCount(0);
   await expect(page.getByText("1234 Oak Street", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Demo mode will be used/)).toHaveCount(0);
 
@@ -32,7 +32,7 @@ test("failed parcel lookup hides sample figures and retry restores property resu
     await page.getByRole("button", { name: "Retry lookup" }).click();
   }
   await expect(page.getByTestId("property-lookup-error")).toHaveCount(0);
-  await expect(page.getByRole("region", { name: isMobile ? "What your backyard could earn" : "Free property preview" })).toBeVisible();
+  await expect(page.getByRole("region", { name: isMobile ? "What a backyard home could rent for" : "Free property preview" })).toBeVisible();
   await expect(page.getByText(SAMPLE_LIVE_PARCEL.address, { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("demo-mode-banner")).toHaveCount(0);
 });
@@ -43,9 +43,9 @@ test("failed geocode shows recovery actions and only an explicit choice enables 
   await expect(page.getByTestId("demo-mode-banner")).toHaveCount(0);
   await expect(page.getByText(/We couldn't find that address/)).toBeVisible();
   await expect(page.getByRole("region", { name: "Free property preview" })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "What your backyard could earn" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "What a backyard home could rent for" })).toHaveCount(0);
 
   await page.getByRole("button", { name: isMobile ? "See the Seattle example" : "Explore demo lot" }).click();
   await expect(page.getByTestId("demo-mode-banner")).toContainText("Demo Mode: Seattle");
-  await expect(page.getByRole("region", { name: isMobile ? "What your backyard could earn" : "Free property preview" })).toBeVisible();
+  await expect(page.getByRole("region", { name: isMobile ? "What a backyard home could rent for" : "Free property preview" })).toBeVisible();
 });

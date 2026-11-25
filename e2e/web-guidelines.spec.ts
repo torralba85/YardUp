@@ -38,7 +38,7 @@ test("desktop upload keyboard focus is visible and reset can be cancelled", asyn
   // The 2px ring sits outside a 2px offset, producing a 4px shadow spread.
   await expect(upload.locator("..")).toHaveCSS("box-shadow", /rgb\(196, 55, 8\) 0px 0px 0px 4px/);
   page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Reset Project" }).click();
+  await page.getByRole("button", { name: "Reset project" }).click();
   await expect(upload).toBeVisible();
   await page.getByRole("link", { name: "Skip to content" }).focus();
   await page.keyboard.press("Enter");

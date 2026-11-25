@@ -18,7 +18,7 @@ test.describe("mobile studio journey", () => {
     // Reveal 2 · Earn — the money figure appears immediately with a
     // confidence teaser citing the market basis.
     await expect(
-      page.getByRole("heading", { name: /your backyard could earn/i }),
+      page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
     await expect(page.getByTestId("earn-confidence")).toBeVisible();
     await page.getByRole("button", { name: /shape your adu/i }).click();
@@ -58,8 +58,8 @@ test.describe("mobile studio journey", () => {
         expect(box?.width).toBeGreaterThanOrEqual(44);
         expect(box?.height).toBeGreaterThanOrEqual(44);
       }
-      await expect(rail.getByText("Find", { exact: true })).toBeVisible();
-      await expect(rail.getByText("Act", { exact: true })).toBeVisible();
+      await expect(rail.getByText("Your lot", { exact: true })).toBeVisible();
+      await expect(rail.getByText("Certificate", { exact: true })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   });
@@ -113,7 +113,7 @@ test.describe("mobile studio journey", () => {
     await page.goto("/studio");
     await page.getByRole("button", { name: "See a San Diego example" }).click();
     await expect(
-      page.getByRole("heading", { name: /your backyard could earn/i }),
+      page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
 
     // Back chevron returns to Find.
@@ -136,7 +136,7 @@ test.describe("mobile studio journey", () => {
 
     // The restored lot's money figure is the first visible state.
     await expect(
-      page.getByRole("heading", { name: /your backyard could earn/i }),
+      page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
     await expect(page.getByText("812 Linden Avenue", { exact: true })).toBeVisible();
     await expect(
@@ -166,7 +166,7 @@ test.describe("desktop studio regression", () => {
     await page.goto("/studio");
 
     await expect(page.getByRole("navigation", { name: "Studio steps" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Rules & Fit" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Rules & fit" })).toBeVisible();
     await expect(page.getByTestId("mobile-journey")).not.toBeVisible();
   });
 });

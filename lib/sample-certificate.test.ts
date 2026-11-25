@@ -27,11 +27,15 @@ describe("public sample Certificate", () => {
     expect(html).toContain("Print menu");
     expect(html).not.toContain("<script");
     const document = new DOMParser().parseFromString(html, "text/html");
-    const startLinks = document.querySelectorAll('a[href="/studio"]');
+    const startLinks = document.querySelectorAll('.sample-action a[href="/studio"]');
     expect(startLinks).toHaveLength(2);
     for (const link of Array.from(startLinks)) {
-      expect(link.textContent).toBe("Start with my lot");
+      expect(link.textContent).toBe("Check my lot");
       expect(link.getAttribute("target")).toBe("_top");
     }
+    // The header matches PublicHeader: shared links and the same call to action.
+    const nav = document.querySelector(".sample-topbar")!;
+    expect(nav.querySelector(".sample-nav-cta")?.textContent).toBe("Check my lot →");
+    expect(Array.from(nav.querySelectorAll(".sample-links > a:not(.sample-nav-cta)")).map((link) => link.textContent)).toEqual(["Lot quiz", "ADU guides", "Calculator", "About", "Help"]);
   });
 });

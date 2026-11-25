@@ -23,22 +23,27 @@ describe("AduCostCalculator", () => {
     window.history.replaceState(null, "", "/");
   });
 
-  it("renders the Los Angeles 600 sq ft estimate by default", () => {
+  it("renders the San Diego County 600 sq ft estimate by default", () => {
     render(<AduCostCalculator />);
+    expect(screen.getByLabelText("County")).toHaveValue("san-diego");
+  });
+
+  it("renders the Los Angeles 600 sq ft estimate", () => {
+    render(<AduCostCalculator initialCounty="los-angeles" />);
     expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
     expect(screen.getByText("$2,402")).toBeInTheDocument();
     expect(screen.getByText("12.9 years")).toBeInTheDocument();
   });
 
   it("keeps loan changes out of the budget and updates the comparison when quotes change", () => {
-    render(<AduCostCalculator />);
+    render(<AduCostCalculator initialCounty="los-angeles" />);
     fireEvent.change(screen.getByLabelText("Loan amount ($)"), { target: { value: "100000" } });
     expect(screen.getByText("$251,340")).toBeInTheDocument();
     expect(screen.getByText("12.9 years")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Replace allowance with a real quote"));
     fireEvent.change(screen.getByLabelText("Construction quote ($)"), { target: { value: "200000" } });
     expect(screen.getByText("$236,000")).toBeInTheDocument();
-    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue(100000);
+    expect(screen.getByLabelText("Loan amount ($)")).toHaveValue("100,000");
   });
 
   it("can start on another county, e.g. on a county cost page", () => {
@@ -58,7 +63,7 @@ describe("AduCostCalculator", () => {
   });
 
   it("recomputes when the size changes", () => {
-    render(<AduCostCalculator />);
+    render(<AduCostCalculator initialCounty="los-angeles" />);
     fireEvent.change(screen.getByLabelText("Unit size"), {
       target: { value: "400" },
     });
@@ -116,13 +121,13 @@ describe("AduCostCalculator", () => {
   });
 
   it("submits the free address check beside the result, stashing query and tracking event", () => {
-    render(<AduCostCalculator />);
+    render(<AduCostCalculator initialCounty="los-angeles" />);
 
     expect(screen.getByText("Free address check")).toBeInTheDocument();
     const addressInput = screen.getByLabelText("Your California street address");
     fireEvent.change(addressInput, { target: { value: "456 Ocean Blvd, San Diego, CA" } });
 
-    fireEvent.click(screen.getByRole("button", { name: "Check my address free" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     expect(trackEventMock).toHaveBeenCalledWith("adu_cta_calculator", {
       city_slug: "los-angeles",

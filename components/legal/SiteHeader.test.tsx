@@ -23,7 +23,7 @@ describe("SiteHeader", () => {
 
     const nav = screen.getByRole("navigation", { name: "Main navigation" });
     expect(nav.querySelector('a[href="/about"]')).toHaveAttribute("aria-current", "page");
-    expect(nav.querySelector('a[href="/"]')).not.toHaveAttribute("aria-current");
+    expect(nav.querySelector('a[href="/adu/ca"]')).not.toHaveAttribute("aria-current");
   });
 
   it("opens the phone menu and closes it on Escape, returning focus", async () => {
@@ -38,7 +38,7 @@ describe("SiteHeader", () => {
     expect(close).toHaveAttribute("aria-expanded", "true");
     const menu = screen.getByRole("navigation", { name: "Mobile navigation" });
     expect(close).toHaveAttribute("aria-controls", menu.id);
-    expect(menu.querySelector('a[href="/"]')).toHaveTextContent("Home");
+    expect(menu.querySelector('a[href="/can-i-build-a-backyard-home"]')).toHaveTextContent("Lot quiz");
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("navigation", { name: "Mobile navigation" })).toBeNull();

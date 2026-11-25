@@ -44,13 +44,13 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
 
   return (
     <section
-      aria-label="What your backyard could earn"
+      aria-label="What a backyard home could rent for"
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lot-orange-ink">Step 2 · Earn</p>
+      <p className="lf-kicker text-lot-orange-ink">Step 2 · Rent</p>
       <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
-        Your backyard could earn
+        What it could rent for
       </h2>
       <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
 

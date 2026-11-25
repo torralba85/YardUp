@@ -19,7 +19,7 @@ test("email capture appears on results and stays out of the design flow", async 
     await page.getByRole("button", { name: "Check feasibility" }).click();
     await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
   } else {
-    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & Fit/ }).click();
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & fit/ }).click();
     await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();

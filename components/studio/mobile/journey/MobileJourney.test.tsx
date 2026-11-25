@@ -21,7 +21,7 @@ describe("MobileJourney", () => {
     );
     expect(main.scrollTop).toBe(0);
     expect(main).toHaveFocus();
-    expect(main).toHaveAccessibleName("Check step");
+    expect(main).toHaveAccessibleName("Rules & fit step");
     main.scrollTop = 100;
     rerender(
       <MobileJourney {...props} steps={deriveJourneySteps("check", { found: true })}>

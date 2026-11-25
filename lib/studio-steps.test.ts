@@ -62,4 +62,12 @@ describe("deriveStepStates", () => {
     expect(stateFor(steps, "feasibility")).toBe("done");
     expect(stateFor(steps, "design")).toBe("current");
   });
+
+  it("leaves a skipped earlier step upcoming instead of showing it done", () => {
+    const steps = deriveStepStates("certificate", { hasParcel: true, visited: new Set<StudioStep>(["lot", "feasibility", "certificate"]) });
+    expect(stateFor(steps, "lot")).toBe("done");
+    expect(stateFor(steps, "feasibility")).toBe("done");
+    expect(stateFor(steps, "design")).toBe("upcoming");
+    expect(stateFor(steps, "certificate")).toBe("current");
+  });
 });

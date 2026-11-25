@@ -58,7 +58,7 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
 test("support text stays readable on hover", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "hover-capable pointer");
   await page.goto("/help");
-  const openStudio = page.getByRole("link", { name: "Open studio", exact: true });
+  const openStudio = page.getByRole("banner").getByRole("link", { name: "Check my lot", exact: true });
   await openStudio.hover();
   await expect(openStudio).toHaveCSS("color", "rgb(22, 22, 22)");
 });

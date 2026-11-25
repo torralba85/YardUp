@@ -44,7 +44,7 @@ test.describe("Studio photoreal scan (beta)", () => {
     test.setTimeout(60_000);
     await page.goto("/studio");
     // The sample-property picker lives on Your Lot; the Studio opens on Rules & Fit.
-    await page.getByRole("button", { name: "Your Lot" }).click();
+    await page.getByRole("button", { name: "Your lot" }).click();
 
     const views = parcelViews(page);
     await expect(views.getByRole("radio", { name: /^Scan/ })).toBeVisible();

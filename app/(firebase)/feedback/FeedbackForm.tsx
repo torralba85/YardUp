@@ -197,7 +197,7 @@ function FeedbackFields() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com…"
+          placeholder="you@example.com"
         />
         {invalidField === "email" && <p id="feedback-email-error" role="alert" className="mt-1 text-sm text-status-blocked">{error}</p>}
       </div>

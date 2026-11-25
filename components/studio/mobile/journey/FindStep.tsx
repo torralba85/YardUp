@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowRight, Search } from "lucide-react";
-import { parcelPresets } from "@/lib/feasibility";
+import { demoPresets, parcelPresets } from "@/lib/feasibility";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { Button } from "@/components/ui/Button";
@@ -63,7 +63,7 @@ export default function FindStep({
       setUserPickedPreset(true);
       onPresetSelect(id);
     },
-    values: parcelPresets.map((p) => p.id),
+    values: demoPresets.map((p) => p.id),
   });
 
   return (
@@ -72,7 +72,7 @@ export default function FindStep({
       className="flex min-h-full flex-col px-5 pt-7"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <p className="lf-kicker text-lot-orange-ink">Step 1 · Find</p>
+      <p className="lf-kicker text-lot-orange-ink">Step 1 · Your lot</p>
       <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
         Start with your address.
       </h2>
@@ -104,11 +104,11 @@ export default function FindStep({
         )}
       </div>
 
-      <p className="mt-7 lf-kicker-dense text-lot-stone">
+      <p className="mt-7 lf-kicker text-lot-stone">
         Or explore a demo lot
       </p>
       <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots" {...groupProps}>
-        {parcelPresets.map((preset) => {
+        {demoPresets.map((preset) => {
           const selected = selectedPresetId === preset.id;
           return (
             <Button

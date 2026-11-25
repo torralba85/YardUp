@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { parcelPresets } from "@/lib/feasibility";
+import { demoPresets, parcelPresets } from "@/lib/feasibility";
 import FindStep from "./FindStep";
 
 vi.mock("@/lib/auth-context", () => ({
@@ -32,12 +32,14 @@ describe("FindStep", () => {
     const group = screen.getByRole("radiogroup", { name: "Demo lots" });
     expect(group).toBeInTheDocument();
 
-    const seattleButton = screen.getByRole("radio", { name: parcelPresets[0].city.split(",")[0] });
-    expect(seattleButton).toHaveAttribute("aria-checked", "false");
-    expect(seattleButton).toHaveAttribute("tabindex", "0");
+    // San Diego leads the demos (the Studio default), so it holds the group's tab stop.
+    const sanDiegoButton = screen.getByRole("radio", { name: demoPresets[0].city.split(",")[0] });
+    expect(demoPresets[0].id).toBe("coyote-brush");
+    expect(sanDiegoButton).toHaveAttribute("aria-checked", "false");
+    expect(sanDiegoButton).toHaveAttribute("tabindex", "0");
 
-    await user.click(seattleButton);
-    expect(onPresetSelect).toHaveBeenCalledWith(parcelPresets[0].id);
+    await user.click(sanDiegoButton);
+    expect(onPresetSelect).toHaveBeenCalledWith("coyote-brush");
   });
 
   it("supports roving tabindex and arrow-key navigation across demo lots", async () => {

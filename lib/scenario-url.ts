@@ -4,6 +4,7 @@ import {
   defaultFinancialAssumptions,
   footprintOptions,
   getParcelById,
+  defaultParcelPreset,
   parcelPresets,
   type ADUConfig,
   type ExteriorFinish,
@@ -51,8 +52,8 @@ const validFootprints = new Set(footprintOptions.map((option) => option.value));
 export const defaultScenarioState: ScenarioState = {
   version: SCENARIO_VERSION,
   heightConvention: HEIGHT_CONVENTION,
-  pose: defaultPose(parcelPresets[0], defaultAduConfig),
-  parcelId: parcelPresets[0].id,
+  pose: defaultPose(defaultParcelPreset, defaultAduConfig),
+  parcelId: defaultParcelPreset.id,
   config: defaultAduConfig,
   assumptions: defaultFinancialAssumptions,
 };
