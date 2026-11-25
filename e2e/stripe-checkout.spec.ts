@@ -89,7 +89,7 @@ test.describe("web certificate checkout", () => {
     expect((body.checkoutAttemptId as string).length).toBeGreaterThan(0);
     // The scenario query rides along so Stripe returns the buyer to the same lot.
     expect(body.certKey).toBe(CHECKOUT_CERT_KEY);
-    expect(body.returnSearch).toEqual(expect.stringContaining("step=certificate"));
+    expect(new URLSearchParams(String(body.returnSearch)).get("layout")).toBe(LAYOUT_TOKEN);
   });
 
   test("a retried checkout reuses the same attempt id", async ({ page }) => {
