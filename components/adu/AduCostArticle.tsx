@@ -167,7 +167,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
           city={city.city}
           slug={ctaSlug}
           placement="top"
-          heading={`Check buildable yard area and ADU budget on your ${city.city} lot`}
+          compactHeading={city.slug === "san-diego" ? "Check what could fit on your San Diego lot" : undefined}
         />
       </div>
 

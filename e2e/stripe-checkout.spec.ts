@@ -1,4 +1,6 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { EMAIL_SCENARIO } from "../test/fixtures/email-scenario";
+import { certificateKey } from "../lib/certificate-key";
 import { mockGuestAnonymousCheckoutAuth, mockTestOwnerAuth } from "./fixtures/studio-auth";
 
 // Browser-side audit of the web certificate checkout. The Stripe API and the
@@ -8,6 +10,18 @@ import { mockGuestAnonymousCheckoutAuth, mockTestOwnerAuth } from "./fixtures/st
 
 const STRIPE_CHECKOUT_URL = "https://checkout.stripe.com/c/pay/cs_test_e2e_fixture";
 const CERTIFICATE_ROUTE = "**/api/stripe/checkout-certificate";
+const CHECKOUT_PARCEL = EMAIL_SCENARIO.liveParcel!;
+const CHECKOUT_CERT_KEY = certificateKey(CHECKOUT_PARCEL);
+const LAYOUT_TOKEN = "a".repeat(48);
+
+async function visitCertificate(page: Page, state: Record<string, string> = {}) {
+  await page.route(`**/api/studio/scenario-link/${LAYOUT_TOKEN}`, (route) =>
+    route.fulfill({ json: { scenario: EMAIL_SCENARIO } }),
+  );
+  const query = new URLSearchParams({ layout: LAYOUT_TOKEN, step: "certificate", ...state });
+  await page.goto(`/studio?${query}`);
+  await expect(page.getByText(CHECKOUT_PARCEL.address, { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+}
 
 async function signIn(page: Page) {
   await mockTestOwnerAuth(page);
@@ -15,23 +29,25 @@ async function signIn(page: Page) {
   await page.getByLabel("Email", { exact: true }).fill("studio-owner@example.test");
   await page.getByLabel("Password", { exact: true }).fill("Browser-fixture-only-123!");
   await page.locator('button[type="submit"]').click();
-  await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible();
+  await page.waitForURL("**/studio", { timeout: 25_000 });
+  await expect(page.getByRole("heading", { name: "Start with your property." })).toBeVisible({ timeout: 15_000 });
 }
 
 function unlockButton(page: Page) {
   return page.getByRole("button", { name: /Get your Certificate/ }).filter({ visible: true }).first();
 }
 
-async function openCertificateStep(page: Page, query = "parcel=oak-street&step=certificate") {
-  await page.goto(`/studio?${query}`);
+async function openCertificateStep(page: Page, state?: Record<string, string>) {
+  await visitCertificate(page, state);
   await expect(unlockButton(page)).toBeVisible();
 }
 
 test.describe("web certificate checkout", () => {
+  test.setTimeout(60_000);
   test("an unresolved Checkout return offers recovery instead of another purchase", async ({ page }, testInfo) => {
     test.setTimeout(60000);
     await signIn(page);
-    await page.goto("/studio?parcel=oak-street&cert=oak-street&checkout=returned");
+    await visitCertificate(page, { cert: CHECKOUT_CERT_KEY, checkout: "returned" });
     await expect(page.getByText("Checking certificate access. Your access record may still be arriving.").filter({ visible: true }).first()).toBeVisible();
     await expect(unlockButton(page)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Check again" }).filter({ visible: true }).first()).toBeVisible({ timeout: 40000 });
@@ -72,7 +88,8 @@ test.describe("web certificate checkout", () => {
     expect(typeof body.checkoutAttemptId).toBe("string");
     expect((body.checkoutAttemptId as string).length).toBeGreaterThan(0);
     // The scenario query rides along so Stripe returns the buyer to the same lot.
-    expect(body.returnSearch).toEqual(expect.stringContaining("parcel=oak-street"));
+    expect(body.certKey).toBe(CHECKOUT_CERT_KEY);
+    expect(body.returnSearch).toEqual(expect.stringContaining("step=certificate"));
   });
 
   test("a retried checkout reuses the same attempt id", async ({ page }) => {
@@ -136,7 +153,7 @@ test.describe("web certificate checkout", () => {
 
   test("returning from a cancelled Stripe checkout shows a calm notice once", async ({ page }) => {
     await signIn(page);
-    await openCertificateStep(page, "parcel=oak-street&step=certificate&checkout=cancelled");
+    await openCertificateStep(page, { checkout: "cancelled" });
 
     const notice = page.getByText("Checkout cancelled. Your property analysis is still here whenever you're ready.");
     await expect(notice.first()).toBeVisible();
@@ -153,7 +170,7 @@ test.describe("web certificate checkout", () => {
     await page.route(CERTIFICATE_ROUTE, (route) =>
       route.fulfill({ status: 502, json: { error: "Could not start checkout. Please try again." } }),
     );
-    await openCertificateStep(page, "parcel=oak-street&step=certificate&checkout=cancelled");
+    await openCertificateStep(page, { checkout: "cancelled" });
     const notice = page.getByText("Checkout cancelled. Your property analysis is still here whenever you're ready.");
     await expect(notice.first()).toBeVisible();
     await unlockButton(page).click();
@@ -177,7 +194,7 @@ test.describe("web certificate checkout", () => {
       route.fulfill({ contentType: "text/html", body: "<title>Stripe Checkout (stub)</title><h1>Stub checkout</h1>" }),
     );
 
-    await page.goto("/studio?parcel=oak-street&step=certificate");
+    await visitCertificate(page);
     const cta = page.getByRole("button", { name: /Continue to secure checkout/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
 
@@ -251,10 +268,7 @@ test.describe("web certificate checkout", () => {
       await route.fulfill({ status: 401, json: { error: "unauthorized" } });
     });
 
-    // The native shell opens on its own onboarding; a guest reaches the demo lot through it.
-    await page.goto("/studio?parcel=oak-street&step=certificate");
-    await page.getByRole("button", { name: /Seattle, WA/ }).click();
-    await page.getByRole("button", { name: /Open the Studio/ }).click();
+    await visitCertificate(page);
     const cta = page.getByRole("button", { name: /Continue to purchase/ }).filter({ visible: true }).first();
     await expect(cta).toBeVisible();
     await expect(page.getByRole("checkbox")).toHaveCount(0);

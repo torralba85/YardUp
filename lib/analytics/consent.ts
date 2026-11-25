@@ -1,10 +1,8 @@
 /**
  * Cookie-consent state for Google Analytics.
  *
- * Analytics is opt-in: nothing is loaded and no cookie is written until the
- * visitor explicitly accepts. The decision lives in `localStorage` (not a
- * cookie) so that declining leaves no browser storage attributable to
- * analytics at all.
+ * Analytics and Ads cookies are opt-in. GA can measure page views without
+ * cookies while consent is denied. The choice itself lives in localStorage.
  *
  * Every accessor is SSR-safe and swallows storage failures: Safari private
  * mode, embedded webviews, and "block all cookies" settings all throw on
@@ -19,7 +17,7 @@ export const CONSENT_STORAGE_KEY = "lf-analytics-consent";
  * category). A stored decision from an older version is treated as `unset`, so
  * the banner re-asks instead of silently inheriting stale consent.
  */
-export const CONSENT_VERSION = 2;
+export const CONSENT_VERSION = 3;
 
 /** Fired on `window` when the decision changes in this tab. */
 export const CONSENT_CHANGE_EVENT = "lf:analytics-consent-change";
@@ -57,16 +55,6 @@ interface StoredConsent {
 
 function isDecision(value: unknown): value is ConsentDecision {
   return value === "granted" || value === "denied";
-}
-
-function pushConsentUpdate(decision: ConsentDecision): void {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-  window.gtag("consent", "update", {
-    ad_storage: decision,
-    ad_user_data: decision,
-    ad_personalization: "denied",
-    analytics_storage: decision,
-  });
 }
 
 /**
@@ -130,7 +118,6 @@ export function writeConsent(decision: ConsentDecision): void {
     // Non-browser or sandbox.
   }
 
-  pushConsentUpdate(decision);
   window.dispatchEvent(
     new CustomEvent<ConsentState>(CONSENT_CHANGE_EVENT, { detail: decision }),
   );
@@ -157,7 +144,6 @@ export function clearConsent(): void {
     // Non-browser or sandbox.
   }
 
-  pushConsentUpdate("denied");
   window.dispatchEvent(
     new CustomEvent<ConsentState>(CONSENT_CHANGE_EVENT, { detail: "unset" }),
   );

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("lf-analytics-consent", JSON.stringify({
-      decision: "denied", version: 2, decidedAt: new Date().toISOString(),
+      decision: "denied", version: 3, decidedAt: new Date().toISOString(),
     }));
   });
 });

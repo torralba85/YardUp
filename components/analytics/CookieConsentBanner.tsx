@@ -63,7 +63,7 @@ export function CookieConsentBanner() {
       >
         <div className="pointer-events-auto mx-auto flex w-full max-w-5xl flex-col gap-1.5 rounded-none border-t border-lot-line bg-lot-chalk px-3 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-none sm:flex-row sm:items-center sm:gap-4 sm:border sm:px-4 sm:py-2">
           <p className="lf-caption flex-1 text-lot-ink">
-            Allow Google Analytics and Google Ads cookies to measure how people find LotFoundry? Google never gets your address or results.
+            Allow Google Analytics and Google Ads cookies? Google Analytics also measures visits without cookies.
           </p>
           <div className="flex shrink-0 items-center gap-2.5 sm:gap-3">
             <Link

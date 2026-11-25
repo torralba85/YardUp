@@ -24,12 +24,14 @@ export function AduStudioCta({
   slug,
   placement,
   heading = "These are the rules. Here is what they mean for your lot.",
+  compactHeading,
 }: {
   city: string;
   slug: string;
   placement: AduCtaPlacement;
   /** Overrides the rules-page heading, e.g. on a cost page. */
   heading?: string;
+  compactHeading?: string;
 }) {
   const isCompactTop = placement === "top";
   const surface =
@@ -56,7 +58,7 @@ export function AduStudioCta({
               : "font-display text-2xl font-medium tracking-tight text-lot-chalk"
           }
         >
-          {isCompactTop ? `Check your ${city} address in 3D` : heading}
+          {isCompactTop ? (compactHeading ?? `Check your ${city} address in 3D`) : heading}
         </p>
       )}
       <p

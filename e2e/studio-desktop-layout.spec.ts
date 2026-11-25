@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem(
       "lf-analytics-consent",
-      JSON.stringify({ decision: "denied", version: 2, decidedAt: new Date().toISOString() }),
+      JSON.stringify({ decision: "denied", version: 3, decidedAt: new Date().toISOString() }),
     );
   });
 });
