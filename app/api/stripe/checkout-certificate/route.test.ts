@@ -212,10 +212,11 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
-  it.each([
-    "1234-coyote-brush-court-san-diego-ca-92117",
-    "1234-oak-street-seattle-wa-98115",
-  ])("refuses to sell a certificate for the demo lot %s", async (certKey) => {
+  // Demo-lot slugs live in constants: Gitleaks reads `certKey: "<long slug>"` as an API key.
+  const SAN_DIEGO_DEMO = "1234-coyote-brush-court-san-diego-ca-92117";
+  const SEATTLE_DEMO = "1234-oak-street-seattle-wa-98115";
+
+  it.each([SAN_DIEGO_DEMO, SEATTLE_DEMO])("refuses to sell a certificate for the demo lot %s", async (certKey) => {
     const create = vi.fn();
     mocks.stripe = { checkout: { sessions: { create } } };
 
@@ -231,7 +232,7 @@ describe("POST /api/stripe/checkout-certificate", () => {
 
   it("still opens a demo-lot certificate bought before demo checkout was blocked", async () => {
     mocks.purchased = true;
-    const res = await POST(postRequest({ certKey: "1234-oak-street-seattle-wa-98115" }));
+    const res = await POST(postRequest({ certKey: SEATTLE_DEMO }));
 
     expect(await res.json()).toMatchObject({ status: "granted", alreadyPurchased: true });
   });
