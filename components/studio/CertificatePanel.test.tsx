@@ -200,7 +200,8 @@ const brief: AIProjectBrief = {
   disclaimer: "Planning estimate only.",
 };
 
-const parcel = parcelPresets[0];
+// A real-style address: demo lots are never sold (see the demo-lot tests below).
+const parcel = { ...parcelPresets[0], address: "413 Elmwood Ave", city: "Seattle, WA 98115" };
 const result = calculateFeasibility(
   parcel,
   defaultAduConfig,
@@ -341,6 +342,30 @@ describe("CertificatePanel", () => {
 
     expect(screen.getByText("Certificate of Feasibility")).toBeInTheDocument();
     expect(screen.queryByText("Step 4 · Certificate")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a guest", null],
+    ["a signed-in homeowner", { uid: "owner-1" }],
+  ])("never sells a demo lot to %s: the action searches an address instead", (_who, signedIn) => {
+    mocks.access.purchased = false;
+    mocks.auth.user = signedIn ? { ...signedIn, getIdToken: mocks.getIdToken } : null;
+    const onSearchAddress = vi.fn();
+    const demo = parcelPresets[0];
+    render(
+      <CertificatePanel
+        {...createProps({ parcel: demo, parcelName: `${demo.address}, ${demo.city}`, onSearchAddress })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /checkout|Get your Certificate/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /18 or older/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/This is a demo lot\. A Certificate covers your own property/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Search your address" }));
+
+    expect(onSearchAddress).toHaveBeenCalledTimes(1);
+    expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+    expect(mocks.auth.ensureCheckoutUser).not.toHaveBeenCalled();
   });
 
   it("offers access retry instead of another Purchase after recovery remains unverified", () => {

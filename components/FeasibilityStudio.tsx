@@ -1483,6 +1483,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               parcelName={mobileParcelName}
               eyebrow="Certificate of Feasibility"
               onOpenCertificate={handleGenerateReport}
+              onSearchAddress={() => setJourneyStep("find")}
               projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
               projectBriefPreview={projectBriefPreview}
@@ -1785,6 +1786,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               feasibilityStatus={feasibilityStatus}
               parcelName={parcelName}
               onOpenCertificate={handleGenerateReport}
+              onSearchAddress={handleChangeAddress}
               projectBrief={projectBrief}
               projectBriefSavedAt={projectBriefSavedAt}
               projectBriefPreview={projectBriefPreview}

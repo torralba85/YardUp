@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 export { rentRangeLabel } from "@/lib/feasibility-disclosure";
 
 /**
- * The free preview contains placeholders, never CSS-blurred paid figures.
+ * The free preview names what the Certificate adds; paid figures are never in the DOM.
  * `stickyCta` pins the unlock button to the bottom of the scrolling pane while
  * the preview is on screen (the desktop rail), so it never sits below the fold.
  * Sticky offsets are measured inside the pane's padding, so a -1.25rem bottom
@@ -48,15 +48,11 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
         <p className="mt-1.5 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. The Certificate of Feasibility adds property-specific cost estimates, payback, and financing scenarios.</p>
       </div>
       <div className="grid grid-cols-2 gap-px border border-lot-line bg-lot-line">
-        {[
-          ["Build cost", "$•••–$•••"],
-          ["Annual net income", "$••• /yr"],
-          ["Payback period", "•• yrs"],
-          ["Financed cash flow", "±$••• /mo"],
-        ].map(([label, placeholder]) => (
+        {/* A plain label, not blurred placeholder glyphs, which read as a rendering fault. */}
+        {["Build cost", "Annual net income", "Payback period", "Financed cash flow"].map((label) => (
           <div key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface p-3.5">
             <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />{label}</p>
-            <span aria-hidden="true" className="mt-2.5 block select-none whitespace-nowrap lf-money-sm leading-tight text-lot-ink blur-xs">{placeholder}</span>
+            <span aria-hidden="true" className="mt-2 block text-sm font-semibold leading-tight text-lot-ink">In your Certificate</span>
             <span className="sr-only">{label} locked in the certificate</span>
           </div>
         ))}

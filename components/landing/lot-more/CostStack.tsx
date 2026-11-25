@@ -57,13 +57,9 @@ const layerAmount = (value: number) => (value === 0 ? "Included" : money(value))
  */
 export function CostStack({
   budget,
-  costLow,
-  costHigh,
   sqft = 600,
 }: {
   budget: ConstructionBudget;
-  costLow: number;
-  costHigh: number;
   sqft?: number;
 }) {
   const [layer, setLayer] = useState<CostLayer>("roof");
@@ -210,12 +206,6 @@ export function CostStack({
             <div>
               <dt>Central estimate</dt>
               <dd>{money(budget.total)}</dd>
-            </div>
-            <div>
-              <dt>Estimate range</dt>
-              <dd>
-                {money(costLow / 1000)}K–{money(costHigh / 1000)}K
-              </dd>
             </div>
           </dl>
           <p className={styles.note}>

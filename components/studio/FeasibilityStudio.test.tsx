@@ -1203,7 +1203,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(monthlyRentSection).toHaveTextContent("$2,615");
   });
 
-  it("paywalls the complete certificate behind a purchase (guest sees the checkout CTA)", async () => {
+  it("never sells the demo lot: its Certificate action opens the address search", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -1211,12 +1211,10 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
     expect(screen.getByText("Financed cash flow locked in the certificate")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Continue to secure checkout/i })).not.toBeInTheDocument();
 
-    // A guest sees the price on the purchase CTA (the account step comes
-    // after), and the paid report does not open.
-    await user.click(
-      screen.getByRole("button", { name: /Continue to secure checkout — \$29/i }),
-    );
+    await user.click(screen.getByRole("button", { name: "Search your address" }));
+    expect(stepButton(/Your lot/)).toHaveAttribute("aria-current", "step");
     expect(screen.queryByText(/recorded concept for this lot/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
   });

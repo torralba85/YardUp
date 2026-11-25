@@ -17,7 +17,7 @@ test.describe("Public LotFoundry flows", () => {
       page.getByRole("heading", { name: /It starts with your address/i }),
     ).toBeVisible();
     // Survey-instrument search is the hero CTA.
-    await expect(page.getByRole("button", { name: /Explore my lot/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Check my lot/i }).first()).toBeVisible();
 
     await page.screenshot({
       path: testInfo.outputPath("landing-page.png"),

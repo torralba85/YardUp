@@ -8,7 +8,7 @@ const budget = market.costBreakdown!;
 
 function renderStack() {
   return render(
-    <CostStack budget={budget} costLow={market.costLow} costHigh={market.costHigh} />,
+    <CostStack budget={budget} />,
   );
 }
 
@@ -30,7 +30,6 @@ describe("CostStack", () => {
     const b = budget;
     expect(b.roofPremium + b.openings + b.baseConstruction + b.regionalAdjustment + b.softCosts).toBe(b.total);
     expect(screen.getByText("$251,340")).toBeInTheDocument();
-    expect(screen.getByText("$231K–$289K")).toBeInTheDocument();
   });
 
   it("labels the drawing illustrative and brings the chosen layer forward", () => {

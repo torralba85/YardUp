@@ -5,6 +5,7 @@ import { LotAnswerCard } from "@/components/adu/LotAnswerCard";
 import { aduCtaEvent, type AduCtaPlacement } from "@/lib/adu/types";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { playStoreCityUrl } from "@/lib/app-store-links";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 
 /**
  * Address-entry call to action for ADU jurisdiction and cost pages.
@@ -86,12 +87,8 @@ export function AduStudioCta({
         tone={isCompactTop ? "light" : "dark"}
         inputId={`adu-studio-address-${placement}`}
         inputLabel={`Your ${city} street address`}
-        placeholder={
-          city === "California"
-            ? "e.g., 1234 Main St, San Diego, CA…"
-            : `e.g., 1234 Main St, ${city}…`
-        }
-        submitLabel="Check my address"
+        placeholder={city === "California" ? "Street address, city, CA" : `Street address, ${city}`}
+        submitLabel={PRIMARY_CTA_LABEL}
         onLookupStart={() => trackEvent(aduCtaEvent(placement), { city_slug: slug })}
         className="mt-4"
       />

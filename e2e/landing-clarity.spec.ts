@@ -33,7 +33,7 @@ test("landing explains the tool before address entry, then shows the model, with
     ).toBe(true);
     if (width <= 480) {
       const submitBox = await hero
-        .getByRole("button", { name: "Explore my lot" })
+        .getByRole("button", { name: "Check my lot" })
         .boundingBox();
       expect(submitBox!.y + submitBox!.height).toBeLessThan(844);
     }

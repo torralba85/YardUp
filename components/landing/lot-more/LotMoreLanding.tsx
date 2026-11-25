@@ -12,6 +12,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
+import { PRIMARY_CTA_LABEL, SITE_NAV_LINKS } from "@/lib/site-nav";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -187,7 +188,7 @@ function LandingAddressForm({
           autoComplete="street-address"
           type="text"
           value={value}
-          placeholder="1420 Coyote Brush Ct, San Diego…"
+          placeholder="1234 Coyote Brush Ct, San Diego"
           aria-invalid={hasError}
           aria-describedby={`${id}-note${hasError ? ` ${id}-error` : ""}`}
           onChange={(event) => {
@@ -202,8 +203,8 @@ function LandingAddressForm({
           loading={busy}
           className={styles.primaryButton}
         >
-          {busy ? (busyLabel ?? "Opening…") : "Explore my lot"}
-          {!busy && <ArrowUpRight size={19} aria-hidden="true" />}
+          {busy ? (busyLabel ?? "Opening…") : PRIMARY_CTA_LABEL}
+          {!busy && <ArrowRight size={19} aria-hidden="true" />}
         </Button>
       </div>
       {hasError && (
@@ -365,8 +366,8 @@ export function LotMoreLanding({
       detail: "Setbacks, separation and lot coverage, checked as you place a backyard home.",
     },
     {
-      title: "Price the possibility.",
-      detail: "Build cost, rent and payback for a 600 sq ft concept, with every assumption in view.",
+      title: "See the possibility.",
+      detail: "A 600 sq ft backyard home placed inside the modeled setbacks. The numbers section prices it.",
     },
   ];
 
@@ -389,9 +390,6 @@ export function LotMoreLanding({
       ),
     [demo.parcelId, explorerConfig, sample.id],
   );
-  const explorerRent = explorerResult.monthlyRent;
-  const explorerCostLow = Math.round(explorerResult.costLow / 1000);
-  const explorerCostHigh = Math.round(explorerResult.costHigh / 1000);
   const explorerCoverage = Math.round(explorerResult.coveragePercent);
 
   const intentions = [
@@ -606,9 +604,11 @@ export function LotMoreLanding({
             <span className={styles.brandDot} aria-hidden="true" />
           </Link>
           <nav className={styles.desktopNav} aria-label="Main navigation">
-            <a href="#how-it-works">How it works</a>
-            <a href="#report">What’s included</a>
-            <a href="#questions">Good questions</a>
+            {SITE_NAV_LINKS.map((link) => (
+              <Link key={link.href} href={link.href}>
+                {link.label}
+              </Link>
+            ))}
             <WebBuilderOnly>
               <Link href="/signup?role=builder" prefetch={false}>
                 Register as a builder
@@ -621,12 +621,11 @@ export function LotMoreLanding({
             ) : (
               <Link href="/login" prefetch={false} className={styles.signIn}>
                 Sign in
-                <ArrowUpRight size={15} aria-hidden="true" />
               </Link>
             )}
             <a className={styles.headerCta} href="#start" onClick={focusHeroAddress}>
-              Check address
-              <ArrowUpRight size={16} aria-hidden="true" />
+              {PRIMARY_CTA_LABEL}
+              <ArrowRight size={16} aria-hidden="true" />
             </a>
             <button
               ref={menuButton}
@@ -650,15 +649,11 @@ export function LotMoreLanding({
               aria-label="Mobile navigation"
               className={styles.mobileMenu}
             >
-              {[
-                ["#how-it-works", "How it works"],
-                ["#report", "What’s included"],
-                ["#questions", "Good questions"],
-              ].map(([href, text]) => (
-                <a key={href} href={href} onClick={() => setMenuOpen(false)}>
-                  {text}
-                  <ArrowUpRight size={18} aria-hidden="true" />
-                </a>
+              {SITE_NAV_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                  {link.label}
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
               ))}
               <WebBuilderOnly>
                 <Link
@@ -762,8 +757,8 @@ export function LotMoreLanding({
                   <div>
                     <dt>Build cost</dt>
                     <dd>
-                      {money(sample.costLow / 1000)}k–
-                      {money(sample.costHigh / 1000)}k
+                      {money(sample.costLow / 1000)}K–
+                      {money(sample.costHigh / 1000)}K
                     </dd>
                   </div>
                 </dl>
@@ -1017,8 +1012,8 @@ export function LotMoreLanding({
               </div>
               <div className={styles.demoIntro}>
                 <p>
-                  Explore the same {explorerFootprint}&nbsp;sq&nbsp;ft {demo.name} demo shown above, with
-                  the {money(explorerRent)}/mo market rent assumption.
+                  Explore the same {explorerFootprint}&nbsp;sq&nbsp;ft {demo.name} demo in 3D. The Studio
+                  shows its free rent range; the numbers below are the demo’s full estimate.
                 </p>
                 <Link
                   href={explorerSampleHref}
@@ -1030,7 +1025,7 @@ export function LotMoreLanding({
                   }}
                 >
                   Try the {demo.name} demo{" "}
-                  <ArrowUpRight size={18} aria-hidden="true" />
+                  <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -1100,19 +1095,6 @@ export function LotMoreLanding({
                       <span>MODELED COVERAGE</span>
                       <strong>{explorerCoverage}% of lot</strong>
                     </div>
-                    <div>
-                      <span>EST. BUILD BAND</span>
-                      <strong>
-                        {money(explorerCostLow)}k–{money(explorerCostHigh)}k
-                      </strong>
-                    </div>
-                    <div>
-                      <span>EST. MARKET RENT</span>
-                      <strong>
-                        {money(explorerRent)}
-                        <small>/mo</small>
-                      </strong>
-                    </div>
                   </div>
                 </div>
                 <figcaption>
@@ -1164,8 +1146,8 @@ export function LotMoreLanding({
                         </Button>
                       </h3>
                       <p>
-                        See build costs, rental potential, and payback with the
-                        assumptions behind them.
+                        See the demo’s build cost, rent and payback below. Your own
+                        lot’s figures come in the Certificate.
                       </p>
                       <a href="#numbers" className={styles.textLink}>
                         See the demo numbers{" "}
@@ -1231,9 +1213,9 @@ export function LotMoreLanding({
               <div>
                 <Eyebrow>THE DEMO ESTIMATES</Eyebrow>
                 <h2 id="numbers-title">
-                  Build costs.
+                  Price the
                   <br />
-                  <span>Rental potential.</span>
+                  <span>possibility.</span>
                 </h2>
               </div>
               <p>
@@ -1269,8 +1251,8 @@ export function LotMoreLanding({
               <div>
                 <p>Estimated build cost</p>
                 <strong>
-                  {money(scenario.costLow / 1000)}k<span>–</span>
-                  {money(scenario.costHigh / 1000)}k
+                  {money(scenario.costLow / 1000)}K<span>–</span>
+                  {money(scenario.costHigh / 1000)}K
                 </strong>
                 <small>One-time project estimate</small>
               </div>
@@ -1306,11 +1288,7 @@ export function LotMoreLanding({
               </div>
             </div>
             {scenario.costBreakdown && (
-              <CostStack
-                budget={scenario.costBreakdown}
-                costLow={scenario.costLow}
-                costHigh={scenario.costHigh}
-              />
+              <CostStack budget={scenario.costBreakdown} />
             )}
             <div className={styles.numberNotes}>
               <details>
@@ -1330,8 +1308,8 @@ export function LotMoreLanding({
                 </p>
               </details>
               <a href="#start" className={styles.textLink} onClick={focusHeroAddress}>
-                Explore your own numbers
-                <ArrowUpRight size={19} aria-hidden="true" />
+                {PRIMARY_CTA_LABEL}
+                <ArrowRight size={19} aria-hidden="true" />
               </a>
             </div>
             <p className={styles.estimateNote}>
@@ -1484,7 +1462,7 @@ export function LotMoreLanding({
                         financial picture.
                       </h3>
                       <dl className={styles.reportEstimates}>
-                        {reportScenario.costBreakdown && constructionBudgetRows(reportScenario.costBreakdown).map(([label, value]) => (
+                        {reportScenario.costBreakdown && constructionBudgetRows(reportScenario.costBreakdown).filter(([, value]) => value !== 0).map(([label, value]) => (
                           <div key={label}><dt>{label}</dt><dd>{money(value)}</dd></div>
                         ))}
                         <div>
@@ -1556,10 +1534,10 @@ export function LotMoreLanding({
             <div className={styles.reportActions}>
               <div className={styles.offerActions}>
               <button type="button" className={styles.textLink} onClick={() => setSampleOpen(true)}>
-                View full sample / save PDF <ArrowUpRight size={18} aria-hidden="true" />
+                View full sample / save PDF <ArrowRight size={18} aria-hidden="true" />
               </button>
               <a href="#start" className={styles.darkButton} onClick={focusHeroAddress}>
-                Start with my lot <ArrowUpRight size={18} aria-hidden="true" />
+                {PRIMARY_CTA_LABEL} <ArrowRight size={18} aria-hidden="true" />
               </a>
               </div>
               <p className={styles.reportPrice}>
@@ -1583,7 +1561,7 @@ export function LotMoreLanding({
               </h2>
               <Link className={styles.textLink} href="/help">
                 A little more help
-                <ArrowUpRight size={18} aria-hidden="true" />
+                <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </div>
             <div className={styles.faqList}>
@@ -1693,10 +1671,10 @@ export function LotMoreLanding({
               <div className={styles.footerGroup}>
                 <h3>Demo lots</h3>
                 <ul>
+                  <li><Link href="/san-diego">{landingDemos["san-diego"].name} demo, {landingDemos["san-diego"].city}</Link></li>
                   <li><Link href="/seattle">{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</Link></li>
                   <li><Link href="/portland">{landingDemos.portland.name} demo, {landingDemos.portland.city}</Link></li>
                   <li><Link href="/austin">{landingDemos.austin.name} demo, {landingDemos.austin.city}</Link></li>
-                  <li><Link href="/san-diego">{landingDemos["san-diego"].name} demo, {landingDemos["san-diego"].city}</Link></li>
                 </ul>
               </div>
               <div className={styles.footerGroup}>
@@ -1786,8 +1764,8 @@ export function LotMoreLanding({
         {sampleOpen && <SampleCertificateDialog city={city} onClose={() => setSampleOpen(false)} />}
         {mobileCta && (
           <a className={styles.stickyCta} href="#start" onClick={focusHeroAddress}>
-            Explore my lot
-            <ArrowUpRight size={18} aria-hidden="true" />
+            {PRIMARY_CTA_LABEL}
+            <ArrowRight size={18} aria-hidden="true" />
           </a>
         )}
         {entering && (

@@ -38,7 +38,7 @@ test.describe("Visual breakpoint coverage", () => {
 
       // Hero search instrument is the primary CTA at every breakpoint
       // (the header link collapses to "Start" on small screens).
-      await expect(page.getByRole("button", { name: /Explore my lot/i }).first()).toBeVisible();
+      await expect(page.getByRole("button", { name: /Check my lot/i }).first()).toBeVisible();
 
       await page.screenshot({
         path: testInfo.outputPath(`${bp.name}.png`),

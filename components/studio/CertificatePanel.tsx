@@ -27,7 +27,7 @@ import {
   trackCertificatePurchase,
   type FeasibilityStatus,
 } from "@/lib/analytics/events";
-import { certificateKey } from "@/lib/certificate-key";
+import { certificateKey, isPresetCertificateKey } from "@/lib/certificate-key";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { useStorePrice } from "@/lib/commerce/store-price";
 import { detectPurchaseChannel } from "@/lib/commerce/purchase-channel";
@@ -94,6 +94,11 @@ export interface CertificatePanelProps {
   projectBriefError: string | null;
   /** Generate the parcel + timeline brief with the signed-in user's token. */
   onGenerateProjectBrief: (idToken: string) => Promise<AIProjectBriefResponse>;
+  /**
+   * Send the visitor to the address search. On a demo lot the purchase action
+   * becomes this, because a Certificate is a record for a real property.
+   */
+  onSearchAddress?: () => void;
 }
 
 /**
@@ -118,6 +123,7 @@ export default function CertificatePanel({
   projectBriefLoading,
   projectBriefError,
   onGenerateProjectBrief,
+  onSearchAddress,
 }: CertificatePanelProps) {
   const {
     user,
@@ -130,6 +136,10 @@ export default function CertificatePanel({
   } = useAuth();
   const activeCheckoutUser = checkoutUser ?? user;
   const certKey = certificateKey(parcel);
+  // Demo lots are explorable but never sold; /api/stripe/checkout-certificate
+  // refuses them too. Play Billing charges before the server sees the purchase,
+  // so this guard is what keeps a store shell from selling one.
+  const demoLot = isPresetCertificateKey(certKey);
   const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -431,11 +441,11 @@ export default function CertificatePanel({
     if (recovery.intent && recovery.intent.kind !== "cancel") return;
     if (!hasCertificatePurchaseIntent(certKey)) return;
     clearCertificatePurchaseIntent();
-    if (profile?.role === "builder" || purchased) return;
+    if (profile?.role === "builder" || purchased || demoLot) return;
     // Resuming follows an explicit purchase click and a completed sign-in.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void beginCheckout(user);
-  }, [authLoading, beginCheckout, certKey, loading, profile, purchased, recovery, user]);
+  }, [authLoading, beginCheckout, certKey, demoLot, loading, profile, purchased, recovery, user]);
 
   const redeemPass = useCallback(async (authenticatedUser: FirebaseUser, code: string) => {
     if (purchaseOperation.current) return;
@@ -510,6 +520,10 @@ export default function CertificatePanel({
     if (recoveryActive && !purchased && activeCheckoutUser) return;
     if (purchased) {
       await prepareAndOpenCertificate();
+      return;
+    }
+    if (demoLot) {
+      onSearchAddress?.();
       return;
     }
     if (!user) {
@@ -593,6 +607,8 @@ export default function CertificatePanel({
         : "Preparing certificate…"
     : purchased
     ? "View complete certificate"
+    : demoLot
+    ? "Search your address"
     : !user
       ? certPrice.exact
         ? `${guestPurchaseAction} — ${price}`
@@ -604,10 +620,12 @@ export default function CertificatePanel({
   // per-property unlock; the amount is named only where it is the one billed.
   const ctaNote = purchased || recoveryPending
     ? undefined
+    : demoLot
+    ? "This is a demo lot. A Certificate covers your own property: search its address to get one."
     : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Includes Certificate access for this property`;
 
   // Web only: a store shell sells digital goods through its own billing.
-  const showPassOffer = !purchased && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
+  const showPassOffer = !purchased && !demoLot && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
   const passOffer = (
     <AgentPassOffer
       linkedCode={linkedPassCode}
@@ -624,7 +642,7 @@ export default function CertificatePanel({
     />
   );
 
-  const guestConsentControl = !purchased && !recoveryPending && !user && isWebChannel ? (
+  const guestConsentControl = !purchased && !demoLot && !recoveryPending && !user && isWebChannel ? (
     <label htmlFor={guestConsentId} className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
       <Checkbox
         ref={guestConsentRef}
