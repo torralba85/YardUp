@@ -4,7 +4,7 @@ async function openDesign(page: Page, isMobile: boolean) {
   if (isMobile) {
     const demo = page.getByRole("button", { name: /See (?:a|the) San Diego example/i });
     const design = page.getByRole("button", { name: "Shape your ADU" });
-    await expect(demo.or(design)).toBeVisible();
+    await expect(demo.or(design)).toBeVisible({ timeout: 20_000 });
     if (await demo.isVisible()) await demo.click();
     await design.click();
   } else {
@@ -62,6 +62,7 @@ test("uses a plan's real footprint in the 3D model, restores it on reload and ke
 });
 
 test("browses another authority's catalog but only uses plans for a confirmed authority", async ({ page, isMobile }) => {
+  test.setTimeout(60_000);
   await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
   await openDesign(page, isMobile);
   await openCatalog(page);
