@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/Button";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import type { ConstructionBudget } from "@/lib/finance";
 import styles from "./CostStack.module.css";
-import { CostStackDrawing, type CostLayer } from "./CostStackDrawing";
+import { CostStackModel } from "./CostStackModel";
+import { createStackMotion, type CostLayer } from "./cost-stack-motion";
 
 export type { CostLayer };
 
 const LAYERS: readonly CostLayer[] = ["roof", "openings", "shell", "soft"];
 
 // The pin follows the landing's model section: motion allowed and a screen
-// with room for the stage. Anywhere else the drawing stays exploded and the
+// with room for the stage. Anywhere else the model stays exploded and the
 // ledger alone picks the layer.
 const PIN_QUERY = "(prefers-reduced-motion: no-preference) and (min-width: 801px) and (min-height: 700px)";
+const MOTION_QUERY = "(prefers-reduced-motion: no-preference)";
 
 const smoothstep = (edge0: number, edge1: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -49,11 +51,10 @@ const money = (value: number) =>
 const layerAmount = (value: number) => (value === 0 ? "Included" : money(value));
 
 /**
- * An exploded axonometric of the demo backyard home beside the Studio
- * engine's construction budget: roof, openings, shell, and the design and
- * permit allowance. Selecting a ledger row (or scrolling the pinned stage)
- * brings that layer forward. The drawing is illustrative; the figures are the
- * engine's.
+ * An exploded 3D model of the demo backyard home beside the Studio engine's
+ * construction budget: roof, openings, shell, and the design and permit
+ * allowance. Selecting a ledger row (or scrolling the pinned stage) brings
+ * that layer forward. The model is illustrative; the figures are the engine's.
  */
 export function CostStack({
   budget,
@@ -63,6 +64,7 @@ export function CostStack({
   sqft?: number;
 }) {
   const [layer, setLayer] = useState<CostLayer>("roof");
+  const [motion] = useState(createStackMotion);
   const rootRef = useRef<HTMLDivElement>(null);
   const manualAtRef = useRef(0);
 
@@ -117,6 +119,7 @@ export function CostStack({
     const root = rootRef.current;
     if (!root || typeof window.matchMedia !== "function") return;
     const pinQuery = window.matchMedia(PIN_QUERY);
+    const motionQuery = window.matchMedia(MOTION_QUERY);
     let frame = 0;
     let band: CostLayer | null = null;
     const unpin = () => {
@@ -130,6 +133,11 @@ export function CostStack({
       frame = 0;
       if (!pinQuery.matches) {
         unpin();
+        // Unpinned the model stays exploded; with motion allowed, the camera
+        // still turns a little as the figure crosses the viewport.
+        const rect = root.getBoundingClientRect();
+        const through = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+        motion.set({ sep: 1, orbit: motionQuery.matches ? Math.min(1, Math.max(0, through)) : 0.5 });
         return;
       }
       root.dataset.pinned = "true";
@@ -140,6 +148,7 @@ export function CostStack({
       root.style.setProperty("--stack-sep", sep.toFixed(4));
       root.style.setProperty("--stack-progress", progress.toFixed(4));
       root.dataset.exploded = sep > 0.4 ? "true" : "false";
+      motion.set({ sep, orbit: progress });
       const next = layerAtProgress(progress);
       if (next !== band) {
         band = next;
@@ -160,7 +169,7 @@ export function CostStack({
       pinQuery.removeEventListener("change", schedule);
       unpin();
     };
-  }, []);
+  }, [motion]);
 
   const active = rows[layer];
 
@@ -174,9 +183,10 @@ export function CostStack({
             </span>
             <strong>{layerAmount(active.amount)}</strong>
           </p>
-          <CostStackDrawing
+          <CostStackModel
             layer={layer}
-            label={`Illustrative exploded view of the ${sqft} sq ft backyard home: the shed roof lifted off its rafters, windows and doors out of their walls, the furnished room on its slab, and the permit drawings beneath.`}
+            motion={motion}
+            label={`Illustrative exploded view of the ${sqft} sq ft backyard home in 3D: the shed roof lifted off its rafters, windows and doors out of their walls, the furnished room on its slab, and the permit drawings beneath.`}
           />
           <figcaption>Illustrative exploded view, not to scale</figcaption>
         </figure>
