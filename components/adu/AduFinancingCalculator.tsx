@@ -18,10 +18,15 @@ export function AduFinancingCalculator({
   const [term, setTerm] = useState("30");
 
   const loan = customLoan ?? String(Math.round(projectCost * 0.8));
+  const loanSyntaxValid = /^\d+(?:\.\d{0,2})?$/.test(loan);
+  const [dollars, cents] = loan.split(".");
+  const displayedLoan = loanSyntaxValid
+    ? `${formatNumber(Number(dollars))}${cents === undefined ? "" : `.${cents}`}`
+    : loan;
   const principal = Number(loan);
   const annualRate = Number(rate);
   const years = Number(term);
-  const loanValid = loan.trim() !== "" && Number.isFinite(principal) && principal >= 0 && principal <= projectCost;
+  const loanValid = loanSyntaxValid && Number.isFinite(principal) && principal >= 0 && principal <= projectCost;
   const rateValid = rate.trim() !== "" && Number.isFinite(annualRate) && annualRate >= 0 && annualRate <= 100;
   const termValid = term.trim() !== "" && Number.isInteger(years) && years >= 1 && years <= 50;
   const valid = loanValid && rateValid && termValid;
@@ -45,20 +50,19 @@ export function AduFinancingCalculator({
             <Input
               name="loanAmount"
               autoComplete="off"
-              inputMode="numeric"
+              inputMode="decimal"
               type="text"
-              value={loan === "" ? "" : formatNumber(Number(loan))}
+              value={displayedLoan}
               aria-invalid={!loanValid}
               aria-describedby={!loanValid ? "adu-loan-error" : "adu-financing-note"}
               onChange={(event) => {
-                // Shown with thousands separators; stored as digits only.
-                setCustomLoan(event.target.value.replace(/[^0-9]/g, ""));
+                setCustomLoan(event.target.value.trim().replace(/^\$/, "").replace(/,/g, ""));
               }}
             />
           </label>
           {!loanValid ? (
             <p id="adu-loan-error" role="alert" className="mt-1 text-xs text-status-blocked">
-              Enter $0 to {formatCurrency(projectCost)}.
+              Enter $0 to {formatCurrency(projectCost)} with up to two decimal places.
             </p>
           ) : (
             <p className="mt-1 text-xs tabular-nums text-lot-stone">
