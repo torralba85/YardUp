@@ -64,7 +64,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                   }`}
                 />
                 )}
-                <span className="min-w-0 max-w-full px-0.5 text-center leading-tight">
+                <span className="w-full min-w-0 wrap-anywhere px-0.5 text-center leading-tight">
                   {step.id === "act" ? (
                     <>
                       <span className="min-[360px]:hidden">Cert.</span>

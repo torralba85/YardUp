@@ -59,7 +59,8 @@ test.describe("mobile studio journey", () => {
         expect(box?.height).toBeGreaterThanOrEqual(44);
       }
       await expect(rail.getByText("Your lot", { exact: true })).toBeVisible();
-      await expect(rail.getByText("Certificate", { exact: true })).toBeVisible();
+      await expect(rail.getByRole("button", { name: "Certificate", exact: true })).toBeVisible();
+      await expect(rail.getByText(width < 360 ? "Cert." : "Certificate", { exact: true })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   });

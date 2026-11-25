@@ -41,7 +41,8 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
       const box = await button.boundingBox();
       expect(box?.width).toBeGreaterThanOrEqual(44);
       expect(box?.height).toBeGreaterThanOrEqual(44);
-      expect(await button.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      const label = await button.getAttribute("aria-label");
+      expect(await button.evaluate((el) => el.scrollWidth <= el.clientWidth), `${label} at ${width}px`).toBe(true);
     }
     await expect(confidence).toHaveCSS("font-size", "12px");
     await expect(confidence).toHaveCSS("text-transform", "none");

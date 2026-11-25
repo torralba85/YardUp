@@ -46,6 +46,6 @@ test("failed geocode shows recovery actions and only an explicit choice enables 
   await expect(page.getByRole("region", { name: "What a backyard home could rent for" })).toHaveCount(0);
 
   await page.getByRole("button", { name: isMobile ? "See the Seattle example" : "Explore demo lot" }).click();
-  await expect(page.getByTestId("demo-mode-banner")).toContainText("Demo Mode: San Diego");
+  await expect(page.getByTestId("demo-mode-banner")).toContainText(isMobile ? "Demo Mode: Seattle" : "Demo Mode: San Diego");
   await expect(page.getByRole("region", { name: isMobile ? "What a backyard home could rent for" : "Free property preview" })).toBeVisible();
 });
