@@ -33,17 +33,17 @@ describe("CostStack", () => {
     expect(screen.getByText("$231k–$289k")).toBeInTheDocument();
   });
 
-  it("labels the drawing illustrative and brings the chosen layer forward", () => {
+  it("labels the model illustrative and brings the chosen layer forward", () => {
     const { container } = renderStack();
-    expect(screen.getByRole("img", { name: /Illustrative exploded view/ })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Illustrative exploded view .* in 3D/ })).toBeInTheDocument();
     expect(screen.getByText(/Illustrative exploded view, not to scale/)).toBeInTheDocument();
-    const active = () => Array.from(container.querySelectorAll('g[data-active="true"]'));
-    expect(active()).toHaveLength(1);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.dataset.layer).toBe("roof");
 
     fireEvent.click(screen.getByRole("radio", { name: /Soft costs/ }));
     expect(screen.getByRole("radio", { name: /Soft costs/ })).toHaveAttribute("aria-checked", "true");
-    expect(active()).toHaveLength(1);
-    expect(active()[0].textContent).toContain("A-101");
+    expect(root.dataset.layer).toBe("soft");
+    expect(screen.getByText("04 · Soft costs")).toBeInTheDocument();
   });
 
   it("stays an unpinned, exploded drawing when motion is reduced", () => {
@@ -64,10 +64,12 @@ describe("CostStack", () => {
     expect([0.1, 0.4, 0.6, 0.9].map(layerAtProgress)).toEqual(["roof", "openings", "shell", "soft"]);
   });
 
-  it("batches repeated SVG primitives so the drawing stays well under Lighthouse's DOM budget", () => {
-    const { container } = renderStack();
-    const svg = container.querySelector("svg");
-    expect(svg).not.toBeNull();
-    expect(svg!.querySelectorAll("*").length).toBeLessThan(700);
+  it("renders a poster, not a DOM drawing, until WebGL takes over", () => {
+    renderStack();
+    const figure = screen.getByRole("img", { name: /Illustrative exploded view/ });
+    expect(figure.dataset.ready).toBe("false");
+    expect(figure.querySelector("img")).toHaveAttribute("src", "/landing/cost-stack-3d.webp");
+    expect(figure.querySelector("svg")).toBeNull();
+    expect(figure.querySelectorAll("*").length).toBeLessThan(5);
   });
 });
