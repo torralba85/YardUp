@@ -3,6 +3,7 @@ import { normalizeAgentPassCode } from "@/lib/agent-pass";
 import { redeemAgentPassGrant, type AgentPassRedeemResult } from "@/lib/server/agent-passes";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { parseOptionalCoordinate } from "@/lib/server/request-validation";
 
 /** Next.js route segment config: run on the Node.js runtime (not Edge). */
 export const runtime = "nodejs";
@@ -40,6 +41,14 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
 
+  const userLimited = checkRateLimit(request, {
+    namespace: "certificate-pass-redeem-uid",
+    limit: 10,
+    windowMs: 60_000,
+    clientKey: auth.uid,
+  });
+  if (userLimited) return userLimited;
+
   const body = await request.json().catch(() => null);
   const code = normalizeAgentPassCode(body?.code);
   const certKey = typeof body?.certKey === "string" ? body.certKey.trim() : "";
@@ -48,6 +57,11 @@ export async function POST(request: NextRequest) {
   }
   if (!certKey || certKey.length > MAX_CERT_KEY_LEN) {
     return NextResponse.json({ error: "A valid certKey is required" }, { status: 400 });
+  }
+  const lat = parseOptionalCoordinate(body?.lat, -90, 90);
+  const lng = parseOptionalCoordinate(body?.lng, -180, 180);
+  if (lat === null || lng === null) {
+    return NextResponse.json({ error: "lat or lng is out of valid range" }, { status: 400 });
   }
 
   let result: AgentPassRedeemResult;
@@ -61,8 +75,8 @@ export async function POST(request: NextRequest) {
       city: optionalString(body?.city, 100),
       state: optionalString(body?.state, 50),
       zip: optionalString(body?.zip, 20),
-      lat: typeof body?.lat === "number" ? body.lat : undefined,
-      lng: typeof body?.lng === "number" ? body.lng : undefined,
+      lat,
+      lng,
       parcelData:
         body?.parcelData && typeof body.parcelData === "object" && !Array.isArray(body.parcelData)
           ? (body.parcelData as Record<string, unknown>)

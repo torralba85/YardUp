@@ -72,6 +72,26 @@ describe("projectBriefDef", () => {
     },
   );
 
+  it("rejects oversized parcel strings and validates LLM output shape", () => {
+    const input = validInput();
+    expect(
+      projectBriefDef.validateInput({
+        ...input,
+        parcel: { ...input.parcel, city: "c".repeat(121) },
+      }).ok,
+    ).toBe(false);
+    expect(
+      projectBriefDef.validateInput({
+        ...input,
+        parcel: { ...input.parcel, address: "a".repeat(241) },
+      }).ok,
+    ).toBe(false);
+    expect(projectBriefDef.validateOutput!(fullBrief)).toEqual(fullBrief);
+    expect(() =>
+      projectBriefDef.validateOutput!({ ...fullBrief, risks: [] }),
+    ).toThrow(/invalid project brief/i);
+  });
+
   it("requires the permit tools in a deterministic order", () => {
     expect(projectBriefDef.requiredToolSequence).toEqual([
       "lookup_permit_tracks",

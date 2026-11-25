@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const mocks = vi.hoisted(() => ({
   requireApiAuth: vi.fn(),
@@ -21,6 +22,7 @@ import { GET } from "./route";
 describe("GET /api/builders/active", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetRateLimitBuckets();
     mocks.requireApiAuth.mockResolvedValue({ uid: "homeowner-1" });
     mocks.collection.mockReturnValue({ where: mocks.where });
     mocks.where.mockReturnValue({ get: mocks.get });
@@ -69,5 +71,18 @@ describe("GET /api/builders/active", () => {
 
     expect(response.status).toBe(401);
     expect(mocks.collection).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 JSON when Firestore fails", async () => {
+    mocks.get.mockRejectedValueOnce(new Error("firestore unavailable"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const response = await GET(new NextRequest("http://localhost/api/builders/active"));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "Could not load builders. Please try again.",
+    });
+    spy.mockRestore();
   });
 });

@@ -3,6 +3,8 @@ import { createTerrainGrid } from "@/lib/parcel-terrain";
 import { fetchParcelTerrain } from "@/lib/server/parcel-terrain";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   const limited = checkRateLimit(request, { namespace: "parcel-terrain", limit: 10, windowMs: 60_000 });
   if (limited) return limited;
@@ -10,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     if (Number(request.headers.get("content-length")) > 50_000) return NextResponse.json({ error: "Parcel boundary is too large." }, { status: 413 });
     const text = await request.text();
-    if (text.length > 50_000) return NextResponse.json({ error: "Parcel boundary is too large." }, { status: 413 });
+    if (Buffer.byteLength(text, "utf8") > 50_000) return NextResponse.json({ error: "Parcel boundary is too large." }, { status: 413 });
     boundary = JSON.parse(text).boundary;
   } catch {
     return NextResponse.json({ error: "A valid parcel boundary is required." }, { status: 400 });

@@ -1,41 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { isSafeDocumentId } from "@/lib/server/request-validation";
+
+export const runtime = "nodejs";
+
+class UnlockCreditError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "UnlockCreditError";
+    this.status = status;
+  }
+}
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireApiAuth(req);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const builderId = authResult.uid;
+
+  const limited = checkRateLimit(req, {
+    namespace: "lead-unlock-credit",
+    limit: 30,
+    windowMs: 60_000,
+    clientKey: builderId,
+  });
+  if (limited) return limited;
+
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const rawRequestId = (body as Record<string, unknown>).requestId;
+  if (rawRequestId === undefined || rawRequestId === null || rawRequestId === "") {
+    return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
+  }
+  if (!isSafeDocumentId(rawRequestId)) {
+    return NextResponse.json({ error: "Invalid requestId" }, { status: 400 });
+  }
+  const requestId = rawRequestId.trim();
+
   try {
-    const authResult = await requireApiAuth(req);
-    if (authResult instanceof NextResponse) {
-      return authResult;
-    }
-    const builderId = authResult.uid;
-
-    const { requestId } = await req.json();
-    if (!requestId) {
-      return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
-    }
-
     const db = getAdminDb();
     const result = await db.runTransaction(async (transaction) => {
       // IMPORTANT: Use 'builders/' instead of 'builderProfiles/'
       const profileRef = db.doc(`builders/${builderId}`);
       const profileSnap = await transaction.get(profileRef);
       if (!profileSnap.exists) {
-        throw new Error("Builder profile not found");
+        throw new UnlockCreditError("Builder profile not found", 404);
       }
 
       const requestRef = db.doc(`connectionRequests/${requestId}`);
       const requestSnap = await transaction.get(requestRef);
       if (!requestSnap.exists) {
-        throw new Error("Lead not found");
+        throw new UnlockCreditError("Lead not found", 404);
       }
       const requestData = requestSnap.data();
       if (requestData?.status !== "submitted") {
-        throw new Error("Lead is no longer available");
+        throw new UnlockCreditError("Lead is no longer available", 409);
       }
       const matchedBuilderIds = requestData?.matchedBuilderIds;
       if (!Array.isArray(matchedBuilderIds) || !matchedBuilderIds.includes(builderId)) {
-        throw new Error("Lead is not matched to this builder");
+        throw new UnlockCreditError("Lead is not matched to this builder", 403);
+      }
+
+      const credits = profileSnap.data()?.credits ?? 0;
+
+      // Check existing unlock before debit/exclusivity checks so retrying after
+      // a dropped response is idempotent even when balance is now 0.
+      const unlockRef = db.doc(`leadUnlocks/${builderId}_${requestId}`);
+      const unlockSnap = await transaction.get(unlockRef);
+      if (unlockSnap.exists) {
+        return { success: true, alreadyUnlocked: true, newCredits: credits };
       }
 
       if (
@@ -44,19 +85,14 @@ export async function POST(req: NextRequest) {
         requestData?.firstUnlockedBy &&
         requestData.firstUnlockedBy !== builderId
       ) {
-        throw new Error("This lead is currently in an exclusive 48-hour window with another builder.");
+        throw new UnlockCreditError(
+          "This lead is currently in an exclusive 48-hour window with another builder.",
+          409,
+        );
       }
 
-      const credits = profileSnap.data()?.credits ?? 0;
       if (credits < 1) {
-        throw new Error("Insufficient credits");
-      }
-
-      // Check if unlock already exists
-      const unlockRef = db.doc(`leadUnlocks/${builderId}_${requestId}`);
-      const unlockSnap = await transaction.get(unlockRef);
-      if (unlockSnap.exists) {
-        throw new Error("Lead already unlocked");
+        throw new UnlockCreditError("Insufficient credits", 400);
       }
 
       // Perform transaction writes
@@ -99,7 +135,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to unlock lead";
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (error instanceof UnlockCreditError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error("[lead/unlock-credit] Failed to unlock lead:", error);
+    return NextResponse.json(
+      { error: "Unable to unlock lead. Please try again." },
+      { status: 500 },
+    );
   }
 }

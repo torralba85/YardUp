@@ -246,18 +246,41 @@ export async function POST(request: NextRequest) {
   });
   if (limited) return limited;
 
-  let body: AddressValidateRequestBody;
+  let parsed: unknown;
   try {
-    body = (await request.json()) as AddressValidateRequestBody;
+    parsed = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON request body" },
       { status: 400 },
     );
   }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return NextResponse.json(
+      { error: "Invalid JSON request body" },
+      { status: 400 },
+    );
+  }
 
-  const rawAddress = body.address?.trim().slice(0, MAX_ADDRESS_LEN) ?? "";
-  const placeId = body.placeId?.trim().slice(0, MAX_ADDRESS_LEN) ?? "";
+  const record = parsed as Record<string, unknown>;
+  if (
+    (record.address !== undefined && typeof record.address !== "string") ||
+    (record.placeId !== undefined && typeof record.placeId !== "string")
+  ) {
+    return NextResponse.json(
+      { error: "address and placeId must be strings" },
+      { status: 400 },
+    );
+  }
+
+  const rawAddress =
+    typeof record.address === "string"
+      ? record.address.trim().slice(0, MAX_ADDRESS_LEN)
+      : "";
+  const placeId =
+    typeof record.placeId === "string"
+      ? record.placeId.trim().slice(0, MAX_ADDRESS_LEN)
+      : "";
 
   if (!rawAddress && !placeId) {
     return NextResponse.json(

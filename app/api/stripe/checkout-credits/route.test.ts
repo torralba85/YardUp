@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const mocks = vi.hoisted(() => ({
   profileExists: true,
@@ -20,7 +21,7 @@ vi.mock("@/lib/server/api-auth", () => ({
 
 vi.mock("@/lib/server/firebase-admin", () => ({
   getAdminDb: () => ({
-    doc: () => ({ get: async () => ({ exists: mocks.profileExists }) }),
+    doc: (path: string) => ({ path, get: async () => ({ exists: mocks.profileExists }) }),
     runTransaction: mocks.runTransaction,
   }),
 }));
@@ -43,6 +44,7 @@ beforeEach(() => {
   mocks.profileExists = true;
   mocks.stripe = null;
   mocks.runTransaction.mockClear();
+  resetRateLimitBuckets();
 });
 
 afterEach(() => {
@@ -51,12 +53,16 @@ afterEach(() => {
 
 describe("POST /api/stripe/checkout-credits", () => {
   it("rejects unsupported pack sizes", async () => {
-    expect((await POST(postRequest({ pack: 3 }))).status).toBe(400);
+    expect((await POST(postRequest({ pack: 3, checkoutAttemptId: "attempt-1" }))).status).toBe(400);
   });
 
-  it("rejects malformed checkout attempt ids", async () => {
+  it("rejects missing or malformed checkout attempt ids", async () => {
+    expect((await POST(postRequest({ pack: 5 }))).status).toBe(400);
     expect(
       (await POST(postRequest({ pack: 5, checkoutAttemptId: "" }))).status,
+    ).toBe(400);
+    expect(
+      (await POST(postRequest({ pack: 5, checkoutAttemptId: "bad/id" }))).status,
     ).toBe(400);
     expect(
       (
@@ -69,7 +75,7 @@ describe("POST /api/stripe/checkout-credits", () => {
 
   it("requires an existing builder profile", async () => {
     mocks.profileExists = false;
-    expect((await POST(postRequest({ pack: 5 }))).status).toBe(403);
+    expect((await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-1" }))).status).toBe(403);
   });
 
   it.each([
@@ -123,25 +129,43 @@ describe("POST /api/stripe/checkout-credits", () => {
     },
   );
 
-  it("uses different idempotency keys for separate legacy purchase attempts", async () => {
-    mocks.stripe = {
-      checkout: {
-        sessions: {
-          create: vi
-            .fn()
-            .mockResolvedValue({ url: "https://stripe.test/credits" }),
-        },
-      },
-    };
+  it("deduplicates demo credit grants by checkoutAttemptId across retries", async () => {
+    const ledger = new Map<string, Record<string, unknown>>();
+    let credits = 2;
+    mocks.runTransaction.mockImplementation(
+      async (
+        cb: (tx: {
+          get: (ref: { path: string }) => Promise<{ exists: boolean; data: () => Record<string, unknown> | undefined }>;
+          update: (ref: { path: string }, data: Record<string, unknown>) => void;
+          set: (ref: { path: string }, data: Record<string, unknown>) => void;
+        }) => Promise<unknown>,
+      ) =>
+        cb({
+          get: async (ref) => {
+            if (ref.path.includes("/ledger/")) {
+              const row = ledger.get(ref.path);
+              return { exists: Boolean(row), data: () => row };
+            }
+            return { exists: true, data: () => ({ credits }) };
+          },
+          update: (_ref, data) => {
+            credits = data.credits as number;
+          },
+          set: (ref, data) => {
+            ledger.set(ref.path, data);
+          },
+        }),
+    );
 
-    await POST(postRequest({ pack: 5 }));
-    await POST(postRequest({ pack: 5 }));
+    const first = await POST(postRequest({ pack: 5, checkoutAttemptId: "demo-attempt-1" }));
+    const retry = await POST(postRequest({ pack: 5, checkoutAttemptId: "demo-attempt-1" }));
 
-    const firstKey = mocks.stripe.checkout.sessions.create.mock.calls[0][1]
-      .idempotencyKey;
-    const secondKey = mocks.stripe.checkout.sessions.create.mock.calls[1][1]
-      .idempotencyKey;
-    expect(firstKey).not.toBe(secondKey);
+    expect(first.status).toBe(200);
+    expect(await first.json()).toEqual({ status: "granted", demo: true });
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ status: "granted", demo: true, alreadyGranted: true });
+    expect(credits).toBe(7);
+    expect(ledger.size).toBe(1);
   });
 
   it("returns to the dashboard with the Session id so the purchase can be confirmed", async () => {
@@ -218,7 +242,7 @@ describe("POST /api/stripe/checkout-credits", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("LOTFOUNDRY_DEMO_UNLOCKS", "false");
 
-    const res = await POST(postRequest({ pack: 5 }));
+    const res = await POST(postRequest({ pack: 5, checkoutAttemptId: "attempt-prod" }));
 
     expect(res.status).toBe(503);
     expect(mocks.runTransaction).not.toHaveBeenCalled();

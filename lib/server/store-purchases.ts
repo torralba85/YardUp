@@ -8,6 +8,7 @@
  */
 
 import { FieldValue } from "firebase-admin/firestore";
+import { isPresetCertificateKey } from "@/lib/certificate-key";
 import { getStoreProduct } from "@/lib/commerce/products";
 import type { PurchaseChannel } from "@/lib/commerce/purchase-channel";
 import { grantCertificate } from "./certificate-purchases";
@@ -52,11 +53,11 @@ export interface StorePurchaseVerifier {
   verifyApple: (input: {
     productId: string;
     token: string;
-  }) => Promise<{ transactionId: string } | { error: string }>;
+  }) => Promise<{ transactionId: string } | { error: string; status?: number }>;
   verifyGoogle: (input: {
     productId: string;
     token: string;
-  }) => Promise<{ transactionId: string } | { error: string }>;
+  }) => Promise<{ transactionId: string } | { error: string; status?: number }>;
 }
 
 /**
@@ -74,7 +75,7 @@ export function createDefaultStoreVerifier(
       const result = verifyAppleSignedTransaction({ productId, token, bundleId });
       if ("transactionId" in result) return result;
       if (!configuredBundle && !parseDemoReceiptToken(token)) {
-        return { error: "App Store verification is not configured." };
+        return { error: "App Store verification is not configured.", status: 503 };
       }
       return result;
     },
@@ -84,7 +85,7 @@ export function createDefaultStoreVerifier(
       if (!packageName || !serviceAccountJson) {
         const demoId = parseDemoReceiptToken(token);
         if (demoId) return { transactionId: `google:${demoId}:${productId}` };
-        return { error: "Google Play verification is not configured." };
+        return { error: "Google Play verification is not configured.", status: 503 };
       }
       return verifyGooglePlayPurchase(
         { productId, token, packageName, serviceAccountJson },
@@ -130,6 +131,13 @@ export async function verifyAndGrantPurchase(
       status: 400,
     };
   }
+  if (certKey && isPresetCertificateKey(certKey)) {
+    return {
+      ok: false,
+      error: "Demo lots can't be purchased. Search your own address to get its certificate.",
+      status: 400,
+    };
+  }
 
   const verified =
     input.platform === "app-store"
@@ -143,7 +151,7 @@ export async function verifyAndGrantPurchase(
         });
 
   if ("error" in verified) {
-    return { ok: false, error: verified.error, status: 400 };
+    return { ok: false, error: verified.error, status: verified.status ?? 400 };
   }
 
   const grantId = `${input.platform}:${verified.transactionId}`;

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import { parseEmailScenario } from "@/lib/scenario";
 
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
@@ -48,6 +49,14 @@ export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
   const { uid } = auth;
+
+  const limited = checkRateLimit(request, {
+    namespace: "account-export",
+    limit: 10,
+    windowMs: 60_000,
+    clientKey: uid,
+  });
+  if (limited) return limited;
   const verifiedEmail =
     auth.emailVerified && typeof auth.email === "string"
       ? auth.email.trim().toLowerCase()

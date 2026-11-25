@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const mocks = vi.hoisted(() => ({
   uid: "b1",
@@ -157,6 +158,7 @@ beforeEach(() => {
   };
   mocks.grant.mockClear();
   mocks.reservations.clear();
+  resetRateLimitBuckets();
 });
 
 afterEach(() => {

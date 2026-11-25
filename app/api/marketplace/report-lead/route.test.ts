@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 let authUid: string | null = "builder-1";
 let isUnlocked = true;
 let reportExists = false;
 let builderExists = true;
 let currentCredits = 2;
+let throwOnTx = false;
 const transactionOps: { sets: Record<string, unknown>[]; updates: Record<string, unknown>[] } = {
   sets: [],
   updates: [],
@@ -20,10 +22,6 @@ vi.mock("@/lib/server/api-auth", () => ({
   },
 }));
 
-vi.mock("@/lib/server/lead-unlocks", () => ({
-  isLeadUnlocked: async () => isUnlocked,
-}));
-
 vi.mock("firebase-admin/firestore", () => ({
   FieldValue: {
     serverTimestamp: () => "SERVER_TIMESTAMP",
@@ -34,6 +32,9 @@ vi.mock("@/lib/server/firebase-admin", () => ({
   getAdminDb: () => ({
     collection: (coll: string) => ({
       doc: (docId: string) => {
+        if (coll === "leadUnlocks") {
+          return { id: docId, path: `leadUnlocks/${docId}` };
+        }
         if (coll === "leadReports") {
           return {
             id: docId,
@@ -56,8 +57,12 @@ vi.mock("@/lib/server/firebase-admin", () => ({
       },
     }),
     runTransaction: async (updateFunction: (transaction: unknown) => Promise<unknown>) => {
+      if (throwOnTx) throw new Error("INTERNAL_DB_ERROR");
       const mockTx = {
         get: async (ref: { path: string }) => {
+          if (ref.path.startsWith("leadUnlocks/")) {
+            return { exists: isUnlocked, data: () => ({}) };
+          }
           if (ref.path.startsWith("leadReports/")) {
             return { exists: reportExists, data: () => ({}) };
           }
@@ -98,8 +103,10 @@ describe("POST /api/marketplace/report-lead", () => {
     reportExists = false;
     builderExists = true;
     currentCredits = 2;
+    throwOnTx = false;
     transactionOps.sets = [];
     transactionOps.updates = [];
+    resetRateLimitBuckets();
   });
 
   it("rejects unauthenticated requests", async () => {
@@ -108,11 +115,15 @@ describe("POST /api/marketplace/report-lead", () => {
     expect(res.status).toBe(401);
   });
 
-  it("rejects missing requestId", async () => {
+  it("rejects missing or invalid requestId, reason, or oversized notes", async () => {
     const res = await POST(postRequest({}));
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toMatch(/Missing requestId/i);
+
+    expect((await POST(postRequest({ requestId: "bad/id" }))).status).toBe(400);
+    expect((await POST(postRequest({ requestId: "req-1", reason: "arbitrary_reason" }))).status).toBe(400);
+    expect((await POST(postRequest({ requestId: "req-1", notes: "a".repeat(2001) }))).status).toBe(400);
   });
 
   it("rejects reporting a lead that is not unlocked", async () => {
@@ -129,6 +140,17 @@ describe("POST /api/marketplace/report-lead", () => {
     expect(res.status).toBe(409);
     const data = await res.json();
     expect(data.error).toMatch(/already been reported/i);
+  });
+
+  it("does not leak internal DB errors on 500", async () => {
+    throwOnTx = true;
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await POST(postRequest({ requestId: "req-1" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toBe("Unable to process lead report. Please try again.");
+    expect(data.error).not.toContain("INTERNAL_DB_ERROR");
+    spy.mockRestore();
   });
 
   it("successfully processes report and refunds 1 credit", async () => {

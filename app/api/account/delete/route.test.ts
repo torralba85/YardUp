@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const deleteUser = vi.fn(async () => undefined);
 const { requireApiAuthMock } = vi.hoisted(() => ({
@@ -175,6 +176,7 @@ describe("POST /api/account/delete", () => {
     ops.failCommit = false;
     throwOnDb = false;
     deleteUser.mockClear();
+    resetRateLimitBuckets();
     requireApiAuthMock.mockReset().mockResolvedValue({
       uid: "local-dev",
       email: "owner@example.com",

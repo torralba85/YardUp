@@ -7,6 +7,8 @@ import {
 } from "@/lib/server/active-checkout-sessions";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { isSafeDocumentId } from "@/lib/server/request-validation";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
@@ -29,6 +31,14 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
   const builderId = auth.uid;
 
+  const limited = checkRateLimit(request, {
+    namespace: "stripe-checkout",
+    limit: 20,
+    windowMs: 60_000,
+    clientKey: builderId,
+  });
+  if (limited) return limited;
+
   const body = await request.json().catch(() => null);
   const requestId =
     typeof body?.requestId === "string" ? body.requestId.trim() : "";
@@ -41,7 +51,7 @@ export async function POST(request: NextRequest) {
       : typeof body.checkoutAttemptId === "string"
         ? body.checkoutAttemptId.trim()
         : "";
-  if (!requestId) {
+  if (!isSafeDocumentId(requestId)) {
     return NextResponse.json(
       { error: "requestId is required" },
       { status: 400 },
@@ -50,30 +60,42 @@ export async function POST(request: NextRequest) {
 
   // The lead must exist, still be active, and have offered itself to this
   // builder — deleted/withdrawn owner submissions must never remain purchasable.
-  const reqSnap = await getAdminDb()
-    .collection("connectionRequests")
-    .doc(requestId)
-    .get();
-  if (!reqSnap.exists) {
-    return NextResponse.json({ error: "Lead not found" }, { status: 404 });
-  }
-  const requestData = reqSnap.data();
-  if (requestData?.status !== "submitted") {
+  let requestData: FirebaseFirestore.DocumentData | undefined;
+  let alreadyUnlocked = false;
+  try {
+    const reqSnap = await getAdminDb()
+      .collection("connectionRequests")
+      .doc(requestId)
+      .get();
+    if (!reqSnap.exists) {
+      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    }
+    requestData = reqSnap.data();
+    if (requestData?.status !== "submitted") {
+      return NextResponse.json(
+        { error: "Lead is no longer available" },
+        { status: 409 },
+      );
+    }
+    const matched: string[] = requestData?.matchedBuilderIds ?? [];
+    if (!matched.includes(builderId)) {
+      return NextResponse.json(
+        { error: "Not a matched builder for this lead" },
+        { status: 403 },
+      );
+    }
+
+    alreadyUnlocked = await isLeadUnlocked(builderId, requestId);
+  } catch (err) {
+    console.error("[stripe/checkout] Failed to verify lead eligibility:", err);
     return NextResponse.json(
-      { error: "Lead is no longer available" },
-      { status: 409 },
-    );
-  }
-  const matched: string[] = requestData?.matchedBuilderIds ?? [];
-  if (!matched.includes(builderId)) {
-    return NextResponse.json(
-      { error: "Not a matched builder for this lead" },
-      { status: 403 },
+      { error: "Payments are temporarily unavailable." },
+      { status: 503 },
     );
   }
 
   // Already unlocked — idempotent success, never a second charge.
-  if (await isLeadUnlocked(builderId, requestId)) {
+  if (alreadyUnlocked) {
     return NextResponse.json({ status: "granted", alreadyUnlocked: true });
   }
 
@@ -253,8 +275,8 @@ export async function POST(request: NextRequest) {
             },
           ],
           metadata: { purchaseType: "lead_unlock", builderId, requestId },
-          success_url: `${reservedOrigin}/builder?lead=${requestId}&unlocked=1`,
-          cancel_url: `${reservedOrigin}/builder?lead=${requestId}`,
+          success_url: `${reservedOrigin}/builder?lead=${encodeURIComponent(requestId)}&unlocked=1`,
+          cancel_url: `${reservedOrigin}/builder?lead=${encodeURIComponent(requestId)}`,
         },
         {
           idempotencyKey: createStripeIdempotencyKey(

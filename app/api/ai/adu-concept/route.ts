@@ -32,6 +32,28 @@ const ALLOWED_PARCEL_STYLE_KEYS = [
   "fireHazardZone",
 ] as const;
 
+const ALLOWED_CONFIG_STYLE_KEYS = [
+  "footprint",
+  "width",
+  "length",
+  "height",
+  "roof",
+  "finish",
+  "includeOpenings",
+] as const;
+
+function sanitizeConfigForStylePrompt(
+  config: Record<string, unknown>,
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const key of ALLOWED_CONFIG_STYLE_KEYS) {
+    if (key in config && config[key] !== undefined) {
+      sanitized[key] = config[key];
+    }
+  }
+  return sanitized;
+}
+
 function sanitizeParcelForStylePrompt(
   parcel: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -157,6 +179,7 @@ export async function POST(request: NextRequest) {
   }
 
   const sanitizedParcel = sanitizeParcelForStylePrompt(parcel);
+  const sanitizedConfig = sanitizeConfigForStylePrompt(config);
 
   try {
     const imageUrl = `data:${image.type};base64,${bytes.toString("base64")}`;
@@ -175,7 +198,7 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "input_text",
-              text: `Untrusted parcel and current ADU config data: ${JSON.stringify({ parcel: sanitizedParcel, config })}`,
+              text: `Untrusted parcel and current ADU config data: ${JSON.stringify({ parcel: sanitizedParcel, config: sanitizedConfig })}`,
             },
             { type: "input_image", image_url: imageUrl },
           ],

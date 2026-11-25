@@ -100,6 +100,12 @@ describe("POST /api/address-validate", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 instead of crashing when address or placeId is not a string", async () => {
+    expect((await POST(makeRequest({ address: 12345 }))).status).toBe(400);
+    expect((await POST(makeRequest({ placeId: { nested: true } }))).status).toBe(400);
+    expect((await POST(makeRequest(["array"]))).status).toBe(400);
+  });
+
   it("falls back to client readiness evaluation when no server key is configured", async () => {
     vi.stubEnv("GOOGLE_MAPS_API_KEY", "");
     const fetchSpy = vi.fn();

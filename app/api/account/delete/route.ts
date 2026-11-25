@@ -3,6 +3,7 @@ import { getAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminApp, getAdminDb } from "@/lib/server/firebase-admin";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 
 /** Run on the Node.js runtime: the Admin SDK is not Edge-compatible. */
 export const runtime = "nodejs";
@@ -37,6 +38,14 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
   const { uid } = auth;
+
+  const limited = checkRateLimit(request, {
+    namespace: "account-delete",
+    limit: 5,
+    windowMs: 60_000,
+    clientKey: uid,
+  });
+  if (limited) return limited;
 
   try {
     const db = getAdminDb();

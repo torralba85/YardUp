@@ -423,4 +423,16 @@ describe("POST /api/stripe/webhook", () => {
       consentAcceptedAt: "2026-11-16T20:00:00.000Z",
     });
   });
+
+  it("returns structured 500 JSON when fulfilment fails so Stripe retries cleanly", async () => {
+    installEvent(paidSession());
+    mocks.grant.mockRejectedValueOnce(new Error("transient firestore timeout"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await POST(webhookRequest());
+
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "Webhook processing failed." });
+    spy.mockRestore();
+  });
 });

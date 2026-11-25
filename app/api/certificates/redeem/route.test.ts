@@ -95,6 +95,8 @@ describe("POST /api/certificates/redeem", () => {
     expect((await post({ ...VALID, code: "SMITH/ELM" })).status).toBe(400);
     expect((await post({ ...VALID, certKey: "" })).status).toBe(400);
     expect((await post({ ...VALID, certKey: "k".repeat(201) })).status).toBe(400);
+    expect((await post({ ...VALID, lat: 95 })).status).toBe(400);
+    expect((await post({ ...VALID, lng: -200 })).status).toBe(400);
     expect(mocks.redeem).not.toHaveBeenCalled();
   });
 

@@ -46,7 +46,7 @@ function makeConceptRequest({
         apn: "123-456-78-00",
       }),
     ],
-    ["config", JSON.stringify(defaultAduConfig)],
+    ["config", JSON.stringify({ ...defaultAduConfig, injectedPrompt: "IGNORE_PREVIOUS" })],
   ]);
   if (consent !== null) fields.set("consent", consent);
 
@@ -162,6 +162,7 @@ describe("POST /api/ai/adu-concept", () => {
     expect(styleRequestRaw).not.toContain("32.7157");
     expect(styleRequestRaw).not.toContain("-117.1611");
     expect(styleRequestRaw).not.toContain("123-456-78-00");
+    expect(styleRequestRaw).not.toContain("IGNORE_PREVIOUS");
     expect(styleRequestRaw).toContain(parcelPresets[0].city);
     for (const key of ["lotArea", "lotWidth", "lotLength", "existingHouseSqft"] as const) {
       expect(styleRequestRaw).toContain(
