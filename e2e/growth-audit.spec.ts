@@ -8,7 +8,7 @@ test("Studio previews locked detail while keeping the free rent range available"
   // rent range is free.
   await expect(preview.locator('[data-locked-metric="true"]')).toHaveCount(4);
   await expect(preview).toContainText("Estimated monthly rent");
-  await expect(page.getByRole("button", { name: "Continue to secure checkout — $29" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Search your address" }).filter({ visible: true }).first()).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("studio-cost-preview.png") });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

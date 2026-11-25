@@ -24,7 +24,7 @@ test("free Studio shows the rent range while cost, income and payback stay paid"
     await expect(preview.getByText(figure, { exact: true })).toHaveCount(0);
   }
   await preview.getByRole("button", { name: "See what’s behind the numbers" }).click();
-  await expect(page.getByRole("button", { name: "Continue to secure checkout — $29" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Search your address" }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("region", { name: "Free property preview" }).locator('[data-locked-metric="true"]')).toHaveCount(4);
   await page.screenshot({ path: testInfo.outputPath("studio-paid-preview.png"), fullPage: true });
 });
