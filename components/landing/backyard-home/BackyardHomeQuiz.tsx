@@ -310,7 +310,7 @@ export function BackyardHomeQuiz() {
               inputId={addressInputId}
               inputLabel="Check your exact address in the 3D studio"
               inputLabelSrOnly={false}
-              placeholder="1420 Coyote Brush Ct, San Diego, CA…"
+              placeholder="1234 Coyote Brush Ct, San Diego, CA"
               submitLabel="Check my lot"
               onLookupStart={() => {
                 trackEvent("eligibility_quiz_studio_cta", {

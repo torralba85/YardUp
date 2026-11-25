@@ -12,10 +12,9 @@ export const viewport: Viewport = {
   themeColor: COLOR["lot-chalk"],
   viewportFit: "cover",
 };
-// Says what a searcher does here (enter an address) and that the first one is
-// free; the search snippet and the shared-link card both read this line.
+// The search snippet and shared-link card describe the same guest offer as the landing page.
 const description =
-  "Check any California address to see what backyard home could fit on your lot in 3D, with estimated build cost, rent and payback. First address free.";
+  "Explore a backyard home in 3D and see an estimated rent range where available. Search up to three California addresses free without an account.";
 const canonicalUrl = "https://lotfoundry.net/";
 export const metadata: Metadata = {
   title: "California ADU Feasibility Check: Cost & Rent | LotFoundry",

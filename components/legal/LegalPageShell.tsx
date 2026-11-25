@@ -3,6 +3,14 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { PublicHeader } from "./PublicHeader";
 import { SiteFooter } from "./SiteFooter";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
+
+/** The aside's tool links; the page's own entry is left out (see `currentPath`). */
+const TOOL_LINKS = [
+  { href: "/sample-certificate/san-diego", label: "Sample Certificate of Feasibility", prefetch: false },
+  { href: "/adu-cost-calculator", label: "California ADU cost calculator" },
+  { href: "/adu/ca/san-diego/permits", label: "San Diego ADU permits by neighborhood" },
+] as const;
 
 /**
  * Shared A LOT MORE chrome for legal, support, and editorial pages: unified
@@ -14,12 +22,15 @@ export function LegalPageShell({
   kicker,
   layout = "prose",
   aside,
+  currentPath,
   children,
 }: {
   title: string;
   kicker?: string;
   layout?: "prose" | "editorial";
   aside?: ReactNode;
+  /** This page's path, so the default aside never links to the page itself. */
+  currentPath?: string;
   children: ReactNode;
 }) {
   const useTwoColumn = layout === "editorial" || Boolean(aside);
@@ -29,7 +40,7 @@ export function LegalPageShell({
         <p className="lf-kicker text-lot-orange-ink">Free lot check</p>
         <h2 className="lf-card-heading mt-2 text-lot-ink">Test your address in 3D</h2>
         <p className="mt-2 text-sm leading-6 text-lot-ink">
-          Check parcel boundaries, modeled setbacks, build cost, and rental potential for up to 3 addresses with no account.
+          Explore a 3D layout and see an estimated rent range where data is available. Search up to three addresses without an account.
         </p>
         <div className="mt-4 flex flex-col gap-2.5">
           <Link
@@ -37,7 +48,7 @@ export function LegalPageShell({
             prefetch={false}
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control bg-lot-orange px-4 py-2.5 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
-            <span>Open 3D studio</span>
+            <span>{PRIMARY_CTA_LABEL}</span>
             <ArrowRight size={15} aria-hidden="true" />
           </Link>
           <Link
@@ -49,23 +60,19 @@ export function LegalPageShell({
         </div>
       </div>
       <nav aria-label="Quick planning tools" className="border-t border-lot-line pt-4">
-        <p className="lf-kicker-dense text-lot-stone">Tools &amp; examples</p>
+        <p className="lf-kicker text-lot-stone">Tools &amp; examples</p>
         <ul className="mt-2 space-y-1 text-sm">
-          <li>
-            <Link href="/sample-certificate/san-diego" prefetch={false} className="inline-flex min-h-11 items-center font-medium text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink">
-              Sample Certificate of Feasibility
-            </Link>
-          </li>
-          <li>
-            <Link href="/adu-cost-calculator" className="inline-flex min-h-11 items-center font-medium text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink">
-              California ADU cost calculator
-            </Link>
-          </li>
-          <li>
-            <Link href="/adu/ca/san-diego/permits" className="inline-flex min-h-11 items-center font-medium text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink">
-              San Diego ADU permits by neighborhood
-            </Link>
-          </li>
+          {TOOL_LINKS.filter((link) => link.href !== currentPath).map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                prefetch={"prefetch" in link ? link.prefetch : undefined}
+                className="inline-flex min-h-11 items-center font-medium text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
     </aside>

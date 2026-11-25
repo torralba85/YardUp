@@ -200,8 +200,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Usage and Conversion Measurement:</strong> <em>Google Analytics 4</em> and{" "}
-            <em>Google Ads</em> measure product usage and ad-driven purchases only with your
-            affirmative consent (see Section 7).
+            <em>Google Ads</em> use measurement cookies only with your affirmative consent. Google
+            Analytics measures page visits without cookies before you opt in (see Section 7).
           </li>
           <li>
             <strong>Aggregate Traffic Measurement:</strong> <em>Cloudflare Web Analytics</em> counts
@@ -299,17 +299,14 @@ export default function PrivacyPage() {
           measurement uses advertising cookies only after you opt in, as described below.
         </p>
         <p>
-          <strong>Google Analytics 4 and Google Ads conversion measurement (Consent Gated):</strong>{" "}
-          We load these Google tags only if you click Accept. They then set first-party measurement
-          cookies (including <code translate="no">_ga</code> and <code translate="no">_ga_*</code> for Analytics, and{" "}
-          <code translate="no">_gcl_au</code>, <code translate="no">_gcl_aw</code>, and <code translate="no">_gcl_dc</code> for Google Ads) to
-          measure site usage, ad-driven visits, and purchases. Google Consent Mode grants analytics
-          and ad storage but keeps ad personalization denied, so personalized advertising and
-          remarketing stay off. Google Ads receives a purchase value, currency, and transaction
-          identifier when a consented visitor completes a purchase. We do not send your address,
-          email, phone number, or feasibility results to Google. If you decline or take no action, no
-          Google measurement scripts load or set cookies. If you later withdraw consent, we disable
-          the tags and delete these cookies.
+          <strong>Google Analytics and Google Ads measurement:</strong>{" "}
+          Before you choose or if you decline, Google Analytics receives limited page-view signals
+          without analytics cookies. If you accept, Google Analytics and Google Ads can use
+          first-party measurement cookies to measure site usage, ad-driven visits, and purchases.
+          Google Ads receives the purchase value, currency, and transaction identifier for a
+          consented purchase. Advertising personalization stays off. We do not send your address,
+          email, phone number, or feasibility results to Google. If you withdraw consent, we delete
+          measurement cookies, stop Google Ads measurement, and return to cookieless page measurement.
         </p>
         <p>
           <strong>Cloudflare Web Analytics (Not Consent Gated):</strong> Separately, we use Cloudflare

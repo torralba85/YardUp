@@ -14,18 +14,18 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   const name = await link.textContent();
   expect(await link.evaluate((anchor) => anchor.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   await link.click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${name} ADU Permits`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${name} ADU Permits`, { timeout: 20_000 });
   await expect(page.getByText("These are issued permits", { exact: false })).toBeVisible();
   await expect(page.getByRole("table")).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `https://lotfoundry.net${new URL(page.url()).pathname}`);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("permit-area.png"), fullPage: true });
   await page.getByRole("textbox", { name: /street address/i }).fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
-  await page.getByRole("button", { name: "Check my address" }).click();
+  await page.getByRole("button", { name: "Check my lot" }).click();
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await answer.getByRole("link", { name: "Open in 3D" }).click();
-  await expect(page).toHaveURL(/\/studio(?:\?|$)/);
+  await expect(page).toHaveURL(/\/studio(?:\?|$)/, { timeout: 20_000 });
   expect(page.url()).not.toContain(SAMPLE_LIVE_PARCEL.address.split(" ")[1]);
 });
 

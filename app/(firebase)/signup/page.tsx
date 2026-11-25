@@ -413,7 +413,7 @@ function SignupForm() {
                 setError(null);
               }
             }}
-            placeholder="Alma Reyes…"
+            placeholder="Alma Reyes"
           />
           {invalidField === "displayName" && error && (
             <p id="signup-display-name-error" role="alert" className="mt-1 text-sm text-status-blocked">
@@ -447,7 +447,7 @@ function SignupForm() {
                 setError(null);
               }
             }}
-            placeholder="you@example.com…"
+            placeholder="you@example.com"
           />
           {invalidField === "email" && error && (
             <p id="signup-email-error" role="alert" className="mt-1 text-sm text-status-blocked">

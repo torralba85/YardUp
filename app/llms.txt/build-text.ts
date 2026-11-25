@@ -123,7 +123,7 @@ licensed builder.
 - Certificate of Feasibility: ${price} one-time on the web, for one property.
   Build cost range, annual net income and simple payback, itemized hard and
   soft cost allowances, debt-service financing scenarios, a
-  fee and permit audit for its size, an AI Project Brief, and a bid-leveling
+  fee and permit checks to confirm locally, an AI Project Brief, and a bid-leveling
   checklist for three builders. In the Android app it is bought through Google
   Play.
 - [Sample certificate](${baseUrl}/sample-certificate/san-diego): a complete example for a fictional San Diego lot.

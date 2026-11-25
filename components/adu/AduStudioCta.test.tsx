@@ -51,7 +51,7 @@ describe("AduStudioCta", () => {
     fireEvent.change(screen.getByLabelText("Your San Diego street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     expect(trackEventMock).toHaveBeenCalledWith("adu_cta_mid", {
       city_slug: "san-diego-cost",

@@ -76,7 +76,7 @@ const jsonLd = {
 
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
-  title: "LotFoundry | See what your backyard can earn",
+  title: "LotFoundry | Explore an ADU on your lot in 3D",
   description:
     "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
   manifest: "/manifest.json",
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
     apple: "/icon-180.png",
   },
   openGraph: {
-    title: "LotFoundry | See what your backyard can earn",
+    title: "LotFoundry | Explore an ADU on your lot in 3D",
     description:
       "Check your address for ADU rent, build cost, and payback estimates—before you spend money on plans. Estimates only, not guarantees.",
     images: [SITE_OG_IMAGE],

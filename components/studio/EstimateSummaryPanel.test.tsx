@@ -52,17 +52,17 @@ describe("leveraged cash-flow row", () => {
     expect(screen.getByRole("button", { name: "See what’s behind the numbers" })).toBeDisabled();
   });
 
-  it("leads with the best option, its equity and its path to positive once purchased", () => {
+  it("leads with the scenario with higher modeled cash flow, its equity and its path to positive once purchased", () => {
     const lead = leadScenario(buildCashFlowProForma(compliant));
     render(<EstimateSummaryPanel parcelName="Oak Street" result={compliant}
       feasibilityStatus="eligible" onGenerateReport={vi.fn()} certificateUnlocked />);
 
     expect(lead.scenario.id).toBe("construction");
     expect(screen.getByText(formatSignedRange(lead.netLow, lead.netHigh))).toBeInTheDocument();
-    expect(screen.getByText(/^Best option: 20% down construction-to-perm/)).toBeInTheDocument();
-    expect(screen.getByText(/pays down about \$142–\$178\/mo of principal in year 1, equity you keep/)).toBeInTheDocument();
+    expect(screen.getByText(/^Higher modeled monthly cash flow in this example: 20% down construction-to-perm/)).toBeInTheDocument();
+    expect(screen.getByText(/pays down about \$142–\$178\/mo of principal in year 1/)).toBeInTheDocument();
     expect(screen.getByText(/Positive across the cost range at \$2,396\/mo rent or with \$92,000 total cash in/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Unlock cash flow" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "See cash flow in the Certificate" })).not.toBeInTheDocument();
   });
 });
 
@@ -79,22 +79,22 @@ describe("750 sq ft impact-fee row", () => {
   it.each([749, 750])("confirms the exemption at %i sq ft", (sqft) => {
     render(<EstimateSummaryPanel parcelName="Lot" result={sized(sqft)}
       feasibilityStatus="eligible" onGenerateReport={vi.fn()} feeJurisdiction="california" certificateUnlocked />);
-    expect(screen.getByText("Under the 750 sq ft impact-fee limit")).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`At ${sqft} sq ft, this layout is within`))).toBeInTheDocument();
+    expect(screen.getByText("Within the 750 sq ft impact-fee threshold")).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`modeled ${sqft} sq ft footprint is within`))).toBeInTheDocument();
   });
 
-  it("alerts above the limit and names the trim that avoids it", () => {
+  it("asks the homeowner to confirm livable area above the footprint threshold", () => {
     render(<EstimateSummaryPanel parcelName="Lot" result={sized(800)}
       feasibilityStatus="eligible" onGenerateReport={vi.fn()} feeJurisdiction="california" certificateUnlocked />);
     expect(screen.getByText("Size threshold alert")).toBeInTheDocument();
-    expect(screen.getByText(/crosses the 750 sq ft SB 13 impact-fee exemption limit/)).toBeInTheDocument();
-    expect(screen.getByText(/Trimming 50 sq ft of footprint keeps it under/)).toBeInTheDocument();
+    expect(screen.getByText(/footprint exceeds 750 sq ft/)).toBeInTheDocument();
+    expect(screen.getByText(/Check the interior livable area on your plans/)).toBeInTheDocument();
   });
 
-  it("notes San Diego's own DIF exemption instead of promising city impact fees", () => {
+  it("separates the state and San Diego fee checks", () => {
     render(<EstimateSummaryPanel parcelName="Lot" result={sized(800)}
       feasibilityStatus="eligible" onGenerateReport={vi.fn()} feeJurisdiction="san-diego" certificateUnlocked />);
-    expect(screen.getByText(/exempts a lot's first two ADUs from its own impact fees/)).toBeInTheDocument();
+    expect(screen.getByText(/confirm state and City of San Diego fees separately/)).toBeInTheDocument();
     expect(screen.queryByText(/in proportion to the main house/)).not.toBeInTheDocument();
   });
 

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { GoogleAnalytics } from "./GoogleAnalytics";
-import { CONSENT_STORAGE_KEY, CONSENT_VERSION } from "@/lib/analytics/consent";
+import { CONSENT_STORAGE_KEY, CONSENT_VERSION, writeConsent } from "@/lib/analytics/consent";
 
 const pageview = vi.hoisted(() => vi.fn());
 const navigation = vi.hoisted(() => ({ pathname: "/", search: "" }));
@@ -28,6 +28,10 @@ vi.mock("@/lib/analytics/gtag", async () => {
   return { ...actual, pageview };
 });
 
+function commands(): unknown[][] {
+  return (window.dataLayer ?? []).map((entry) => Array.from(entry as ArrayLike<unknown>));
+}
+
 function grantConsent() {
   window.localStorage.setItem(
     CONSENT_STORAGE_KEY,
@@ -45,6 +49,9 @@ function denyConsent() {
 describe("GoogleAnalytics", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.sessionStorage.clear();
+    delete window.gtag;
+    delete window.dataLayer;
     pageview.mockClear();
     navigation.pathname = "/";
     navigation.search = "";
@@ -58,22 +65,20 @@ describe("GoogleAnalytics", () => {
     Reflect.deleteProperty(navigator, "webdriver");
   });
 
-  it("loads no tag before the visitor decides", () => {
-    // The core promise of an opt-in banner: nothing reaches Google until the
-    // visitor accepts, so an undecided visitor must produce no script at all.
-    const { container } = render(<GoogleAnalytics />);
+  it.each(["unset", "denied"])("loads only GA4 with denied storage when consent is %s", (consent) => {
+    if (consent === "denied") denyConsent();
 
-    expect(container).toBeEmptyDOMElement();
-    expect(pageview).not.toHaveBeenCalled();
-  });
+    render(<GoogleAnalytics />);
 
-  it("loads no tag when the visitor declined", () => {
-    denyConsent();
-
-    const { container } = render(<GoogleAnalytics />);
-
-    expect(container).toBeEmptyDOMElement();
-    expect(pageview).not.toHaveBeenCalled();
+    expect(screen.getByTestId("gtag-loader")).toBeInTheDocument();
+    expect(commands()[0]).toEqual(["consent", "default", {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+    }]);
+    expect(commands().filter(([command]) => command === "config").map((entry) => entry[1]))
+      .toEqual(["G-ABC1234567"]);
   });
 
   it("loads no tag when no measurement ID is configured", () => {
@@ -112,9 +117,9 @@ describe("GoogleAnalytics", () => {
 
     render(<GoogleAnalytics />);
 
-    const init = await screen.findByTestId("lf-gtag-init");
-    expect(init.textContent).toContain("send_page_view: false");
-    expect(init.textContent).toContain("G-ABC1234567");
+    expect(commands()).toContainEqual(["config", "G-ABC1234567", expect.objectContaining({
+      send_page_view: false,
+    })]);
   });
 
   it("configures approved attribution with clean default URLs before early events flush", async () => {
@@ -122,24 +127,35 @@ describe("GoogleAnalytics", () => {
     window.history.replaceState(null, "", "/adu-cost-calculator?utm_source=x&utm_medium=organic_social&utm_campaign=adu_size_comparison_20261111&address=private#secret");
     render(<GoogleAnalytics />);
 
-    const init = await screen.findByTestId("lf-gtag-init");
-    const body = init.textContent ?? "";
+    const body = JSON.stringify(commands());
     expect(body).toContain('"campaign_source":"x"');
     expect(body).toContain('"campaign_name":"adu_size_comparison_20261111"');
     expect(body).toContain('"page_location":"http://localhost:3000/adu-cost-calculator"');
     expect(body).not.toMatch(/private|#secret|utm_source/);
   });
 
-  it("grants advertising measurement only after the new disclosure is accepted", async () => {
-    grantConsent();
-
+  it("configures Ads on grant and preserves the GA loader on withdrawal", () => {
     render(<GoogleAnalytics />);
 
-    const init = await screen.findByTestId("lf-gtag-init");
-    expect(init.textContent).toContain("ad_storage: 'granted'");
-    expect(init.textContent).toContain("ad_user_data: 'granted'");
-    expect(init.textContent).toContain("ad_personalization: 'denied'");
-    expect(init.textContent).toContain("analytics_storage: 'granted'");
+    act(() => writeConsent("granted"));
+    expect(commands()).toContainEqual(["consent", "update", {
+      analytics_storage: "granted",
+      ad_storage: "granted",
+      ad_user_data: "granted",
+      ad_personalization: "denied",
+    }]);
+    expect(commands()).toContainEqual(["config", "AW-18350405574", expect.objectContaining({
+      send_page_view: false,
+    })]);
+
+    document.cookie = "_ga=temporary; path=/";
+    act(() => writeConsent("denied"));
+    expect(commands()).toContainEqual(["consent", "update", expect.objectContaining({
+      analytics_storage: "denied",
+      ad_storage: "denied",
+    })]);
+    expect(document.cookie).not.toContain("_ga=");
+    expect(screen.getByTestId("gtag-loader")).toBeInTheDocument();
   });
 
   it("sends a page view for the current route", async () => {
@@ -187,22 +203,16 @@ describe("GoogleAnalytics", () => {
     await vi.waitFor(() => expect(pageview).toHaveBeenCalledWith("/builder"));
   });
 
-  it("configures the Ads account alongside GA4 for conversion measurement", async () => {
+  it("announces readiness after configuring, so events held before init are sent", () => {
     grantConsent();
+    const seen = vi.fn(() => commands().filter(([command]) => command === "config"));
+    window.addEventListener("lf:gtag-ready", seen, { once: true });
 
     render(<GoogleAnalytics />);
 
-    const init = await screen.findByTestId("lf-gtag-init");
-    expect(init.textContent).toContain("gtag('config', 'AW-18350405574', { send_page_view: false })");
-  });
-
-  it("announces readiness after configuring, so events held before init are sent", async () => {
-    grantConsent();
-
-    render(<GoogleAnalytics />);
-
-    const text = (await screen.findByTestId("lf-gtag-init")).textContent ?? "";
-    const ready = text.indexOf("window.dispatchEvent(new Event('lf:gtag-ready'))");
-    expect(ready).toBeGreaterThan(text.lastIndexOf("gtag('config'"));
+    expect(seen).toHaveReturnedWith(expect.arrayContaining([
+      expect.arrayContaining(["config", "G-ABC1234567"]),
+      expect.arrayContaining(["config", "AW-18350405574"]),
+    ]));
   });
 });

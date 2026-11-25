@@ -21,16 +21,16 @@ test("property entry supports skip navigation and a visible field focus", async 
   await page.getByRole("link", { name: "LotFoundry home", exact: true }).click();
   await page.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i }).click();
   await expect(page.getByRole("heading", { name: "Start with your property." })).toBeHidden();
-  await expect(page.getByRole("button", { name: /^Reset (scenario|Project)$/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Reset (scenario|project)$/i })).toBeVisible();
   await expect(page).toHaveURL(/parcel=coyote-brush/);
   await page.screenshot({ path: testInfo.outputPath("signed-in-example.png") });
 });
 
 test("mobile journey labels and provenance remain readable at narrow widths", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile journey");
-  await page.goto("/studio?parcel=oak-street");
-  // The default scenario begins at Find; commit to the demo lot to reach Earn.
-  await page.getByRole("button", { name: "See the Seattle example" }).click();
+  await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
+  // The default scenario begins at Your lot; choose the demo to see the rent.
+  await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
   const rail = page.getByRole("navigation", { name: "Journey progress" });
   const confidence = page.getByTestId("earn-confidence");
   await expect(confidence).toBeVisible();
@@ -41,7 +41,8 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
       const box = await button.boundingBox();
       expect(box?.width).toBeGreaterThanOrEqual(44);
       expect(box?.height).toBeGreaterThanOrEqual(44);
-      expect(await button.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      const label = await button.getAttribute("aria-label");
+      expect(await button.evaluate((el) => el.scrollWidth <= el.clientWidth), `${label} at ${width}px`).toBe(true);
     }
     await expect(confidence).toHaveCSS("font-size", "12px");
     await expect(confidence).toHaveCSS("text-transform", "none");
@@ -58,7 +59,7 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
 test("support text stays readable on hover", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "hover-capable pointer");
   await page.goto("/help");
-  const openStudio = page.getByRole("link", { name: "Open studio", exact: true });
+  const openStudio = page.getByRole("banner").getByRole("link", { name: "Check my lot", exact: true });
   await openStudio.hover();
   await expect(openStudio).toHaveCSS("color", "rgb(22, 22, 22)");
 });

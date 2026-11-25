@@ -108,7 +108,12 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
       </div>
 
       <div className="mt-6">
-        <AduStudioCta city={content.city} slug={content.slug} placement="top" />
+        <AduStudioCta
+          city={content.city}
+          slug={content.slug}
+          placement="top"
+          compactHeading={content.slug === "san-diego-county" ? "Check whether an ADU could fit on your lot" : undefined}
+        />
       </div>
 
       {content.slug === "san-diego-county" ? (

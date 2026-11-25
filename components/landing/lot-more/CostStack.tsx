@@ -47,6 +47,9 @@ const money = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+/** A zero-cost layer is folded into another line, so it reads "Included", never "$0". */
+const layerAmount = (value: number) => (value === 0 ? "Included" : money(value));
+
 /**
  * An exploded 3D model of the demo backyard home beside the Studio engine's
  * construction budget: roof, openings, shell, and the design and permit
@@ -55,13 +58,9 @@ const money = (value: number) =>
  */
 export function CostStack({
   budget,
-  costLow,
-  costHigh,
   sqft = 600,
 }: {
   budget: ConstructionBudget;
-  costLow: number;
-  costHigh: number;
   sqft?: number;
 }) {
   const [layer, setLayer] = useState<CostLayer>("roof");
@@ -182,7 +181,7 @@ export function CostStack({
             <span>
               {active.index} · {active.title}
             </span>
-            <strong>{money(active.amount)}</strong>
+            <strong>{layerAmount(active.amount)}</strong>
           </p>
           <CostStackModel
             layer={layer}
@@ -208,7 +207,7 @@ export function CostStack({
                     <span className={styles.rowTitle}>{row.title}</span>
                     <span className={styles.rowDetail}>{row.detail}</span>
                   </span>
-                  <span className={styles.rowAmount}>{money(row.amount)}</span>
+                  <span className={styles.rowAmount}>{layerAmount(row.amount)}</span>
                 </Button>
               );
             })}
@@ -217,12 +216,6 @@ export function CostStack({
             <div>
               <dt>Central estimate</dt>
               <dd>{money(budget.total)}</dd>
-            </div>
-            <div>
-              <dt>Estimate range</dt>
-              <dd>
-                {money(costLow / 1000)}k–{money(costHigh / 1000)}k
-              </dd>
             </div>
           </dl>
           <p className={styles.note}>

@@ -128,7 +128,7 @@ describe("buildCashFlowProForma", () => {
   it("leads with the option closest to positive and what makes it positive", () => {
     expect(leadScenario(proForma).scenario.id).toBe("construction");
     expect(proFormaSummary(proForma)).toBe(
-      "Best option: 20% down construction-to-perm, −$48 to +$231/mo after the loan and operating costs, plus about $123–$154/mo of principal paid down in year 1, equity you keep. Positive across the whole cost range at $2,072/mo rent or with $57,000 total cash in.",
+      "Higher modeled monthly cash flow in this example: 20% down construction-to-perm, −$48 to +$231/mo after the loan and operating costs, plus about $123–$154/mo of principal paid down in year 1. Positive across the whole cost range at $2,072/mo rent or with $57,000 total cash in.",
     );
   });
 
@@ -139,7 +139,7 @@ describe("buildCashFlowProForma", () => {
       monthlyRent: 3000,
       operatingExpenseRatio: 0.3,
     });
-    expect(proFormaSummary(strong)).toMatch(/^Best option: 20% down construction-to-perm, \+\$\d/);
+    expect(proFormaSummary(strong)).toMatch(/^Higher modeled monthly cash flow in this example: 20% down construction-to-perm, \+\$\d/);
     expect(proFormaSummary(strong)).not.toMatch(/Positive across/);
   });
 

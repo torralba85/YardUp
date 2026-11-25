@@ -79,7 +79,7 @@ test("native guest gets three successful lookups, preserves Back, and is asked t
     if (index > 0) await page.goBack();
     await expect(addressStep).toBeVisible();
     await search(freeLookups[index]);
-    await expect(page.getByRole("heading", { name: /Your backyard could earn/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /What it could rent for/ })).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     expect(calls).toEqual({ geocode: index + 1, parcel: index + 1 });
     if (index === 0) await page.screenshot({ path: testInfo.outputPath("native-guest-first-lookup.png"), fullPage: true });

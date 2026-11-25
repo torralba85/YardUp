@@ -6,7 +6,7 @@ import { SITE_NAME } from "@/lib/site-identity";
 // Matches the page's H1, "ADU Feasibility Studio", so the title leads with ADU.
 const title = "ADU Feasibility Studio: Your Lot in 3D | LotFoundry";
 const description =
-  "Place an ADU on your lot in 3D, snap it inside the modeled setbacks, and see estimated rent, build cost and payback. Try a sample lot without an account.";
+  "Place an ADU on your lot in 3D, snap it inside the modeled setbacks and see a free rent range. The $29 certificate adds build cost, net income and payback.";
 
 /**
  * Studio metadata.
@@ -58,7 +58,7 @@ export default function StudioLayout({
         <details className="group lg:h-full">
           <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
             <div className="min-w-0 lg:flex lg:items-baseline lg:gap-3">
-              <p className="lf-kicker-dense text-lot-stone">Planning guide &amp; methodology</p>
+              <p className="lf-kicker text-lot-stone">Planning guide &amp; methodology</p>
               <h1
                 id="studio-overview-heading"
                 className="font-display text-lg font-medium tracking-[-0.025em] text-pretty lg:text-base"

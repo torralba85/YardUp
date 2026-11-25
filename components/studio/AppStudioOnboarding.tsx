@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import FeasibilityStudio from "@/components/FeasibilityStudio";
 import { AuthModal, type AuthModalCloseReason } from "@/components/auth/AuthModal";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-import { parcelPresets } from "@/lib/feasibility";
+import { demoPresets, parcelPresets } from "@/lib/feasibility";
 import { parseScenarioParams } from "@/lib/scenario-url";
 import SignedInStudioGate from "./SignedInStudioGate";
 
@@ -200,7 +200,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
           </h2>
           <p className="mt-1 text-sm text-lot-stone">No account needed. Sample lots with typical local rules.</p>
           <ul className="mt-4 space-y-2">
-            {parcelPresets.map((preset) => (
+            {demoPresets.map((preset) => (
               <li key={preset.id}>
                 <button
                   type="button"

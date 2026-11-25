@@ -197,7 +197,7 @@ export default function EstimateSummaryPanel({
               </div>
               <p className="mt-1 text-xs leading-5 text-lot-stone">
                 {certificateUnlocked
-                  ? `Best option: ${lead.scenario.label}, ${financingTermsLabel(lead.scenario)}, after the ${formatOperatingShare(result.operatingExpenseRatio)} operating allowance. Each payment also pays down about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal in year 1, equity you keep.${
+                  ? `Higher modeled monthly cash flow in this example: ${lead.scenario.label}, ${financingTermsLabel(lead.scenario)}, after the ${formatOperatingShare(result.operatingExpenseRatio)} operating allowance. Each payment also pays down about ${formatCurrencyRange(lead.principalPaydownLow, lead.principalPaydownHigh)}/mo of principal in year 1.${
                       lead.netLow < 0
                         ? ` Positive across the cost range at ${
                             lead.breakEvenRentHigh === null ? "" : `${formatCurrency(lead.breakEvenRentHigh)}/mo rent or with `
@@ -226,7 +226,7 @@ export default function EstimateSummaryPanel({
                   disabled={reportCtaBusy}
                   leftIcon={<Lock size={13} />}
                 >
-                  Unlock cash flow
+                  See cash flow in the Certificate
                 </Button>
               </div>
             )}
@@ -237,7 +237,7 @@ export default function EstimateSummaryPanel({
           <h3 className="text-sm font-semibold text-lot-ink">Hard &amp; soft cost allowances</h3>
           <p className="mt-1 text-xs leading-5 text-lot-stone">See how your estimated build cost is put together. Your Certificate explains the construction base, roof, openings, regional adjustment, and combined design and permit allowance.</p>
           <Button type="button" variant="secondary" size="xs" className="mt-3" onClick={onGenerateReport} disabled={reportCtaBusy} leftIcon={certificateUnlocked ? undefined : <Lock size={13} />}>
-            {certificateUnlocked ? "View cost allowances" : "Unlock cost allowances"}
+            {certificateUnlocked ? "View cost allowances" : "See cost allowances in the Certificate"}
           </Button>
         </div>
 
@@ -256,14 +256,14 @@ export default function EstimateSummaryPanel({
             />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-lot-ink">
-                {feeThreshold.isExempt ? "Under the 750 sq ft impact-fee limit" : "Size threshold alert"}
+                {feeThreshold.isExempt ? "Within the 750 sq ft impact-fee threshold" : "Size threshold alert"}
               </p>
               <p className="mt-1 text-xs leading-5 text-lot-stone">
                 {feeThreshold.isExempt
-                  ? `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout is within California's 750 sq ft SB 13 impact-fee exemption.`
+                  ? `The modeled ${formatNumber(feeThreshold.sqft)} sq ft footprint is within California’s 750 sq ft impact-fee threshold for interior livable space. Permit, school, and utility charges follow separate rules.`
                   : feeJurisdiction === "san-diego"
-                    ? `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit. The City of San Diego still exempts a lot's first two ADUs from its own impact fees; school and utility fees can apply.`
-                    : `At ${formatNumber(feeThreshold.sqft)} sq ft, this layout crosses the 750 sq ft SB 13 impact-fee exemption limit, so impact fees can apply in proportion to the main house. Trimming ${formatNumber(feeThreshold.sqftOverLimit)} sq ft of footprint keeps it under.`}{" "}
+                    ? `The modeled ${formatNumber(feeThreshold.sqft)} sq ft footprint exceeds 750 sq ft. Check the interior livable area on your plans and confirm state and City of San Diego fees separately.`
+                    : `The modeled ${formatNumber(feeThreshold.sqft)} sq ft footprint exceeds 750 sq ft. Check the interior livable area on your plans and confirm applicable fees with your permitting agency.`}{" "}
                 {certificateUnlocked
                   ? "The fee and submittal breakdown is in your certificate."
                   : "See the fee and submittal breakdown in the certificate."}

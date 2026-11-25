@@ -9,11 +9,11 @@ const stone = "rgb(101, 101, 95)";
 test.describe("Project-wide A LOT MORE contract", () => {
   test("Studio gives the task action one signal-orange fill", async ({ page, isMobile }, testInfo) => {
     test.skip(isMobile, "Desktop rail and context header; mobile has its own journey contract");
-    await page.goto("/studio?parcel=oak-street");
+    await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
     const save = page.getByRole("button", { name: "Save this property — free account", exact: true });
     const certificate = page.getByRole("button", { name: "See what’s behind the numbers", exact: true });
     const signIn = page.getByRole("complementary", { name: "Studio navigation" })
-      .getByRole("button", { name: "Sign In", exact: true });
+      .getByRole("button", { name: "Sign in", exact: true });
     await expect(save).toHaveCSS("background-color", chalk);
     await expect(save).toHaveCSS("color", carbon);
     await expect(save).toHaveCSS("border-color", "rgb(101, 101, 95)");

@@ -81,7 +81,7 @@ export const BACKYARD_HOME_FAQS = [
   {
     question: "Does the 750 sq ft impact-fee waiver apply to backyard homes?",
     answer:
-      "Yes. Under California Government Code §66324(c), ADUs smaller than 750 sq ft are exempt from local development impact fees. Units at 750 sq ft or larger pay impact fees scaled proportionally to the main house.",
+      "California Government Code § 66311.5(c)(1) exempts ADUs with 750 sq ft or less of interior livable space from specified impact fees. Permit, school, and utility charges follow separate rules. Confirm which fees apply with your permitting agency.",
   },
   {
     question: "Does a passing quiz guarantee city permit approval?",
@@ -156,48 +156,46 @@ export function BackyardHomeLanding() {
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-lot-chalk text-lot-ink">
-      <PublicHeader
-        studioHref="/studio?parcel=coyote-brush&size=600"
-        studioLabel="Open 3D studio"
-      />
+      <PublicHeader />
 
       <main id="main-content">
         <section
           id="quiz"
           className="mx-auto max-w-6xl scroll-mt-20 px-5 pb-14 pt-8 sm:px-8 sm:pb-16 sm:pt-12"
         >
-          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-12">
-            <div className="min-w-0 space-y-5">
+          {/* Phones put the quiz straight under the heading; the explainer follows it. */}
+          <div className="grid items-start gap-x-8 gap-y-6 [grid-template-areas:'head'_'quiz'_'body'] lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-x-12 lg:gap-y-5 lg:[grid-template-areas:'head_quiz'_'body_quiz'] lg:[grid-template-rows:auto_1fr]">
+            <div className="min-w-0 space-y-5 [grid-area:head]">
               <p className="lf-kicker text-lot-orange-ink">
                 California &amp; San Diego · 60-Second Lot Quiz
               </p>
               <h1 className="font-display text-[clamp(2rem,4vw,3.1rem)] font-semibold leading-[1.04] tracking-[-0.04em] text-lot-ink">
                 Can I build a backyard home?
               </h1>
+            </div>
+            <div className="min-w-0 space-y-5 [grid-area:body]">
               <p className="lf-body max-w-prose text-lot-ink">
-                For most residential lots in California—including San Diego—the
-                short answer is yes. State law protects your right to add an{" "}
+                California law allows many homeowners to add an{" "}
                 <strong className="font-semibold text-lot-ink">
                   accessory dwelling unit (ADU)
                 </strong>{" "}
-                ministerially, often with 4-foot (or 0-foot in San Diego) yard
-                setbacks. Screen your property in 5 quick checks, then verify
-                your exact lot in 3D.
+                through a streamlined review. Take five quick checks and explore a 3D concept on your lot.
+                Confirm site conditions and local requirements before planning to build.
               </p>
 
               <dl className="grid grid-cols-2 gap-4 border-t border-lot-line pt-5 sm:grid-cols-[minmax(0,0.85fr)_minmax(0,0.95fr)_minmax(0,1.2fr)]">
                 <div className="min-w-0">
-                  <dt className="lf-kicker-dense text-lot-stone">Lot quiz</dt>
+                  <dt className="lf-kicker text-lot-stone">Lot quiz</dt>
                   <dd className="lf-card-heading mt-1 text-lot-ink">5 checks</dd>
                 </div>
                 <div className="min-w-0">
-                  <dt className="lf-kicker-dense text-lot-stone">
+                  <dt className="lf-kicker text-lot-stone">
                     San Diego setback
                   </dt>
                   <dd className="lf-card-heading mt-1 text-lot-ink">0–4 ft</dd>
                 </div>
                 <div className="col-span-2 min-w-0 sm:col-span-1">
-                  <dt className="lf-kicker-dense text-lot-stone">
+                  <dt className="lf-kicker text-lot-stone">
                     Est. 600 sf cost
                   </dt>
                   <dd className="lf-card-heading mt-1 text-lot-ink tabular-nums">
@@ -207,7 +205,7 @@ export function BackyardHomeLanding() {
               </dl>
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 [grid-area:quiz]">
               <BackyardHomeQuiz />
             </div>
           </div>
@@ -373,12 +371,12 @@ export function BackyardHomeLanding() {
                   <strong className="font-semibold text-lot-chalk">
                     {costRange600}
                   </strong>
-                  ). Units under{" "}
+                  ). California exempts ADUs with{" "}
                   <strong className="font-semibold text-lot-chalk">
-                    750 sq ft
+                    750 sq ft or less of interior livable space
                   </strong>{" "}
-                  are exempt from municipal development impact fees under Gov.
-                  Code §66324(c).
+                  from specified impact fees (Gov. Code § 66311.5(c)(1)). Permit,
+                  school, and utility charges follow separate rules.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 lg:justify-self-end">

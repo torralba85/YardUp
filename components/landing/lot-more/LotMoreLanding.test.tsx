@@ -81,7 +81,7 @@ describe("landing address handoff", () => {
     expect(String(homeMetadata.title)).toContain("California");
     expect(String(homeMetadata.title).length).toBeLessThanOrEqual(60);
     expect(homeMetadata.description).toContain("California");
-    expect(screen.getByText(/Check any California address/i)).toBeVisible();
+    expect(screen.getByText(/Enter a California address/i)).toBeVisible();
     expect(screen.getByText("COYOTE BRUSH COURT DEMO, SAN DIEGO · 600 SQ FT · 1 BED CONCEPT")).toBeVisible();
     expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
   });
@@ -126,8 +126,10 @@ describe("landing address handoff", () => {
     input.scrollIntoView = scroll;
     const focus = vi.spyOn(input, "focus");
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: motionAllowed }));
-    for (const name of ["Start with my lot", "Explore your own numbers", "Check address"]) {
-      const link = screen.getByRole("link", { name });
+    // One call to action, "Check my lot": header, numbers section and report.
+    const startLinks = screen.getAllByRole("link", { name: "Check my lot" });
+    expect(startLinks).toHaveLength(3);
+    for (const link of startLinks) {
       expect(link).toHaveAttribute("href", "#start");
       fireEvent.click(link);
       expect(input).toHaveFocus();
@@ -279,7 +281,7 @@ describe("landing address handoff", () => {
       { target: { value: "  500 Cedar Ave, San Jose, CA  " } },
     );
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Explore my lot" })[0],
+      screen.getAllByRole("button", { name: "Check my lot" })[0],
     );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -305,7 +307,7 @@ describe("landing address handoff", () => {
       { target: { value: "  456 Pine St, Denver, CO  " } },
     );
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Explore my lot" })[1],
+      screen.getAllByRole("button", { name: "Check my lot" })[1],
     );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -325,7 +327,7 @@ describe("landing address handoff", () => {
       { target: { value: "  456 Pine St, Denver, CO  " } },
     );
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Explore my lot" })[0],
+      screen.getAllByRole("button", { name: "Check my lot" })[0],
     );
     expect(stash).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
@@ -349,7 +351,7 @@ describe("landing address handoff", () => {
       { target: { value: "456 Pine St, Denver, CO" } },
     );
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Explore my lot" })[0],
+      screen.getAllByRole("button", { name: "Check my lot" })[0],
     );
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -369,7 +371,7 @@ describe("landing address handoff", () => {
     fireEvent.change(screen.getAllByLabelText("Property address", { exact: true })[0], {
       target: { value: "456 Pine St, Denver, CO" },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: "Explore my lot" })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Check my lot" })[0]);
 
     expect(screen.getByRole("dialog")).toHaveAttribute("data-initial-mode", "sign-in");
     expect(push).not.toHaveBeenCalled();
@@ -383,7 +385,7 @@ describe("landing address handoff", () => {
       { target: { value: "456 Pine St, Denver, CO" } },
     );
     fireEvent.click(
-      screen.getAllByRole("button", { name: "Explore my lot" })[1],
+      screen.getAllByRole("button", { name: "Check my lot" })[1],
     );
     fireEvent.click(screen.getByRole("button", { name: "Dismiss sign in" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

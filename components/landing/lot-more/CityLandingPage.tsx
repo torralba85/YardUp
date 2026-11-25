@@ -13,7 +13,7 @@ import { SITE_NAME } from "@/lib/site-identity";
 export function cityLandingMetadata(city: LandingCity): Metadata {
   const demo = landingDemos[city];
   const title = `${demo.city} ADU Feasibility: Explore Your Lot | LotFoundry`;
-  const description = `Explore your ${demo.city} backyard in 3D. Compare ADU cost and rent assumptions, or try the illustrative ${demo.name} demo. First address free.`;
+  const description = `Explore your ${demo.city} backyard in 3D. See an estimated rent range or try the illustrative ${demo.name} demo. Search up to three addresses free without an account.`;
   const url = `${CANONICAL_ORIGIN}/${city}`;
   return {
     title,

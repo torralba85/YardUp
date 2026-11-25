@@ -33,7 +33,7 @@ test.describe("native app Studio onboarding", () => {
 
     await page.getByRole("button", { name: /Open the Studio/ }).click();
     await expect(page.getByTestId("mobile-journey")).toBeVisible({ timeout: 25_000 });
-    await expect(page.getByRole("heading", { name: /your backyard could earn/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /what it could rent for/i })).toBeVisible();
     await expect(page.getByText(/812 Linden Avenue/).first()).toBeVisible();
     expect(new URL(page.url()).searchParams.get("parcel")).toBe("corner-lot");
 

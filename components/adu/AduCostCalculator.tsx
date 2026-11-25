@@ -20,6 +20,7 @@ import { Input, Select } from "@/components/ui/Field";
 import { stashAddressQuery } from "@/lib/address-handoff";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { aduCtaEvent } from "@/lib/adu/types";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import { AduFinancingCalculator } from "./AduFinancingCalculator";
 
 /** Unit sizes offered by the calculator, in square feet. */
@@ -74,7 +75,7 @@ function syncCalculatorQuery(updates: Record<string, string>): void {
  *   visitors can test their actual parcel in 3D.
  */
 export function AduCostCalculator({
-  initialCounty = "los-angeles",
+  initialCounty = "san-diego",
   showAddressCheck = true,
 }: {
   /** County slug from `CALCULATOR_COUNTIES` to start on, e.g. on a county cost page. */
@@ -632,7 +633,7 @@ export function AduCostCalculator({
                 name="address"
                 type="text"
                 autoComplete="street-address"
-                placeholder={countyName ? `e.g. 1420 Coyote Brush Ct, ${countyName}…` : "e.g. 1420 Coyote Brush Ct, San Diego, CA…"}
+                placeholder="Street address, city, CA"
                 value={address}
                 aria-invalid={Boolean(addressError)}
                 aria-describedby={addressError ? "calculator-address-error" : undefined}
@@ -651,7 +652,7 @@ export function AduCostCalculator({
                 type="submit"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink motion-safe:transition hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 focus-visible:ring-offset-lot-chalk"
               >
-                Check my address free
+                {PRIMARY_CTA_LABEL}
               </button>
               <p className="text-xs text-lot-stone text-center">
                 Up to 3 free guest searches · No account or credit card needed

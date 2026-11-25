@@ -73,30 +73,15 @@ describe("analytics consent", () => {
     expect(readConsent()).toBe("unset");
   });
 
-  it("updates all measurement consent states before notifying listeners", () => {
-    const gtag = vi.fn();
-    window.gtag = gtag;
-    const listener = vi.fn(() => {
-      expect(gtag).toHaveBeenLastCalledWith("consent", "update", {
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-        analytics_storage: "denied",
-      });
-    });
+  it("persists and clears decisions before notifying measurement subscribers", () => {
+    const decisions: string[] = [];
+    const unsubscribe = subscribeToConsent(() => decisions.push(readConsent()));
 
     writeConsent("granted");
-    expect(gtag).toHaveBeenLastCalledWith("consent", "update", {
-      ad_storage: "granted",
-      ad_user_data: "granted",
-      ad_personalization: "denied",
-      analytics_storage: "granted",
-    });
-
-    const unsubscribe = subscribeToConsent(listener);
     writeConsent("denied");
     clearConsent();
-    expect(listener).toHaveBeenCalledTimes(2);
+
+    expect(decisions).toEqual(["granted", "denied", "unset"]);
     unsubscribe();
   });
 

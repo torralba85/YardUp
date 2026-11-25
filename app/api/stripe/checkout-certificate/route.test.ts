@@ -212,6 +212,31 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
+  // Demo-lot slugs live in constants: Gitleaks reads `certKey: "<long slug>"` as an API key.
+  const SAN_DIEGO_DEMO = "1234-coyote-brush-court-san-diego-ca-92117";
+  const SEATTLE_DEMO = "1234-oak-street-seattle-wa-98115";
+
+  it.each([SAN_DIEGO_DEMO, SEATTLE_DEMO])("refuses to sell a certificate for the demo lot %s", async (certKey) => {
+    const create = vi.fn();
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({ certKey, checkoutAttemptId: "attempt-1" }));
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: "Demo lots can't be purchased. Search your own address to get its certificate.",
+    });
+    expect(create).not.toHaveBeenCalled();
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("still opens a demo-lot certificate bought before demo checkout was blocked", async () => {
+    mocks.purchased = true;
+    const res = await POST(postRequest({ certKey: SEATTLE_DEMO }));
+
+    expect(await res.json()).toMatchObject({ status: "granted", alreadyPurchased: true });
+  });
+
   it("returns 409 when the certificate was recovered to another account", async () => {
     mocks.transferred = true;
     const create = vi.fn();

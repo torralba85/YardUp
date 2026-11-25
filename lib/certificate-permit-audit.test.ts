@@ -5,7 +5,6 @@ import {
   feeJurisdiction,
   permitAuditPreviewLines,
   permitAuditTitle,
-  proportionalFeeSharePercent,
 } from "./certificate-permit-audit";
 import { parcelPresets, type Parcel } from "./feasibility";
 
@@ -59,17 +58,6 @@ describe("feeJurisdiction", () => {
   });
 });
 
-describe("proportionalFeeSharePercent", () => {
-  it("scales the fee by the ADU's size against the main house", () => {
-    expect(proportionalFeeSharePercent(800, 1600)).toBe(50);
-    expect(proportionalFeeSharePercent(1000, 1380)).toBe(72);
-  });
-
-  it("names no share when the main house size is unknown", () => {
-    expect(proportionalFeeSharePercent(800, 0)).toBeNull();
-  });
-});
-
 describe("buildPermitFeeAudit", () => {
   it("records the exemption for a California layout at the limit", () => {
     const audit = buildPermitFeeAudit({ parcel: base, aduSqft: 750, totalHeightFt: 14 });
@@ -79,13 +67,12 @@ describe("buildPermitFeeAudit", () => {
     expect(audit.sources[0].label).toMatch(/HCD ADU Handbook/);
   });
 
-  it("prices the proportional fee and the trim that avoids it over the limit", () => {
+  it("asks for interior livable area and a local fee check above the footprint threshold", () => {
     const audit = buildPermitFeeAudit({ parcel: base, aduSqft: 800, totalHeightFt: 17.5 });
     const impact = audit.feeLines[0];
-    expect(impact.title).toBe("Impact fees: 50 sq ft over the exemption");
+    expect(impact.title).toBe("Impact fees: modeled footprint above 750 sq ft");
     expect(impact.tone).toBe("review");
-    expect(impact.detail).toMatch(/about 50% of the fee for a new home its size/);
-    expect(impact.detail).toMatch(/Trimming 50 sq ft of footprint keeps the layout within the exemption/);
+    expect(impact.detail).toMatch(/ask your permitting agency/);
     expect(impact.detail).toMatch(/interior livable space/);
     expect(audit.feeLines.find((line) => line.title.startsWith("School"))?.tone).toBe("review");
     expect(audit.feeLines.at(-1)).toMatchObject({ title: "Height: above the 16 ft state minimum", tone: "review" });
@@ -100,7 +87,7 @@ describe("buildPermitFeeAudit", () => {
 
   it("adds the City of San Diego DIF exemption, height setbacks and sources", () => {
     const audit = buildPermitFeeAudit({ parcel: sanDiego, aduSqft: 900, totalHeightFt: 18 });
-    expect(audit.feeLines.map((line) => line.title)).toContain("City of San Diego: first two ADUs exempt from DIF");
+    expect(audit.feeLines.map((line) => line.title)).toContain("City of San Diego: check local development impact fees");
     expect(audit.feeLines.at(-1)?.title).toBe("Height: over San Diego's 16 ft line");
     expect(audit.submittalChecklist[0]).toMatch(/Information Bulletin 400/);
     expect(audit.sources.map((source) => source.url)).toContain(
@@ -162,10 +149,10 @@ describe("buildPermitFeeAudit", () => {
     expect(audit.feeLines.some((line) => line.title.startsWith("Height"))).toBe(false);
   });
 
-  it("drops the main-house share when the footprint is unknown", () => {
+  it("avoids claiming a fee amount when the existing house footprint is unknown", () => {
     const unknown = { ...base, source: "county-gis", state: "CA", existingHouseSqft: 0 } as Parcel;
     const impact = buildPermitFeeAudit({ parcel: unknown, aduSqft: 800 }).feeLines[0];
-    expect(impact.detail).toMatch(/proportional to the size of the main house/);
+    expect(impact.detail).toMatch(/ask your permitting agency/);
     expect(impact.detail).not.toMatch(/%/);
   });
 
@@ -215,7 +202,7 @@ describe("permitting jurisdiction", () => {
     expect(titles).toContain("Permit: unincorporated San Diego County");
     expect(titles).toContain("Green Building Incentive Program: up to 15% off County permit fees");
     expect(titles).toContain("County fees: the ADU fee waiver has ended");
-    expect(titles).not.toContain("City of San Diego: first two ADUs exempt from DIF");
+    expect(titles).not.toContain("City of San Diego: check local development impact fees");
     expect(audit.feeLines.find((line) => line.title.startsWith("Permit:"))?.detail).toMatch(/outside city limits, in Spring Valley/);
     expect(audit.zoningChecklist[0]).toMatch(/outside city limits/);
     expect(audit.zoningChecklist.join(" ")).not.toMatch(/0 ft up to 16 ft/);

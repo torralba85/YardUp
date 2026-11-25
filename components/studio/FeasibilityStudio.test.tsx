@@ -385,7 +385,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save this design" }));
     await waitFor(() => expect(savedMocks.save).toHaveBeenCalled());
     expect(savedMocks.save.mock.calls[0][1].preapprovedPlan).toEqual({ planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" });
-    fireEvent.click(stepButton(/Your Lot/));
+    fireEvent.click(stepButton(/Your lot/));
     fireEvent.change(screen.getByLabelText("Sample Property"), { target: { value: "corner-lot" } });
     fireEvent.click(stepButton(/Design/));
     expect(screen.queryByRole("region", { name: "Selected plan reference" })).not.toBeInTheDocument();
@@ -658,7 +658,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(stepRail()).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 
-    expect(stepButton(/Rules & Fit/)).toHaveAttribute("aria-current", "step");
+    expect(stepButton(/Rules & fit/)).toHaveAttribute("aria-current", "step");
     expect(screen.getByLabelText("Search property address")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Numbers & readiness" })).not.toBeInTheDocument();
@@ -716,10 +716,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    // The demo preset renders first (oak-street, 40 ft wide).
-    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "40");
+    // The default San Diego demo renders first (coyote-brush, 50 ft wide).
+    expect(screen.getByTestId("parcel-scene")).toHaveAttribute("data-lot-width", "50");
 
-    await user.click(stepButton(/Your Lot/));
+    await user.click(stepButton(/Your lot/));
     const search = screen.getByRole("search");
     await user.type(
       within(search).getByLabelText("Search property address"),
@@ -737,6 +737,10 @@ describe("FeasibilityStudio (guided spine)", () => {
   it("keeps the parcel view switch inside the scene and changes views explicitly", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    // The registered photoreal scan belongs to the Seattle sample, not the San Diego default.
+    await user.click(stepButton(/Your lot/));
+    await user.click(screen.getByText(/Try a sample property/i));
+    await user.selectOptions(screen.getByLabelText("Sample Property"), "oak-street");
 
     const viewport = screen.getByTestId("scene-viewport");
     const viewControl = within(viewport).getByRole("radiogroup", { name: "Parcel view" });
@@ -786,7 +790,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(stepButton(/Your Lot/));
+    await user.click(stepButton(/Your lot/));
     await user.click(screen.getByText(/Try a sample property/i));
     const sampleSelect = screen.getByLabelText("Sample Property");
     await user.selectOptions(sampleSelect, "corner-lot");
@@ -799,9 +803,12 @@ describe("FeasibilityStudio (guided spine)", () => {
   describe("with internal scan calibration enabled", () => {
     beforeEach(() => {
       vi.stubEnv("NEXT_PUBLIC_SCAN_CALIBRATION", "true");
+      // The registered photoreal scan belongs to the Seattle sample, not the San Diego default.
+      window.history.replaceState(null, "", "/studio?parcel=oak-street");
     });
     afterEach(() => {
       vi.unstubAllEnvs();
+      window.history.replaceState(null, "", "/");
     });
 
     it("recovers from a scan failure without losing the ADU pose or hiding the model", async () => {
@@ -845,7 +852,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       await screen.findByText(/We couldn't find that address/);
       await user.click(screen.getByRole("button", { name: "See the Seattle example" }));
       expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
-      expect(screen.getByRole("region", { name: "What your backyard could earn" })).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "What a backyard home could rent for" })).toBeInTheDocument();
     });
 
     it("withholds a previous live result when a different address fails", async () => {
@@ -895,14 +902,14 @@ describe("FeasibilityStudio (guided spine)", () => {
       };
 
       await search("101 First St");
-      expect(await screen.findByRole("heading", { name: /Your backyard could earn/i })).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: /What it could rent for/i })).toBeInTheDocument();
       expect(screen.getAllByText(/101 First St/).length).toBeGreaterThan(0);
 
       act(() => popToJourneyStep("find"));
       expect(await screen.findByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
 
       await search("202 Second St");
-      expect(await screen.findByRole("heading", { name: /Your backyard could earn/i })).toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: /What it could rent for/i })).toBeInTheDocument();
       expect(screen.getAllByText(/202 Second St/).length).toBeGreaterThan(0);
     });
 
@@ -928,15 +935,15 @@ describe("FeasibilityStudio (guided spine)", () => {
       await waitFor(() => expect(screen.getAllByText(/Parcel data is unavailable/).length).toBeGreaterThan(0));
       expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
       expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("region", { name: "What your backyard could earn" })).not.toBeInTheDocument();
-      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "What a backyard home could rent for" })).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
       expect(screen.queryByText(/Demo mode will be used/)).not.toBeInTheDocument();
 
       failParcel = false;
       await user.click(screen.getByRole("button", { name: "Retry lookup" }));
       await waitFor(() => expect(screen.queryByTestId("property-lookup-error")).not.toBeInTheDocument());
       expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
-      expect(screen.getByRole("region", { name: layout === "mobile" ? "What your backyard could earn" : "Free property preview" })).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: layout === "mobile" ? "What a backyard home could rent for" : "Free property preview" })).toBeInTheDocument();
       expect(screen.getAllByText(new RegExp(SAMPLE_LIVE_PARCEL.address)).length).toBeGreaterThan(0);
     });
 
@@ -950,7 +957,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       // Shell / address header should show target address and loading status, not 1234 Oak Street
       expect(screen.getByText("250 Hamilton Avenue")).toBeInTheDocument();
       expect(screen.getByText(/Palo Alto, CA 94301 · Looking up…/)).toBeInTheDocument();
-      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
 
       // In 3D model view, property loading is rendered instead of parcel scene with demo
       expect(screen.getByTestId("property-loading")).toBeInTheDocument();
@@ -988,7 +995,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       // Wait for error state to appear
       await screen.findByTestId("property-lookup-error");
       expect(screen.getByText("Could not load property data")).toBeInTheDocument();
-      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
 
       // Switch to Neighborhood view
       const viewport = screen.getByTestId("scene-viewport");
@@ -1007,14 +1014,14 @@ describe("FeasibilityStudio (guided spine)", () => {
       // User can choose to explore demo lot instead
       await user.click(screen.getByRole("button", { name: "Explore demo lot" }));
       expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
-      expect(screen.getByText("1234 Oak Street")).toBeInTheDocument();
-      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
+      expect(screen.getByText("1234 Coyote Brush Court")).toBeInTheDocument();
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: San Diego");
       expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
 
       // Now Neighborhood view works for the demo lot
       await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
       expect(screen.getByTestId("cesium-neighborhood-view")).toBeInTheDocument();
-      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", "1234 Oak Street");
+      expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", "1234 Coyote Brush Court");
 
       fetchSpy.mockRestore();
     });
@@ -1026,7 +1033,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
       // Header shows live address
       expect(screen.getByText(SAMPLE_LIVE_PARCEL.address)).toBeInTheDocument();
-      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
 
       // 3D scene renders with live parcel dims
       const scene = screen.getByTestId("parcel-scene");
@@ -1051,7 +1058,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       // Switch back to Neighborhood
       await user.click(within(screen.getByTestId("scene-viewport")).getByRole("radio", { name: "Neighborhood" }));
       expect(screen.getByTestId("cesium-neighborhood-view")).toHaveAttribute("data-address", SAMPLE_LIVE_PARCEL.address);
-      expect(screen.queryByText("1234 Oak Street")).not.toBeInTheDocument();
+      expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
     });
   });
 
@@ -1066,7 +1073,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     entitlement.purchased = true; // The complete workspace requires a property grant.
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     expect(
-      screen.getByRole("heading", { name: /Seattle ADU Starter Guide/i }),
+      screen.getByRole("heading", { name: /San Diego ADU Starter Guide/i }),
     ).toBeInTheDocument();
   });
 
@@ -1104,7 +1111,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     // Reveal 2 · Earn — the money payoff with a confidence teaser.
     expect(
-      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+      await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("earn-confidence")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Shape your ADU/i }));
@@ -1172,7 +1179,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    await user.click(stepButton(/Your Lot/));
+    await user.click(stepButton(/Your lot/));
     await user.click(screen.getByText("Try a sample property"));
     await user.selectOptions(screen.getByLabelText("Sample Property"), "compact-lot");
     await user.click(stepButton(/Design/));
@@ -1193,10 +1200,10 @@ describe("FeasibilityStudio (guided spine)", () => {
     await user.click(within(rentGroup).getByRole("radio", { name: "Market" }));
 
     const monthlyRentSection = screen.getByText("Monthly Rent").parentElement;
-    expect(monthlyRentSection).toHaveTextContent("$2,350");
+    expect(monthlyRentSection).toHaveTextContent("$2,615");
   });
 
-  it("paywalls the complete certificate behind a purchase (guest sees the checkout CTA)", async () => {
+  it("never sells the demo lot: its Certificate action opens the address search", async () => {
     const user = userEvent.setup();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
@@ -1204,12 +1211,10 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
     expect(screen.getByText("Financed cash flow locked in the certificate")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Continue to secure checkout/i })).not.toBeInTheDocument();
 
-    // A guest sees the price on the purchase CTA (the account step comes
-    // after), and the paid report does not open.
-    await user.click(
-      screen.getByRole("button", { name: /Continue to secure checkout — \$29/i }),
-    );
+    await user.click(screen.getByRole("button", { name: "Search your address" }));
+    expect(stepButton(/Your lot/)).toHaveAttribute("aria-current", "step");
     expect(screen.queryByText(/recorded concept for this lot/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Print \/ Save/i })).not.toBeInTheDocument();
   });
@@ -1376,7 +1381,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       screen.getByRole("region", { name: "Free property preview" }),
     ).toBeInTheDocument();
 
-    await user.click(stepButton(/Rules & Fit/));
+    await user.click(stepButton(/Rules & fit/));
     expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
   });
 
@@ -1558,15 +1563,15 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
 
-    // Jump backward via the rail's completed "Earn" chip. JourneyRail only
+    // Jump backward via the rail's completed "Rent" chip. JourneyRail only
     // makes done chips clickable and calls onStepSelect (setJourneyStep)
     // directly — an ordinary forward move as far as the history hook is
     // concerned, so it pushes a *new* entry, leaving the "check" entry
     // pushed a moment ago still sitting ahead of it in the stack.
     const rail = screen.getByRole("navigation", { name: "Journey progress" });
-    fireEvent.click(within(rail).getByRole("button", { name: /Earn/i }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Rent (completed)" }));
     expect(
-      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+      await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
 
     // A back gesture pops forward into that stale "check" entry. Relative
@@ -1576,7 +1581,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     act(() => popToJourneyStep("check"));
 
     expect(
-      screen.getByRole("heading", { name: /Your backyard could earn/i }),
+      screen.getByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
   });
@@ -1619,7 +1624,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // lot picked above rather than promising San Diego.
     fireEvent.click(screen.getByRole("button", { name: "See the Portland example" }));
     expect(
-      await screen.findByRole("heading", { name: /Your backyard could earn/i }),
+      await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
 
     // Simulate a real Back press landing on the launch entry, carrying

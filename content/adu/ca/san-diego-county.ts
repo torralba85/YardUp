@@ -33,9 +33,8 @@ export const sanDiegoCounty: JurisdictionContent = {
     "Unincorporated San Diego County ADU rules & setbacks: 4 ft side/rear, 1,200 sq ft, 25 ft tall, fire & septic checks under County PDS outside city limits.",
   h1: "ADU Rules in Unincorporated San Diego County (2026)",
   introAnswer: [
-    "Yes — on a residentially zoned lot outside city limits with an existing or proposed house, the County allows at least one ADU and one junior ADU. A detached ADU can be up to 1,200 square feet whatever the size of the house, and up to 25 feet tall, well above the 16 feet state law guarantees for most detached units.",
-    "This guide is for properties in the unincorporated county, such as Alpine, Fallbrook, Lakeside, Ramona, Spring Valley and Valley Center, where County Planning & Development Services (PDS) issues the permit. A San Diego mailing address does not make a lot part of the City of San Diego, so confirm your jurisdiction first.",
-    "Outside the cities the hard questions are usually about the site, not the zoning: which fire protection district covers the lot, whether the house is on a septic system, and whether the pad needs grading. Ask the fire district and, on septic, the Department of Environmental Health and Quality before you pay for plans.",
+    "New ADUs in unincorporated San Diego County generally need 4 feet of clearance from side and rear property lines. Check for additional fire setbacks before choosing a location. The County allows detached ADUs up to 1,200 square feet, independent of the main home's size.",
+    "These rules apply where County Planning & Development Services issues permits, including unincorporated communities such as Alpine, Fallbrook, Lakeside, Ramona, Spring Valley and Valley Center. Confirm your lot's jurisdiction, fire district and any septic or grading requirements before paying for plans.",
   ],
   metaSizeNote: "up to 1,200 sq ft detached, independent of the house's size",
   metaSetbackNote: "4 ft side and rear plus any fire-district setbacks",
