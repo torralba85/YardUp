@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Component, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import styles from "./CostStack.module.css";
 import type { CostLayer, StackMotion } from "./cost-stack-motion";
 import type { CalloutNodes } from "./CostStackScene";
@@ -10,7 +10,7 @@ import type { CalloutNodes } from "./CostStackScene";
 // landing's first paint never waits on WebGL.
 const CostStackScene = dynamic(() => import("./CostStackScene"), { ssr: false });
 
-/** A still of the exploded model: the first frame before WebGL, and the fallback without it. */
+/** A still of the exploded model: the first frame before WebGL, and the fallback without a GPU. */
 const POSTER = "/landing/cost-stack-3d.webp";
 
 /** Each callout's leader, in px from its anchor on the model to its numbered badge. */
@@ -22,7 +22,8 @@ const CALLOUTS: readonly { layer: CostLayer; index: string; dx: number; dy: numb
 ];
 
 // A cheap check only: creating a test context costs a few hundred ms on
-// some GPUs. A context that still fails to start lands in SceneBoundary.
+// some GPUs. A context that fails to start, including one refused for
+// software rendering, lands in SceneBoundary.
 const webglAvailable = () => typeof window.WebGL2RenderingContext === "function" || typeof window.WebGLRenderingContext === "function";
 
 /** If WebGL fails to start, the poster simply stays. */
@@ -46,6 +47,8 @@ export function CostStackModel({ layer, label, motion }: { layer: CostLayer; lab
   const callouts = useRef<CalloutNodes>({});
   const [live, setLive] = useState(false);
   const [ready, setReady] = useState(false);
+  const [unsupported, setUnsupported] = useState(false);
+  const markUnsupported = useMemo(() => () => setUnsupported(true), []);
 
   useEffect(() => {
     const node = ref.current;
@@ -66,7 +69,7 @@ export function CostStackModel({ layer, label, motion }: { layer: CostLayer; lab
     <div ref={ref} className={styles.model} role="img" aria-label={label} data-ready={ready ? "true" : "false"}>
       {/* eslint-disable-next-line @next/next/no-img-element -- a static still under the canvas, sized by CSS */}
       <img className={styles.poster} src={POSTER} alt="" width={772} height={950} loading="lazy" decoding="async" />
-      {live && (
+      {live && !unsupported && (
         <SceneBoundary>
           <CostStackScene
             className={styles.canvas}
@@ -74,6 +77,7 @@ export function CostStackModel({ layer, label, motion }: { layer: CostLayer; lab
             motion={motion}
             callouts={callouts}
             onReady={() => setReady(true)}
+            onUnsupported={markUnsupported}
           />
           {CALLOUTS.map(({ layer: key, index, dx, dy }) => (
             <span

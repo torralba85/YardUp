@@ -780,6 +780,19 @@ function warmShadowPrograms(scene: THREE.Scene) {
   };
 }
 
+/**
+ * A software rasteriser (SwiftShader, llvmpipe, Windows' basic renderer)
+ * paints this scene so slowly that it starves the page's own animations, and
+ * some browsers do not refuse it for `failIfMajorPerformanceCaveat`. Read
+ * the renderer once, at context creation while the GPU is idle.
+ */
+export function isSoftwareRenderer(renderer: Pick<THREE.WebGLRenderer, "getContext">) {
+  const context = renderer.getContext();
+  const info = context.getExtension("WEBGL_debug_renderer_info");
+  const name = String(context.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER));
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+}
+
 const REDUCED = "(prefers-reduced-motion: reduce)";
 const subscribeReduced = (onChange: () => void) => {
   const query = window.matchMedia(REDUCED);
@@ -878,6 +891,7 @@ function Stage({
   callouts,
   onCompiled,
   onFirstFrame,
+  onUnsupported,
 }: {
   textures: StackTextures;
   layer: CostLayer;
@@ -885,9 +899,14 @@ function Stage({
   callouts: RefObject<CalloutNodes>;
   onCompiled: () => void;
   onFirstFrame: () => void;
+  onUnsupported: () => void;
 }) {
   const invalidate = useThree((state) => state.invalidate);
   const get = useThree((state) => state.get);
+  const software = useMemo(() => isSoftwareRenderer(get().gl), [get]);
+  useEffect(() => {
+    if (software) onUnsupported();
+  }, [software, onUnsupported]);
   // The shell mounts first and the furnished interior a task later, so
   // building the scene never lands as one long task.
   const [furnished, setFurnished] = useState(false);
@@ -908,7 +927,7 @@ function Stage({
 
   // Compile every program off the main thread before the first frame.
   useEffect(() => {
-    if (!furnished) return;
+    if (!furnished || software) return;
     let cancelled = false;
     const { gl, scene, camera } = get();
     const warm = warmShadowPrograms(scene);
@@ -928,7 +947,7 @@ function Stage({
       cancelled = true;
       warm.dispose();
     };
-  }, [furnished, get, onCompiled]);
+  }, [furnished, software, get, onCompiled]);
   useEffect(() => {
     invalidate();
   }, [layer, invalidate]);
@@ -967,7 +986,9 @@ function Stage({
 
   useFrame((state, delta) => {
     const now = live.current;
-    const dt = Math.min(delta, 0.05);
+    // Time-based easing: a slow GPU takes fewer, longer steps rather than
+    // drawing for longer. The cap only stops a jump after an idle stretch.
+    const dt = Math.min(delta, 0.1);
     let settling = false;
     const ease = (from: number, to: number, lambda: number) => {
       if (reduced) return to;
@@ -1104,12 +1125,15 @@ export default function CostStackScene({
   callouts,
   className,
   onReady,
+  onUnsupported,
 }: {
   layer: CostLayer;
   motion: StackMotion;
   callouts: RefObject<CalloutNodes>;
   className: string;
   onReady: () => void;
+  /** The device can only rasterise in software; the caller keeps the poster. */
+  onUnsupported: () => void;
 }) {
   const [compiled, setCompiled] = useState(false);
   const markCompiled = useMemo(() => () => setCompiled(true), []);
@@ -1145,7 +1169,9 @@ export default function CostStackScene({
       dpr={[1, 2]}
       shadows={{ enabled: true, type: THREE.PCFShadowMap }}
       camera={{ fov: 22, near: 2, far: 600, position: [70, 50, 70] }}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      // Browsers that honour it refuse a software renderer here; the rest
+      // are caught by isSoftwareRenderer. Either way the poster stays.
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: true }}
       style={{ pointerEvents: "none" }}
       onCreated={({ gl }) => {
         // Reading shader logs blocks until the driver finishes; three advises
@@ -1163,6 +1189,7 @@ export default function CostStackScene({
         callouts={callouts}
         onCompiled={markCompiled}
         onFirstFrame={onReady}
+        onUnsupported={onUnsupported}
       />
     </Canvas>
   );
