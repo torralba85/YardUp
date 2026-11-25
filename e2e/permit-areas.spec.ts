@@ -12,8 +12,10 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   await page.goto("/adu/ca/san-diego/permits");
   const link = page.locator('table a[href*="/permits/"]').first();
   const name = await link.textContent();
+  const areaPath = await link.getAttribute("href");
   expect(await link.evaluate((anchor) => anchor.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
   await link.click();
+  await expect(page).toHaveURL(`**${areaPath}`, { timeout: 20_000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`${name} ADU Permits`);
   await expect(page.getByText("These are issued permits", { exact: false })).toBeVisible();
   await expect(page.getByRole("table")).toBeVisible();
@@ -25,7 +27,7 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await answer.getByRole("link", { name: "Open in 3D" }).click();
-  await expect(page).toHaveURL(/\/studio(?:\?|$)/);
+  await expect(page).toHaveURL(/\/studio(?:\?|$)/, { timeout: 20_000 });
   expect(page.url()).not.toContain(SAMPLE_LIVE_PARCEL.address.split(" ")[1]);
 });
 
