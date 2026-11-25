@@ -37,11 +37,11 @@ async function mockLookup(page: Page) {
   return calls;
 }
 
-test("sample card preserves its advertised market scenario", async ({ page, isMobile }) => {
+test("sample card and Studio show the same rent range with market assumptions", async ({ page, isMobile }) => {
   await mockTestOwnerAuth(page);
   await page.goto("/");
   const card = page.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i });
-  await expect(card).toContainText("2,615");
+  await expect(card).toContainText("$2,335–$2,919");
   await expect(card).toContainText("11.9");
   const href = await card.getAttribute("href");
   const scenario = new URL(href!, "http://localhost").searchParams;
@@ -49,6 +49,7 @@ test("sample card preserves its advertised market scenario", async ({ page, isMo
   await card.click();
   if (isMobile) {
     await expect(page.getByRole("main")).toContainText("$2,335–$2,919");
+    await expect(page.getByRole("link", { name: /see sample build cost and payback/i })).toHaveAttribute("href", "/sample-certificate/san-diego");
   } else {
     await expect(page.getByRole("region", { name: "Free property preview" })).toContainText("$2,335–$2,919");
     await expect(page.getByText("11.9", { exact: true })).toHaveCount(0);

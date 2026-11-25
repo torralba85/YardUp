@@ -129,6 +129,54 @@ test("landing radios expose one tab stop, move focus, and update the associated 
   ).toHaveCSS("outline-color", "rgb(196, 55, 8)");
 });
 
+test("cost stack keeps phone controls beside the illustration and the ledger clear", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "phone cost stack");
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "WebGLRenderingContext", { value: undefined });
+    Object.defineProperty(window, "WebGL2RenderingContext", { value: undefined });
+  });
+  await page.goto("/");
+  const decline = page.getByRole("button", { name: "Decline", exact: true });
+  if (await decline.isVisible()) await decline.click();
+  await page.evaluate(() => document.fonts.ready);
+
+  const group = page.getByRole("radiogroup", { name: "Build cost layers" });
+  const stack = page.locator("[data-layer]").filter({ has: group });
+  const figure = stack.locator("figure");
+  await figure.evaluate((node) => window.scrollBy(0, node.getBoundingClientRect().top - 50));
+  await expect(figure).toBeInViewport({ ratio: 1 });
+
+  const softCosts = group.getByRole("radio", { name: "Soft costs", exact: true });
+  await expect(softCosts).toBeInViewport({ ratio: 1 });
+  expect((await softCosts.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  await softCosts.tap();
+  await expect(softCosts).toBeChecked();
+  await expect(figure).toBeInViewport({ ratio: 1 });
+  await expect(figure.getByText("Static illustration, not to scale")).toBeVisible();
+  await expect(figure.locator("img")).toHaveJSProperty("complete", true);
+  const ledgerDetail = stack.locator("dl").getByText("Windows and doors allowance");
+  await expect(ledgerDetail).toBeVisible();
+  await ledgerDetail.scrollIntoViewIfNeeded();
+  await expect(page.locator('a[class*="stickyCta"]')).toHaveCount(0);
+});
+
+test("the cost stack's desktop total label and figure share an edge", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop cost ledger");
+  await page.goto("/");
+  const label = page.getByText("Central estimate", { exact: true });
+  const offset = await label.evaluate((node) => {
+    const textStart = (element: Element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect().left;
+    };
+    return Math.abs(textStart(node) - textStart(node.nextElementSibling!));
+  });
+  expect(offset).toBeLessThan(1);
+});
+
 test("maquette inspection pins are one radio group that moves with the arrow keys", async ({
   page,
 }) => {

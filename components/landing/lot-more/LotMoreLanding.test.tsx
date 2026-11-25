@@ -13,6 +13,7 @@ import {
   parcelPresets,
 } from "@/lib/feasibility";
 import { mergeScenarioPartial, parseScenarioParams } from "@/lib/scenario-url";
+import { rentRangeLabel } from "@/lib/feasibility-disclosure";
 import { landingDemos, landingScenarios } from "@/lib/landing-demo";
 import LandingPage, { metadata as homeMetadata } from "@/app/page";
 import SanDiegoPage, { metadata as sanDiegoMetadata } from "@/app/san-diego/page";
@@ -83,7 +84,7 @@ describe("landing address handoff", () => {
     expect(homeMetadata.description).toContain("California");
     expect(screen.getByText(/Enter a California address/i)).toBeVisible();
     expect(screen.getByText("COYOTE BRUSH COURT DEMO, SAN DIEGO · 600 SQ FT · 1 BED CONCEPT")).toBeVisible();
-    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
+    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,335–$2,919");
   });
 
   it("renders the San Diego page with its own metadata, kicker, demo and provenance", () => {
@@ -91,7 +92,7 @@ describe("landing address handoff", () => {
     expect(sanDiegoMetadata.alternates?.canonical).toBe("https://lotfoundry.net/san-diego");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Explore an ADU on your lot in 3D.");
     expect(screen.getByText("San Diego ADU feasibility · see what fits your lot")).toBeVisible();
-    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,615");
+    expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("$2,335–$2,919");
     expect(screen.getByRole("link", { name: /^Just looking\? See a sample result.*San Diego/i })).toHaveTextContent("Coyote Brush Court");
     fireEvent.click(screen.getByText("What’s behind these numbers?"));
     const note = "Rent bands start from HUD's FY2027 Fair Market Rent for a one-bedroom in San Diego County ($2,335/mo), plus the studio's standard 12% and 25% spreads. The lot follows San Diego's RS-1-7 minimums; the address is fictional, and coverage is modeled at 60% because the city limits floor area (0.60 FAR), not flat-lot coverage.";
@@ -142,7 +143,7 @@ describe("landing address handoff", () => {
     render(<LotMoreLanding city={city} scenarios={landingScenarios(city)} />);
     const demo = landingDemos[city];
     const sample = screen.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${demo.city}`, "i") });
-    expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · market rent · open it in 3D`);
+    expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · open it in 3D`);
     expect(screen.getByText(`${demo.name.toUpperCase()} DEMO, ${demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT`)).toBeVisible();
     expect(screen.getByText(`${demo.name} demo, ${demo.city}`, { selector: "span" })).toBeVisible();
     const footer = screen.getByRole("contentinfo");
@@ -199,7 +200,7 @@ describe("landing address handoff", () => {
     const restored = mergeScenarioPartial(parseScenarioParams(new URLSearchParams(sample.getAttribute("href")!.split("?")[1])));
     expect(restored.parcelId).toBe(city === "portland" ? "corner-lot" : "compact-lot");
     const result = calculateFeasibility(getParcelById(restored.parcelId), restored.config, restored.assumptions);
-    expect(within(sample).getByText(`$${result.monthlyRent.toLocaleString("en-US")}`)).toBeVisible();
+    expect(sample).toHaveTextContent(rentRangeLabel(result));
   });
   beforeEach(() => {
     vi.clearAllMocks();
@@ -478,7 +479,7 @@ describe("landing address handoff", () => {
     ).toBeVisible();
   });
 
-  it("shows the engine's market-case result in the hero and opens the demo lot from it", () => {
+  it("shows the rent range and market payback in the hero and opens the demo lot", () => {
     render(<LotMoreLanding city="seattle" scenarios={scenarios} />);
     const sample = screen.getByRole("link", {
       name: /^Just looking\? See a sample result.*Seattle/i,
@@ -492,7 +493,7 @@ describe("landing address handoff", () => {
       }).format(value);
     expect(new URLSearchParams(sample.getAttribute("href")!.split("?")[1]).get("rent")).toBe("market");
     expect(within(sample).getByText(/market rent/)).toBeVisible();
-    expect(within(sample).getByText(usd(market.rent))).toBeVisible();
+    expect(sample).toHaveTextContent(`${usd(scenarios[0].rent)}–${usd(scenarios[2].rent)}`);
     expect(within(sample).getByText(String(market.payback))).toBeVisible();
     fireEvent.click(sample);
     expect(stash).toHaveBeenCalledExactlyOnceWith("");

@@ -72,7 +72,7 @@ test("city pages have static local numbers, a self canonical, and the matching d
     expect(html).toContain(rent);
     await page.goto(`/${city}`, { waitUntil: "domcontentloaded" });
     const link = page.getByRole("link", { name: new RegExp(`^Just looking\\? See a sample result.*${label}`, "i") });
-    await expect(link).toContainText(rent);
+    await expect(link).toContainText(/Est\. rent range\s*\$[\d,]+–\$[\d,]+/);
     expect(new URLSearchParams((await link.getAttribute("href"))!.split("?")[1]).get("parcel")).toBe(parcel);
   }
   const costGuide = await request.get("/adu/ca/san-diego/cost");

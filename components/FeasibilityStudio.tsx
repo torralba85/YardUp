@@ -1405,6 +1405,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           parcelName={mobileParcelName}
           result={result}
           estimated={parcelMode !== "live"}
+          showSampleCertificate={parcelPresetId === "coyote-brush"}
           certificateUnlocked={certificateUnlocked}
           onContinue={() => setJourneyStep("shape")}
         />

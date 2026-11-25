@@ -188,15 +188,20 @@ export function CostStack({
             motion={motion}
             label={`Illustrative exploded view of the ${sqft} sq ft backyard home in 3D: the shed roof lifted off its rafters, windows and doors out of their walls, the furnished room on its slab, and the permit drawings beneath.`}
           />
-          <figcaption>Illustrative exploded view, not to scale</figcaption>
+          <figcaption>
+            <span className={styles.posterCaption}>Static illustration, not to scale</span>
+            <span className={styles.sceneCaption}>Illustrative exploded view, not to scale</span>
+          </figcaption>
         </figure>
 
         <div className={styles.ledger}>
-          <p className={styles.kicker}>WHAT THE BUILD COST IS MADE OF</p>
-          <h3>Take it apart, layer by layer.</h3>
-          <p className={styles.lead}>
-            The same Studio engine as the estimate above, split into what you would actually build.
-          </p>
+          <div className={styles.intro}>
+            <p className={styles.kicker}>WHAT THE BUILD COST IS MADE OF</p>
+            <h3>Take it apart, layer by layer.</h3>
+            <p className={styles.lead}>
+              The same Studio engine as the estimate above, split into what you would actually build.
+            </p>
+          </div>
           <div className={styles.rows} {...group.groupProps} aria-label="Build cost layers">
             {LAYERS.map((key) => {
               const row = rows[key];
@@ -212,18 +217,32 @@ export function CostStack({
               );
             })}
           </div>
-          <dl className={styles.total}>
-            <div>
-              <dt>Central estimate</dt>
-              <dd>{money(budget.total)}</dd>
+          <div className={styles.summary}>
+            <dl className={styles.mobileDetails}>
+              {LAYERS.map((key) => {
+                const row = rows[key];
+                return (
+                  <div key={key}>
+                    <dt>{row.title}</dt>
+                    <dd className={styles.rowDetail}>{row.detail}</dd>
+                    <dd className={styles.rowAmount}>{layerAmount(row.amount)}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+            <dl className={styles.total}>
+              <div>
+                <dt>Central estimate</dt>
+                <dd>{money(budget.total)}</dd>
+              </div>
+            </dl>
+            <p className={styles.note}>
+              Modeled allowances, not contractor quotes. Site work, utility extensions and local fees need
+              project-specific quotes.
+            </p>
+            <div className={styles.rail} aria-hidden="true">
+              <span />
             </div>
-          </dl>
-          <p className={styles.note}>
-            Modeled allowances, not contractor quotes. Site work, utility extensions and local fees need
-            project-specific quotes.
-          </p>
-          <div className={styles.rail} aria-hidden="true">
-            <span />
           </div>
         </div>
       </div>

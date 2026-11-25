@@ -20,6 +20,7 @@ export interface EarnStepProps {
   result: FeasibilityResult;
   /** Whether the figures describe an estimate (demo lot / estimated parcel). */
   estimated: boolean;
+  showSampleCertificate?: boolean;
   /** The one primary action: move on to shaping the ADU. */
   onContinue: () => void;
 }
@@ -29,7 +30,7 @@ export interface EarnStepProps {
  * resolution: estimated monthly and annual rent potential, followed by a
  * simple confidence teaser (the market basis line). One primary action.
  */
-export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, onContinue, parcelNotice }: EarnStepProps) {
+export default function EarnStep({ certificateUnlocked = false, parcelName, result, estimated, showSampleCertificate, onContinue, parcelNotice }: EarnStepProps) {
   const disclosure = discloseFeasibility(result, certificateUnlocked);
   const unverified =
     !result.market.verified &&
@@ -102,6 +103,16 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
           Shape your ADU
         </Button>
       </div>
+      {showSampleCertificate && (
+        <a
+          href="/sample-certificate/san-diego"
+          target="_blank"
+          rel="noopener"
+          className="mt-2 inline-flex min-h-11 items-center self-start text-sm font-semibold text-lot-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+        >
+          See sample build cost and payback<span className="sr-only"> (opens in a new tab)</span>
+        </a>
+      )}
     </section>
   );
 }

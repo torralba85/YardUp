@@ -312,6 +312,7 @@ export function LotMoreLanding({
   const pageRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const storyRef = useRef<HTMLElement>(null);
+  const costStackRef = useRef<HTMLDivElement>(null);
   const closingRef = useRef<HTMLElement>(null);
   const manualSceneAtRef = useRef(0);
   const pendingAddress = useRef("");
@@ -320,6 +321,8 @@ export function LotMoreLanding({
   const router = useRouter();
   const scenario = scenarios[scenarioIndex];
   const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
+  const sampleRentLow = scenarios.find((item) => item.id === "conservative")?.rent ?? sample.rent;
+  const sampleRentHigh = scenarios.find((item) => item.id === "optimistic")?.rent ?? sample.rent;
 
   const hotspots = [
     {
@@ -428,17 +431,21 @@ export function LotMoreLanding({
     const update = () => {
       const hero = heroRef.current?.getBoundingClientRect();
       const closing = closingRef.current?.getBoundingClientRect();
+      const costStack = costStackRef.current?.getBoundingClientRect();
+      const costStackVisible = costStack && costStack.bottom > 0 && costStack.top < window.innerHeight;
       setMobileCta(
         Boolean(
           hero &&
           hero.bottom < 0 &&
           closing &&
-          closing.top > window.innerHeight,
+          closing.top > window.innerHeight &&
+          !costStackVisible,
         ),
       );
     };
     const observer = new IntersectionObserver(update);
     if (heroRef.current) observer.observe(heroRef.current);
+    if (costStackRef.current) observer.observe(costStackRef.current);
     if (closingRef.current) observer.observe(closingRef.current);
     update();
     return () => observer.disconnect();
@@ -741,14 +748,16 @@ export function LotMoreLanding({
                 </span>
                 <dl className={styles.sampleFigures}>
                   <div>
-                    <dt>Est. rent</dt>
+                    <dt>Est. rent range</dt>
                     <dd>
-                      {money(sample.rent)}
+                      {sampleRentLow === sampleRentHigh
+                        ? money(sampleRentLow)
+                        : `${money(sampleRentLow)}–${money(sampleRentHigh)}`}
                       <small>/mo</small>
                     </dd>
                   </div>
                   <div>
-                    <dt>Simple payback</dt>
+                    <dt>Payback at market rent</dt>
                     <dd>
                       {sample.payback}
                       <small> yrs</small>
@@ -763,7 +772,7 @@ export function LotMoreLanding({
                   </div>
                 </dl>
                 <span className={styles.sampleCta}>
-                  {demo.name} demo, {demo.city} · {sample.id} rent · open it in 3D
+                  {demo.name} demo, {demo.city} · open it in 3D
                   <ArrowRight size={17} aria-hidden="true" />
                 </span>
               </Link>
@@ -1288,7 +1297,9 @@ export function LotMoreLanding({
               </div>
             </div>
             {scenario.costBreakdown && (
-              <CostStack budget={scenario.costBreakdown} />
+              <div ref={costStackRef}>
+                <CostStack budget={scenario.costBreakdown} />
+              </div>
             )}
             <div className={styles.numberNotes}>
               <details>
