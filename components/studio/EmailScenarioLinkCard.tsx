@@ -90,7 +90,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
             <CheckCircle2 size={18} className="shrink-0" aria-hidden="true" />
             {receipt.delivery === "sent" ? "Sent! Check your inbox for your 3D lot link (plus a quick-copy link button below)." : "Saved! We couldn't email it right now, so copy your 3D lot link below to keep it."}
           </p>
-          <Button type="button" variant="secondary" className="border-lot-line bg-lot-chalk text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink" onClick={() => void copyLink()} leftIcon={<Copy size={15} />}>{copied ? "Copied!" : "Copy Link"}</Button>
+          <Button type="button" variant="secondary" className="bg-lot-chalk text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink" onClick={() => void copyLink()} leftIcon={<Copy size={15} />}>{copied ? "Copied!" : "Copy Link"}</Button>
           {copyFallback && <div><label htmlFor={`${id}-copy`} className="block text-xs text-lot-stone">Select and copy your link</label><Input id={`${id}-copy`} className="bg-lot-chalk text-lot-ink focus-visible:ring-lot-orange-ink" readOnly value={receipt.scenarioUrl} onFocus={(event) => event.target.select()} /></div>}
         </div>
       ) : (

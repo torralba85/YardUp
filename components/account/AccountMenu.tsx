@@ -174,7 +174,7 @@ export function AccountMenu({
         <div
           className={cn(
             "truncate text-sm font-medium",
-            isDark ? "text-lot-surface" : "text-lot-ink",
+            isDark ? "text-lot-chalk" : "text-lot-ink",
           )}
         >
           {displayName}

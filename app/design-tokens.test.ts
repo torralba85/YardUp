@@ -218,7 +218,7 @@ describe("A LOT MORE shared design contract", () => {
     const landing = readFileSync(resolve(root, "components/landing/lot-more/LotMoreLanding.module.css"), "utf8");
     let checked = 0;
     for (const [, selector, body] of Array.from(landing.matchAll(/([^{}]+)\{([^{}]*)\}/g))) {
-      if (!/\.hero/.test(selector) || /::placeholder/.test(selector)) continue;
+      if (!/\.hero/.test(selector)) continue;
       for (const [, percent] of Array.from(body.matchAll(/(?:^|[;\s])(?:color|--hero-text-muted):\s*color-mix\(in srgb, var\(--chalk\) (\d+)%/g))) {
         expect(Number(percent), selector.trim()).toBeGreaterThanOrEqual(86);
         checked += 1;

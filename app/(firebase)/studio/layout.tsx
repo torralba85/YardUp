@@ -56,7 +56,7 @@ export default function StudioLayout({
         className="border-t border-lot-line bg-lot-chalk pb-[env(safe-area-inset-bottom,0px)] text-lot-ink lg:relative lg:z-(--z-index-sheet) lg:ml-[248px] lg:h-(--studio-guide-bar) lg:pb-0"
       >
         <details className="group lg:h-full">
-          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
             <div className="min-w-0 lg:flex lg:items-baseline lg:gap-3">
               <p className="lf-kicker text-lot-stone">Planning guide &amp; methodology</p>
               <h1
