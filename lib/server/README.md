@@ -83,6 +83,8 @@ Domain modeling, utility functions, and calculation engines for server.
 - `county-parcels.ts:AddressParcelResult` - TypeScript Interface
 - `county-parcels.ts:AddressParcelLookup` - TypeScript Interface
 - `county-parcels.ts:fetchCountyParcelByAddress` - Exported Function
+- `deleted-account-purchases.ts:retainedGrantFields` - Exported Function
+- `deleted-account-purchases.ts:pseudonymizePurchaseRecords` - Exported Function
 - `feedback-rate-limit.ts:checkFeedbackRateLimit` - Exported Function
 - `feedback-rate-limit.ts:resetFeedbackRateLimitBuckets` - Exported Function
 - `fire-hazard-zones.ts:FireHazardLayer` - TypeScript Interface

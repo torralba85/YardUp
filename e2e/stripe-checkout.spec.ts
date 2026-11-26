@@ -214,8 +214,8 @@ test.describe("web certificate checkout", () => {
     const req = checkoutRequest as unknown as Request;
     const body = req.postDataJSON() as Record<string, unknown>;
     expect(body.legalConsent).toMatchObject({
-      termsVersion: "2026-11-19",
-      privacyVersion: "2026-11-19",
+      termsVersion: "2026-11-25",
+      privacyVersion: "2026-11-25",
       adultConfirmed: true,
     });
   });

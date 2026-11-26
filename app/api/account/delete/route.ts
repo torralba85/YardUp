@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
 import { requireApiAuth } from "@/lib/server/api-auth";
+import { pseudonymizePurchaseRecords } from "@/lib/server/deleted-account-purchases";
 import { getAdminApp, getAdminDb } from "@/lib/server/firebase-admin";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 
@@ -100,6 +101,10 @@ export async function POST(request: NextRequest) {
         db.collection("studioScenarioLeads").where("email", "==", verifiedEmail),
       );
     }
+
+    // Purchase records stay for accounting, tax and disputes, but without the
+    // email, property address or parcel detail (Privacy Policy §6).
+    await pseudonymizePurchaseRecords(db, uid);
 
     // Remove the builder profile before Auth deletion so a failure is retryable.
     await db.collection("builders").doc(uid).delete();

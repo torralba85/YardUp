@@ -9,6 +9,16 @@
  */
 import type { JurisdictionContent } from "@/lib/adu/types";
 
+const cityAduHandbook = {
+  label: "City of San Diego ADU handbook (Information Bulletin 400)",
+  url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/400",
+};
+
+const cityAduOrdinance = {
+  label: "San Diego Municipal Code § 141.0302 (ADU regulations)",
+  url: "https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art01Division03.pdf",
+};
+
 export const sanDiego: JurisdictionContent = {
   state: "ca",
   stateName: "California",
@@ -19,10 +29,10 @@ export const sanDiego: JurisdictionContent = {
   published: "2026-09-18",
   // Explicit "City of San Diego" title and H1 separate municipal-code rules
   // (SDMC § 141.0302) from the Unincorporated San Diego County guide.
-  metaTitle: "City of San Diego ADU Rules (2026): Setbacks, Size & Permits",
+  metaTitle: "City of San Diego ADU Rules, Setbacks & Handbook (2026)",
   h1: "City of San Diego ADU Rules (2026)",
   metaDescription:
-    "City of San Diego ADU rules for 2026: 150 to 1,200 sq ft, no side or rear setback up to 16 ft outside High/Very High fire zones, coastal caveats, permits.",
+    "Find the City of San Diego ADU handbook, ordinance and permit steps. Check when zero setbacks apply outside High/Very High fire zones and the Coastal Zone.",
   coastalCallout:
     "The 2025 and 2026 amendments took effect outside the Coastal Zone only. If your property is inside it, you are still under the prior ordinance until the California Coastal Commission certifies the changes. Most ADU guides for San Diego miss this. Check whether your parcel is in the Coastal Zone before you rely on anything below.",
   setbackDiagram: {
@@ -32,7 +42,6 @@ export const sanDiego: JurisdictionContent = {
     tallRule: "4 ft side and rear",
   },
   introAnswer: [
-    "Enter your City of San Diego address and see what fits on your lot — buildable area, setbacks, a placed ADU in 3D and a free rent range. The $29 certificate adds build cost, net income and payback.",
     "Under San Diego Municipal Code § 141.0302 (administered by the City of San Diego Development Services Department), the City is one of the more permissive ADU jurisdictions in California, with detached and attached ADUs from 150 to 1,200 sq ft, junior ADUs up to 500 sq ft, and a zero side-and-rear setback rule for units up to 16 feet tall outside designated High and Very High fire hazard zones.",
   ],
   metaSizeNote: "150 to 1,200 sq ft",
@@ -169,9 +178,10 @@ export const sanDiego: JurisdictionContent = {
         "Pull building permits, begin construction, and schedule required building, trade, and final inspections.",
     },
   ],
-  permitPortal: {
-    label: "City of San Diego ADU Information Bulletin 400",
-    url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/400",
+  permitPortal: cityAduHandbook,
+  quickSources: {
+    heading: "City of San Diego ADU handbook and ordinance",
+    links: [cityAduHandbook, cityAduOrdinance],
   },
   faqs: [
     {
@@ -234,10 +244,8 @@ export const sanDiego: JurisdictionContent = {
       label: "California Department of Housing and Community Development — ADU",
       url: "https://www.hcd.ca.gov/building-standards/adu",
     },
-    {
-      label: "San Diego Municipal Code § 141.0302 (ADU Regulations)",
-      url: "https://docs.sandiego.gov/municode/MuniCodeChapter14/Ch14Art01Division03.pdf",
-    },
+    cityAduHandbook,
+    cityAduOrdinance,
     {
       label: "San Diego Information Bulletin 501 (Fee Schedule for Construction Permits)",
       url: "https://www.sandiego.gov/development-services/forms-publications/information-bulletins/501",

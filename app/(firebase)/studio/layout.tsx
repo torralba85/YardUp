@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StudioOfferSummary } from "@/components/studio/StudioOfferSummary";
-import { SITE_NAME } from "@/lib/site-identity";
+import { SITE_NAME, SOFTWARE_APPLICATION_JSON_LD } from "@/lib/site-identity";
+
+const studioJsonLd = {
+  "@context": "https://schema.org",
+  ...SOFTWARE_APPLICATION_JSON_LD,
+};
 
 // Matches the page's H1, "ADU Feasibility Studio", so the title leads with ADU.
 const title = "ADU Feasibility Studio: Your Lot in 3D | LotFoundry";
@@ -49,6 +54,10 @@ export default function StudioLayout({
   // a second scroll that slid the Studio's top controls out of view.
   return (
     <div className="bg-lot-ground-dark lg:[--studio-guide-bar:3rem]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(studioJsonLd) }}
+      />
       {children}
       <section
         data-testid="studio-overview"
@@ -56,7 +65,7 @@ export default function StudioLayout({
         className="border-t border-lot-line bg-lot-chalk pb-[env(safe-area-inset-bottom,0px)] text-lot-ink lg:relative lg:z-(--z-index-sheet) lg:ml-[248px] lg:h-(--studio-guide-bar) lg:pb-0"
       >
         <details className="group lg:h-full">
-          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-line/25 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 px-[4.5%] py-3 hover:bg-lot-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink lg:h-full lg:min-h-0 lg:py-0 [&::-webkit-details-marker]:hidden">
             <div className="min-w-0 lg:flex lg:items-baseline lg:gap-3">
               <p className="lf-kicker text-lot-stone">Planning guide &amp; methodology</p>
               <h1

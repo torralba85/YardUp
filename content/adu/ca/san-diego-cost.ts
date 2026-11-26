@@ -21,12 +21,12 @@ export const sanDiegoCost: JurisdictionCostContent = {
   slug: "san-diego",
   asOf: "2026-10-06",
   published: "2026-10-06",
-  metaTitle: "ADU Cost in San Diego (2026): $231K–$289K for 600 Sq Ft",
+  metaTitle: "ADU Cost in San Diego (2026): Local Fees, Rent & Payback",
   metaDescription:
-    "ADU cost in San Diego for 2026: $231K–$289K for 600 sq ft, $2,335/mo HUD rent, 13.3-yr payback, size-by-size estimates, and City permit fees.",
+    "Budget a San Diego ADU with City permit fees, HUD county rent and modeled build costs and payback by size. See what to ask local builders to quote.",
   h1: "ADU Cost in San Diego (2026)",
   introAnswer: [
-    "Compare detached ADU sizes below to see how floor area affects your budget. These estimates use a national construction model and San Diego County's HUD Fair Market Rent. For a budget you can build to, request local quotes that itemize site work, utility connections and City of San Diego permit fees.",
+    "Use the City of San Diego fee schedule below to price plan review and inspection. For a budget you can build to, ask local builders to itemize site work and utility connections.",
   ],
   coveredCities: ["chula-vista", "oceanside", "escondido", "carlsbad", "imperial-beach", "la-mesa", "san-marcos", "san-diego-county", "encinitas", "el-cajon", "vista"],
   fees: {

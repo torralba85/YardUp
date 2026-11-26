@@ -236,4 +236,28 @@ describe("ReportPreview certificate packet", () => {
     expect(within(sheet).getAllByRole("checkbox")).toHaveLength(36);
     expect(within(sheet).getByRole("checkbox", { name: /^Builder C includes Final inspection/ })).toBeInTheDocument();
   });
+
+  it("keeps one primary orange toolbar action and styles the Concept stamp neutrally", () => {
+    const parcel = parcelPresets[0];
+    const result = calculateFeasibility(parcel, defaultAduConfig, defaultFinancialAssumptions);
+    render(
+      <ReportPreview
+        parcelName={`${parcel.address}, ${parcel.city}`}
+        result={result}
+        feasibilityStatus="eligible"
+        onClose={vi.fn()}
+        onDownload={vi.fn()}
+        onConnectBuilders={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /print \/ save/i })).toHaveClass("bg-lot-orange");
+    const connect = screen.getByRole("button", { name: /connect with builders/i });
+    expect(connect).toHaveClass("bg-lot-ink");
+    expect(connect).not.toHaveClass("bg-lot-orange");
+
+    const stamp = screen.getByText("Concept");
+    expect(stamp).toHaveClass("text-lot-ink", "border-lot-ink");
+    expect(stamp).not.toHaveClass("text-status-blocked", "border-status-blocked");
+  });
 });

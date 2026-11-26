@@ -85,7 +85,7 @@ export function DeleteAccountButton({ tone = "dark" }: DeleteAccountButtonProps)
       <p
         className={cn(
           "text-[11px] leading-snug",
-          isDark ? "text-lot-surface" : "text-lot-ink",
+          isDark ? "text-lot-chalk" : "text-lot-ink",
         )}
       >
         Permanently delete your account, saved concepts, and profile? This can&rsquo;t

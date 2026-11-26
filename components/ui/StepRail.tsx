@@ -126,7 +126,7 @@ export function StepRail({ steps, onSelect, className, ...aria }: StepNavProps) 
               "group flex min-h-11 items-center gap-3 rounded-control px-2.5 py-2 text-left motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-offset-2 focus-visible:ring-offset-lot-ink",
               step.state === "current" && "bg-lot-surface-dark",
               !locked && step.state !== "current" && "hover:bg-lot-surface-dark/60",
-              locked && "cursor-not-allowed opacity-55",
+              locked && "cursor-not-allowed opacity-65",
             )}
           >
             <StepDot step={step} index={index} />

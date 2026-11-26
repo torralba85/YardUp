@@ -148,7 +148,7 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
       <div className="mt-4 space-y-4">
         <p className="lf-body text-lg leading-relaxed">
           For a {formatNumber(row600.size)}&nbsp;sq&nbsp;ft detached ADU in{" "}
-          {city.city}, LotFoundry&apos;s planning model estimates{" "}
+          {city.city}, LotFoundry&apos;s national construction model estimates{" "}
           {formatCurrency(row600.costLow)} to {formatCurrency(row600.costHigh)}{" "}
           to build, including an allowance for design and permit soft costs. At{" "}
           {city.county}&apos;s HUD Fair Market Rent of{" "}

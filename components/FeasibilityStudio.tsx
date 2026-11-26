@@ -167,8 +167,8 @@ const ParcelScene = dynamic(() => import("./ParcelScene"), {
     >
       <div className="absolute inset-0 motion-safe:animate-pulse bg-lot-ink/40" />
       <div className="absolute left-5 bottom-5 right-5 flex flex-col gap-3">
-        <Skeleton className="h-3 w-32 bg-lot-stone/15" />
-        <Skeleton className="h-2.5 w-56 bg-lot-stone/10" />
+        <Skeleton className="h-3 w-32 bg-lot-surface-dark" />
+        <Skeleton className="h-2.5 w-56 bg-lot-line-dark" />
       </div>
     </div>
   ),
@@ -1283,13 +1283,20 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 data-testid="property-lookup-error"
                 className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
               >
-                <AlertCircle size={28} className="text-status-blocked" aria-hidden="true" />
+                <AlertCircle size={28} className="text-status-blocked-on-dark" aria-hidden="true" />
                 <p className="font-display text-sm font-semibold text-lot-chalk">Could not load property data</p>
                 <p className="max-w-[36ch] text-xs text-lot-stone-on-dark">{parcelError}</p>
                 <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                  <Button variant="primary" onClick={() => void retryLookup()}>Retry lookup</Button>
+                  <Button
+                    variant="primary"
+                    className="focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+                    onClick={() => void retryLookup()}
+                  >
+                    Retry lookup
+                  </Button>
                   <Button
                     variant="secondary"
+                    className="focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
                     onClick={() => switchToPreset(DEFAULT_PARCEL_ID)}
                   >
                     Explore demo lot
@@ -1302,7 +1309,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
                 data-testid="property-loading"
                 className="flex h-full min-h-[460px] flex-col items-center justify-center gap-3 bg-lot-ink p-8 text-center"
               >
-                <RefreshCw className="motion-safe:animate-spin text-lot-orange-ink" size={28} aria-hidden="true" />
+                <RefreshCw className="motion-safe:animate-spin text-lot-chalk" size={28} aria-hidden="true" />
                 <p className="font-display text-sm font-semibold text-lot-chalk">Looking up property data…</p>
                 <p className="text-xs text-lot-stone-on-dark">
                   {displayAddress !== "Looking up property…"

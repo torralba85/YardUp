@@ -7,7 +7,7 @@ vi.mock("next/font/google", () => ({
 }));
 import LandingPage, { metadata as homeMetadata } from "./page";
 import RootLayout, { metadata as rootMetadata } from "./layout";
-import { metadata as studioMetadata } from "./(firebase)/studio/layout";
+import StudioLayout, { metadata as studioMetadata } from "./(firebase)/studio/layout";
 import { metadata as aboutMetadata } from "./about/page";
 import { metadata as helpMetadata } from "./help/page";
 import { metadata as feedbackMetadata } from "./(firebase)/feedback/page";
@@ -108,39 +108,46 @@ describe("canonical metadata", () => {
 });
 
 describe("site JSON-LD", () => {
-  const jsonLd = () => {
-    const body = Children.toArray(RootLayout({ children: null }).props.children)[0];
-    const script = Children.toArray(isValidElement<{ children?: React.ReactNode }>(body) ? body.props.children : []).find(
+  function jsonLdScript(children: React.ReactNode) {
+    return Children.toArray(children).find(
       (child) => isValidElement<{ type?: string }>(child) && child.type === "script" && child.props.type === "application/ld+json",
     );
+  }
+
+  function parseJsonLd(children: React.ReactNode) {
+    const script = jsonLdScript(children);
     if (!isValidElement<{ dangerouslySetInnerHTML: { __html: string } }>(script)) throw new Error("no JSON-LD script");
     return JSON.parse(script.props.dangerouslySetInnerHTML.__html);
-  };
+  }
 
-  it("names the company as the Terms do and the founder the About page names", () => {
-    const { publisher } = jsonLd();
-    expect(publisher.legalName).toBe("VeriShare LLC");
-    expect(publisher.founder).toEqual({ "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" });
-    expect(publisher.contactPoint.email).toBe("support@lotfoundry.net");
+  it("describes the app on the homepage and Studio without publishing its markup site-wide", () => {
+    const body = Children.toArray(RootLayout({ children: null }).props.children)[0];
+    expect(isValidElement<{ children?: React.ReactNode }>(body)).toBe(true);
+    if (!isValidElement<{ children?: React.ReactNode }>(body)) throw new Error("no root body");
+    expect(jsonLdScript(body.props.children)).toBeUndefined();
+
+    const studioApp = parseJsonLd(StudioLayout({ children: null }).props.children);
+    expect(studioApp).toMatchObject({
+      "@type": "SoftwareApplication",
+      "@id": "https://lotfoundry.net/#app",
+      publisher: {
+        legalName: "VeriShare LLC",
+        founder: { "@type": "Person", name: "Andrew Torralba", jobTitle: "CEO" },
+        contactPoint: { email: "support@lotfoundry.net" },
+      },
+    });
   });
 
-  const homeJsonLd = () => {
-    const script = Children.toArray(LandingPage().props.children).find(
-      (child) => isValidElement<{ type?: string }>(child) && child.type === "script" && child.props.type === "application/ld+json",
-    );
-    if (!isValidElement<{ dangerouslySetInnerHTML: { __html: string } }>(script)) throw new Error("no homepage JSON-LD script");
-    return JSON.parse(script.props.dangerouslySetInnerHTML.__html);
-  };
-
   it("gives the homepage the WebSite and top-level Organization Google reads the site name and logo from", () => {
-    const graph: Array<Record<string, unknown>> = homeJsonLd()["@graph"];
+    const graph: Array<Record<string, unknown>> = parseJsonLd(LandingPage().props.children)["@graph"];
     const website = graph.find((node) => node["@type"] === "WebSite");
     const organization = graph.find((node) => node["@type"] === "Organization");
+    const app = graph.find((node) => node["@type"] === "SoftwareApplication");
     expect(website).toMatchObject({ url: "https://lotfoundry.net/", name: "LotFoundry", alternateName: ["Lot Foundry"] });
     expect(organization).toMatchObject({ name: "LotFoundry", logo: "https://lotfoundry.net/icon-512-transparent.png" });
-    // One entity: the WebSite, the homepage Organization and the layout's publisher share an @id.
+    // One entity: the WebSite, the homepage Organization and the app publisher share an @id.
     expect(website?.publisher).toEqual({ "@id": organization?.["@id"] });
-    expect(jsonLd().publisher["@id"]).toBe(organization?.["@id"]);
+    expect(app).toMatchObject({ "@id": "https://lotfoundry.net/#app", publisher: { "@id": organization?.["@id"] } });
   });
 
   it("names the site in og:site_name on the homepage and the layout default", () => {

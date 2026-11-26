@@ -4,10 +4,8 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import { Analytics } from "@/components/analytics/Analytics";
 import { CLOUDFLARE_BEACON_LOADER } from "@/lib/analytics/cloudflare-beacon";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
-import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
-import { ORGANIZATION_JSON_LD, SITE_NAME } from "@/lib/site-identity";
+import { SITE_NAME } from "@/lib/site-identity";
 import { SITE_OG_IMAGE } from "@/lib/og-images";
-import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import "./globals.css";
 import "./mobile-form-safeguards.css";
 import { COLOR } from "@/lib/design-tokens";
@@ -24,55 +22,6 @@ const manrope = Manrope({
   display: "swap",
   variable: "--font-lot-body",
 });
-
-const appUrl = CANONICAL_ORIGIN;
-const appRootUrl = `${appUrl.replace(/\/+$/, "")}/`;
-
-/**
- * Site-wide JSON-LD: SoftwareApplication with Organization as publisher, no
- * fabricated ratings. The homepage adds WebSite and a top-level Organization
- * (`HOME_JSON_LD`); the shared `@id` makes both one entity.
- *
- * `operatingSystem` and `installUrl` name the shipped Android build as well as
- * the web app. Describing a published app as web-only hides it from the app
- * results that Google builds from this markup.
- */
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "@id": `${appRootUrl}#app`,
-  name: "LotFoundry",
-  description:
-    "Check your address for ADU rent, build cost, and payback estimates before you spend money on plans.",
-  url: appRootUrl,
-  applicationCategory: "HomeApplication",
-  operatingSystem: ["Web", "Android"],
-  installUrl: GOOGLE_PLAY_URL,
-  // "What does it cost?" is one of the questions an assistant is actually
-  // asked about a tool like this, and prose on the page is the only place the
-  // answer currently lives. Both tiers are stated because listing only the
-  // paid one would read as a paid-only product. The certificate price is read
-  // from the same constant the checkout charges, so the markup cannot drift
-  // away from the real price.
-  offers: [
-    {
-      "@type": "Offer",
-      name: "Feasibility check",
-      description:
-        "Address lookup, parcel boundary, buildable area, and a placed ADU in 3D.",
-      price: "0",
-      priceCurrency: "USD",
-    },
-    {
-      "@type": "Offer",
-      name: "Certificate of Feasibility",
-      description: "Downloadable feasibility certificate for one parcel.",
-      price: (CERTIFICATE_PRICE_CENTS / 100).toFixed(2),
-      priceCurrency: "USD",
-    },
-  ],
-  publisher: ORGANIZATION_JSON_LD,
-};
 
 /** Site-wide default metadata (title, description, icons, Open Graph, PWA manifest). */
 export const metadata: Metadata = {
@@ -137,10 +86,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased bg-lot-chalk text-lot-ink">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
         <a
           href="#main-content"
           className="sr-only rounded-control focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-(--z-index-toast) focus:inline-flex focus:items-center focus:bg-lot-ink focus:px-5 focus:py-2.5 focus:font-sans focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.08em] focus:text-lot-chalk focus:outline-2 focus:outline-offset-2 focus:outline-lot-orange-ink"

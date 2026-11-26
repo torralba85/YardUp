@@ -847,7 +847,7 @@ export default function BuilderInbox({
                                         </div>
                                       </div>
 
-                                      <div className="lf-dataprint rotate-[-2deg] border-2 border-status-blocked/30 py-1 text-center font-bold text-status-blocked">
+                                      <div className="lf-dataprint rotate-[-2deg] border-2 border-lot-ink py-1 text-center font-bold text-lot-ink">
                                         Concept &middot; Not a Permit
                                       </div>
                                   </div>

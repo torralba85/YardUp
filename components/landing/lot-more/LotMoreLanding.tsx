@@ -1666,6 +1666,8 @@ export function LotMoreLanding({
                   <li><Link href="/adu/ca">California ADU rules</Link></li>
                   <li><Link href="/adu/ca/cost">California ADU costs</Link></li>
                   <li><Link href="/adu/ca/san-diego/cost">San Diego ADU costs</Link></li>
+                  <li><Link href="/adu/ca/san-diego">City of San Diego ADU rules</Link></li>
+                  <li><Link href="/adu/ca/san-diego/permits">San Diego ADU permits by neighborhood</Link></li>
                 </ul>
               </div>
               <div className={styles.footerGroup}>
