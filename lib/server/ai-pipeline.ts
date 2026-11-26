@@ -18,6 +18,7 @@ const DEFAULT_TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-sol";
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 const DEFAULT_MAX_TOOL_ROUNDS = 4;
 const DEFAULT_DEADLINE_MS = 75_000;
+const MAX_AI_PANEL_BODY_BYTES = 64 * 1024;
 
 /**
  * A deterministic, server-side function the model may call mid-generation.
@@ -50,6 +51,8 @@ export interface AIPanelDefinition<Input, Output, Ctx> {
   /** Strict json_schema the final structured answer must satisfy. */
   outputSchema: Record<string, unknown>;
   validateInput: (raw: unknown) => AIInputValidation<Input>;
+  /** Optional runtime validator for the parsed model output (defense in depth). */
+  validateOutput?: (raw: unknown) => Output;
   /** Derive the tool-execution context from validated input. */
   buildContext: (input: Input) => Ctx;
   tools: AIToolHandler<Ctx>[];
@@ -135,7 +138,10 @@ export function cleanJsonText(raw: string): string {
   return text;
 }
 
-function parseFinal<Output>(res: OpenAIResponseShape): Output {
+function parseFinal<Output>(
+  res: OpenAIResponseShape,
+  validateOutput?: (raw: unknown) => Output,
+): Output {
   if (res.status === "incomplete") {
     const reason = res.incomplete_details?.reason || "output truncated";
     throw new OpenAIProviderError(`OpenAI output was incomplete (${reason}).`);
@@ -143,7 +149,8 @@ function parseFinal<Output>(res: OpenAIResponseShape): Output {
   const text = extractResponseText(res);
   if (!text) throw new OpenAIProviderError("OpenAI returned no final output.");
   const cleaned = cleanJsonText(text);
-  return JSON.parse(cleaned) as Output;
+  const parsed: unknown = JSON.parse(cleaned);
+  return validateOutput ? validateOutput(parsed) : (parsed as Output);
 }
 
 function outputItemsForHistory(
@@ -219,7 +226,7 @@ export async function runAgentic<Input, Output, Ctx>(
           `OpenAI did not call required tool "${nextRequiredTool}".`,
         );
       }
-      return parseFinal<Output>(res);
+      return parseFinal<Output>(res, def.validateOutput);
     }
 
     const responseHistory = outputItemsForHistory(res, calls);
@@ -255,7 +262,7 @@ export async function runAgentic<Input, Output, Ctx>(
     ],
     text: { format },
   });
-  return parseFinal<Output>(finalRes);
+  return parseFinal<Output>(finalRes, def.validateOutput);
 }
 
 /**
@@ -283,7 +290,22 @@ export function createAIPanelRoute<Input, Output, Ctx>(
 
     let raw: unknown;
     try {
-      raw = await request.json();
+      const contentLength = Number(request.headers.get("content-length") ?? 0);
+      if (Number.isFinite(contentLength) && contentLength > MAX_AI_PANEL_BODY_BYTES) {
+        return NextResponse.json({ error: "Request payload is too large." }, { status: 413 });
+      }
+      if (typeof request.text === "function") {
+        const text = await request.text();
+        if (Buffer.byteLength(text, "utf8") > MAX_AI_PANEL_BODY_BYTES) {
+          return NextResponse.json({ error: "Request payload is too large." }, { status: 413 });
+        }
+        raw = JSON.parse(text);
+      } else {
+        raw = await request.json();
+        if (Buffer.byteLength(JSON.stringify(raw ?? null), "utf8") > MAX_AI_PANEL_BODY_BYTES) {
+          return NextResponse.json({ error: "Request payload is too large." }, { status: 413 });
+        }
+      }
     } catch {
       return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
     }

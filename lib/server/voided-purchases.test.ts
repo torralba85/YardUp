@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { purchaseId } from "@/lib/certificate-purchases-id";
-import { PRODUCT_TYPE_ONE_TIME, REFUND_TYPE_FULL } from "./play-rtdn";
+import { PRODUCT_TYPE_ONE_TIME, REFUND_TYPE_FULL, REFUND_TYPE_QUANTITY_PARTIAL } from "./play-rtdn";
 // `vi.mock` calls below are hoisted above this import, so the mocked
 // `./firebase-admin` is already in place when this module is evaluated.
 import {
   applyVoidedPurchase,
+  planVoidRemediation,
   purchaseTokenHash,
   type VoidRemediationPlan,
   type VoidRemediationPlanner,
@@ -184,13 +185,31 @@ describe("applyVoidedPurchase", () => {
     expect(store.builders.get("builder-1")?.credits).toBe(4);
   });
 
-  it("floors the balance at zero when the plan disallows debt", async () => {
+  it("floors the balance at zero and records the shortfall when the plan disallows debt", async () => {
     seedGrant();
     store.builders.set("builder-1", { credits: 3 }); // 7 already spent
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    await applyVoidedPurchase(VOID, revokeAll);
+    const outcome = await applyVoidedPurchase(VOID, revokeAll);
 
+    expect(outcome).toMatchObject({
+      status: "applied",
+      shortfall: { leadCredits: 7, certificateCredits: 0 },
+    });
     expect(store.builders.get("builder-1")?.credits).toBe(0);
+    expect(store.grants.get(GRANT_ID)).toMatchObject({
+      revokedLeadCredits: 3,
+      leadCreditShortfall: 7,
+    });
+    const entries = Array.from(store.ledger.values());
+    expect(entries[0]).toMatchObject({
+      type: "refund",
+      creditsChange: -3,
+      requestedRevokeCredits: 10,
+      shortfall: 7,
+    });
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it("allows a negative balance when the plan permits debt", async () => {
@@ -280,5 +299,121 @@ describe("applyVoidedPurchase", () => {
     });
 
     expect(seen).toHaveLength(1);
+  });
+
+  it("uses the default floor-at-zero policy and records shortfalls end-to-end", async () => {
+    seedGrant({ credits: 10 });
+    store.builders.set("builder-1", { credits: 4 });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const outcome = await applyVoidedPurchase(VOID);
+
+    expect(outcome).toMatchObject({
+      status: "applied",
+      plan: {
+        leadCreditsToRevoke: 10,
+        certificateCreditsToRevoke: 0,
+        revokeCertificateUnlock: false,
+        allowNegativeBalance: false,
+        reason: "full-refund-floor-zero",
+      },
+      shortfall: { leadCredits: 6, certificateCredits: 0 },
+    });
+    expect(store.builders.get("builder-1")?.credits).toBe(0);
+    expect(store.grants.get(GRANT_ID)).toMatchObject({
+      revokedLeadCredits: 4,
+      leadCreditShortfall: 6,
+      voidReason: "full-refund-floor-zero",
+    });
+    warn.mockRestore();
+  });
+
+  it("revokes single-lot certificate unlock without touching certificateCredits balance under default policy", async () => {
+    const certKey = "lot-xyz";
+    seedGrant({
+      productId: "com.lotfoundry.certificate.credit1",
+      credits: 0,
+      certificateCredits: 1,
+      certKey,
+    });
+    store.certificatePurchases.set(purchaseId("builder-1", certKey), {
+      uid: "builder-1",
+      certKey,
+    });
+
+    const outcome = await applyVoidedPurchase(VOID);
+
+    expect(outcome).toMatchObject({
+      status: "applied",
+      shortfall: { leadCredits: 0, certificateCredits: 0 },
+    });
+    expect(store.certificatePurchases.has(purchaseId("builder-1", certKey))).toBe(false);
+    expect(store.certificateCredits.has("builder-1")).toBe(false);
+    expect(store.grants.get(GRANT_ID)).toMatchObject({
+      revokedCertificateCredits: 0,
+      certificateCreditShortfall: 0,
+      revokedCertificateUnlock: true,
+    });
+  });
+
+  it("floors multi-credit certificate balance at zero and records certificate credit shortfall", async () => {
+    seedGrant({
+      productId: "com.lotfoundry.certificate.pack5",
+      credits: 0,
+      certificateCredits: 5,
+    });
+    store.certificateCredits.set("builder-1", { uid: "builder-1", balance: 2 });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const outcome = await applyVoidedPurchase(VOID);
+
+    expect(outcome).toMatchObject({
+      status: "applied",
+      shortfall: { leadCredits: 0, certificateCredits: 3 },
+    });
+    expect(store.certificateCredits.get("builder-1")?.balance).toBe(0);
+    expect(store.grants.get(GRANT_ID)).toMatchObject({
+      revokedCertificateCredits: 2,
+      certificateCreditShortfall: 3,
+    });
+    warn.mockRestore();
+  });
+
+  it("flags partial refunds for manual review without automated revocation", async () => {
+    seedGrant({ credits: 10 });
+    store.builders.set("builder-1", { credits: 10 });
+
+    const outcome = await applyVoidedPurchase({
+      ...VOID,
+      refundType: REFUND_TYPE_QUANTITY_PARTIAL,
+    });
+
+    expect(outcome).toMatchObject({
+      status: "applied",
+      plan: {
+        leadCreditsToRevoke: 0,
+        certificateCreditsToRevoke: 0,
+        revokeCertificateUnlock: false,
+        allowNegativeBalance: false,
+        reason: "partial-refund-manual-review",
+      },
+      shortfall: { leadCredits: 0, certificateCredits: 0 },
+    });
+    expect(store.builders.get("builder-1")?.credits).toBe(10);
+    expect(
+      planVoidRemediation({
+        grant: {
+          id: GRANT_ID,
+          uid: "builder-1",
+          productId: "com.lotfoundry.builder.credits10",
+          credits: 10,
+          certificateCredits: 0,
+          transactionId: ORDER_ID,
+        },
+        fullRefund: false,
+        currentLeadCredits: 10,
+        hasCertificateUnlock: false,
+      }).reason,
+    ).toBe("partial-refund-manual-review");
   });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { STORE_PRODUCTS } from "@/lib/commerce/products";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const verifyAndGrantPurchase = vi.fn();
 
@@ -21,6 +22,7 @@ function post(body: unknown) {
 describe("POST /api/store/purchases/verify", () => {
   beforeEach(() => {
     verifyAndGrantPurchase.mockReset();
+    resetRateLimitBuckets();
   });
 
   it.each([null, [], "receipt", 7])(
@@ -32,9 +34,35 @@ describe("POST /api/store/purchases/verify", () => {
     },
   );
 
-  it("returns 400 for missing fields", async () => {
-    const res = await POST(post({ platform: "app-store" }));
-    expect(res.status).toBe(400);
+  it("returns 400 for missing or non-string fields", async () => {
+    expect((await POST(post({ platform: "app-store" }))).status).toBe(400);
+    expect(
+      (await POST(post({ platform: "app-store", productId: 123, token: "abc" }))).status,
+    ).toBe(400);
+    expect(
+      (
+        await POST(
+          post({
+            platform: "app-store",
+            productId: STORE_PRODUCTS.certificate.id,
+            token: { nested: true },
+          }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await POST(
+          post({
+            platform: "app-store",
+            productId: STORE_PRODUCTS.certificate.id,
+            token: "demo:tx-1",
+            certKey: 42,
+          }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(verifyAndGrantPurchase).not.toHaveBeenCalled();
   });
 
   it("returns grant payload on success and forwards certKey", async () => {

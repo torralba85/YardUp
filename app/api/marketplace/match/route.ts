@@ -1,30 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import { getMatchedBuilders } from "@/lib/marketplace";
 import type { ServiceArea } from "@/lib/marketplace-types";
 
 export const runtime = "nodejs";
 
+const MAX_LOCATION_FIELD_LEN = 120;
+const MAX_STATE_FIELD_LEN = 50;
+
 /**
  * POST /api/marketplace/match
  *
- * Server-side lead matching endpoint (Pass 2 / Task 6B). Matches active builders
- * against a parcel's city and state on the server rather than sending full
- * builder directories to untrusted clients.
+ * Authenticated server-side lead matching endpoint. Matches active builders
+ * against a parcel's city, state, and county on the server rather than sending
+ * full builder directories to untrusted clients.
  */
 export async function POST(req: NextRequest) {
+  const auth = await requireApiAuth(req);
+  if (auth instanceof NextResponse) return auth;
+
+  const limited = checkRateLimit(req, {
+    namespace: "marketplace-match",
+    limit: 30,
+    windowMs: 60_000,
+    clientKey: auth.uid,
+  });
+  if (limited) return limited;
+
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json(
+      { error: "Invalid JSON body" },
+      { status: 400 },
+    );
+  }
+
+  const record = body as Record<string, unknown>;
+  const parcelCity =
+    typeof record.parcelCity === "string" ? record.parcelCity.trim() : "";
+
+  if (!parcelCity) {
+    return NextResponse.json(
+      { error: "parcelCity is required" },
+      { status: 400 },
+    );
+  }
+  if (parcelCity.length > MAX_LOCATION_FIELD_LEN) {
+    return NextResponse.json(
+      { error: "parcelCity is too long" },
+      { status: 400 },
+    );
+  }
+
+  if (
+    record.parcelState !== undefined &&
+    (typeof record.parcelState !== "string" ||
+      record.parcelState.trim().length > MAX_STATE_FIELD_LEN)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid parcelState" },
+      { status: 400 },
+    );
+  }
+
+  if (
+    record.parcelCounty !== undefined &&
+    (typeof record.parcelCounty !== "string" ||
+      record.parcelCounty.trim().length > MAX_LOCATION_FIELD_LEN)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid parcelCounty" },
+      { status: 400 },
+    );
+  }
+
+  const parcelState =
+    typeof record.parcelState === "string" && record.parcelState.trim()
+      ? record.parcelState.trim()
+      : undefined;
+  const parcelCounty =
+    typeof record.parcelCounty === "string" && record.parcelCounty.trim()
+      ? record.parcelCounty.trim()
+      : undefined;
+
   try {
-    const body = await req.json().catch(() => null);
-    const parcelCity =
-      typeof body?.parcelCity === "string" ? body.parcelCity.trim() : "";
-
-    if (!parcelCity) {
-      return NextResponse.json(
-        { error: "parcelCity is required" },
-        { status: 400 },
-      );
-    }
-
     const db = getAdminDb();
     const snap = await db
       .collection("builders")
@@ -39,8 +100,8 @@ export async function POST(req: NextRequest) {
 
     const matched = getMatchedBuilders(candidates, {
       city: parcelCity,
-      state: typeof body?.parcelState === "string" ? body.parcelState : undefined,
-      county: typeof body?.parcelCounty === "string" ? body.parcelCounty : undefined,
+      state: parcelState,
+      county: parcelCounty,
     });
 
     return NextResponse.json({
@@ -48,8 +109,10 @@ export async function POST(req: NextRequest) {
       count: matched.length,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to match builders";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[marketplace/match] Failed to match builders:", error);
+    return NextResponse.json(
+      { error: "Failed to match builders." },
+      { status: 500 },
+    );
   }
 }

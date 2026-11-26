@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { STORE_PRODUCTS } from "@/lib/commerce/products";
+import { certificateKey } from "@/lib/certificate-key";
+import { parcelPresets } from "@/lib/feasibility";
 import { purchaseId } from "@/lib/certificate-purchases-id";
 import type { StorePurchaseVerifier } from "./store-purchases";
 
@@ -321,6 +323,49 @@ describe("verifyAndGrantPurchase", () => {
       expect.stringMatching(/^read:purchaseGrants\//),
       "read:builders/user-1",
     ]);
+  });
+
+  it("rejects demo preset certKeys before verifying receipts", async () => {
+    const verifyApple = vi.fn();
+    const result = await verifyAndGrantPurchase(
+      {
+        uid: "user-1",
+        platform: "app-store",
+        productId: STORE_PRODUCTS.certificate.id,
+        token: "demo:preset-lot",
+        certKey: certificateKey(parcelPresets[0]),
+      },
+      { ...verifier, verifyApple },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe(400);
+      expect(result.error).toMatch(/Demo lots/i);
+    }
+    expect(verifyApple).not.toHaveBeenCalled();
+  });
+
+  it("returns 503 when store receipt verification is not configured", async () => {
+    const prevPkg = process.env.GOOGLE_PLAY_PACKAGE_NAME;
+    const prevSa = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+    delete process.env.GOOGLE_PLAY_PACKAGE_NAME;
+    delete process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON;
+    try {
+      const result = await verifyAndGrantPurchase({
+        uid: "user-1",
+        platform: "google-play",
+        productId: STORE_PRODUCTS.builder5.id,
+        token: "real-play-token-not-demo",
+      });
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.status).toBe(503);
+        expect(result.error).toMatch(/not configured/i);
+      }
+    } finally {
+      if (prevPkg !== undefined) process.env.GOOGLE_PLAY_PACKAGE_NAME = prevPkg;
+      if (prevSa !== undefined) process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = prevSa;
+    }
   });
 });
 

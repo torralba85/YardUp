@@ -110,7 +110,12 @@ export async function POST(request: NextRequest) {
     if (outcome.status === "unmatched") {
       console.warn("[rtdn/google] no grant matched order", outcome.orderId);
     }
-    await eventRef.update({ outcome: outcome.status });
+    try {
+      await eventRef.update({ outcome: outcome.status });
+    } catch (updateErr) {
+      // The void is already committed; keep the claim and ack Pub/Sub.
+      console.warn("[rtdn/google] could not record outcome on event", messageId, updateErr);
+    }
     return NextResponse.json({ ok: true, outcome: outcome.status }, { status: 200 });
   } catch (err) {
     console.error("[rtdn/google] void handling failed", messageId, err);

@@ -5,6 +5,7 @@ import {
 } from "@/lib/legal-consent";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { checkRateLimit } from "@/lib/server/rate-limit";
+import { parseOptionalCoordinate } from "@/lib/server/request-validation";
 import {
   replaceExpiredActiveCheckout,
   reserveActiveCheckout,
@@ -85,14 +86,22 @@ export async function POST(request: NextRequest) {
   const auth = await requireApiAuth(request, { allowAnonymous: true });
   if (auth instanceof NextResponse) return auth;
   const uid = auth.uid;
-  if (auth.isAnonymous) {
-    const limited = checkRateLimit(request, {
-      limit: 20,
-      namespace: "checkout-certificate-guest",
-      windowMs: 60_000,
-    });
-    if (limited) return limited;
-  }
+  const limited = checkRateLimit(
+    request,
+    auth.isAnonymous
+      ? {
+          limit: 20,
+          namespace: "checkout-certificate-guest",
+          windowMs: 60_000,
+        }
+      : {
+          limit: 20,
+          namespace: "checkout-certificate",
+          windowMs: 60_000,
+          clientKey: uid,
+        },
+  );
+  if (limited) return limited;
   // Checkout locks a customer_email prefill, so only a verified address from
   // the ID token is used; the request body can never supply one.
   const verifiedEmail = auth.emailVerified && auth.email ? auth.email : undefined;
@@ -126,8 +135,16 @@ export async function POST(request: NextRequest) {
   const city = typeof body?.city === "string" ? body.city.trim() : "";
   const state = typeof body?.state === "string" ? body.state.trim() : "";
   const zip = typeof body?.zip === "string" ? body.zip.trim() : "";
-  const lat = typeof body?.lat === "number" ? body.lat : undefined;
-  const lng = typeof body?.lng === "number" ? body.lng : undefined;
+  const latParsed = parseOptionalCoordinate(body?.lat, -90, 90);
+  const lngParsed = parseOptionalCoordinate(body?.lng, -180, 180);
+  if (latParsed === null || lngParsed === null) {
+    return NextResponse.json(
+      { error: "lat or lng is out of valid range" },
+      { status: 400 },
+    );
+  }
+  const lat = latParsed;
+  const lng = lngParsed;
   const parcelData =
     body?.parcelData && typeof body.parcelData === "object"
       ? (body.parcelData as Record<string, unknown>)
@@ -149,13 +166,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let alreadyOwned = false;
+  let wasTransferred = false;
+  try {
+    alreadyOwned = await hasCertificate(uid, certKey);
+    if (!alreadyOwned) {
+      wasTransferred = await wasCertificateTransferredFrom(uid, certKey);
+    }
+  } catch (err) {
+    console.error("[stripe/checkout-certificate] Failed to check certificate status:", err);
+    return NextResponse.json(
+      { error: "Payments are temporarily unavailable." },
+      { status: 503 },
+    );
+  }
+
   // Already purchased — idempotent success, never a second charge.
-  if (await hasCertificate(uid, certKey)) {
+  if (alreadyOwned) {
     return NextResponse.json({ status: "granted", alreadyPurchased: true });
   }
 
   // Recovered to another account — block a second payment from the original session.
-  if (await wasCertificateTransferredFrom(uid, certKey)) {
+  if (wasTransferred) {
     return NextResponse.json(
       { error: "This certificate was recovered to another account. Sign in to that account to open it." },
       { status: 409 },

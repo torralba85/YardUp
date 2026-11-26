@@ -10,7 +10,81 @@ import type {
 import { certificateKey } from "@/lib/certificate-key";
 import type { AIPanelDefinition } from "@/lib/server/ai-pipeline";
 import { hasCertificate } from "@/lib/server/certificate-purchases";
+import { OpenAIProviderError } from "@/lib/server/openai";
 import { getStageBenchmarks, lookupPermitTracks } from "@/lib/server/permit-rules";
+
+const MAX_CITY_LEN = 120;
+const MAX_ADDRESS_LEN = 240;
+const MAX_STATE_LEN = 50;
+const MAX_ZIP_LEN = 20;
+const MAX_OUTPUT_STR_LEN = 4000;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isBoundedNonEmptyString(value: unknown, maxLen = MAX_OUTPUT_STR_LEN): value is string {
+  return typeof value === "string" && value.trim().length > 0 && value.length <= maxLen;
+}
+
+function validateProjectBriefOutput(raw: unknown): AIProjectBrief {
+  if (!isRecord(raw) || !isRecord(raw.permitTrack)) {
+    throw new OpenAIProviderError("OpenAI returned an invalid project brief.");
+  }
+  const { permitTrack, risks, stages, recommendedNextSteps } = raw;
+  const validRisks =
+    Array.isArray(risks) &&
+    risks.length >= 2 &&
+    risks.length <= 5 &&
+    risks.every(
+      (r) =>
+        isRecord(r) &&
+        isBoundedNonEmptyString(r.label) &&
+        ["low", "medium", "high"].includes(String(r.level)) &&
+        isBoundedNonEmptyString(r.explanation),
+    );
+  const validStages =
+    Array.isArray(stages) &&
+    stages.length >= 1 &&
+    stages.length <= 8 &&
+    stages.every(
+      (s) =>
+        isRecord(s) &&
+        isBoundedNonEmptyString(s.name) &&
+        isBoundedNonEmptyString(s.description) &&
+        typeof s.estWeeksLow === "number" &&
+        Number.isFinite(s.estWeeksLow) &&
+        typeof s.estWeeksHigh === "number" &&
+        Number.isFinite(s.estWeeksHigh) &&
+        ["clear", "review", "blocker"].includes(String(s.status)),
+    );
+  const validSteps =
+    Array.isArray(recommendedNextSteps) &&
+    recommendedNextSteps.length >= 3 &&
+    recommendedNextSteps.length <= 5 &&
+    recommendedNextSteps.every((step) => isBoundedNonEmptyString(step));
+
+  if (
+    !isBoundedNonEmptyString(raw.headline) ||
+    !isBoundedNonEmptyString(raw.summary) ||
+    !isBoundedNonEmptyString(raw.bestFit) ||
+    !validRisks ||
+    !isBoundedNonEmptyString(permitTrack.name) ||
+    !["ministerial", "discretionary"].includes(String(permitTrack.type)) ||
+    !isBoundedNonEmptyString(permitTrack.basis) ||
+    !validStages ||
+    typeof raw.totalEstWeeksLow !== "number" ||
+    !Number.isFinite(raw.totalEstWeeksLow) ||
+    typeof raw.totalEstWeeksHigh !== "number" ||
+    !Number.isFinite(raw.totalEstWeeksHigh) ||
+    !validSteps ||
+    !isBoundedNonEmptyString(raw.disclaimer)
+  ) {
+    throw new OpenAIProviderError("OpenAI returned an invalid project brief.");
+  }
+
+  return raw as unknown as AIProjectBrief;
+}
 
 interface ProjectBriefContext {
   jurisdiction: string;
@@ -175,21 +249,46 @@ export const projectBriefDef: AIPanelDefinition<
   systemPrompt: SYSTEM_PROMPT,
   outputSchema: OUTPUT_SCHEMA,
   validateInput: (raw) => {
-    const input = raw as Partial<AIProjectBriefInput> | null;
-    if (!input?.parcel || !input.config || !input.result) {
+    if (!isRecord(raw) || !isRecord(raw.parcel) || !isRecord(raw.config) || !isRecord(raw.result)) {
       return { ok: false, error: "parcel, config, and result are required." };
     }
-    if (typeof input.parcel.city !== "string" || input.parcel.city.trim().length === 0) {
+    const { parcel } = raw;
+    if (
+      typeof parcel.city !== "string" ||
+      parcel.city.trim().length === 0 ||
+      parcel.city.trim().length > MAX_CITY_LEN
+    ) {
       return { ok: false, error: "parcel.city is required to determine the jurisdiction." };
     }
     if (
-      typeof input.parcel.address !== "string" ||
-      input.parcel.address.trim().length === 0
+      typeof parcel.address !== "string" ||
+      parcel.address.trim().length === 0 ||
+      parcel.address.trim().length > MAX_ADDRESS_LEN
     ) {
       return { ok: false, error: "parcel.address is required to identify the property." };
     }
-    return { ok: true, value: input as AIProjectBriefInput };
+    if (
+      parcel.state !== undefined &&
+      (typeof parcel.state !== "string" || parcel.state.trim().length > MAX_STATE_LEN)
+    ) {
+      return { ok: false, error: "parcel.state must be a valid state string." };
+    }
+    if (
+      parcel.zip !== undefined &&
+      (typeof parcel.zip !== "string" || parcel.zip.trim().length > MAX_ZIP_LEN)
+    ) {
+      return { ok: false, error: "parcel.zip must be a valid ZIP string." };
+    }
+    return {
+      ok: true,
+      value: {
+        parcel: raw.parcel,
+        config: raw.config,
+        result: raw.result,
+      } as unknown as AIProjectBriefInput,
+    };
   },
+  validateOutput: validateProjectBriefOutput,
   buildContext: (input) => {
     const state = input.parcel.state?.trim();
     const city = input.parcel.city.trim();

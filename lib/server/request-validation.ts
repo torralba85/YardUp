@@ -40,3 +40,37 @@ export function parseCoordinateParams(searchParams: URLSearchParams):
 
   return { lat, lng };
 }
+
+/**
+ * Check that a caller-supplied identifier is safe to use as a single Firestore
+ * document ID segment (non-empty, bounded length, no path separators or
+ * reserved relative segments `.` / `..`).
+ */
+export function isSafeDocumentId(value: unknown, maxLen = 200): value is string {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  return (
+    trimmed.length > 0 &&
+    trimmed.length <= maxLen &&
+    !trimmed.includes("/") &&
+    trimmed !== "." &&
+    trimmed !== ".."
+  );
+}
+
+/**
+ * Parse an optional latitude or longitude supplied in a JSON body. Returns
+ * `undefined` when omitted, a finite in-range number when valid, or `null`
+ * when present with an invalid type or out-of-range value.
+ */
+export function parseOptionalCoordinate(
+  value: unknown,
+  min: number,
+  max: number,
+): number | undefined | null {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max) {
+    return null;
+  }
+  return value;
+}

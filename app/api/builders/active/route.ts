@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { getAdminDb } from "@/lib/server/firebase-admin";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import type { BuilderDirectoryProfile, ServiceArea } from "@/lib/marketplace-types";
 
 export const runtime = "nodejs";
@@ -35,25 +36,41 @@ export async function GET(request: NextRequest) {
   const auth = await requireApiAuth(request);
   if (auth instanceof NextResponse) return auth;
 
-  const snapshot = await getAdminDb()
-    .collection("builders")
-    .where("active", "==", true)
-    .get();
-
-  const builders: BuilderDirectoryProfile[] = snapshot.docs.flatMap((builder) => {
-    const data = builder.data();
-    const companyName = typeof data.companyName === "string" ? data.companyName.trim() : "";
-    const serviceAreas = publicServiceAreas(data.serviceAreas);
-    if (!companyName || serviceAreas.length === 0) return [];
-
-    return [{
-      id: builder.id,
-      companyName,
-      serviceAreas,
-      active: true,
-      licensed: typeof data.licenseNumber === "string" && data.licenseNumber.trim().length > 0,
-    }];
+  const limited = checkRateLimit(request, {
+    namespace: "builders-active",
+    limit: 30,
+    windowMs: 60_000,
+    clientKey: auth.uid,
   });
+  if (limited) return limited;
 
-  return NextResponse.json({ builders });
+  try {
+    const snapshot = await getAdminDb()
+      .collection("builders")
+      .where("active", "==", true)
+      .get();
+
+    const builders: BuilderDirectoryProfile[] = snapshot.docs.flatMap((builder) => {
+      const data = builder.data();
+      const companyName = typeof data.companyName === "string" ? data.companyName.trim() : "";
+      const serviceAreas = publicServiceAreas(data.serviceAreas);
+      if (!companyName || serviceAreas.length === 0) return [];
+
+      return [{
+        id: builder.id,
+        companyName,
+        serviceAreas,
+        active: true,
+        licensed: typeof data.licenseNumber === "string" && data.licenseNumber.trim().length > 0,
+      }];
+    });
+
+    return NextResponse.json({ builders });
+  } catch (error) {
+    console.error("[builders/active] Failed to load active builders:", error);
+    return NextResponse.json(
+      { error: "Could not load builders. Please try again." },
+      { status: 500 },
+    );
+  }
 }

@@ -80,24 +80,12 @@ export interface VoidRemediationInput {
 /**
  * Decide what a voided purchase takes back.
  *
- * TODO(andrew): implement the clawback policy — see the trade-offs below.
- *
- * The hard case is a builder who bought 10 credits, spent 6 unlocking real
- * homeowner leads (whose contact details they have already seen), then
- * refunded. The lead data cannot be un-seen, so the only lever is the balance.
- *
- *   (a) Floor at zero — revoke up to what is left, never go negative.
- *       Kindest to a legitimate dispute; leaves the spend-then-refund loop open.
- *   (b) Allow debt — revoke the full amount even if the balance goes negative,
- *       blocking future unlocks until they re-purchase. Closes the loop, but a
- *       user whose card issuer forced a chargeback lands in a confusing hole.
- *   (c) Forward-only — record the void, touch no balances. Never punishes a
- *       legitimate refund; fully open to abuse.
- *
- * `currentLeadCredits` is passed in precisely so you can distinguish "refunded
- * without spending" (safe to revoke fully) from "already spent" (the judgement
- * call). `fullRefund` is false for quantity-based partial refunds, where
- * revoking the whole pack would overcharge the user.
+ * Policy (2026-11-25): floor credit balances at zero (`allowNegativeBalance:
+ * false`) and record any unrecovered shortfall on the grant and refund ledger
+ * for support/abuse visibility. Full refunds revoke unused lead credits,
+ * multi-credit certificate balances, and single-lot certificate unlocks.
+ * Quantity-based partial refunds are recorded for manual review without
+ * automated clawback so we never over-revoke.
  *
  * @param input - The grant, refund type, and current balances.
  * @returns The plan {@link applyVoidedPurchase} will execute.
@@ -105,20 +93,41 @@ export interface VoidRemediationInput {
 export function planVoidRemediation(
   input: VoidRemediationInput,
 ): VoidRemediationPlan {
-  // PLACEHOLDER — records the void without altering balances (option (c)).
-  // Replace with the policy you want before enabling RTDN in production.
-  void input;
+  if (!input.fullRefund) {
+    return {
+      leadCreditsToRevoke: 0,
+      certificateCreditsToRevoke: 0,
+      revokeCertificateUnlock: false,
+      allowNegativeBalance: false,
+      reason: "partial-refund-manual-review",
+    };
+  }
+
   return {
-    leadCreditsToRevoke: 0,
-    certificateCreditsToRevoke: 0,
-    revokeCertificateUnlock: false,
+    leadCreditsToRevoke: Math.max(0, input.grant.credits),
+    // Single-lot certificate purchases unlock `certificatePurchases/{uid}_{certKey}`
+    // directly without incrementing `certificateCredits/{uid}.balance`.
+    certificateCreditsToRevoke: input.hasCertificateUnlock
+      ? 0
+      : Math.max(0, input.grant.certificateCredits),
+    revokeCertificateUnlock: input.hasCertificateUnlock,
     allowNegativeBalance: false,
-    reason: "policy-not-configured",
+    reason: "full-refund-floor-zero",
   };
 }
 
+export interface VoidShortfall {
+  leadCredits: number;
+  certificateCredits: number;
+}
+
 export type ApplyVoidOutcome =
-  | { status: "applied"; grantId: string; plan: VoidRemediationPlan }
+  | {
+      status: "applied";
+      grantId: string;
+      plan: VoidRemediationPlan;
+      shortfall: VoidShortfall;
+    }
   | { status: "replay"; grantId: string }
   | { status: "unmatched"; orderId: string };
 
@@ -205,10 +214,17 @@ export async function applyVoidedPurchase(
       return { status: "replay" as const };
     }
 
-    const builderSnap = await tx.get(builderRef);
+    const [builderSnap, certBalanceSnap] = await Promise.all([
+      tx.get(builderRef),
+      tx.get(certBalanceRef),
+    ]);
     const currentLeadCredits =
       builderSnap.exists && typeof builderSnap.data()?.credits === "number"
         ? (builderSnap.data()?.credits as number)
+        : 0;
+    const currentCertCredits =
+      certBalanceSnap.exists && typeof certBalanceSnap.data()?.balance === "number"
+        ? (certBalanceSnap.data()?.balance as number)
         : 0;
 
     const plan = planner({
@@ -220,31 +236,68 @@ export async function applyVoidedPurchase(
       hasCertificateUnlock: Boolean(current.certKey),
     });
 
+    let actualLeadRevoked = 0;
+    let leadCreditShortfall = 0;
+    let nextLeadCredits = currentLeadCredits;
+    if (plan.leadCreditsToRevoke > 0) {
+      if (builderSnap.exists) {
+        nextLeadCredits = plan.allowNegativeBalance
+          ? currentLeadCredits - plan.leadCreditsToRevoke
+          : Math.min(
+              currentLeadCredits,
+              Math.max(0, currentLeadCredits - plan.leadCreditsToRevoke),
+            );
+        actualLeadRevoked = Math.max(0, currentLeadCredits - nextLeadCredits);
+        leadCreditShortfall = Math.max(0, plan.leadCreditsToRevoke - actualLeadRevoked);
+      } else {
+        leadCreditShortfall = plan.leadCreditsToRevoke;
+      }
+    }
+
+    let actualCertRevoked = 0;
+    let certificateCreditShortfall = 0;
+    let nextCertCredits = currentCertCredits;
+    if (plan.certificateCreditsToRevoke > 0) {
+      nextCertCredits = plan.allowNegativeBalance
+        ? currentCertCredits - plan.certificateCreditsToRevoke
+        : Math.min(
+            currentCertCredits,
+            Math.max(0, currentCertCredits - plan.certificateCreditsToRevoke),
+          );
+      actualCertRevoked = Math.max(0, currentCertCredits - nextCertCredits);
+      certificateCreditShortfall = Math.max(
+        0,
+        plan.certificateCreditsToRevoke - actualCertRevoked,
+      );
+    }
+
     tx.update(grantRef, {
       voidedAt: new Date().toISOString(),
       voidedAtServer: FieldValue.serverTimestamp(),
       voidReason: plan.reason,
       voidOrderId: voided.orderId,
       voidRefundType: voided.refundType ?? null,
-      revokedLeadCredits: plan.leadCreditsToRevoke,
-      revokedCertificateCredits: plan.certificateCreditsToRevoke,
+      revokedLeadCredits: actualLeadRevoked,
+      leadCreditShortfall,
+      revokedCertificateCredits: actualCertRevoked,
+      certificateCreditShortfall,
+      revokedCertificateUnlock: Boolean(plan.revokeCertificateUnlock && certUnlockRef),
     });
 
     if (plan.leadCreditsToRevoke > 0 && builderSnap.exists) {
-      const next = plan.allowNegativeBalance
-        ? currentLeadCredits - plan.leadCreditsToRevoke
-        : Math.max(0, currentLeadCredits - plan.leadCreditsToRevoke);
       tx.update(builderRef, {
-        credits: next,
+        credits: nextLeadCredits,
         updatedAt: FieldValue.serverTimestamp(),
       });
       // Mirror the builder ledger the Stripe webhook writes, so support sees
-      // refunds and purchases in one place.
+      // refunds, clawbacks, and any unrecovered shortfall in one place.
       tx.set(
         builderRef.collection("ledger").doc(`void_${grant.id.replace(/[/]/g, "_")}`),
         {
           type: "refund",
-          creditsChange: next - currentLeadCredits,
+          creditsChange: -actualLeadRevoked,
+          requestedRevokeCredits: plan.leadCreditsToRevoke,
+          shortfall: leadCreditShortfall,
           reason: plan.reason,
           orderId: voided.orderId,
           createdAt: FieldValue.serverTimestamp(),
@@ -252,12 +305,12 @@ export async function applyVoidedPurchase(
       );
     }
 
-    if (plan.certificateCreditsToRevoke > 0) {
+    if (plan.certificateCreditsToRevoke > 0 && (certBalanceSnap.exists || plan.allowNegativeBalance)) {
       tx.set(
         certBalanceRef,
         {
           uid: current.uid,
-          balance: FieldValue.increment(-plan.certificateCreditsToRevoke),
+          balance: nextCertCredits,
           updatedAt: FieldValue.serverTimestamp(),
         },
         { merge: true },
@@ -270,7 +323,14 @@ export async function applyVoidedPurchase(
       tx.delete(certUnlockRef);
     }
 
-    return { status: "applied" as const, plan };
+    return {
+      status: "applied" as const,
+      plan,
+      shortfall: {
+        leadCredits: leadCreditShortfall,
+        certificateCredits: certificateCreditShortfall,
+      },
+    };
   });
 
   if (result.status === "unmatched") {
@@ -279,5 +339,18 @@ export async function applyVoidedPurchase(
   if (result.status === "replay") {
     return { status: "replay", grantId: grant.id };
   }
-  return { status: "applied", grantId: grant.id, plan: result.plan };
+  if (result.shortfall.leadCredits > 0 || result.shortfall.certificateCredits > 0) {
+    console.warn("[voided-purchases] credit clawback shortfall recorded", {
+      grantId: grant.id,
+      uid: grant.uid,
+      orderId: voided.orderId,
+      shortfall: result.shortfall,
+    });
+  }
+  return {
+    status: "applied",
+    grantId: grant.id,
+    plan: result.plan,
+    shortfall: result.shortfall,
+  };
 }

@@ -78,122 +78,130 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // A delayed payment that failed can never become paid, but the reservation
-  // still holds its Session. Rotate it so the buyer can start a fresh checkout
-  // instead of being handed the dead one on every retry.
-  if (event.type === "checkout.session.async_payment_failed") {
-    await rotateReservationForFailedSession(
-      event.data.object as Stripe.Checkout.Session,
-    );
-    return NextResponse.json({ received: true });
-  }
-
-  if (
-    event.type !== "checkout.session.completed" &&
-    event.type !== "checkout.session.async_payment_succeeded"
-  ) {
-    return NextResponse.json({ received: true });
-  }
-
-  const session = event.data.object as Stripe.Checkout.Session;
-  if (session.payment_status !== "paid") {
-    return NextResponse.json({ received: true });
-  }
-
-  const purchaseType = session.metadata?.purchaseType;
-
-  if (purchaseType === "certificate") {
-    if (!hasExpectedPayment(session, CERTIFICATE_PRICE_CENTS)) {
-      return NextResponse.json({ received: true });
-    }
-
-    if ((await fulfillPaidCertificateSession(session)) === null) {
-      console.error(
-        `[stripe/webhook] Missing uid or certKey in certificate purchase metadata for session ${session.id}`,
-      );
-    }
-  } else if (purchaseType === "credit_pack") {
-    const builderId = session.metadata?.builderId;
-    const creditsToGrant = Number(session.metadata?.creditsToGrant);
-
-    if (!isCreditPackSize(creditsToGrant)) {
-      console.error(
-        `[stripe/webhook] Invalid credit pack metadata for session ${session.id}`,
+  try {
+    // A delayed payment that failed can never become paid, but the reservation
+    // still holds its Session. Rotate it so the buyer can start a fresh checkout
+    // instead of being handed the dead one on every retry.
+    if (event.type === "checkout.session.async_payment_failed") {
+      await rotateReservationForFailedSession(
+        event.data.object as Stripe.Checkout.Session,
       );
       return NextResponse.json({ received: true });
     }
+
     if (
-      !hasExpectedPayment(session, CREDIT_PACK_PRICES_CENTS[creditsToGrant])
+      event.type !== "checkout.session.completed" &&
+      event.type !== "checkout.session.async_payment_succeeded"
     ) {
       return NextResponse.json({ received: true });
     }
-    if (!builderId) {
-      console.error(
-        `[stripe/webhook] Missing builderId in credit pack metadata for session ${session.id}`,
-      );
+
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.payment_status !== "paid") {
       return NextResponse.json({ received: true });
     }
 
-    const adminDb = getAdminDb();
-    const builderRef = adminDb.collection("builders").doc(builderId);
-    const ledgerRef = builderRef
-      .collection("ledger")
-      .doc(`${builderId}_${session.id}`);
+    const purchaseType = session.metadata?.purchaseType;
 
-    await adminDb.runTransaction(async (transaction) => {
-      const ledgerSnap = await transaction.get(ledgerRef);
-      if (ledgerSnap.exists) {
-        return;
+    if (purchaseType === "certificate") {
+      if (!hasExpectedPayment(session, CERTIFICATE_PRICE_CENTS)) {
+        return NextResponse.json({ received: true });
       }
 
-      const builderDoc = await transaction.get(builderRef);
-      if (!builderDoc.exists) {
-        throw new Error(`Builder ${builderId} not found`);
+      if ((await fulfillPaidCertificateSession(session)) === null) {
+        console.error(
+          `[stripe/webhook] Missing uid or certKey in certificate purchase metadata for session ${session.id}`,
+        );
       }
-      const data = builderDoc.data();
-      const currentCredits =
-        typeof data?.credits === "number" ? data.credits : 0;
+    } else if (purchaseType === "credit_pack") {
+      const builderId = session.metadata?.builderId;
+      const creditsToGrant = Number(session.metadata?.creditsToGrant);
 
-      transaction.update(builderRef, {
-        credits: currentCredits + creditsToGrant,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+      if (!isCreditPackSize(creditsToGrant)) {
+        console.error(
+          `[stripe/webhook] Invalid credit pack metadata for session ${session.id}`,
+        );
+        return NextResponse.json({ received: true });
+      }
+      if (
+        !hasExpectedPayment(session, CREDIT_PACK_PRICES_CENTS[creditsToGrant])
+      ) {
+        return NextResponse.json({ received: true });
+      }
+      if (!builderId) {
+        console.error(
+          `[stripe/webhook] Missing builderId in credit pack metadata for session ${session.id}`,
+        );
+        return NextResponse.json({ received: true });
+      }
 
-      transaction.set(ledgerRef, {
-        type: "purchase",
-        creditsChange: creditsToGrant,
-        amountPaid: CREDIT_PACK_PRICES_CENTS[creditsToGrant] / 100,
-        stripeSessionId: session.id,
-        createdAt: FieldValue.serverTimestamp(),
-      });
-    });
-  } else if (purchaseType === "lead_unlock") {
-    if (!hasExpectedPayment(session, LEAD_UNLOCK_PRICE_CENTS)) {
-      return NextResponse.json({ received: true });
-    }
+      const adminDb = getAdminDb();
+      const builderRef = adminDb.collection("builders").doc(builderId);
+      const ledgerRef = builderRef
+        .collection("ledger")
+        .doc(`${builderId}_${session.id}`);
 
-    const builderId = session.metadata?.builderId;
-    const requestId = session.metadata?.requestId;
-    if (builderId && requestId) {
-      await grantLeadUnlock({
-        builderId,
-        requestId,
-        stripeSessionId: session.id,
-        amount: LEAD_UNLOCK_PRICE_CENTS,
+      await adminDb.runTransaction(async (transaction) => {
+        const ledgerSnap = await transaction.get(ledgerRef);
+        if (ledgerSnap.exists) {
+          return;
+        }
+
+        const builderDoc = await transaction.get(builderRef);
+        if (!builderDoc.exists) {
+          throw new Error(`Builder ${builderId} not found`);
+        }
+        const data = builderDoc.data();
+        const currentCredits =
+          typeof data?.credits === "number" ? data.credits : 0;
+
+        transaction.update(builderRef, {
+          credits: currentCredits + creditsToGrant,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        transaction.set(ledgerRef, {
+          type: "purchase",
+          creditsChange: creditsToGrant,
+          amountPaid: CREDIT_PACK_PRICES_CENTS[creditsToGrant] / 100,
+          stripeSessionId: session.id,
+          createdAt: FieldValue.serverTimestamp(),
+        });
       });
+    } else if (purchaseType === "lead_unlock") {
+      if (!hasExpectedPayment(session, LEAD_UNLOCK_PRICE_CENTS)) {
+        return NextResponse.json({ received: true });
+      }
+
+      const builderId = session.metadata?.builderId;
+      const requestId = session.metadata?.requestId;
+      if (builderId && requestId) {
+        await grantLeadUnlock({
+          builderId,
+          requestId,
+          stripeSessionId: session.id,
+          amount: LEAD_UNLOCK_PRICE_CENTS,
+        });
+      } else {
+        console.error(
+          `[stripe/webhook] Missing builderId or requestId in lead unlock metadata for session ${session.id}`,
+        );
+      }
     } else {
       console.error(
-        `[stripe/webhook] Missing builderId or requestId in lead unlock metadata for session ${session.id}`,
+        `[stripe/webhook] Ignoring unknown purchaseType for session ${session.id}`,
       );
     }
-  } else {
-    console.error(
-      `[stripe/webhook] Ignoring unknown purchaseType for session ${session.id}`,
+
+    // Refunds / bad-lead credits are handled manually in the Stripe Dashboard for
+    // now; there is intentionally no charge.refunded handler, so a refund does not
+    // auto-revoke a fulfilled purchase.
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error(`[stripe/webhook] Fulfilment failed for event ${event.id}:`, err);
+    return NextResponse.json(
+      { error: "Webhook processing failed." },
+      { status: 500 },
     );
   }
-
-  // Refunds / bad-lead credits are handled manually in the Stripe Dashboard for
-  // now; there is intentionally no charge.refunded handler, so a refund does not
-  // auto-revoke a fulfilled purchase.
-  return NextResponse.json({ received: true });
 }

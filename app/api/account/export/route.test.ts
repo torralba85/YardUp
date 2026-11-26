@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { EMAIL_SCENARIO } from "@/test/fixtures/email-scenario";
+import { resetRateLimitBuckets } from "@/lib/server/rate-limit";
 
 const { requireApiAuthMock } = vi.hoisted(() => ({
   requireApiAuthMock: vi.fn(async () => ({
@@ -130,6 +131,7 @@ describe("GET /api/account/export", () => {
     state.studioScenarioLeads = [];
     state.certificateCredits = {};
     state.throwOnDb = false;
+    resetRateLimitBuckets();
     requireApiAuthMock.mockReset().mockResolvedValue({
       uid: "local-dev",
       email: "owner@example.com",

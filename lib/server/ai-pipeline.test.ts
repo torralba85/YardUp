@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NextRequest } from "next/server";
+import { OpenAIProviderError } from "./openai";
 import {
   cleanJsonText,
   createAIPanelRoute,
@@ -272,6 +273,35 @@ describe("createAIPanelRoute", () => {
     const res = await POST(fakeRequest({ nope: 1 }));
 
     expect(res.status).toBe(400);
+  });
+
+  it("returns 413 when the JSON payload exceeds 64 KB", async () => {
+    const POST = createAIPanelRoute(testDef, {
+      createResponse: async () => messageResponse({ answer: "x" }) as never,
+      executeTool: async () => "{}",
+    });
+
+    const res = await POST(fakeRequest({ q: "x".repeat(70_000) }));
+
+    expect(res.status).toBe(413);
+  });
+
+  it("returns 502 when validateOutput rejects malformed model output", async () => {
+    const validatingDef: AIPanelDefinition<TestInput, TestOutput, TestCtx> = {
+      ...testDef,
+      validateOutput: () => {
+        throw new OpenAIProviderError("Invalid output shape");
+      },
+    };
+    const { fn } = scriptedResponder([messageResponse({ answer: "bad" })]);
+    const POST = createAIPanelRoute(validatingDef, {
+      createResponse: fn,
+      executeTool: async () => "{}",
+    });
+
+    const res = await POST(fakeRequest({ q: "hi" }));
+
+    expect(res.status).toBe(502);
   });
 });
 

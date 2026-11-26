@@ -1,8 +1,9 @@
-import { randomUUID } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiAuth } from "@/lib/server/api-auth";
 import { CREDIT_PACK_PRICES_CENTS, isCreditPackSize } from "@/lib/credit-packs";
 import { getAdminDb } from "@/lib/server/firebase-admin";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { isSafeDocumentId } from "@/lib/server/request-validation";
 import { getStripe } from "@/lib/stripe";
 import { resolveCheckoutOrigin } from "@/lib/server/checkout-origin";
 import { createStripeIdempotencyKey } from "@/lib/server/stripe-idempotency";
@@ -21,14 +22,20 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
   const builderId = auth.uid;
 
+  const limited = checkRateLimit(request, {
+    namespace: "stripe-checkout-credits",
+    limit: 20,
+    windowMs: 60_000,
+    clientKey: builderId,
+  });
+  if (limited) return limited;
+
   const body = await request.json().catch(() => null);
   const pack = body?.pack;
   const checkoutAttemptId =
-    body?.checkoutAttemptId === undefined
-      ? randomUUID()
-      : typeof body.checkoutAttemptId === "string"
-        ? body.checkoutAttemptId.trim()
-        : "";
+    typeof body?.checkoutAttemptId === "string"
+      ? body.checkoutAttemptId.trim()
+      : "";
 
   if (!isCreditPackSize(pack)) {
     return NextResponse.json(
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!checkoutAttemptId || checkoutAttemptId.length > 100) {
+  if (!isSafeDocumentId(checkoutAttemptId, 100)) {
     return NextResponse.json(
       { error: "A valid checkoutAttemptId is required" },
       { status: 400 },
@@ -45,14 +52,24 @@ export async function POST(request: NextRequest) {
   }
 
   const amountCents = CREDIT_PACK_PRICES_CENTS[pack];
-  const db = getAdminDb();
-  const profileRef = db.doc(`builders/${builderId}`);
-  const profileSnap = await profileRef.get();
+  let db: ReturnType<typeof getAdminDb>;
+  let profileRef: ReturnType<ReturnType<typeof getAdminDb>["doc"]>;
+  try {
+    db = getAdminDb();
+    profileRef = db.doc(`builders/${builderId}`);
+    const profileSnap = await profileRef.get();
 
-  if (!profileSnap.exists) {
+    if (!profileSnap.exists) {
+      return NextResponse.json(
+        { error: "Builder profile not found" },
+        { status: 403 },
+      );
+    }
+  } catch (err) {
+    console.error("[stripe/checkout-credits] Failed to load builder profile:", err);
     return NextResponse.json(
-      { error: "Builder profile not found" },
-      { status: 403 },
+      { error: "Payments are temporarily unavailable." },
+      { status: 503 },
     );
   }
 
@@ -69,10 +86,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Demo grant
+    // Demo grant — keyed by checkoutAttemptId so retries are idempotent.
     try {
-      await db.runTransaction(async (transaction) => {
-        const profileSnap = await transaction.get(profileRef);
+      const outcome = await db.runTransaction(async (transaction) => {
+        const txId = `demo_pack_${pack}_${checkoutAttemptId}`;
+        const ledgerRef = db.doc(`builders/${builderId}/ledger/${txId}`);
+        const [ledgerSnap, profileSnap] = await Promise.all([
+          transaction.get(ledgerRef),
+          transaction.get(profileRef),
+        ]);
+        if (ledgerSnap.exists) {
+          return { alreadyGranted: true };
+        }
         if (!profileSnap.exists) {
           throw new Error("Builder profile not found");
         }
@@ -83,8 +108,6 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date().toISOString(),
         });
 
-        const txId = `demo_pack_${pack}_${Date.now()}`;
-        const ledgerRef = db.doc(`builders/${builderId}/ledger/${txId}`);
         transaction.set(ledgerRef, {
           id: txId,
           builderId,
@@ -94,8 +117,13 @@ export async function POST(request: NextRequest) {
           description: `${pack}-Lead Pack`,
           createdAt: new Date().toISOString(),
         });
+        return { alreadyGranted: false };
       });
-      return NextResponse.json({ status: "granted", demo: true });
+      return NextResponse.json({
+        status: "granted",
+        demo: true,
+        ...(outcome.alreadyGranted ? { alreadyGranted: true } : {}),
+      });
     } catch (err) {
       console.error("[stripe/checkout-credits] Demo grant failed:", err);
       return NextResponse.json(
