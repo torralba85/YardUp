@@ -86,6 +86,7 @@ them in Play Console's required dimensions.
 | Photos | Yes, only when the user submits an optional style-match photo | No | App functionality | No |
 | Purchase history | Yes | No | App functionality | No |
 | Other user-generated content (saved studies and feedback) | Yes | No | App functionality | No |
+| App interactions | Yes | No | Analytics | Yes |
 | Device or other IDs | Yes | No | Security and fraud prevention | Yes |
 
 Notes for the form:
@@ -130,11 +131,24 @@ Notes for the form:
   stored on our servers (processed and discarded), while saving a scenario to an
   account stores the generated AI concept rendering with that saved scenario,
   matching `app/privacy/page.tsx`.
-- The AI Project Brief feature forwards parcel dimensions, zoning constraints,
-  and feasibility metrics to OpenAI via `/api/ai/project-brief` to synthesize
-  the planning narrative for Certificates of Feasibility. OpenAI acts as a
-  service provider processing on our behalf under commercial API terms (no
-  model training on API inputs), matching `app/privacy/page.tsx`.
+- The AI Project Brief ("property notes") forwards the property street
+  address, city, state and ZIP, lot and existing-home size, setbacks, zoning,
+  the ADU configuration, and the cost, rent and payback estimates to OpenAI via
+  `/api/ai/project-brief` (`lib/ai-project-brief.ts`). Signed-in users get a
+  preview before purchase, so declare Address under the OpenAI service-provider
+  flow even for users who never buy. No name, email or account ID is sent.
+  OpenAI acts as a service provider processing on our behalf under commercial
+  API terms (no model training on API inputs), matching `app/privacy/page.tsx`.
+- Web guest checkout signs the visitor in anonymously and stores the email
+  Stripe Checkout collected (`buyerEmail`) with the purchase so the buyer can
+  recover the Certificate by signing in with that verified email. The Email
+  address and Purchase history rows already cover this.
+- Real estate agent passes (`?pass=CODE`, `/api/certificates/redeem`) record
+  `agentPasses/{CODE}/redemptions/{uid}`. Nothing is sent to the agent, so this
+  adds no sharing.
+- Deleting an account moves its purchase records to random-id documents
+  without the email, property address, coordinates or parcel data
+  (`lib/server/deleted-account-purchases.ts`), matching `app/privacy/page.tsx` §6.
 - The address disambiguation and zoning shadow feature forwards candidate
   address strings and zoning district labels to TypeSafe to pick the best match
   and evaluate zoning classifications (`app/privacy/page.tsx` §3). Neither query
@@ -144,10 +158,13 @@ Notes for the form:
 - No crash/analytics SDK ships in the app bundle, so **Crash logs** and
   **Diagnostics** under App info and performance stay undeclared.
 - **App activity -> App interactions** must be declared: Collected, Not shared,
-  Optional (the user can decline), purpose Analytics. GA4 records page paths,
-  referrer, device/browser type, and an approximate location derived from a
-  truncated IP. It is optional in Play's sense because the tag does not load at
-  all until the visitor accepts the banner.
+  **Required**, purpose Analytics. Since PR #448 (2026-11-25), GA4 loads for
+  every visitor with storage denied and sends cookieless page views before a
+  choice and after Decline (`lib/analytics/initialize.ts`). These record page
+  paths, referrer, device/browser type, and an approximate location derived
+  from a truncated IP. A user cannot turn that collection off, so it is not
+  optional in Play's sense. GA4 and Ads cookies, custom product events and the
+  Ads destination still wait for Accept.
 - Do not declare in-app advertising: Play Console "App content -> Ads" is `No`
   (the app contains no third-party advertisements or ad display SDKs).
 - Google Ads conversion measurement operates under the same consent gate as GA4:

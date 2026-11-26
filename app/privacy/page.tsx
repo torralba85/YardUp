@@ -34,7 +34,7 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      kicker="Effective November 19, 2026 · Version 2026-11-19"
+      kicker="Effective November 25, 2026 · Version 2026-11-25"
     >
       <LegalSection title="Who We Are &amp; Scope">
         <p>
@@ -90,8 +90,17 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Billing &amp; Transaction Records:</strong> Transaction IDs, purchase timestamps,
-            certificate identifiers, and credit balances provided by Stripe, Google Play Billing, or
-            Apple App Store (we never store raw payment card numbers on our servers).
+            certificate identifiers, credit balances, and the property a Certificate covers, provided
+            by Stripe, Google Play Billing, or Apple App Store (we never store raw payment card numbers
+            on our servers). If you buy a Certificate on the web without signing in, we create a
+            temporary guest session and save the email address you give Stripe Checkout with the
+            purchase, so you can recover the Certificate later by signing in with that verified email.
+          </li>
+          <li>
+            <strong>Agent Pass Redemptions:</strong> If you redeem a real estate agent&rsquo;s code for
+            a complimentary Certificate, we record the code with your account so we can count
+            redemptions and tell whether later purchases came from that agent&rsquo;s link. We do not
+            give the agent your name, email, or other contact details.
           </li>
           <li>
             <strong>Support &amp; Feedback:</strong> Messages you send us by email or through the
@@ -115,8 +124,9 @@ export default function PrivacyPage() {
           and financial estimates; (b) authenticate your identity and safeguard your account; (c)
           generate and deliver Certificates of Feasibility and AI Project Briefs; (d) carry out
           builder and referral connections you direct; (e) process payments, refunds, and chargebacks
-          and prevent fraud; (f) respond to support inquiries; and (g) comply with legal and
-          regulatory obligations.
+          and prevent fraud; (f) respond to support inquiries; (g) measure site usage and which
+          campaigns and agent links bring visitors, as described in Sections 1 and 7; and (h) comply
+          with legal and regulatory obligations.
         </p>
         <p>
           <strong>We do not sell personal information or share it for cross-context behavioral
@@ -184,10 +194,12 @@ export default function PrivacyPage() {
           <li>
             <strong>Artificial Intelligence (OpenAI):</strong> We use <em>OpenAI</em> API to process
             both: (1) optional user-uploaded photos (paired with non-identifying lot and ADU style
-            parameters) to generate architectural style-match imagery, and (2) parcel metrics, zoning
-            constraints, and feasibility parameters to synthesize the narrative AI Project Brief and
-            risk breakdown included with Certificates. Under OpenAI&rsquo;s API terms, inputs are not
-            used to train its models by default.
+            parameters) to generate architectural style-match imagery, and (2) the property&rsquo;s
+            street address, city, state, and ZIP code, with its lot and existing-home size, setbacks,
+            zoning, the ADU you designed, and the cost, rent, and payback estimates, to write the AI
+            Project Brief (property notes) and risk breakdown (see Section 4). Requests to OpenAI do
+            not include your name, email, or account details. Under OpenAI&rsquo;s API terms, inputs
+            are not used to train its models by default.
           </li>
           <li>
             <strong>Address &amp; Zoning Interpretation (TypeSafe):</strong> We use <em>TypeSafe</em>{" "}
@@ -223,10 +235,12 @@ export default function PrivacyPage() {
           stored with that saved scenario until you delete the scenario or your account.
         </p>
         <p>
-          When generating a Certificate of Feasibility, project feasibility parameters (lot size,
-          calculated setbacks, jurisdiction, and target ADU dimensions) are transmitted to OpenAI to
-          generate the Project Brief. Generating AI briefs or photos is never required to browse the
-          studio.
+          When you generate property notes or open a Certificate of Feasibility, we send OpenAI the
+          property&rsquo;s street address, city, state, and ZIP code, its lot and existing-home size,
+          setbacks, and zoning, the ADU you designed, and the cost, rent, and payback estimates, so it
+          can write the AI Project Brief. Signed-in users can see a short preview of the brief before
+          buying a Certificate, so this can happen before any purchase. Generating AI briefs or photos
+          is never required to browse the studio.
         </p>
         <p>
           We do not develop, train, or fine-tune AI models, and we do not use your photos or personal
@@ -278,9 +292,12 @@ export default function PrivacyPage() {
         <p>
           Upon deletion, your active profile, saved scenario studies, emailed 3D lot links associated
           with your verified account email, and contact records are permanently removed from active
-          product databases. We retain transactional, accounting, tax, dispute, and fraud records for
-          up to seven (7) years as required by applicable commercial and financial regulations, in
-          de-identified or pseudonymized format.
+          product databases. We keep purchase records for up to seven (7) years for accounting, tax,
+          dispute, and fraud purposes, as applicable commercial and financial regulations require,
+          but we first remove your email address, the property address, its coordinates, and parcel
+          details from them. Stripe, Google Play, and Apple keep their own records of payments made
+          through them under their own privacy policies. Guest purchases are not tied to an account;
+          email <SupportEmail /> to delete one.
         </p>
         <p>
           <strong>Information already shared at your direction.</strong> Deleting your LotFoundry
@@ -294,8 +311,9 @@ export default function PrivacyPage() {
       <LegalSection title="7. Cookies &amp; Local Storage">
         <p>
           We use strictly necessary session cookies and Firebase Authentication state to maintain your
-          login session, and browser local and session storage for Studio preferences, handoffs, and
-          your cookie choice. We do not use behavioral retargeting. Optional Google Ads conversion
+          login session, and browser local and session storage for Studio preferences, handoffs, your
+          cookie choice, and the campaign or agent link that brought you to the site during your
+          visit. We do not use behavioral retargeting. Optional Google Ads conversion
           measurement uses advertising cookies only after you opt in, as described below.
         </p>
         <p>
@@ -325,7 +343,8 @@ export default function PrivacyPage() {
           The Service is designed and intended for adults aged 18 and older, and it is rated for
           adults in mobile app stores. We do not knowingly collect personal information from anyone
           under 18, we do not sell or share personal information of consumers under 16, and we do not
-          target marketing to minors. We respect age signals provided by app stores and platforms.
+          target marketing to minors. If an app store or platform tells us that a user is under 18, we
+          close that account and delete its personal information.
         </p>
         <p>
           If we learn that we collected personal information from a child under 13, or from anyone
