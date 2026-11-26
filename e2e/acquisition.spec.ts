@@ -98,7 +98,7 @@ for (const guide of [
   },
   {
     path: "/adu/ca/san-diego/cost",
-    opening: /Compare detached ADU sizes below/i,
+    opening: /Use the City of San Diego fee schedule below/i,
     callToAction: "Check what could fit on your San Diego lot",
   },
 ]) {
@@ -114,7 +114,7 @@ for (const guide of [
 test("Carlsbad checklist and search metadata render on a narrow viewport", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/adu/ca/carlsbad");
-  await expect(page).toHaveTitle("Carlsbad ADU Regulations (2026): Rules & Permits");
+  await expect(page).toHaveTitle("Carlsbad ADU Regulations (2026): Setbacks & Permits");
   await expect(page.getByRole("heading", { name: "Carlsbad ADU regulations: three checks for your lot" })).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://lotfoundry.net/adu/ca/carlsbad");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

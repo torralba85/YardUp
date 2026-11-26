@@ -19,8 +19,7 @@ import { formatDecimal, formatNumber } from "@/lib/intl-format";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Field";
 import { stashAddressQuery } from "@/lib/address-handoff";
-import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
-import { formatUsdCents } from "@/lib/credit-packs";
+import { useStorePrice } from "@/lib/commerce/store-price";
 import { trackEvent } from "@/lib/analytics/gtag";
 import { aduCtaEvent } from "@/lib/adu/types";
 import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
@@ -87,6 +86,10 @@ export function AduCostCalculator({
   showAddressCheck?: boolean;
 } = {}) {
   const router = useRouter();
+  // Quote the certificate on the channel that will charge it: inside the
+  // Android app Play sets (and localizes) the amount, so the Stripe figure is
+  // never shown there. No figure is named until an exact price is known.
+  const certPrice = useStorePrice("certificate");
   const urlSearch = useSyncExternalStore(
     subscribeCalculatorUrl,
     getCalculatorUrlSnapshot,
@@ -663,7 +666,7 @@ export function AduCostCalculator({
             </form>
             <dl className="mt-5 border-t border-lot-line pt-4 text-sm">
               <dt className="font-semibold text-lot-ink">
-                Certificate of Feasibility · {formatUsdCents(CERTIFICATE_PRICE_CENTS)} one-time
+                Certificate of Feasibility{certPrice.exact ? ` · ${certPrice.amountCompact} one-time` : ""}
               </dt>
               <dd className="mt-1 leading-relaxed text-lot-stone">
                 Add a shareable report with property-specific build-cost estimates, net income,

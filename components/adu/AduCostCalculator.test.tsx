@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AduCostCalculator } from "./AduCostCalculator";
+import type { StorePriceDisplay } from "@/lib/commerce/store-price";
 
 const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -17,9 +18,23 @@ vi.mock("@/lib/address-handoff", () => ({
   stashAddressQuery: (addr: string) => stashAddressQueryMock(addr),
 }));
 
+/** Forces a store-channel quote; `null` keeps the real web catalog price. */
+const storePrice = vi.hoisted(() => ({ override: null as StorePriceDisplay | null }));
+vi.mock("@/lib/commerce/store-price", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/commerce/store-price")>();
+  return {
+    ...actual,
+    useStorePrice: (...args: Parameters<typeof actual.useStorePrice>) => {
+      const real = actual.useStorePrice(...args);
+      return storePrice.override ?? real;
+    },
+  };
+});
+
 describe("AduCostCalculator", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storePrice.override = null;
     window.history.replaceState(null, "", "/");
   });
 
@@ -134,5 +149,24 @@ describe("AduCostCalculator", () => {
     });
     expect(stashAddressQueryMock).toHaveBeenCalledWith("456 Ocean Blvd, San Diego, CA");
     expect(pushMock).toHaveBeenCalledWith("/studio");
+  });
+
+  it("quotes the Google Play certificate price inside the Android app", () => {
+    storePrice.override = {
+      channel: "google-play", amount: "€47.99", amountCompact: "€47.99", unitAmount: "€47.99",
+      exact: true, loading: false, error: null,
+    };
+    render(<AduCostCalculator />);
+    expect(screen.getByText("Certificate of Feasibility · €47.99 one-time")).toBeInTheDocument();
+  });
+
+  it("names no certificate figure while the store price is unknown", () => {
+    storePrice.override = {
+      channel: "google-play", amount: "…", amountCompact: "…", unitAmount: "…",
+      exact: false, loading: true, error: null,
+    };
+    render(<AduCostCalculator />);
+    expect(screen.getByText("Certificate of Feasibility")).toBeInTheDocument();
+    expect(screen.queryByText(/one-time/)).not.toBeInTheDocument();
   });
 });
