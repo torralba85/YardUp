@@ -14,6 +14,14 @@ updates:
       semver-minor-days: 7
       semver-patch-days: 3
     open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7 (the native compiler) ships no JavaScript compiler API.
+      # scripts/design/audit.mjs, typescript-eslint and the Next.js build all
+      # need that API, so a major bump breaks lint and build. Revisit once
+      # those tools support TypeScript 7.
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     labels:
       - "type: chore"
     commit-message:
