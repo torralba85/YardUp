@@ -100,7 +100,7 @@ export default function ShapeStep({
                 aria-checked={selected}
                 onClick={() => onConfigChange(configForFootprint(option.footprint, config))}
                 className={`flex min-h-24 items-center gap-3 rounded-control border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2 ${
-                  selected ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-line bg-lot-chalk text-lot-ink hover:border-lot-stone"
+                  selected ? "border-lot-ink bg-lot-ink text-lot-chalk" : "border-lot-stone bg-lot-chalk text-lot-ink hover:border-lot-ink"
                 }`}
               >
                 <span className="min-w-0 flex-1">

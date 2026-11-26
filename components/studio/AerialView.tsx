@@ -154,7 +154,7 @@ export default function AerialView({
         >
           {!aerialError && (
             <>
-              <RefreshCw size={20} className="motion-safe:animate-spin text-lot-orange-ink" aria-hidden="true" />
+              <RefreshCw size={20} className="motion-safe:animate-spin text-lot-chalk" aria-hidden="true" />
               <p className="text-xs font-medium text-lot-chalk">Loading satellite context…</p>
             </>
           )}

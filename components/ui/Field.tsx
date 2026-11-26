@@ -186,7 +186,7 @@ export function Segmented<T extends string>({
               "min-h-11 rounded-control border text-xs font-semibold motion-safe:transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2",
               checked
                 ? "border-lot-ink bg-lot-ink text-lot-chalk"
-                : "border-lot-line bg-lot-chalk text-lot-stone hover:border-lot-stone/50 hover:bg-lot-surface",
+                : "border-lot-stone bg-lot-chalk text-lot-stone hover:border-lot-ink hover:bg-lot-surface",
             )}
           >
             {option.label}

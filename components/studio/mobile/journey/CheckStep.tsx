@@ -142,7 +142,7 @@ export default function CheckStep({
                   )}
                   <span>
                     <span className="block font-semibold">{item.label}</span>
-                    <span className="block text-xs opacity-90">{item.detail}</span>
+                    <span className="block text-xs">{item.detail}</span>
                   </span>
                 </span>
               </li>

@@ -205,7 +205,7 @@ export default function AppStudioOnboarding({ user }: { user: User | null }) {
                 <button
                   type="button"
                   onClick={() => chooseDemo(preset.id)}
-                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-control border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-line motion-safe:transition-colors motion-safe:duration-(--duration-hover) ${focusRing}`}
+                  className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-control border-[1.5px] border-lot-ink px-4 py-2 text-left hover:bg-lot-surface motion-safe:transition-colors motion-safe:duration-(--duration-hover) ${focusRing}`}
                 >
                   <span>
                     <span className="block text-sm font-bold">{cityLabel(preset.city)}</span>

@@ -135,7 +135,7 @@
   color: var(--ink) !important;
 }
 .header .headerCta:hover {
-  background: var(--line);
+  background: var(--color-lot-surface);
 }
 .brand {
   display: inline-flex;
@@ -219,7 +219,7 @@
 }
 .memberPanel a:hover,
 .memberPanel button:hover {
-  background: var(--line);
+  background: var(--color-lot-surface);
 }
 .memberPanel :is(a, button):focus-visible {
   outline: 2px solid var(--orange-ink);
@@ -693,7 +693,7 @@
 .intentControls button:hover:not([aria-checked="true"]),
 .reportTabs button:hover:not([aria-checked="true"]),
 .sandboxToggleBar button:hover:not([aria-checked="true"]) {
-  background: var(--line);
+  background: var(--color-lot-surface);
 }
 .artCaption {
   display: flex;
@@ -1195,7 +1195,7 @@
   justify-content: center;
 }
 .backTop:hover {
-  background: var(--line);
+  background: var(--color-lot-surface);
   border-color: var(--ink);
 }
 .footerWordmark {
@@ -1296,7 +1296,7 @@
 .entering svg {
   width: 60px;
   height: 60px;
-  color: var(--orange);
+  color: var(--ink);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2245,7 +2245,7 @@
   box-shadow: 4px 4px 0 var(--color-lot-shadow-soft);
 }
 .hotspotPin:hover {
-  background: var(--line);
+  background: var(--color-lot-surface);
 }
 .hotspotPin[aria-checked="true"] {
   background: var(--orange);
@@ -2347,7 +2347,7 @@
   padding-left: 18px;
 }
 .demoStepActive {
-  border-left-color: var(--orange) !important;
+  border-left-color: var(--orange-edge) !important;
 }
 .metricMeter {
   height: 3px;
@@ -2465,7 +2465,7 @@
   font-size: 15px;
 }
 .hero .inputRow input::placeholder {
-  color: color-mix(in srgb, var(--chalk) 68%, transparent);
+  color: var(--hero-text-muted);
 }
 .hero .inputRow:focus-within {
   box-shadow: 0 0 0 2px var(--chalk);

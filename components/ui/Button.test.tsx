@@ -93,7 +93,7 @@ describe("Button", () => {
     render(<Button variant="ghost">Ghost</Button>);
     expect(screen.getByRole("button", { name: "Ghost" })).toHaveClass(
       "text-lot-ink",
-      "hover:bg-lot-line/30",
+      "hover:bg-lot-surface",
       "focus-visible:ring-lot-orange-ink",
     );
   });

@@ -356,7 +356,7 @@ export function LotAnswerCard({
         />
         <Button
           type="submit"
-          variant="primary"
+          variant={answer ? "secondary" : "primary"}
           size="md"
           loading={loading}
           disabled={loading}

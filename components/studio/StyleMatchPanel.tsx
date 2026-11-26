@@ -377,8 +377,8 @@ export default function StyleMatchPanel({
                   textColor = "text-lot-ink font-semibold";
                 } else {
                   icon = (
-                    <div className="h-4 w-4 rounded-full border border-lot-line flex items-center justify-center shrink-0" aria-hidden="true">
-                      <div className="h-1.5 w-1.5 rounded-full bg-lot-stone" />
+                    <div className="h-4 w-4 rounded-full border border-lot-stone bg-lot-surface flex items-center justify-center shrink-0" aria-hidden="true">
+                      <div className="h-1.5 w-1.5 rounded-full bg-lot-ink" />
                     </div>
                   );
                   textColor = "text-lot-stone";
@@ -424,7 +424,7 @@ export default function StyleMatchPanel({
                   <button
                     type="button"
                     onClick={triggerTimeout}
-                    className="inline-flex min-h-11 items-center rounded-control border border-status-review/40 bg-status-review-soft px-3 py-1 font-sans text-xs font-semibold text-status-review motion-safe:transition hover:bg-status-review-soft/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
+                    className="inline-flex min-h-11 items-center rounded-control border border-status-review bg-status-review-soft px-3 py-1 font-sans text-xs font-semibold text-status-review motion-safe:transition hover:bg-lot-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink focus-visible:ring-offset-2"
                   >
                     [Timeout]
                   </button>

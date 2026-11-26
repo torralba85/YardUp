@@ -29,7 +29,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
     "border border-lot-ink bg-lot-ink text-lot-chalk ring-1 ring-lot-ink/20 hover:bg-lot-ink-hover",
   secondary:
     "border border-lot-stone bg-lot-chalk text-lot-ink hover:border-lot-ink hover:bg-lot-surface",
-  ghost: "text-lot-ink hover:bg-lot-line/30",
+  ghost: "text-lot-ink hover:bg-lot-surface",
   destructive:
     "bg-status-blocked text-lot-chalk hover:bg-status-blocked-hover focus-visible:ring-status-blocked",
 };

@@ -206,7 +206,7 @@ export default function ReportPreview({
           {onConnectBuilders && (
             <Button
               type="button"
-              variant="primary"
+              variant="commit"
               size="sm"
               onClick={onConnectBuilders}
               leftIcon={<Hammer size={14} />}
@@ -227,7 +227,7 @@ export default function ReportPreview({
             <div className="mx-auto mt-2 h-px w-10 bg-lot-line" />
             <div className="lf-caption mt-2 truncate text-lot-stone">{parcelName}</div>
             {/* Decorative facsimile thumbnail only — not primary body copy. */}
-            <div className="mt-2 inline-block -rotate-3 border border-status-blocked px-1.5 py-0.5 lf-kicker text-status-blocked">
+            <div className="mt-2 inline-block -rotate-3 border border-lot-ink px-1.5 py-0.5 lf-kicker text-lot-ink">
               Concept
             </div>
           </div>
@@ -685,7 +685,7 @@ function CertificateBriefSection({
                   type="button"
                   onClick={onRetry}
                   disabled={loading}
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-status-blocked/50 bg-transparent px-3 py-2 text-xs font-medium text-status-blocked hover:bg-status-blocked/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-blocked motion-safe:transition-colors disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-status-blocked bg-transparent px-3 py-2 text-xs font-medium text-status-blocked hover:bg-lot-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-blocked motion-safe:transition-colors disabled:opacity-50"
                 >
                   <RotateCcw size={12} className={loading ? "motion-safe:animate-spin" : ""} aria-hidden="true" />
                   <span>Try again</span>
