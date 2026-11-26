@@ -25,7 +25,7 @@ import { SITE_NAME } from "@/lib/site-identity";
 // Kept to 60 characters or fewer so Google shows the whole title.
 const TITLE = "California ADU Cost Calculator (2026) | LotFoundry";
 const DESCRIPTION =
-  "Free California ADU cost calculator: compare build cost, rent, simple payback, and loan cash flow across LA, San Diego, and Santa Clara counties.";
+  "Compare ADU sizes, finishes, rent assumptions and loan payments in a free California calculator for Los Angeles, San Diego and Santa Clara counties.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -77,9 +77,6 @@ const softPercentLabel = formatPercent(defaultFinancialAssumptions.softCostMulti
 
 // The 600 sq ft build cost is the same in every county (national cost base).
 const sample600 = aggregates[0] ? row600(aggregates[0].aggregate) : undefined;
-const paybacks600 = aggregates
-  .map(({ aggregate }) => row600(aggregate)?.paybackYears)
-  .filter((value): value is number => value !== undefined);
 
 const breadcrumbJsonLd = {
   "@context": "https://schema.org",
@@ -132,17 +129,11 @@ export default function AduCostCalculatorPage() {
       />
 
       <div className="lf-body space-y-3 text-lg leading-relaxed">
-        {sample600 ? (
-          <p>
-            A 600 sq ft detached ADU models at{" "}
-            {formatDollars(sample600.costLow)}–{formatDollars(sample600.costHigh)}{" "}
-            with design and permit soft costs, with an estimated simple payback of{" "}
-            {formatNumber(Math.round(Math.min(...paybacks600)))}–
-            {formatNumber(Math.round(Math.max(...paybacks600)))}{" "}
-            years using HUD county rent. Adjust county, size, finish, rent, or add
-            a loan below—free, no account required.
-          </p>
-        ) : null}
+        <p>
+          Compare two ADU scenarios by changing the county, size, exterior finish or rent
+          assumption. See how each choice affects estimated build cost, monthly rent and simple
+          payback. Add a loan to see how the payment changes monthly cash flow.
+        </p>
       </div>
 
       <AduCostCalculator />

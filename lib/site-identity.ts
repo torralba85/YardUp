@@ -1,5 +1,6 @@
 import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { GOOGLE_PLAY_URL } from "@/lib/app-store-links";
+import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
 import { DIRECTORY_URLS, SOCIAL_URLS } from "@/lib/social-links";
 
 /** The name search results and link previews should show for the site. */
@@ -9,7 +10,7 @@ const siteUrl = `${CANONICAL_ORIGIN.replace(/\/+$/, "")}/`;
 
 /**
  * The company behind the site. The `@id` makes every mention one entity: the
- * layout's SoftwareApplication `publisher` and the homepage's WebSite node
+ * SoftwareApplication `publisher` and the homepage's WebSite node
  * point at this node rather than describing a second Organization.
  */
 export const ORGANIZATION_JSON_LD = {
@@ -37,6 +38,35 @@ export const ORGANIZATION_JSON_LD = {
   },
 };
 
+/** App details for the homepage and Studio. Editorial routes have their own markup. */
+export const SOFTWARE_APPLICATION_JSON_LD = {
+  "@type": "SoftwareApplication",
+  "@id": `${siteUrl}#app`,
+  name: SITE_NAME,
+  description: "Explore an ADU on your lot in 3D and compare planning estimates for rent, build cost and payback.",
+  url: siteUrl,
+  applicationCategory: "HomeApplication",
+  operatingSystem: ["Web", "Android"],
+  installUrl: GOOGLE_PLAY_URL,
+  offers: [
+    {
+      "@type": "Offer",
+      name: "Feasibility check",
+      description: "Address lookup, parcel boundary, buildable area, and a placed ADU in 3D.",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    {
+      "@type": "Offer",
+      name: "Certificate of Feasibility",
+      description: "Downloadable feasibility certificate for one parcel.",
+      price: (CERTIFICATE_PRICE_CENTS / 100).toFixed(2),
+      priceCurrency: "USD",
+    },
+  ],
+  publisher: ORGANIZATION_JSON_LD,
+};
+
 /**
  * Homepage JSON-LD. Google takes the site name in results from a WebSite node
  * and the logo from a top-level Organization, and reads both from the
@@ -54,5 +84,6 @@ export const HOME_JSON_LD = {
       publisher: { "@id": ORGANIZATION_JSON_LD["@id"] },
     },
     ORGANIZATION_JSON_LD,
+    SOFTWARE_APPLICATION_JSON_LD,
   ],
 };

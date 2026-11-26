@@ -807,6 +807,15 @@ Show:
 - certificate checkout started → Stripe redirect → purchase, with Stripe cancellations reported separately
 - matched-lead unlock rate from first-party records; preview impressions reported separately
 
+For the SEO funnel, use [GA4 Landing page](https://support.google.com/analytics/answer/12931766) and
+filter the session default channel group to Organic Search. Use the session landing page
+throughout the funnel, since checkout and purchase events fire from Studio. Count sessions
+with a usable address check via `lot_answer_viewed` on guide pages or
+`parcel_lookup_completed` with a usable result in Studio. Count each qualifying session once
+if both events occur. Follow with `certificate_checkout_started` and verified `purchase`
+events filtered to the certificate purchase type. Check for Stripe referrals on return and
+record any attribution gaps before using the report to compare landing pages.
+
 ### View 4 — Marketplace liquidity
 
 Show:

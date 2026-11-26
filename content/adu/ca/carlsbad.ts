@@ -21,9 +21,9 @@ export const carlsbad: JurisdictionContent = {
   county: "San Diego County",
   asOf: "2026-10-25",
   published: "2026-09-18",
-  metaTitle: "Carlsbad ADU Regulations (2026): Rules & Permits",
+  metaTitle: "Carlsbad ADU Regulations (2026): Setbacks & Permits",
   metaDescription:
-    "Carlsbad ADU regulations for 2026: size, setbacks, Coastal Zone permits and transit exceptions. Check the rules, then explore a concept for your lot.",
+    "Check Carlsbad ADU setbacks, height limits, transit exceptions and Coastal Zone permits. Find the City’s permit steps and ADU information bulletin.",
   introAnswer: [
     "Yes — Carlsbad allows one ADU plus one junior ADU on a single-family lot, and a detached unit can reach 1,200 square feet where lot coverage allows. The city approves ADUs administratively, with no public hearing: it confirms an application is complete within 15 business days and decides within 60 days of a complete application.",
     "Carlsbad ties its height relief to two named Coaster stops. Within a half-mile walk of Carlsbad Village or Poinsettia Station, a detached ADU can be 18 feet tall instead of 16, plus up to 2 more feet to match the main house's roof pitch. The parking waiver reaches further: it applies near any public transit stop, bus stops included.",

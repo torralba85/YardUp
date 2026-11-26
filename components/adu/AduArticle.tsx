@@ -107,27 +107,18 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         ))}
       </div>
 
-      <div className="mt-6">
-        <AduStudioCta
-          city={content.city}
-          slug={content.slug}
-          placement="top"
-          compactHeading={content.slug === "san-diego-county" ? "Check whether an ADU could fit on your lot" : undefined}
-        />
-      </div>
-
       {content.slug === "san-diego-county" ? (
         <aside aria-label="Jurisdiction check" className="mt-6 border border-lot-line bg-lot-surface px-5 py-4">
           <p className="lf-kicker-dense text-lot-orange-ink">Jurisdiction scope · County PDS</p>
           <p className="lf-body mt-2 text-lot-ink">
-            These rules apply only to <strong>unincorporated San Diego County</strong> parcels reviewed by County Planning &amp; Development Services (PDS). Inside City limits? Read the{" "}
+            These rules apply only to <strong>unincorporated San Diego County</strong> parcels reviewed by County Planning &amp; Development Services (PDS). For a lot in the City of San Diego, read the{" "}
             <Link
-              href="/adu/ca/san-diego"
+              href="/adu/ca/san-diego#official-adu-resources"
               className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
             >
-              City of San Diego ADU guide (SDMC § 141.0302)
+              City of San Diego ADU handbook and ordinance
             </Link>
-            {" "}or{" "}
+            . For a lot in Carlsbad, see{" "}
             <Link
               href="/adu/ca/carlsbad"
               className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
@@ -144,23 +135,54 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           <aside aria-label="Jurisdiction check" className="border border-lot-line bg-lot-surface px-5 py-4">
             <p className="lf-kicker-dense text-lot-orange-ink">Jurisdiction scope · City of San Diego DSD</p>
             <p className="lf-body mt-2 text-lot-ink">
-              This guide covers parcels inside <strong>City of San Diego</strong> municipal limits under SDMC § 141.0302, not unincorporated county areas. For a lot outside city limits (such as Fallbrook, Ramona, Alpine, Lakeside, or Spring Valley), read the{" "}
+              This guide covers parcels inside <strong>City of San Diego</strong> municipal limits under SDMC § 141.0302. If County Planning &amp; Development Services permits your lot, read the{" "}
               <Link
                 href="/adu/ca/san-diego-county"
                 className="font-semibold text-lot-orange-ink underline underline-offset-2 hover:text-lot-ink"
               >
-                Unincorporated San Diego County ADU guide
+                Unincorporated San Diego County ADU setbacks and rules
               </Link>
               . Confirm your jurisdiction and overlays with the permitting authority before using these rules for a specific lot.
             </p>
           </aside>
-          <nav aria-label="On this San Diego guide" className="flex flex-wrap gap-x-5 gap-y-2">
-            {[["adu-glance", "Rules at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"], ["adu-sources", "Official sources"]].map(([id, label]) => (
-              <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
-            ))}
-          </nav>
         </div>
       ) : null}
+
+      {content.quickSources ? (
+        <section aria-labelledby="official-adu-resources" className="mt-6">
+          <h2 id="official-adu-resources" className="lf-card-heading scroll-mt-20 text-lot-ink">
+            {content.quickSources.heading}
+          </h2>
+          <ul className="mt-2 flex flex-wrap gap-x-5">
+            {content.quickSources.links.map((source) => (
+              <li key={source.url}>
+                <a href={source.url} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
+                  {source.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <nav aria-label="On this ADU guide" className="flex flex-wrap gap-x-5">
+            {[["adu-glance", "Requirements at a glance"], ["adu-fees", "Permit fees"], ["adu-process", "Permit steps"]].map(([id, label]) => (
+              <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">{label}</a>
+            ))}
+            {content.slug === "san-diego" ? (
+              <Link href="/adu/ca/san-diego/permits" className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-ink underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
+                San Diego ADU permits by neighborhood
+              </Link>
+            ) : null}
+          </nav>
+        </section>
+      ) : null}
+
+      <div className="mt-6">
+        <AduStudioCta
+          city={content.city}
+          slug={content.slug}
+          placement="top"
+          compactHeading={content.slug === "san-diego-county" ? "Check whether an ADU could fit on your lot" : undefined}
+        />
+      </div>
 
       <section aria-labelledby="adu-glance" className="mt-12">
         <h2 id="adu-glance" className="lf-card-heading scroll-mt-20 text-lot-ink">
@@ -391,7 +413,9 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
                 href={`/adu/${neighbor.state}/${neighbor.slug}`}
                 className="inline-flex min-h-11 items-center rounded-control border border-lot-line px-4 text-sm font-semibold text-lot-ink motion-safe:transition hover:border-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
               >
-                ADU rules in {neighbor.city}
+              {neighbor.slug === "san-diego"
+                ? "City of San Diego ADU rules"
+                : `ADU rules in ${neighbor.city}`}
               </Link>
             </li>
           ))}

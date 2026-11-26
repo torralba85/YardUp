@@ -7,9 +7,9 @@ import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { stateCostUrl } from "@/lib/adu/content";
 import { SITE_NAME } from "@/lib/site-identity";
 
-const TITLE = "ADU Cost in California (2026): $231K–$289K for 600 Sq Ft";
+const TITLE = "California ADU Costs (2026): Budget Ranges & Fees";
 const DESCRIPTION =
-  "California ADU build cost runs $231K–$289K for 600 sq ft ($157K–$566K for 400–1,200 sq ft), with permit-fee rules, cost breakdown, and scope checklist.";
+  "Plan a California ADU budget with modeled costs by size, design and permit allowances, site-work exclusions and a checklist for comparing builder quotes.";
 
 export const metadata: Metadata = {
   title: TITLE,

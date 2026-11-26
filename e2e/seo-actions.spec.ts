@@ -28,6 +28,43 @@ test("public loan comparison handles zero interest and invalid input at narrow w
   await expect(page.getByRole("heading", { name: "Free address check" })).toBeAttached();
 });
 
+test("public guides distinguish jurisdictions and link to official permit resources", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("navigation", { name: "Footer" });
+  await expect(footer.getByRole("link", { name: "City of San Diego ADU rules" })).toHaveAttribute("href", "/adu/ca/san-diego");
+  await expect(footer.getByRole("link", { name: "San Diego ADU permits by neighborhood" })).toHaveAttribute("href", "/adu/ca/san-diego/permits");
+  const structuredData = page.locator('script[type="application/ld+json"]');
+  expect((await structuredData.allTextContents()).join("\n")).toContain('"@type":"SoftwareApplication"');
+  await page.goto("/adu/ca/san-diego-county");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Unincorporated San Diego County ADU Setbacks/);
+  await page.getByRole("link", { name: "City of San Diego ADU handbook and ordinance" }).click();
+  await expect(page.getByRole("heading", { name: "City of San Diego ADU handbook and ordinance" })).toBeVisible();
+  const cityResources = page.getByRole("region", { name: "City of San Diego ADU handbook and ordinance" });
+  await expect(cityResources.getByRole("link", { name: /Information Bulletin 400/ })).toHaveAttribute("href", /information-bulletins\/400$/);
+  await expect(cityResources.getByRole("link", { name: "San Diego ADU permits by neighborhood" })).toHaveAttribute("href", "/adu/ca/san-diego/permits");
+  await expect(page.getByRole("link", { name: "Unincorporated San Diego County ADU setbacks and rules" })).toHaveAttribute("href", "/adu/ca/san-diego-county");
+  const cityStructuredData = (await structuredData.allTextContents()).join("\n");
+  expect(cityStructuredData).not.toContain('"@type":"SoftwareApplication"');
+  expect(cityStructuredData).toContain('"@type":"Article"');
+  await page.goto("/adu/ca/la-mesa");
+  const laMesaResources = page.getByRole("region", { name: "Official La Mesa ADU requirements" });
+  await expect(laMesaResources.getByRole("link", { name: /Development Matrix/ })).toHaveAttribute("href", /DocumentCenter\/View\/26946$/);
+  await expect(laMesaResources.getByRole("link", { name: "Permit steps" })).toHaveAttribute("href", "#adu-process");
+});
+
+test("cost pages show the sample certificate next to the free check", async ({ page }, testInfo) => {
+  for (const [name, path] of [["calculator", "/adu-cost-calculator"], ["san-diego-cost", "/adu/ca/san-diego/cost"]]) {
+    await page.goto(path);
+    const offer = page.getByRole("region", { name: "Free address check" });
+    await expect(offer.getByRole("button", { name: "Check my lot" })).toBeEnabled();
+    await expect(offer.getByText(/Certificate of Feasibility · \$[\d.]+ one-time/)).toBeVisible();
+    await expect(offer.getByRole("link", { name: "View a sample certificate" })).toHaveAttribute("href", "/sample-certificate/san-diego");
+    const screenshot = testInfo.outputPath(`${name}-certificate-offer.png`);
+    await offer.screenshot({ path: screenshot });
+    await testInfo.attach(`${name}-certificate-offer`, { path: screenshot, contentType: "image/png" });
+  }
+});
+
 test("Studio planning guide explains limits and links to sample and methodology", async ({ page }, testInfo) => {
   await page.goto("/studio?parcel=coyote-brush");
   const overview = page.getByTestId("studio-overview");
