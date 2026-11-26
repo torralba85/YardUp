@@ -154,6 +154,15 @@ vi.mock("firebase-admin/firestore", () => ({
   },
 }));
 
+const { pseudonymizeMock } = vi.hoisted(() => ({
+  pseudonymizeMock: vi.fn<(db: unknown, uid: string) => Promise<void>>(async () => undefined),
+}));
+const pseudonymizeSawBuilder: boolean[] = [];
+
+vi.mock("@/lib/server/deleted-account-purchases", () => ({
+  pseudonymizePurchaseRecords: pseudonymizeMock,
+}));
+
 import { POST } from "./route";
 
 function postRequest() {
@@ -175,6 +184,10 @@ describe("POST /api/account/delete", () => {
     ops.failCommit = false;
     throwOnDb = false;
     deleteUser.mockClear();
+    pseudonymizeSawBuilder.length = 0;
+    pseudonymizeMock.mockReset().mockImplementation(async () => {
+      pseudonymizeSawBuilder.push(ops.builderDeleted);
+    });
     requireApiAuthMock.mockReset().mockResolvedValue({
       uid: "local-dev",
       email: "owner@example.com",
@@ -242,6 +255,24 @@ describe("POST /api/account/delete", () => {
         data: expect.objectContaining({ status: "withdrawn", ownerUid: "DELETE_FIELD" }),
       }),
     ]);
+  });
+
+  it("strips contact and property detail from purchase records before the account goes", async () => {
+    const res = await POST(postRequest());
+    expect(res.status).toBe(200);
+    expect(pseudonymizeMock).toHaveBeenCalledWith(expect.anything(), "local-dev");
+    // It runs while the builder profile and user profile still exist, so a failure is retryable.
+    expect(pseudonymizeSawBuilder).toEqual([false]);
+  });
+
+  it("keeps the account retryable when purchase records cannot be scrubbed", async () => {
+    pseudonymizeMock.mockRejectedValueOnce(new Error("batch failed"));
+
+    const res = await POST(postRequest());
+    expect(res.status).toBe(500);
+    expect(ops.builderDeleted).toBe(false);
+    expect(ops.userSet).toBeNull();
+    expect(deleteUser).not.toHaveBeenCalled();
   });
 
   it("keeps the account retryable when Firestore cleanup fails", async () => {
