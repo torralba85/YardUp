@@ -150,7 +150,7 @@ Anonymous visitors get three real address lookups before the account ask (`lib/g
 - Stripe: the webhook (`app/api/stripe/webhook/route.ts`) must verify signatures with `STRIPE_WEBHOOK_SECRET` and read the raw request body; lead unlocks are granted through `lib/server/lead-unlocks.ts`, gated by Firestore rules.
 - Firestore: data access is constrained by `firestore.rules`; update and `npm run deploy:rules` (or include in deploy) when adding collections. Server reads/writes go through `lib/server/firebase-admin.ts`.
 - Analytics: load GA4 only when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set. Queue denied storage defaults before loading the tag. Allow cookieless page views before opt-in. Analytics and Ads cookies, custom product events, and the Google Ads destination require opt-in.
-- Worktree location: commit from the repo worktree, not the outer `C:\Users\torra\Downloads\Repos\AR ADU` container.
+- Worktree location: commit from the repo (`C:\Users\Andrew\LotFoundry\YardUp`) or one of its worktrees, not the outer `C:\Users\Andrew\LotFoundry` workspace, which is not a git repo.
 
 ## Testing Guidance
 
