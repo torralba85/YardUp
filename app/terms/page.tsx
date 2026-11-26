@@ -34,7 +34,7 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="Terms & Conditions"
-      kicker="Effective November 19, 2026 · Version 2026-11-19"
+      kicker="Effective November 25, 2026 · Version 2026-11-25"
     >
       <LegalSection title="1. Who We Are &amp; Acceptance">
         <p>
@@ -147,9 +147,12 @@ export default function TermsPage() {
 
       <LegalSection title="4. User Accounts &amp; Security">
         <p>
-          Some features, including saving scenarios, further address lookups, purchases, builder
-          accounts, and connection requests, require an account. You must provide true, accurate,
-          and complete information and keep it current. You are responsible for keeping your
+          Some features, including saving scenarios, further address lookups, builder accounts, and
+          connection requests, require an account. You can buy a Certificate on the web without one;
+          we then create a temporary guest session in your browser. To keep access on another device
+          or after clearing your browser data, save the Certificate to an account, or later sign in
+          with the verified email address you gave at checkout to recover it. You must provide true,
+          accurate, and complete information and keep it current. You are responsible for keeping your
           credentials confidential and for all activity under your account. Notify <SupportEmail />{" "}
           immediately of any unauthorized access. You may export your data or delete your account at
           any time in Settings or on our public{" "}
@@ -182,6 +185,14 @@ export default function TermsPage() {
           If you experience a delivery defect or billing issue, contact <SupportEmail />. Demo
           environments may grant unlocks without payment; those carry no monetary value or ongoing
           entitlement.
+        </p>
+        <p>
+          <strong>Agent passes.</strong> A real estate agent may give you a code or link for a
+          complimentary Certificate for one listing. A pass works only for the property it names,
+          needs a free account to redeem, and may expire or run out after a set number of
+          redemptions. A complimentary Certificate is covered by these Terms like a paid one, has no
+          cash value, and cannot be exchanged or transferred. The agent is not our agent or partner,
+          and nothing the agent says changes these Terms.
         </p>
         <p>
           <strong>Chargebacks and reversed payments.</strong> If a payment is refunded, reversed, or
