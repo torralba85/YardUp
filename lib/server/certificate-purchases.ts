@@ -131,14 +131,33 @@ export async function grantCertificate(
 
   const db = getAdminDb();
   const transferRef = db.collection(CERTIFICATE_TRANSFERS).doc(encodeURIComponent(input.stripeSessionId));
+  const sameSession = db
+    .collection(CERTIFICATE_PURCHASES)
+    .where("stripeSessionId", "==", input.stripeSessionId);
   return db.runTransaction(async (tx) => {
-    const [grant, transfer] = await Promise.all([tx.get(ref), tx.get(transferRef)]);
+    const [grant, transfer, sessionGrants] = await Promise.all([
+      tx.get(ref),
+      tx.get(transferRef),
+      tx.get(sameSession),
+    ]);
     // Keep the original payment consumed after recovery. A delayed webhook or
     // Checkout reconciliation must never recreate the former owner's grant.
     if (grant.exists || transfer.exists) return false;
+    // Account deletion moves the grant to a random id without the email or
+    // address. A retried webhook for that payment must not rebuild them.
+    if (sessionGrants.docs.some((doc) => isDeletedAccountGrant(doc.data()))) return false;
     tx.create(ref, certificateGrantData(input));
     return true;
   });
+}
+
+/**
+ * A grant kept for a deleted account (see `pseudonymizePurchaseRecords`).
+ * Demo grants share a session id per lot across accounts, so they never
+ * consume a payment.
+ */
+function isDeletedAccountGrant(data: Record<string, unknown> | undefined): boolean {
+  return data?.accountDeleted === true && data.demo !== true;
 }
 
 function metadataNumber(raw: string | undefined): number | undefined {
