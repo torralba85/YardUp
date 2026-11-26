@@ -20,6 +20,8 @@ vi.mock("./firebase-admin", async () => {
 });
 
 import { claimCertificatesByVerifiedEmail, grantCertificate, hasCertificate } from "./certificate-purchases";
+import { getAdminDb } from "./firebase-admin";
+import { pseudonymizePurchaseRecords } from "./deleted-account-purchases";
 
 afterAll(async () => {
   const app = getApps().find((app) => app.name === "certificate-transfer-test");
@@ -48,5 +50,20 @@ describe.skipIf(!process.env.FIRESTORE_EMULATOR_HOST)("certificate recovery tran
     expect(await grantCertificate(grant)).toBe(false);
     expect(await hasCertificate(sourceUid, "lot-1")).toBe(false);
     expect(await grantCertificate({ ...grant, stripeSessionId: `cs_new_${id}` })).toBe(true);
+  }, 30_000);
+
+  it("never restores a deleted account's email or address on payment replay", async () => {
+    const id = randomUUID();
+    const uid = `deleting-${id}`;
+    const grant = { uid, certKey: "lot-1", stripeSessionId: `cs_${id}`, amount: 2900, address: "1 Elm St", buyerEmail: "buyer@example.test" };
+    expect(await grantCertificate(grant)).toBe(true);
+    await pseudonymizePurchaseRecords(getAdminDb(), uid);
+
+    expect(await grantCertificate(grant)).toBe(false);
+    expect(await hasCertificate(uid, "lot-1")).toBe(false);
+    const records = await getAdminDb().collection("certificatePurchases").where("uid", "==", uid).get();
+    expect(records.docs).toHaveLength(1);
+    expect(records.docs[0].data()).not.toHaveProperty("address");
+    expect(records.docs[0].data()).not.toHaveProperty("buyerEmail");
   }, 30_000);
 });

@@ -41,7 +41,9 @@ export function retainedGrantFields(data: Record<string, unknown>): Record<strin
  * A certificate grant's document id is `{uid}_{certKey}`, and the certKey is a
  * slug of the street address, so the kept fields move to a new random-id
  * document and the original is deleted in the same batch. A retry skips grants
- * already moved. Store grants (`purchaseGrants`) are keyed by transaction, so
+ * already moved. The moved grant keeps its `stripeSessionId`, which
+ * `grantCertificate` checks so a retried payment webhook cannot recreate the
+ * original grant with the buyer's email and address. Store grants (`purchaseGrants`) are keyed by transaction, so
  * only their certKey field is removed.
  */
 export async function pseudonymizePurchaseRecords(db: Firestore, uid: string): Promise<void> {
