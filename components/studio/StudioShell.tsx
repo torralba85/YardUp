@@ -153,7 +153,7 @@ export default function StudioShell({
                   className="flex w-full min-h-11 items-center justify-between px-3 py-2 motion-safe:transition-colors hover:bg-lot-surface-dark-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk focus-visible:ring-inset"
                 >
                   <span className="lf-kicker text-lot-stone-on-dark">
-                    Saved Concepts
+                    Saved concepts
                     <span className="ml-1.5 rounded-none bg-lot-ink px-1.5 py-0.5 text-[11px] font-bold text-lot-chalk">
                       {savedScenarios.length}
                     </span>

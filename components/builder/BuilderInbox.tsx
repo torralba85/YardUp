@@ -432,10 +432,17 @@ export default function BuilderInbox({
               </nav>
             )}
             {filtered.length === 0 ? (
-              <div className="mt-4 border border-lot-line bg-lot-chalk p-6 text-sm text-lot-stone">
-                {tab === "archived"
-                  ? "Nothing archived yet."
-                  : `No ${tab} leads right now.`}
+              <div className="mt-4 flex flex-col items-start gap-3 border border-lot-line bg-lot-chalk p-6 text-sm text-lot-stone sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                  {tab === "archived"
+                    ? "Nothing archived yet."
+                    : `No ${tab} leads right now.`}
+                </p>
+                {tab !== "all" ? (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setTab("all")}>
+                    View all leads
+                  </Button>
+                ) : null}
               </div>
             ) : viewMode === "cards" ? (
               <div className="mt-4 grid gap-4">

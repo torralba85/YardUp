@@ -143,7 +143,7 @@ describe("FindStep", () => {
     expect(onReveal).toHaveBeenCalledTimes(1);
   });
 
-  it("changes CTA to 'Check my address' when text is typed and submits the typed query", async () => {
+  it("changes CTA to 'Check my lot' when text is typed and submits the typed query", async () => {
     const user = userEvent.setup();
     const onReveal = vi.fn();
     const onSubmitText = vi.fn();
@@ -152,7 +152,7 @@ describe("FindStep", () => {
     const input = screen.getByRole("searchbox", { name: /search property address/i });
     await user.type(input, "5124 35th St, San Diego, CA");
 
-    const cta = screen.getByRole("button", { name: "Check my address" });
+    const cta = screen.getByRole("button", { name: "Check my lot" });
     await user.click(cta);
     expect(onSubmitText).toHaveBeenCalledWith("5124 35th St, San Diego, CA");
     expect(onReveal).not.toHaveBeenCalled();
@@ -169,6 +169,6 @@ describe("FindStep", () => {
       screen.getByRole("searchbox", { name: /search property address/i }),
       "5124 35th St, San Diego, CA",
     );
-    expect(screen.getByRole("button", { name: "Check my address" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Check my lot" })).toBeDisabled();
   });
 });

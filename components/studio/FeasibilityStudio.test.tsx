@@ -341,7 +341,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
     window.history.replaceState(null, "", "/studio");
     render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     expect(await screen.findByRole("region", { name: "Save your layout link" })).toBeInTheDocument();
   });
@@ -491,8 +491,8 @@ describe("FeasibilityStudio (guided spine)", () => {
       { ...base, id: "legacy", name: "Legacy study" },
     ]);
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
-    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    await screen.findByText("Saved concepts", {}, { timeout: 10000 });
+    fireEvent.click(screen.getByRole("button", { name: /Saved concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Plan study" }));
     fireEvent.click(stepButton(/Design/));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
@@ -537,7 +537,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
     const initial = { id: "shared", name: "Shared study", createdAt: "2026-11-06T00:00:00Z", parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } };
     render(<FeasibilityStudio demoChosen initialScenario={initial} />, { wrapper: TestWrapper });
-    fireEvent.click(await screen.findByRole("button", { name: "Shape your ADU" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Shape your backyard home" }));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
   });
 
@@ -551,8 +551,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
     // Wait for the async auth/scenario state before scanning the large Studio DOM by role.
     await waitFor(() => expect(savedMocks.fetch).toHaveBeenCalledWith("owner-1"), { timeout: 10000 });
-    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
-    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    await screen.findByText("Saved concepts", {}, { timeout: 10000 });
+    fireEvent.click(screen.getByRole("button", { name: /Saved concepts/ }));
     const remove = screen.getByRole("button", { name: "Delete saved concept Garden home" });
     fireEvent.click(remove);
     expect(savedMocks.remove).not.toHaveBeenCalled();
@@ -576,8 +576,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     }]);
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
-    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    await screen.findByText("Saved concepts", {}, { timeout: 10000 });
+    fireEvent.click(screen.getByRole("button", { name: /Saved concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Saved study" }));
     fireEvent.click(stepButton(/Certificate/));
 
@@ -595,8 +595,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     ]);
     savedMocks.save.mockImplementation(async (_uid, entry) => ({ ...entry, id: "new", createdAt: base.createdAt }));
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
-    await screen.findByText("Saved Concepts", {}, { timeout: 10000 });
-    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    await screen.findByText("Saved concepts", {}, { timeout: 10000 });
+    fireEvent.click(screen.getByRole("button", { name: /Saved concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Matched study" }));
     fireEvent.click(screen.getByRole("button", { name: "Plain study" }));
     fireEvent.click(stepButton(/Design/));
@@ -642,7 +642,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(stepButton(/Certificate/));
     fireEvent.click(await screen.findByRole("button", { name: "View complete certificate" }, { timeout: 10000 }));
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole("button", { name: /Saved Concepts/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Saved concepts/ }));
     fireEvent.click(screen.getByRole("button", { name: "Saved study" }));
     await act(async () => {
       finish(new Response(JSON.stringify({ tier: "full", brief: { ...briefFixture, headline: "Late outdated generation" } }), { status: 200 }));
@@ -1114,7 +1114,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("earn-confidence")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Shape your backyard home/i }));
 
     // Reveal 3 · Shape — broad size/style choices only, one primary CTA.
     const sizeGroup = await screen.findByRole("radiogroup", { name: "ADU size" });
@@ -1150,7 +1150,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
     fireEvent.click(
       await screen.findByRole("button", { name: /Fine-tune dimensions & assumptions/i }),
     );
@@ -1486,7 +1486,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
     fireEvent.click(
@@ -1524,7 +1524,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     // Walk the full journey to Act, pushing a real history entry per reveal.
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
     expect(
@@ -1559,7 +1559,7 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     // Walk forward to Check, pushing find -> earn -> shape -> check.
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your ADU/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
     expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
 

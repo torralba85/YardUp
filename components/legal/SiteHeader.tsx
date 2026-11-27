@@ -48,13 +48,13 @@ export function SiteHeader({
 
   const linkClass = (current: boolean) =>
     cn(
-      "inline-flex min-h-11 items-center rounded-control px-2 text-sm font-semibold motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink",
-      current ? "text-lot-ink underline decoration-lot-orange underline-offset-4" : "text-lot-stone",
+      "inline-flex min-h-11 items-center rounded-control px-2 text-sm motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink",
+      current ? "font-semibold text-lot-ink underline decoration-lot-orange-ink underline-offset-4" : "font-medium text-lot-ink",
     );
 
   return (
     <header
-      className="border-b border-lot-line/50 bg-lot-chalk"
+      className="border-b border-lot-line bg-lot-chalk"
       onKeyDown={(event) => {
         if (event.key === "Escape" && open) {
           setOpen(false);
@@ -62,7 +62,7 @@ export function SiteHeader({
         }
       }}
     >
-      <div className={cn("mx-auto flex items-center justify-between gap-3 px-4 py-2 sm:px-6", width)}>
+      <div className={cn("mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-6", width)}>
         <Link
           href="/"
           aria-label="LotFoundry home"
@@ -112,9 +112,9 @@ export function SiteHeader({
         <nav
           id={menuId}
           aria-label="Mobile navigation"
-          className="border-t border-lot-line/50 min-[800px]:hidden"
+          className="border-t border-lot-line bg-lot-chalk min-[800px]:hidden"
         >
-          <ul className={cn("mx-auto flex flex-col px-4 py-2 sm:px-6", width)}>
+          <ul className={cn("mx-auto flex flex-col divide-y divide-lot-line px-4 py-2 sm:px-6", width)}>
             {SITE_NAV_LINKS.map((link) => {
               const current = isCurrent(pathname, link.href);
               return (

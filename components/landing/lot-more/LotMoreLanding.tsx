@@ -309,11 +309,8 @@ export function LotMoreLanding({
     hasMemberSessionHint,
     () => false,
   );
-  const pageRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
-  const storyRef = useRef<HTMLElement>(null);
   const closingRef = useRef<HTMLElement>(null);
-  const manualSceneAtRef = useRef(0);
   const pendingAddress = useRef("");
   const submitButton = useRef<HTMLButtonElement | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -323,15 +320,15 @@ export function LotMoreLanding({
 
   const hotspots = [
     {
-      id: "01",
-      title: "Proposed 600 sq ft ADU",
+      id: "A",
+      title: "Proposed 600 sq ft backyard home",
       metric: "24′ × 25′ footprint · 1 bed",
       detail: "Positioned in the rear yard envelope with full-height southern glazing and private deck access.",
       x: "66%",
       y: "54%",
     },
     {
-      id: "02",
+      id: "B",
       title: "Modeled Setback Buffer",
       metric: "5′ rear · 5′ side clearance",
       detail: "Automated boundary offset checks rear, side, and house-to-ADU separation rules in real time.",
@@ -339,7 +336,7 @@ export function LotMoreLanding({
       y: "42%",
     },
     {
-      id: "03",
+      id: "C",
       title: "Primary Residence Context",
       metric: "1,420 sq ft existing · 32% lot coverage",
       detail: "Preserves existing yard sightlines and calculates remaining allowable impervious coverage.",
@@ -355,7 +352,7 @@ export function LotMoreLanding({
     values: hotspots.map((_, index) => index),
   });
 
-  // One chapter per parcel scene; scroll (or the scene picker) advances them.
+  // One chapter per parcel scene, driven directly by the scene picker.
   const storyChapters = [
     {
       title: "Start with what’s there.",
@@ -444,98 +441,6 @@ export function LotMoreLanding({
     return () => observer.disconnect();
   }, []);
 
-  // The model section pins its stage and lets scroll walk the parcel from
-  // today to the possibility. Only with motion allowed and room for the
-  // stage: otherwise the section stays in normal flow and the scene picker
-  // alone drives it. Crossing a third of the travel changes the scene, so a
-  // scene picked by hand holds until the visitor scrolls into another band.
-  useEffect(() => {
-    const section = storyRef.current;
-    if (!section || typeof window.matchMedia !== "function") return;
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: no-preference) and (min-width: 801px) and (min-height: 700px)");
-    let frame = 0;
-    let band = -1;
-    let isPinned = false;
-    const update = () => {
-      frame = 0;
-      if (!motionQuery.matches) {
-        if (isPinned) {
-          delete section.dataset.pinned;
-          section.style.removeProperty("--story-progress");
-          isPinned = false;
-        }
-        band = -1;
-        return;
-      }
-      if (!isPinned) {
-        section.dataset.pinned = "true";
-        isPinned = true;
-      }
-      // Read geometry cleanly without mutating DOM attributes on every scroll frame.
-      const rect = section.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      const progress = travel > 0 ? Math.min(1, Math.max(0, -rect.top / travel)) : 0;
-      section.style.setProperty("--story-progress", progress.toFixed(4));
-      const next = progress < 0.34 ? 0 : progress < 0.67 ? 1 : 2;
-      if (next !== band) {
-        band = next;
-        // Guard against a focus-triggered scroll rAF overwriting an immediate keyboard/pointer pick.
-        if (performance.now() - manualSceneAtRef.current > 300) {
-          setScene(next);
-        }
-      }
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
-    schedule();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    motionQuery.addEventListener("change", schedule);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      motionQuery.removeEventListener("change", schedule);
-      delete section.dataset.pinned;
-      section.style.removeProperty("--story-progress");
-    };
-  }, []);
-
-  // Sections below the model rise into place once, as they enter the view.
-  // The hidden state is only applied after this runs, so a page without
-  // JavaScript, or with reduced motion, shows everything at rest.
-  useEffect(() => {
-    const page = pageRef.current;
-    if (!page || typeof window.matchMedia !== "function" || typeof IntersectionObserver !== "function") return;
-    if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) return;
-    const targets = Array.from(
-      page.querySelectorAll<HTMLElement>(
-        [styles.howSection, styles.numbersSection, styles.reportSection, styles.faqSection, styles.closing]
-          .map((name) => `.${name} > *`)
-          .join(", "),
-      ),
-    );
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.classList.add(styles.revealIn);
-          observer.unobserve(entry.target);
-        }
-      },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
-    );
-    for (const target of targets) {
-      target.classList.add(styles.reveal);
-      observer.observe(target);
-    }
-    return () => {
-      observer.disconnect();
-      for (const target of targets) target.classList.remove(styles.reveal, styles.revealIn);
-    };
-  }, []);
-
   const handleClosingSubmit = useCallback(
     (trimmed: string, submitBtn: HTMLButtonElement | null) => {
       submitButton.current = submitBtn;
@@ -588,7 +493,7 @@ export function LotMoreLanding({
 
   return (
     <>
-      <div ref={pageRef} className={styles.page} data-theme="a-lot-more">
+      <div className={styles.page} data-theme="a-lot-more">
         <header
           className={styles.header}
           onKeyDown={(event) => {
@@ -652,7 +557,6 @@ export function LotMoreLanding({
               {SITE_NAV_LINKS.map((link) => (
                 <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
                   {link.label}
-                  <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               ))}
               <WebBuilderOnly>
@@ -772,7 +676,6 @@ export function LotMoreLanding({
           </section>
 
           <section
-            ref={storyRef}
             className={styles.story}
             id="the-model"
             aria-labelledby="story-title"
@@ -801,9 +704,6 @@ export function LotMoreLanding({
                     </li>
                   ))}
                 </ol>
-                <div className={styles.storyRail} aria-hidden="true">
-                  <span />
-                </div>
               </div>
               <figure className={styles.heroVisual} data-ui>
                 <div className={styles.artHeader}>
@@ -946,13 +846,13 @@ export function LotMoreLanding({
                   </div>
                 </div>
                 {/* The slot keeps its height while the readout comes and goes,
-                    so the pinned stage does not jump between scenes. */}
+                    so the model frame does not jump between scenes. */}
                 <div className={styles.readoutSlot}>
                   {scene === 2 && (
                     <div className={styles.maquetteReadout} aria-live="polite">
                       <div className={styles.maquetteReadoutTop}>
                         <span className={styles.maquetteReadoutIndex}>
-                          POINT {hotspots[activeHotspot].id} / 03
+                          DETAIL {hotspots[activeHotspot].id}
                         </span>
                         <span className={styles.maquetteReadoutMetric}>
                           {hotspots[activeHotspot].metric}
@@ -970,7 +870,6 @@ export function LotMoreLanding({
                   aria-label="Property illustration view"
                   value={String(scene)}
                   onChange={(value) => {
-                    manualSceneAtRef.current = performance.now();
                     setScene(Number(value));
                   }}
                   options={["Today", "The footprint", "The possibility"].map(
@@ -1116,7 +1015,7 @@ export function LotMoreLanding({
                           size="xs"
                           aria-pressed={activeStep === 0}
                           onClick={() => setActiveStep(0)}
-                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                          className={styles.demoStepButton}
                         >
                           Place a backyard home.
                         </Button>
@@ -1140,7 +1039,7 @@ export function LotMoreLanding({
                           size="xs"
                           aria-pressed={activeStep === 1}
                           onClick={() => setActiveStep(1)}
-                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                          className={styles.demoStepButton}
                         >
                           Compare the estimates.
                         </Button>
@@ -1168,7 +1067,7 @@ export function LotMoreLanding({
                           size="xs"
                           aria-pressed={activeStep === 2}
                           onClick={() => setActiveStep(2)}
-                          className="!min-h-11 !justify-start !px-0 !font-display !text-[inherit] !font-medium hover:!bg-transparent hover:underline"
+                          className={styles.demoStepButton}
                         >
                           Plan your next questions.
                         </Button>
@@ -1215,7 +1114,7 @@ export function LotMoreLanding({
                 <h2 id="numbers-title">
                   Price the
                   <br />
-                  <span>possibility.</span>
+                  possibility.
                 </h2>
               </div>
               <p>
@@ -1553,15 +1452,13 @@ export function LotMoreLanding({
             aria-labelledby="faq-title"
           >
             <div>
-              <Eyebrow>BEFORE YOU START</Eyebrow>
               <h2 id="faq-title">
                 Good questions.
                 <br />
                 Straight answers.
               </h2>
               <Link className={styles.textLink} href="/help">
-                A little more help
-                <ArrowRight size={18} aria-hidden="true" />
+                Visit Help &amp; FAQ
               </Link>
             </div>
             <div className={styles.faqList}>
@@ -1605,9 +1502,6 @@ export function LotMoreLanding({
           >
             <ParcelMark className={styles.closingMark} />
             <div>
-              <p className={styles.closingKicker}>
-                A LITTLE LAND. A LOT OF POSSIBILITY.
-              </p>
               <h2 id="closing-title">
                 It starts with
                 <br />
@@ -1636,9 +1530,6 @@ export function LotMoreLanding({
                 </a>
               </div>
             </div>
-            <span className={styles.closingSerial}>
-              YOUR NEXT CHAPTER / LOTFOUNDRY
-            </span>
           </section>
         </main>
 

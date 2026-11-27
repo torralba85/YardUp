@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function openShape(page: Page) {
   await page.goto("/studio");
   await page.getByRole("button", { name: "See a San Diego example" }).click();
-  await page.getByRole("button", { name: /shape your adu/i }).click();
+  await page.getByRole("button", { name: /shape your backyard home/i }).click();
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();
 }
 

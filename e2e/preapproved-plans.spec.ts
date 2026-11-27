@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function openDesign(page: Page, isMobile: boolean) {
   if (isMobile) {
     const demo = page.getByRole("button", { name: /See (?:a|the) San Diego example/i });
-    const design = page.getByRole("button", { name: "Shape your ADU" });
+    const design = page.getByRole("button", { name: "Shape your backyard home" });
     await expect(demo.or(design)).toBeVisible({ timeout: 20_000 });
     if (await demo.isVisible()) await demo.click();
     await design.click();

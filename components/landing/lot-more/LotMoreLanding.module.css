@@ -43,29 +43,23 @@
 .page * {
   box-sizing: border-box;
 }
-.page h1,
-.page h2,
-.page h3,
-.page p,
-.page figure {
+:where(.page) :where(h1, h2, h3, p, figure) {
   margin: 0;
 }
-.page h1,
-.page h2,
-.page h3 {
+:where(.page) :where(h1, h2, h3) {
   font-family: var(--font-lot-display), Arial, sans-serif;
   font-weight: 500;
 }
-.page h2 {
+:where(.page) h2 {
   font-size: clamp(38px, 4.4vw, 64px);
   line-height: 1.06;
   letter-spacing: -0.055em;
 }
-.page h3 {
+:where(.page) h3 {
   line-height: 1.2;
   letter-spacing: -0.035em;
 }
-.page a {
+:where(.page) a {
   color: inherit;
   text-decoration: none;
 }
@@ -132,7 +126,7 @@
 }
 .header .headerCta {
   background: var(--chalk);
-  color: var(--ink) !important;
+  color: var(--ink);
 }
 .header .headerCta:hover {
   background: var(--color-lot-surface);
@@ -249,7 +243,7 @@
 .headerCta,
 .darkButton {
   background: var(--ink);
-  color: var(--chalk) !important;
+  color: var(--chalk);
 }
 .primaryButton {
   background: var(--orange);
@@ -395,7 +389,7 @@
   max-width: 440px;
   font-size: 17px;
   color: var(--hero-text-muted);
-  margin-top: 12px !important;
+  margin-top: 12px;
   line-height: 1.55;
 }
 .addressForm {
@@ -453,12 +447,12 @@
   color: var(--stone);
   font-size: 13px;
   line-height: 1.5;
-  margin-top: 6px !important;
+  margin-top: 6px;
 }
 .formError {
   font-size: 13px;
   font-weight: 600;
-  margin-top: 6px !important;
+  margin-top: 6px;
 }
 .textLink {
   display: inline-flex;
@@ -675,19 +669,12 @@
   border-radius: 3px;
   font-size: 14px;
 }
-.sceneControls button span {
-  color: var(--stone);
-  font-size: 11px;
-}
 .sceneControls button[aria-checked="true"],
 .intentControls button[aria-checked="true"],
 .reportTabs button[aria-checked="true"],
 .sandboxToggleBar button[aria-checked="true"] {
   background: var(--ink);
   color: var(--chalk);
-}
-.sceneControls button[aria-checked="true"] span {
-  color: var(--color-lot-stone-on-dark);
 }
 .sceneControls button:hover:not([aria-checked="true"]),
 .intentControls button:hover:not([aria-checked="true"]),
@@ -712,19 +699,7 @@
   font-size: 13px;
   letter-spacing: 0.08em;
   font-weight: 600;
-  margin-bottom: 30px !important;
-}
-.eyebrow > span {
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  letter-spacing: 0;
-  flex-shrink: 0;
+  margin-bottom: 30px;
 }
 .howSection {
   padding: 112px 6% 106px;
@@ -744,9 +719,6 @@
   align-items: end;
   justify-content: space-between;
   gap: 32px;
-}
-.numbersHeading h2 span {
-  color: var(--orange);
 }
 .numbersHeading > p {
   color: var(--color-lot-stone-on-dark);
@@ -851,7 +823,7 @@
 .numberNotes details p {
   color: var(--color-lot-stone-on-dark);
   font-size: 13px;
-  margin-top: 15px !important;
+  margin-top: 15px;
 }
 .numberNotes .textLink {
   flex-shrink: 0;
@@ -869,7 +841,7 @@
 .estimateNote {
   color: var(--color-lot-stone-on-dark);
   font-size: 13px;
-  margin-top: 32px !important;
+  margin-top: 32px;
 }
 .reportSection {
   padding: 112px 6%;
@@ -911,7 +883,7 @@
 .reportPrice {
   font-size: 13px;
   color: var(--stone);
-  margin-top: 12px !important;
+  margin-top: 12px;
 }
 .reportPreview {
   grid-area: preview;
@@ -1022,7 +994,7 @@
 }
 .paperDetail {
   font-size: 13px;
-  margin-top: 17px !important;
+  margin-top: 17px;
   color: var(--stone);
 }
 .reportQuestions {
@@ -1037,7 +1009,7 @@
   font-size: 13px;
   color: var(--stone);
   text-align: center;
-  margin-top: 28px !important;
+  margin-top: 28px;
 }
 .faqSection {
   display: grid;
@@ -1084,14 +1056,9 @@
   font-size: clamp(62px, 8.5vw, 126px);
   line-height: 0.97;
   letter-spacing: -0.065em;
-  margin: 30px 0 23px;
+  margin: 0 0 23px;
 }
-.closingKicker {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-.closing > div > p:not(.closingKicker) {
+.closing > div > p {
   font-size: 16px;
 }
 .closing .addressForm {
@@ -1127,13 +1094,6 @@
   fill: var(--chalk);
   stroke: var(--ink);
   stroke-width: 0.75;
-}
-.closingSerial {
-  position: absolute;
-  bottom: 40px;
-  right: 6%;
-  font-size: 13px;
-  letter-spacing: 0.08em;
 }
 .footer {
   padding: 50px 6% 96px;
@@ -1207,13 +1167,6 @@
   white-space: nowrap;
   margin: 50px 0 30px;
 }
-.footerWordmark > span {
-  display: inline-block;
-  vertical-align: top;
-  font-size: 22px;
-  margin: 1.5vw 0 0 1.5vw;
-  letter-spacing: 0;
-}
 .footerBottom {
   display: flex;
   justify-content: space-between;
@@ -1270,7 +1223,7 @@
 .offerActions .textLink { font-size: 14px; font-weight: 700; }
 .offerActions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .footerDisclaimer {
-  max-width: 100ch;
+  max-width: 65ch;
   font-size: 13px;
   line-height: 1.7;
   color: var(--stone);
@@ -1348,12 +1301,6 @@
   }
   .heroAside {
     animation: settle-in 1000ms 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .reveal {
-    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .reveal:not(.revealIn):not(:focus-within) {
-    transform: translateY(18px);
   }
   @keyframes camera-settle {
     from {
@@ -1477,9 +1424,6 @@
   .sceneControls button {
     padding: 8px 10px;
   }
-  .sceneControls button span {
-    display: none;
-  }
   .artCaption {
     flex-direction: column;
     gap: 4px;
@@ -1591,7 +1535,7 @@
     max-width: 430px;
   }
   .heroVisual {
-    margin: 28px 0 0 !important;
+    margin: 28px 0 0;
   }
   .parcelCanvas {
     width: 100%;
@@ -1606,9 +1550,6 @@
   }
   .sceneControls button {
     padding: 8px 15px;
-  }
-  .sceneControls button span {
-    display: inline;
   }
   .artCaption {
     flex-direction: row;
@@ -1706,11 +1647,6 @@
     height: 105px;
     top: 65px;
   }
-  .closingSerial {
-    bottom: 24px;
-    left: 6%;
-    right: auto;
-  }
   .footer {
     padding: 38px 6% 140px;
   }
@@ -1727,9 +1663,6 @@
   .footerWordmark {
     font-size: 16.4vw;
     margin: 30px 0 20px;
-  }
-  .footerWordmark > span {
-    font-size: 13px;
   }
   .footerBottom {
     gap: 12px;
@@ -1749,7 +1682,7 @@
     align-items: center;
     justify-content: space-between;
     background: var(--ink);
-    color: var(--chalk) !important;
+    color: var(--chalk);
     padding: 14px 20px;
     border: 1px solid var(--chalk);
     border-radius: var(--radius-control, 3px);
@@ -1825,7 +1758,7 @@
     font-size: 13px;
   }
   .heroVisual {
-    margin-top: 18px !important;
+    margin-top: 18px;
   }
   .sceneTag {
     top: 8%;
@@ -1844,9 +1777,6 @@
     flex: 1;
     justify-content: center;
   }
-  .sceneControls button span {
-    display: none;
-  }
   .artCaption {
     flex-direction: column;
     font-size: 13px;
@@ -1857,7 +1787,7 @@
   .eyebrow {
     font-size: 11px;
     gap: 10px;
-    margin-bottom: 24px !important;
+    margin-bottom: 24px;
   }
   .metrics {
     grid-template-columns: 1fr;
@@ -1919,7 +1849,7 @@
   }
   .closing h2 {
     font-size: 13vw;
-    margin-top: 55px;
+    margin-top: 48px;
   }
   .closingMark {
     width: 54px;
@@ -1927,17 +1857,13 @@
     top: 29px;
     right: 6%;
   }
-  .closingKicker {
-    font-size: 11px;
-    max-width: 190px;
-  }
   .closing .inputRow {
     flex-wrap: wrap;
   }
   .closing .inputRow .primaryButton {
     width: 100%;
   }
-  .closing > div > p:not(.closingKicker) {
+  .closing > div > p {
     font-size: 16px;
   }
 }
@@ -2024,12 +1950,23 @@
   display: block;
   padding: 0 0 24px;
 }
-.demoSteps li > span {
-  color: var(--orange-ink);
-  font-size: 13px;
-}
 .demoSteps h3 {
   font-size: 22px;
+}
+.demoSteps .demoStepButton {
+  min-height: 44px;
+  justify-content: flex-start;
+  padding: 0;
+  font-family: var(--font-lot-display), Arial, sans-serif;
+  font-size: inherit;
+  font-weight: 500;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+.demoSteps .demoStepButton:hover {
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .demoSteps p {
   margin-top: 9px;
@@ -2277,7 +2214,7 @@
   color: var(--ink);
 }
 .maquetteReadoutBody {
-  margin-top: 4px !important;
+  margin-top: 4px;
   font-size: 13px;
   line-height: 1.45;
   color: var(--stone);
@@ -2313,12 +2250,22 @@
   background: var(--chalk);
 }
 .sandboxReadoutGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
+}
+.sandboxReadoutGrid > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  width: 100%;
 }
 .sandboxReadoutGrid span {
   display: block;
@@ -2329,7 +2276,7 @@
 }
 .sandboxReadoutGrid strong {
   display: block;
-  margin-top: 3px;
+  margin-top: 0;
   font-family: var(--font-lot-display), sans-serif;
   font-size: 22px;
   font-weight: 500;
@@ -2346,20 +2293,8 @@
   border-left: 2px solid var(--line);
   padding-left: 18px;
 }
-.demoStepActive {
-  border-left-color: var(--orange-edge) !important;
-}
-.metricMeter {
-  height: 3px;
-  width: 100%;
-  background: var(--line-dark);
-  margin-top: 14px;
-  overflow: hidden;
-}
-.metricMeter > span {
-  display: block;
-  height: 100%;
-  background: var(--orange);
+.demoSteps li.demoStepActive {
+  border-left-color: var(--orange-edge);
 }
 .telemetryStrip {
   display: grid;
@@ -2394,10 +2329,6 @@
   .footprintPolygon {
     animation: cad-dash 4s linear 1;
   }
-  .metricMeter > span {
-    transform-origin: left;
-    transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  }
   .hotspotPin {
     transition:
       transform 200ms cubic-bezier(0.32, 0.72, 0, 1),
@@ -2431,10 +2362,6 @@
 }
 
 @media (max-width: 480px) {
-  .sandboxReadoutGrid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
   .hotspotPin {
     min-width: 44px;
     min-height: 44px;
@@ -2522,9 +2449,8 @@
   text-wrap: balance;
 }
 
-/* The model: a pinned stage where scroll walks the parcel from today to the
-   possibility. Without the pin (reduced motion, short screens, no script)
-   it is an ordinary section driven by the scene picker. */
+/* The model: driven directly by the scene picker so scroll-pinning belongs
+   exclusively to the 3D Cost Stack below. */
 .story {
   position: relative;
   background: var(--chalk);
@@ -2539,15 +2465,6 @@
   max-width: 1480px;
   margin: 0 auto;
   padding: 112px 0 96px;
-}
-.story[data-pinned="true"] {
-  height: 190svh;
-}
-.story[data-pinned="true"] .storyStage {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  padding: 64px 0 28px;
 }
 .storyCopy h2 {
   margin: 22px 0 34px;
@@ -2564,14 +2481,6 @@
   padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
-.storyChapters li > span {
-  padding-top: 5px;
-  color: var(--stone);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-}
 .storyChapters h3 {
   color: var(--stone);
   font-size: 22px;
@@ -2585,9 +2494,6 @@
   font-size: 15px;
   line-height: 1.5;
 }
-.storyChapters li[aria-current="step"] > span {
-  color: var(--orange-ink);
-}
 .storyChapters li[aria-current="step"] h3 {
   color: var(--ink);
 }
@@ -2596,22 +2502,6 @@
   margin-top: 6px;
   opacity: 1;
   visibility: visible;
-}
-.storyRail {
-  position: relative;
-  height: 2px;
-  margin-top: 28px;
-  background: var(--line);
-}
-.storyRail > span {
-  position: absolute;
-  inset: 0;
-  background: var(--orange);
-  transform: scaleX(var(--story-progress, 0));
-  transform-origin: left;
-}
-.story:not([data-pinned="true"]) .storyRail {
-  display: none;
 }
 .story .heroVisual {
   grid-area: auto;
@@ -2634,12 +2524,6 @@
     linear-gradient(180deg, transparent 0%, var(--ink) 3%, var(--ink) 97%, transparent 100%);
   mask-composite: intersect;
 }
-.story[data-pinned="true"] .parcelCanvas {
-  width: min(100%, calc((100svh - 330px) * 1.6));
-  margin-inline: auto;
-  transform: scale(calc(0.94 + var(--story-progress, 1) * 0.08));
-  transform-origin: 50% 62%;
-}
 .readoutSlot {
   min-height: 84px;
 }
@@ -2661,8 +2545,7 @@
       opacity 300ms ease,
       transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
   }
-  .storyChapters h3,
-  .storyChapters li > span {
+  .storyChapters h3 {
     transition: color 450ms ease;
   }
 }
@@ -2680,36 +2563,14 @@
     gap: 24px;
     padding: 68px 0 56px;
   }
-  /* The pinned phone stage must clear the sticky address bar (~84px). */
-  .story[data-pinned="true"] .storyStage {
-    align-content: start;
-    gap: 14px;
-    padding: 28px 0 96px;
-  }
-  .story[data-pinned="true"] .artHeader {
-    display: none;
-  }
-  .story[data-pinned="true"] .maquetteReadoutBody {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
   .storyCopy h2 {
     margin: 12px 0 14px;
-  }
-  /* A pinned phone shows one chapter at a time to keep the stage on screen. */
-  .story[data-pinned="true"] .storyChapters li:not([aria-current="step"]) {
-    display: none;
   }
   .storyChapters li {
     padding: 14px 0;
   }
   .storyChapters h3 {
     font-size: 20px;
-  }
-  .storyRail {
-    margin-top: 14px;
   }
   .readoutSlot {
     min-height: 92px;
@@ -2733,7 +2594,7 @@
     margin: 10px 0 12px;
   }
   .hero .heroDescription {
-    margin-top: 8px !important;
+    margin-top: 8px;
   }
   .hero .addressForm {
     margin-top: 14px;

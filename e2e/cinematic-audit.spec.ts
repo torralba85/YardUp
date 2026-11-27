@@ -1,17 +1,19 @@
 import { expect, test } from "@playwright/test";
 
-test("cinematic model responds to motion and viewport changes", async ({ page }) => {
+test("cost stack pins for motion-allowed desktop and unpins for reduced motion or short screens", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
-  const story = page.locator("#the-model");
-  await expect(story).toHaveAttribute("data-pinned", "true");
+  // The maquette section stays unpinned so the 3D cost stack owns the pinned choreography.
+  await expect(page.locator("#the-model")).not.toHaveAttribute("data-pinned");
+  const stack = page.locator("#numbers [data-layer]");
+  await expect(stack).toHaveAttribute("data-pinned", "true");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(story).not.toHaveAttribute("data-pinned");
+  await expect(stack).not.toHaveAttribute("data-pinned");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(story).toHaveAttribute("data-pinned", "true");
+  await expect(stack).toHaveAttribute("data-pinned", "true");
   await page.setViewportSize({ width: 390, height: 664 });
-  await expect(story).not.toHaveAttribute("data-pinned");
+  await expect(stack).not.toHaveAttribute("data-pinned");
 });
 
 test("decorative motion stops within five seconds", async ({ page }) => {

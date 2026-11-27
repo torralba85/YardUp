@@ -49,6 +49,7 @@ export default function BuildersPanel({
   const { user } = useAuth();
   const [builders, setBuilders] = useState<BuilderDirectoryProfile[] | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [authOpen, setAuthOpen] = useState(false);
   const hasTrackedParcelRef = useRef<string | null>(null);
 
@@ -73,6 +74,7 @@ export default function BuildersPanel({
     // branch renders or a re-fetch begins (mirrors the URL-hydration pattern).
     /* eslint-disable-next-line react-hooks/set-state-in-effect */
     setBuilders(null);
+    setLoadError(false);
     if (!user) return;
     fetchActiveBuilders()
       .then((all) => {
@@ -87,7 +89,7 @@ export default function BuildersPanel({
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, reloadNonce]);
 
   const loading = Boolean(user) && builders === null;
   const matched = builders ? getMatchedBuilders(builders, { city: parcelCity, state: parcelState, county: parcelCounty }) : [];
@@ -128,13 +130,27 @@ export default function BuildersPanel({
           className="rounded-none border border-lot-line bg-lot-surface p-6 text-center"
         >
           <p className="text-sm font-semibold text-lot-ink">
-            No builders are registered for {parcelCity} yet.
+            {loadError
+              ? "Couldn't load registered builders."
+              : `No builders are registered for ${parcelCity} yet.`}
           </p>
           <p className="lf-body-sm mt-1 text-lot-stone">
             {loadError
-              ? "We couldn't load the builder network — check your connection and try again."
-              : "The network is growing. Save your concept and check back; we'll match you as builders join."}
+              ? "Check your connection and try loading the directory again."
+              : "Use your Certificate brief and 12-item scope checklist to compare quotes from any local contractor, or save this concept and check back as builders join."}
           </p>
+          {loadError ? (
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setReloadNonce((n) => n + 1)}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <>

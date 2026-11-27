@@ -83,7 +83,7 @@ export default function StudioLayout({
             </span>
           </summary>
           <div className="overscroll-contain border-t border-lot-line px-[4.5%] py-8 lg:absolute lg:inset-x-0 lg:bottom-full lg:max-h-[min(70dvh,560px)] lg:overflow-y-auto lg:bg-lot-chalk">
-            <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-stone xl:grid-cols-2">
+            <div className="grid max-w-[1200px] gap-6 text-pretty text-sm leading-6 text-lot-ink xl:grid-cols-2">
               <div>
                 <h2 className="font-display text-lg font-medium text-lot-ink">What the address check covers</h2>
                 <p className="mt-2">

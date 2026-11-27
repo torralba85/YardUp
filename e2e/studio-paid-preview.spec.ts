@@ -9,7 +9,7 @@ test("free Studio shows the rent range while cost, income and payback stay paid"
   if (mobile) {
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await expect(page.getByText("$2,335–$2,919")).toBeVisible();
-    await page.getByRole("button", { name: /Shape your ADU/ }).click();
+    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
     await expect(page.getByRole("radiogroup", { name: "ADU size", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Check feasibility" }).click();
   }

@@ -21,7 +21,7 @@ test.describe("mobile studio journey", () => {
       page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
     await expect(page.getByTestId("earn-confidence")).toBeVisible();
-    await page.getByRole("button", { name: /shape your adu/i }).click();
+    await page.getByRole("button", { name: /shape your backyard home/i }).click();
 
     // Reveal 3 · Shape — broad size/style directions only by default.
     await page.getByRole("radio", { name: /2 bedroom/i }).click();
@@ -68,7 +68,7 @@ test.describe("mobile studio journey", () => {
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
-    await page.getByRole("button", { name: /shape your adu/i }).click();
+    await page.getByRole("button", { name: /shape your backyard home/i }).click();
 
     await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
     const drawer = page.getByTestId("fine-tune-drawer");
@@ -94,7 +94,7 @@ test.describe("mobile studio journey", () => {
   test("closing fine-tune restores focus when exit animation events are lost", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
-    await page.getByRole("button", { name: /shape your adu/i }).click();
+    await page.getByRole("button", { name: /shape your backyard home/i }).click();
     const trigger = page.getByRole("button", { name: /fine-tune dimensions/i });
     await trigger.click();
     const drawer = page.getByTestId("fine-tune-drawer");

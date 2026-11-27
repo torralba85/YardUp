@@ -276,7 +276,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             <h2 className="lf-card-heading text-lot-ink">
               {section.heading}
             </h2>
-            <div className="lf-body mt-3 space-y-3 text-lot-stone">
+            <div className="lf-body mt-3 space-y-3 text-lot-ink">
               {section.paragraphs.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>
               ))}
@@ -289,13 +289,13 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <h2 id="adu-fees" className="lf-card-heading text-lot-ink">
           {content.fees.heading}
         </h2>
-        <div className="lf-body mt-3 space-y-3 text-lot-stone">
+        <div className="lf-body mt-3 space-y-3 text-lot-ink">
           {content.fees.paragraphs.map((paragraph, index) => (
             <p key={index}>{paragraph}</p>
           ))}
         </div>
         {content.fees.bullets ? (
-          <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
+          <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-ink">
             {content.fees.bullets.map((bullet) => (
               <li key={bullet}>{bullet}</li>
             ))}
@@ -307,7 +307,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           </div>
         ) : null}
         {costPage ? (
-          <p className="lf-body mt-6 text-lot-stone">
+          <p className="lf-body mt-6 text-lot-ink">
             {ownCostPage
               ? "Build cost, rent and payback estimates by unit size: "
               : "Countywide build cost, rent and payback estimates, which apply here too: "}
@@ -320,7 +320,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             .
           </p>
         ) : null}
-        <p className="lf-body mt-4 text-lot-stone">
+        <p className="lf-body mt-4 text-lot-ink">
           For a statewide budget framework, permit-fee context, and a quote
           checklist, see{" "}
           <Link
@@ -337,10 +337,10 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <h2 id="adu-process" className="lf-card-heading text-lot-ink">
           What is the {content.city} ADU permit process?
         </h2>
-        <p className="lf-body mt-3 text-lot-stone">{content.processIntro}</p>
+        <p className="lf-body mt-3 text-lot-ink">{content.processIntro}</p>
         <ol className="mt-4 list-decimal space-y-4 pl-6">
           {content.processSteps.map((step) => (
-            <li key={step.title} className="lf-body text-lot-stone">
+            <li key={step.title} className="lf-body text-lot-ink">
               <span className="font-semibold text-lot-ink">
                 {step.title}.
               </span>{" "}
@@ -348,12 +348,12 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             </li>
           ))}
         </ol>
-        <p className="lf-body mt-4 text-lot-stone">
+        <p className="lf-body mt-4 text-lot-ink">
           Start at the official front door:{" "}
           <a
             href={content.permitPortal.url}
             rel="noopener"
-            className="underline underline-offset-2 hover:text-lot-ink"
+            className="underline underline-offset-2 hover:text-lot-orange-ink"
           >
             {content.permitPortal.label}
           </a>
@@ -388,7 +388,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
               <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-lot-ink marker:text-lot-orange-ink">
                 {faq.question}
               </summary>
-              <p className="lf-body mt-2 text-lot-stone">{faq.answer}</p>
+              <p className="lf-body mt-2 text-lot-ink">{faq.answer}</p>
             </details>
           ))}
         </div>
@@ -430,7 +430,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         <h2 id="adu-sources" className="lf-card-heading text-lot-ink">
           Sources and as-of date
         </h2>
-        <p className="lf-body mt-3 text-lot-stone">
+        <p className="lf-body mt-3 text-lot-ink">
           Every number on this page was checked against the sources below on{" "}
           {content.asOf}. Ordinances change once or twice a year — confirm
           against the live code before spending money on plans. Cost, rent and
@@ -443,13 +443,13 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
           </Link>
           .
         </p>
-        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-stone">
+        <ul className="lf-body mt-4 list-disc space-y-2 pl-6 text-lot-ink">
           {content.sources.map((source) => (
             <li key={source.url}>
               <a
                 href={source.url}
                 rel="noopener"
-                className="underline underline-offset-2 hover:text-lot-ink"
+                className="underline underline-offset-2 hover:text-lot-orange-ink"
               >
                 {source.label}
               </a>

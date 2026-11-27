@@ -16,6 +16,7 @@ import { formatCompactCurrency, formatCurrency } from "@/lib/feasibility";
 import { formatDecimal, formatNumber } from "@/lib/intl-format";
 import { landingDemos, landingScenarios } from "@/lib/landing-demo";
 import { marketProvenanceLine } from "@/lib/market/market-basis";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -25,19 +26,16 @@ const CURRENCY = new Intl.NumberFormat("en-US", {
 
 const ADU_PATH_TYPES = [
   {
-    number: "01",
     title: "Detached backyard home",
     tag: "400 – 1,200 sq ft",
     body: "A standalone structure in your rear or side yard with its own kitchen, bath, and entrance. Keeps the highest privacy and long-term rent value.",
   },
   {
-    number: "02",
     title: "Garage conversion",
     tag: "Lower site prep",
     body: "Reuses an existing detached or attached garage slab and framing. Often bypasses extra yard clearance checks when setbacks are tight.",
   },
   {
-    number: "03",
     title: "Attached or junior ADU",
     tag: "Under 500 sq ft option",
     body: "Shares a wall with the main house or repurposes an existing bedroom wing (JADU) when open backyard depth is limited.",
@@ -46,17 +44,14 @@ const ADU_PATH_TYPES = [
 
 const PROPERTY_BLOCKERS = [
   {
-    number: "01",
     title: "HOA covenants cannot ban your ADU",
     body: "California Civil Code §4751 voids HOA rules that prohibit or unreasonably restrict an ADU or JADU on a single-family lot. Objective architectural standards can still apply, so submit plans rather than assuming a blanket no.",
   },
   {
-    number: "02",
     title: "Minimum lot size cannot block an 800 sq ft unit",
     body: "Under Government Code §66323, cities must allow at least one detached ADU up to 800 sq ft with 4-foot side and rear setbacks regardless of local lot-coverage or floor-area ratio caps.",
   },
   {
-    number: "03",
     title: "Easements, septic, and coastal overlays matter most",
     body: "Recorded utility easements remain off-limits even when side setbacks shrink to 0–4 ft. Properties on septic need County Environmental Health verification, and Coastal Zone lots require a coastal permit or exemption.",
   },
@@ -385,7 +380,7 @@ export function BackyardHomeLanding() {
                   prefetch={false}
                   className="inline-flex min-h-11 items-center gap-2 rounded-control bg-lot-orange px-5 py-3 lf-body-sm font-semibold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-chalk"
                 >
-                  <span>Inspect {demo.name} in 3D</span>
+                  <span>Open {demo.name} in 3D</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </div>
@@ -531,7 +526,7 @@ export function BackyardHomeLanding() {
             <div className="grid gap-5 md:grid-cols-3">
               {ADU_PATH_TYPES.map((item) => (
                 <article
-                  key={item.number}
+                  key={item.title}
                   className="border border-lot-line bg-lot-chalk p-5 shadow-paper-sm"
                 >
                   <span className="lf-caption text-lot-stone">
@@ -548,7 +543,7 @@ export function BackyardHomeLanding() {
             <div className="grid gap-5 md:grid-cols-3">
               {PROPERTY_BLOCKERS.map((blocker) => (
                 <article
-                  key={blocker.number}
+                  key={blocker.title}
                   className="border border-lot-line bg-lot-chalk p-5"
                 >
                   <h3 className="lf-card-heading text-lot-ink">
@@ -576,7 +571,7 @@ export function BackyardHomeLanding() {
                   href="#quiz"
                   className="inline-flex min-h-11 items-center gap-1.5 rounded-control bg-lot-orange px-5 py-2.5 lf-body-sm font-semibold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
                 >
-                  <span>Check your address above</span>
+                  <span>{PRIMARY_CTA_LABEL}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
                 <Link
@@ -596,7 +591,6 @@ export function BackyardHomeLanding() {
         >
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="space-y-4">
-              <p className="lf-kicker text-lot-stone">Common Questions</p>
               <h2 className="font-display text-[clamp(1.65rem,2.7vw,2.35rem)] font-medium leading-[1.1] tracking-[-0.035em] text-lot-ink">
                 San Diego &amp; California ADU FAQ
               </h2>

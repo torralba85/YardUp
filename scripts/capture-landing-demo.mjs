@@ -35,7 +35,7 @@ try {
     if (name === "mobile") {
       const reveal = page.getByRole("button", { name: /See the San Diego example|See a San Diego example|Reveal my backyard/i });
       if (await reveal.isVisible()) await reveal.click();
-      await page.getByRole("button", { name: /Shape your ADU/i }).click();
+      await page.getByRole("button", { name: /Shape your backyard home/i }).click();
     } else {
       await page.getByRole("button", { name: /Design/i }).click();
     }

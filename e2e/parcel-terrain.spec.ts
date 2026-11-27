@@ -21,7 +21,7 @@ test("terrain renders relief, placement controls and provenance on desktop and p
   await page.goto("/");
   await page.evaluate((value) => sessionStorage.setItem("lf:initial-live-parcel", JSON.stringify(value)), parcel);
   await page.goto("/studio", { waitUntil: "domcontentloaded" });
-  if (viewport && viewport.width < 1024) await page.getByRole("button", { name: /shape your adu/i }).click();
+  if (viewport && viewport.width < 1024) await page.getByRole("button", { name: /shape your backyard home/i }).click();
   await page.getByRole("radio", { name: "Terrain", exact: true }).click();
   await expect(page.getByTestId("terrain-canvas").locator("canvas")).toBeVisible();
   await expect(page.getByTestId("terrain-footprint-relief")).toContainText("ground change beneath this ADU");
@@ -49,7 +49,7 @@ test("demo terrain never invents ground elevations", async ({ page, viewport }) 
   await page.route("**/api/parcel-terrain", async (route) => { requested = true; await route.abort(); });
   await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
   if (viewport && viewport.width < 1024) {
-    await page.getByRole("button", { name: /shape your adu/i }).click();
+    await page.getByRole("button", { name: /shape your backyard home/i }).click();
   }
   await page.getByRole("radio", { name: "Terrain", exact: true }).click();
   await expect(page.getByText(/Demo lots and estimated boundaries/)).toBeVisible();
