@@ -71,6 +71,7 @@ export async function fetchBuilderLedger(
       amountPaid: typeof data.amountPaid === "number" ? data.amountPaid : 0,
       referenceId:
         (data.referenceId as string) || (data.stripeSessionId as string) || (data.orderId as string) || "",
+      ...(typeof data.stripeRefundStatus === "string" ? { stripeRefundStatus: data.stripeRefundStatus } : {}),
       description: (data.description as string) || "",
       createdAt: timestampToIso(data.createdAt) || new Date().toISOString(),
     };
@@ -256,12 +257,14 @@ export async function fetchBuilderInbox(
         ),
       ]);
 
+      const stripeSessionId = unlockSnap?.data()?.stripeSessionId;
       return {
         request: firestoreToConnectionRequest(requestDoc.id, requestDoc.data()),
         response: responseSnap.exists()
           ? firestoreToBuilderResponse(responseSnap.data())
           : { builderId, status: "new" as const, createdAt: null, updatedAt: null },
         unlocked: unlockSnap?.exists() ?? false,
+        ...(typeof stripeSessionId === "string" ? { unlockStripeSessionId: stripeSessionId } : {}),
       };
     }),
   );

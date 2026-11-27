@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   grant: vi.fn(),
   grantCertificate: vi.fn(),
   rotate: vi.fn(),
+  reconcile: vi.fn(),
   adminDb: {
     runTransaction: vi.fn(),
     collection: vi.fn(),
@@ -44,6 +45,10 @@ vi.mock("@/lib/server/certificate-purchases", async () => {
     },
   };
 });
+
+vi.mock("@/lib/server/stripe-reversals", () => ({
+  reconcileStripeReversal: (...args: unknown[]) => mocks.reconcile(...args),
+}));
 
 vi.mock("@/lib/server/active-checkout-sessions", () => ({
   rotateFailedActiveCheckout: (...args: unknown[]) => mocks.rotate(...args),
@@ -104,11 +109,12 @@ function paidSession(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
   mocks.stripe = null;
-  mocks.grant.mockClear();
+  mocks.grant.mockReset().mockResolvedValue({ status: "granted" });
+  mocks.reconcile.mockReset();
   mocks.grantCertificate.mockClear();
   mocks.rotate.mockClear();
   mocks.adminDb.runTransaction.mockClear();
-  mocks.transaction.get.mockReset();
+  mocks.transaction.get.mockReset().mockResolvedValue({ exists: false, data: () => undefined });
   mocks.transaction.update.mockClear();
   mocks.transaction.set.mockClear();
   mocks.adminDb.collection.mockReturnValue({ doc: () => mocks.docRef });
@@ -212,6 +218,32 @@ describe("POST /api/stripe/webhook", () => {
     expect(mocks.grant).not.toHaveBeenCalled();
   });
 
+  it.each(["refund.created", "refund.updated", "refund.failed", "charge.dispute.created", "charge.dispute.closed"])(
+    "routes %s to reconciliation after signature verification",
+    async (type) => {
+      installEvent({ id: "processor-object" }, type);
+      expect((await POST(webhookRequest())).status).toBe(200);
+      expect(mocks.reconcile).toHaveBeenCalledWith(mocks.stripe, expect.objectContaining({ type }));
+      expect(mocks.grant).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not grant a credit pack after its payment was reversed", async () => {
+    installEvent(paidSession({
+      amount_total: 17_500,
+      metadata: { purchaseType: "credit_pack", builderId: "b2", creditsToGrant: "5" },
+    }));
+    mocks.adminDb.runTransaction.mockImplementationOnce(
+      async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
+        mocks.transaction.get
+          .mockResolvedValueOnce({ data: () => ({ reversedAt: "timestamp" }) });
+        await cb(mocks.transaction);
+      },
+    );
+    expect((await POST(webhookRequest())).status).toBe(200);
+    expect(mocks.transaction.update).not.toHaveBeenCalled();
+  });
+
   it("ignores unrelated event types", async () => {
     installEvent({}, "payment_intent.created");
 
@@ -260,6 +292,7 @@ describe("POST /api/stripe/webhook", () => {
     mocks.adminDb.runTransaction.mockImplementation(
       async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
         mocks.transaction.get
+          .mockResolvedValueOnce({ data: () => undefined })
           .mockResolvedValueOnce({ exists: false })
           .mockResolvedValueOnce(mocks.builderDoc);
         await cb(mocks.transaction);
@@ -317,7 +350,9 @@ describe("POST /api/stripe/webhook", () => {
     );
     mocks.adminDb.runTransaction.mockImplementation(
       async (cb: (tx: typeof mocks.transaction) => Promise<unknown>) => {
-        mocks.transaction.get.mockResolvedValueOnce({ exists: true });
+        mocks.transaction.get
+          .mockResolvedValueOnce({ data: () => undefined })
+          .mockResolvedValueOnce({ exists: true });
         await cb(mocks.transaction);
       },
     );

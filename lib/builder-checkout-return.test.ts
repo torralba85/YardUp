@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getLeadCheckoutRefund,
   hasBuilderCheckoutReturnMarkers,
   isBuilderCheckoutConfirmed,
   readBuilderCheckoutReturn,
@@ -29,6 +30,12 @@ describe("readBuilderCheckoutReturn", () => {
     expect(readBuilderCheckoutReturn("?lead=req-1&unlocked=1")).toEqual({
       kind: "lead_unlock",
       requestId: "req-1",
+    });
+  });
+
+  it("reads the exact Checkout Session on a new lead return", () => {
+    expect(readBuilderCheckoutReturn("?lead=req-1&unlocked=1&session_id=cs_test_lead")).toEqual({
+      kind: "lead_unlock", requestId: "req-1", sessionId: "cs_test_lead",
     });
   });
 
@@ -69,6 +76,18 @@ describe("isBuilderCheckoutConfirmed", () => {
     expect(
       isBuilderCheckoutConfirmed(target, [inboxItem("req-2", true), inboxItem("req-1", true)], []),
     ).toBe(true);
+  });
+
+  it("keeps a previously unlocked lead separate from a refunded checkout", () => {
+    const target = { kind: "lead_unlock", requestId: "req-1", sessionId: "cs_test_blocked" } as const;
+    const originalGrant = { ...inboxItem("req-1", true), unlockStripeSessionId: "cs_test_original" };
+    const refund = { ...ledgerEntry("cs_test_blocked"), type: "refund", stripeRefundStatus: "pending" } as const;
+
+    expect(isBuilderCheckoutConfirmed(target, [originalGrant], [refund])).toBe(false);
+    expect(getLeadCheckoutRefund(target, [refund])).toBe("refund_requested");
+    expect(getLeadCheckoutRefund(target, [{ ...refund, stripeRefundStatus: "failed" }]))
+      .toBe("refund_needs_review");
+    expect(getLeadCheckoutRefund(target, [{ ...refund, referenceId: "cs_test_other" }])).toBeNull();
   });
 
   it("confirms a credit pack only by its own ledger entry", () => {

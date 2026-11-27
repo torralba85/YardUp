@@ -25,6 +25,7 @@ import { SiteHeader } from "@/components/legal/SiteHeader";
 import { reconcilePendingLeadUnlock } from "@/lib/analytics/lead-unlock-tracking";
 import {
   type BuilderCheckoutReturn,
+  getLeadCheckoutRefund,
   hasBuilderCheckoutReturnMarkers,
   isBuilderCheckoutConfirmed,
   readBuilderCheckoutReturn,
@@ -39,7 +40,7 @@ const CHECKOUT_CONFIRM_ATTEMPTS = 6;
 
 type CheckoutReturnState = {
   target: BuilderCheckoutReturn;
-  status: "confirming" | "confirmed" | "delayed";
+  status: "confirming" | "confirmed" | "delayed" | "refund_requested" | "refund_needs_review";
 };
 
 type BuilderDashboardView = "inbox" | "billing";
@@ -165,9 +166,8 @@ export default function BuilderDashboard({
       if (!target) return;
       setCheckoutReturn({
         target,
-        status: isBuilderCheckoutConfirmed(target, loadedItems, loadedLedger)
-          ? "confirmed"
-          : "confirming",
+        status: getLeadCheckoutRefund(target, loadedLedger) ??
+          (isBuilderCheckoutConfirmed(target, loadedItems, loadedLedger) ? "confirmed" : "confirming"),
       });
     }
 
@@ -196,6 +196,11 @@ export default function BuilderDashboard({
         if (loadedProfile) setProfile(loadedProfile);
         setItems(loadedItems);
         setLedger(loadedLedger);
+        const refund = getLeadCheckoutRefund(target, loadedLedger);
+        if (refund) {
+          setCheckoutReturn({ target, status: refund });
+          return;
+        }
         if (isBuilderCheckoutConfirmed(target, loadedItems, loadedLedger)) {
           reconcilePendingLeadUnlock(loadedItems);
           setCheckoutReturn({ target, status: "confirmed" });
@@ -391,7 +396,7 @@ function BuilderHeader({
 
 const CHECKOUT_RETURN_COPY: Record<
   BuilderCheckoutReturn["kind"],
-  Record<CheckoutReturnState["status"], string>
+  Record<"confirming" | "confirmed" | "delayed", string>
 > = {
   lead_unlock: {
     confirming: "Payment received. Confirming your unlock with Stripe…",
@@ -413,11 +418,16 @@ const CHECKOUT_RETURN_COPY: Record<
  * colour alone.
  */
 function CheckoutReturnNotice({ state }: { state: CheckoutReturnState }) {
-  const message = CHECKOUT_RETURN_COPY[state.target.kind][state.status];
+  const { status } = state;
+  const message = status === "refund_requested"
+    ? "The lead was unavailable. Stripe has accepted your refund. Check your payment method for the credit."
+    : status === "refund_needs_review"
+      ? "The lead was unavailable and your refund needs review. Contact support for help."
+      : CHECKOUT_RETURN_COPY[state.target.kind][status];
   const tone =
     state.status === "confirmed"
       ? "border-status-eligible/30 bg-status-eligible-soft text-status-eligible"
-      : state.status === "delayed"
+      : state.status === "delayed" || state.status === "refund_needs_review"
         ? "border-status-review/30 bg-status-review-soft text-status-review"
         : "border-lot-line bg-lot-surface text-lot-ink";
   const Icon = state.status === "confirmed" ? CheckCircle2 : Clock;

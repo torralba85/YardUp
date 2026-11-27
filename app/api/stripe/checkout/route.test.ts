@@ -156,7 +156,7 @@ beforeEach(() => {
       preview: { previewSerial: "LF-X" },
     }),
   };
-  mocks.grant.mockClear();
+  mocks.grant.mockReset().mockResolvedValue({ status: "granted" });
   mocks.reservations.clear();
   resetRateLimitBuckets();
 });
@@ -320,7 +320,7 @@ describe("POST /api/stripe/checkout", () => {
       mode: "payment",
       currency: "usd",
       amount_total: 4900,
-      metadata: { builderId: "b1", requestId: "r1" },
+      metadata: { purchaseType: "lead_unlock", builderId: "b1", requestId: "r1" },
     });
     mocks.stripe = { checkout: { sessions: { create, retrieve } } };
 
@@ -352,7 +352,7 @@ describe("POST /api/stripe/checkout", () => {
       mode: "payment",
       currency: "usd",
       amount_total: 1,
-      metadata: { builderId: "b1", requestId: "r1" },
+      metadata: { purchaseType: "lead_unlock", builderId: "b1", requestId: "r1" },
     });
     mocks.stripe = { checkout: { sessions: { create, retrieve } } };
 
@@ -376,7 +376,7 @@ describe("POST /api/stripe/checkout", () => {
       mode: "payment",
       currency: "usd",
       amount_total: 4900,
-      metadata: { builderId: "someone-else", requestId: "r1" },
+      metadata: { purchaseType: "lead_unlock", builderId: "someone-else", requestId: "r1" },
     });
     mocks.stripe = { checkout: { sessions: { create, retrieve } } };
 
@@ -447,7 +447,7 @@ describe("POST /api/stripe/checkout", () => {
     expect(res.status).toBe(200);
     expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        success_url: "https://lotfoundry.net/builder?lead=r1&unlocked=1",
+        success_url: "https://lotfoundry.net/builder?lead=r1&unlocked=1&session_id={CHECKOUT_SESSION_ID}",
         cancel_url: "https://lotfoundry.net/builder?lead=r1",
       }),
       expect.any(Object),

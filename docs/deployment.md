@@ -78,6 +78,14 @@ with `npm run deploy:rules` when that is the explicitly intended scope.
 Keep `firebase.json`, `functions/index.js`, and `scripts/prepare-firebase.js`
 aligned whenever a function boundary changes.
 
+### Stripe refunds and disputes
+
+Before deploying the Stripe reconciliation handler, verify the runtime Stripe key has Checkout Sessions and Charges read access and Refunds read and write access. The existing three Checkout event subscriptions stay enabled. Add `refund.created`, `refund.updated`, `refund.failed`, `charge.dispute.created`, and `charge.dispute.closed` to the production destination after the handler is serving. Verify the matching event names and signed delivery in an isolated Stripe sandbox before enabling production.
+
+A paid lead that can no longer be granted is refunded to its original payment method. LotFoundry uses a stable Stripe idempotency key and records one refund outcome per blocked Checkout Session. The builder ledger reports that outcome when the profile still exists. A successful full refund or full lost dispute removes the corresponding live certificate or lead grant and takes back available pack credits up to the original purchase. Credit balances never go below zero. Partial reversals, spent-credit shortfalls, failed refunds, and open disputes are recorded for support review in the server-only `stripeCheckoutReconciliation` collection. The `events` subcollection records incoming event IDs and observed provider statuses for each Checkout Session.
+
+Review `requiresReview == true` in Firestore alongside Stripe Workbench. Compare the latest Stripe state, original payment, and any credit shortfall before making a manual adjustment. A dispute won before any full reversal leaves access intact. A provider outcome that reverses a previously applied clawback requires manual review. Stripe delivers events prospectively when the subscription is enabled. Review older reversals separately if they need reconciliation.
+
 ### Guest web certificate checkout
 
 Guest purchases use a Firebase anonymous UID until the buyer links a Google or

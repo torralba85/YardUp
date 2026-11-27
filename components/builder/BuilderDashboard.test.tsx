@@ -350,6 +350,32 @@ describe("BuilderDashboard Stripe return", () => {
     expect(firestore.fetchBuilderInbox).toHaveBeenCalledTimes(1);
   });
 
+  it("shows a blocked lead's refund when Stripe reports it in the ledger", async () => {
+    window.history.replaceState(null, "", "/builder?lead=request-1&unlocked=1&session_id=cs_test_blocked");
+    firestore.fetchBuilderInbox.mockResolvedValue([item]);
+    firestore.fetchBuilderLedger.mockResolvedValueOnce([]).mockResolvedValue([
+      {
+        id: "stripe_lead_refund_cs_test_blocked",
+        builderId: "builder-1",
+        type: "refund",
+        creditsChange: 0,
+        amountPaid: 0,
+        referenceId: "cs_test_blocked",
+        stripeRefundStatus: "pending",
+        description: "Refund for unavailable lead",
+        createdAt: "2026-11-27T00:00:00.000Z",
+      },
+    ]);
+
+    render(<BuilderDashboard uid="builder-1" email="builder@example.com" displayName="Builder" />);
+    await screen.findByText(/Confirming your unlock/);
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+
+    expect(await screen.findByText(/Stripe has accepted your refund/)).toBeInTheDocument();
+    expect(screen.queryByText(/owner contact is visible/)).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?lead=request-1");
+  });
+
   it("confirms a credit pack by its ledger entry and shows the new balance", async () => {
     window.history.replaceState(
       null,

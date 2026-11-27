@@ -1,106 +1,111 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "./firebase-admin";
+import { stripeCheckoutRecord } from "./stripe-checkout-record";
 
 const LEAD_UNLOCKS = "leadUnlocks";
+const HEAD_START_MS = 48 * 60 * 60 * 1000;
 
-/** Deterministic grant id — `{builderId}_{requestId}` — is the idempotency key
- * (2A). A replayed Stripe webhook targets the same doc and no-ops. */
 export function unlockId(builderId: string, requestId: string): string {
   return `${builderId}_${requestId}`;
 }
 
-/** Fields needed to record a paid lead-unlock grant. */
 export interface GrantLeadUnlockInput {
-  /** The builder receiving the unlock. */
   builderId: string;
-  /** The connection request being unlocked. */
   requestId: string;
-  /** The Stripe Checkout session id that paid for the unlock. */
   stripeSessionId: string;
-  /** Amount paid, in cents. */
   amount: number;
-  /** Whether this is a demo (non-paid) grant. */
   demo?: boolean;
 }
 
-/**
- * Write the paid-unlock grant via the Admin SDK (which bypasses the
- * leadUnlocks "no client write" rule). Uses `create()` so a replay or Stripe
- * retry hits an ALREADY_EXISTS and is swallowed — the grant is written exactly
- * once and never re-stamped. Returns true if this call created the grant,
- * false if it already existed.
- */
-export async function grantLeadUnlock(
-  input: GrantLeadUnlockInput,
-): Promise<boolean> {
-  const ref = getAdminDb()
-    .collection(LEAD_UNLOCKS)
-    .doc(unlockId(input.builderId, input.requestId));
+type LeadBlockReason = "lead_unavailable" | "exclusive_window" | "already_unlocked";
 
-  let created = false;
-  try {
-    await ref.create({
-      builderId: input.builderId,
-      requestId: input.requestId,
-      stripeSessionId: input.stripeSessionId,
+export type LeadGrantOutcome =
+  | { status: "granted" | "replay" | "reversed" }
+  | { status: "blocked"; reason: LeadBlockReason; refundId?: string; refundStatus?: string };
+
+function blockReason(
+  lead: FirebaseFirestore.DocumentData | undefined,
+  grantExists: boolean,
+  builderId: string,
+  now: number,
+): LeadBlockReason | undefined {
+  if (grantExists) return "already_unlocked";
+  if (lead?.status !== "submitted" || !Array.isArray(lead.matchedBuilderIds) ||
+      !lead.matchedBuilderIds.includes(builderId)) return "lead_unavailable";
+  if (lead.firstUnlockedBy && lead.firstUnlockedBy !== builderId &&
+      Date.parse(lead.headStartUntil) > now) return "exclusive_window";
+}
+
+/**
+ * Grant access and set the first builder's window in the same transaction.
+ * The credit unlock route also reads and writes the lead document, so the
+ * first committed unlock wins across both payment methods.
+ */
+export async function grantLeadUnlock(input: GrantLeadUnlockInput): Promise<LeadGrantOutcome> {
+  const { builderId, requestId, stripeSessionId } = input;
+  const db = getAdminDb();
+  const grantRef = db.collection(LEAD_UNLOCKS).doc(unlockId(builderId, requestId));
+  const leadRef = db.collection("connectionRequests").doc(requestId);
+  const record = input.demo ? null : stripeCheckoutRecord(db, stripeSessionId);
+
+  return db.runTransaction(async (tx): Promise<LeadGrantOutcome> => {
+    // Read the shared lead first so lead and credit payments contend on the
+    // same document before reading their per-builder grants.
+    const lead = await tx.get(leadRef);
+    const [grant, checkout] = await Promise.all([
+      tx.get(grantRef),
+      record ? tx.get(record) : undefined,
+    ]);
+    const data = checkout?.data();
+    if (data?.reversedAt) return { status: "reversed" };
+    if (data?.leadRefundReason) {
+      return {
+        status: "blocked",
+        reason: data.leadRefundReason,
+        refundId: data.leadRefundId,
+        refundStatus: data.leadRefundStatus,
+      };
+    }
+    if (grant.exists && (grant.data()?.stripeSessionId === stripeSessionId || input.demo)) {
+      return { status: "replay" };
+    }
+
+    const now = Date.now();
+    const leadData = lead.data();
+    const reason = blockReason(leadData, grant.exists, builderId, now);
+    if (reason) {
+      if (record) {
+        tx.set(record, {
+          purchaseType: "lead_unlock",
+          leadRefundReason: reason,
+          leadRefundRequestedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+      return { status: "blocked", reason };
+    }
+
+    tx.create(grantRef, {
+      builderId, requestId, stripeSessionId,
       amount: input.amount,
       status: "granted",
       demo: input.demo ?? false,
       createdAt: FieldValue.serverTimestamp(),
     });
-    created = true;
-  } catch (err) {
-    if (isAlreadyExists(err)) return false;
-    throw err;
-  }
-
-  if (created) {
-    try {
-      const connRef = getAdminDb()
-        .collection("connectionRequests")
-        .doc(input.requestId);
-      const connSnap = await connRef.get();
-      if (connSnap.exists && !connSnap.data()?.headStartUntil) {
-        await connRef.update({
-          headStartUntil: new Date(
-            Date.now() + 48 * 60 * 60 * 1000,
-          ).toISOString(),
-          firstUnlockedBy: input.builderId,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      }
-    } catch (err) {
-      console.error(
-        `[grantLeadUnlock] Failed to set headStartUntil on lead ${input.requestId}:`,
-        err,
-      );
+    if (!leadData?.headStartUntil) {
+      tx.update(leadRef, {
+        headStartUntil: new Date(now + HEAD_START_MS).toISOString(),
+        firstUnlockedBy: builderId,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     }
-  }
-
-  return created;
+    return { status: "granted" };
+  });
 }
 
-/**
- * Check whether a builder already holds an unlock grant for a lead.
- *
- * @param builderId - The builder's id.
- * @param requestId - The connection request id.
- * @returns `true` if a grant document exists.
- */
-export async function isLeadUnlocked(
-  builderId: string,
-  requestId: string,
-): Promise<boolean> {
+export async function isLeadUnlocked(builderId: string, requestId: string): Promise<boolean> {
   const snap = await getAdminDb()
     .collection(LEAD_UNLOCKS)
     .doc(unlockId(builderId, requestId))
     .get();
   return snap.exists;
-}
-
-/** Firestore Admin throws code 6 / "already-exists" when create() hits an
- * existing doc — the idempotency signal, not a real failure. */
-function isAlreadyExists(err: unknown): boolean {
-  const code = (err as { code?: number | string } | null)?.code;
-  return code === 6 || code === "already-exists";
 }
