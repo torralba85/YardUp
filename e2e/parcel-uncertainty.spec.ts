@@ -11,7 +11,7 @@ test("county GIS uncertainty survives the parcel handoff into Rules & Fit", asyn
   await page.goto("/studio");
   if (viewport && viewport.width < 1024) {
     // A resolved live parcel starts at Earn; Find is already complete.
-    await page.getByRole("button", { name: /shape your adu/i }).click();
+    await page.getByRole("button", { name: /shape your backyard home/i }).click();
     await page.getByRole("button", { name: /check feasibility/i }).click();
   }
   await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();

@@ -50,7 +50,7 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
     await page.screenshot({ path: testInfo.outputPath(`earn-${width}.png`) });
   }
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.getByRole("button", { name: /shape your adu/i }).click();
+  await page.getByRole("button", { name: /shape your backyard home/i }).click();
   await expect(page.getByText("Projected rent / mo", { exact: true })).toHaveCSS("font-size", "12px");
   await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
