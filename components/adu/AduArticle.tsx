@@ -225,6 +225,19 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             </tbody>
           </table>
         </div>
+        {content.glanceNote ? (
+          <p className="lf-body mt-4 text-lot-ink">
+            {content.glanceNote.text}{" "}
+            {content.glanceNote.sources.map((source, index) => (
+              <span key={source.url}>
+                {index > 0 ? " · " : null}
+                <a href={source.url} className="underline underline-offset-4">
+                  {source.label}
+                </a>
+              </span>
+            ))}
+          </p>
+        ) : null}
       </section>
 
       {content.coastalCallout ? (
