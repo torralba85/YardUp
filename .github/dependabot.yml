@@ -22,6 +22,21 @@ updates:
       - dependency-name: "typescript"
         update-types:
           - "version-update:semver-major"
+      # Production Firebase Functions (functions/package.json engines.node: "22")
+      # and CI run Node 22. Hold @types/node major bumps so Node 24/26-only APIs
+      # cannot pass tsc and fail at runtime on Node 22.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+      # firebase@13.x declares engines.node >=24.12.0, and @firebase/rules-unit-testing@6
+      # requires peer firebase@^13.0.0. Hold both major bumps until CI and
+      # Firebase Functions upgrade to Node 24.
+      - dependency-name: "firebase"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@firebase/rules-unit-testing"
+        update-types:
+          - "version-update:semver-major"
     labels:
       - "type: chore"
     commit-message:
@@ -35,6 +50,10 @@ updates:
         update-types:
           - "patch"
           - "minor"
+      firebase-client:
+        patterns:
+          - "firebase"
+          - "@firebase/rules-unit-testing"
       shared-runtime:
         patterns:
           - "next"
