@@ -18,14 +18,10 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpRight,
-  Facebook,
-  Instagram,
-  Linkedin,
   MapPin,
   Menu,
   Plus,
   X,
-  Youtube,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -101,8 +97,89 @@ function Eyebrow({
   );
 }
 
-// lucide-react ships no X brand mark (its `X` is the close glyph), so the
-// filled logo is drawn inline at the optical size of the stroked rail icons.
+// lucide-react v1 removed third-party brand marks, so the footer social rail
+// icons are drawn inline.
+function YoutubeLogo() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+      <path d="m10 15 5-3-5-3z" />
+    </svg>
+  );
+}
+
+function InstagramLogo() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect width={20} height={20} x={2} y={2} rx={5} ry={5} />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1={17.5} x2={17.51} y1={6.5} y2={6.5} />
+    </svg>
+  );
+}
+
+function FacebookLogo() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function LinkedinLogo() {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect width={4} height={12} x={2} y={9} />
+      <circle cx={4} cy={4} r={2} />
+    </svg>
+  );
+}
+
 function XLogo() {
   return (
     <svg
@@ -1608,7 +1685,7 @@ export function LotMoreLanding({
                 aria-label="YouTube"
                 className={styles.socialIconLink}
               >
-                <Youtube size={18} strokeWidth={1.5} aria-hidden="true" />
+                <YoutubeLogo />
               </a>
               <a
                 href={SOCIAL_LINKS.instagram}
@@ -1617,7 +1694,7 @@ export function LotMoreLanding({
                 aria-label="Instagram"
                 className={styles.socialIconLink}
               >
-                <Instagram size={18} strokeWidth={1.5} aria-hidden="true" />
+                <InstagramLogo />
               </a>
               <a
                 href={SOCIAL_LINKS.facebook}
@@ -1626,7 +1703,7 @@ export function LotMoreLanding({
                 aria-label="Facebook"
                 className={styles.socialIconLink}
               >
-                <Facebook size={18} strokeWidth={1.5} aria-hidden="true" />
+                <FacebookLogo />
               </a>
               <a
                 href={SOCIAL_LINKS.x}
@@ -1644,7 +1721,7 @@ export function LotMoreLanding({
                 aria-label="LinkedIn"
                 className={styles.socialIconLink}
               >
-                <Linkedin size={18} strokeWidth={1.5} aria-hidden="true" />
+                <LinkedinLogo />
               </a>
             </nav>
             <div className={styles.footerLegal}>
