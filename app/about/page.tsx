@@ -1,11 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageShell, LegalSection } from "@/components/legal/LegalPageShell";
+import { CANONICAL_ORIGIN } from "@/lib/canonical-origin";
 import { pageOpenGraph } from "@/lib/og-images";
+import { ORGANIZATION_JSON_LD } from "@/lib/site-identity";
 
 const title = "About LotFoundry | Explore a Backyard Home in 3D";
 const description =
   "LotFoundry, made by VeriShare LLC in San Diego, helps homeowners explore a backyard-home concept in 3D and compare early planning estimates.";
+const aboutUrl = `${CANONICAL_ORIGIN}/about`;
+const aboutJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "@id": `${aboutUrl}#webpage`,
+  url: aboutUrl,
+  name: "About LotFoundry",
+  isPartOf: { "@id": `${CANONICAL_ORIGIN}/#website` },
+  about: { "@id": ORGANIZATION_JSON_LD["@id"] },
+};
 
 export const metadata: Metadata = {
   title,
@@ -17,6 +29,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <LegalPageShell title="About LotFoundry" kicker="ADU planning for homeowners" layout="editorial">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutJsonLd).replace(/</g, "\\u003c") }}
+      />
       <LegalSection title="What we do">
         <p>
           LotFoundry helps you explore a backyard home, also called an accessory dwelling unit (ADU).

@@ -130,6 +130,8 @@ export interface JurisdictionContent {
   metaParkingNote: string;
   /** At-a-glance constraint table. Must differ between cities. */
   glance: AduGlanceRow[];
+  /** Source clarification shown directly under the at-a-glance table. */
+  glanceNote?: { text: string; sources: AduSource[] };
   /** The heart of the page: where this city differs. >= 400 words total. */
   cityDiffers: AduContentSection[];
   /** Cost and fees. Figures only with a sourced as-of date, else omitted. */

@@ -18,7 +18,7 @@ export const ELIGIBILITY_GUIDE_AS_OF = "2026-11-13";
 /** Per-guide changes made without a new local ordinance review, by slug. */
 export const CITY_NAV_UPDATED: Record<string, string> = {
   "san-diego-county": SEARCH_CONSOLE_AUDIT_UPDATED,
-  "san-diego": SEARCH_CONSOLE_AUDIT_UPDATED,
+  "san-diego": "2026-11-26",
   carlsbad: SEARCH_CONSOLE_AUDIT_UPDATED,
   "chula-vista": AUDIT_GUIDES_UPDATED,
   "el-cajon": AUDIT_GUIDES_UPDATED,

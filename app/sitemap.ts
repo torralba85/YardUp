@@ -27,7 +27,7 @@ const lastModified: Record<string, string> = {
   "/": SEARCH_CONSOLE_AUDIT_UPDATED,
   "/can-i-build-a-backyard-home": SEARCH_CONSOLE_AUDIT_UPDATED,
   "/studio": "2026-11-20",
-  "/about": "2026-11-21",
+  "/about": "2026-11-26",
   "/help": "2026-11-21",
   "/feedback": "2026-11-16",
   // #362 added processors to both policies on 2026-11-03 without a new

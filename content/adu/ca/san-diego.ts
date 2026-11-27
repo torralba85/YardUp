@@ -100,6 +100,13 @@ export const sanDiego: JurisdictionContent = {
       confidence: "secondary",
     },
   ],
+  glanceNote: {
+    text: "The City’s ADU/JADU guidance mentions the 4-foot minimum for Very High Fire Hazard Severity Zones. Outside the Coastal Zone, San Diego Municipal Code § 141.0302(b)(9)(C)(ii) and (D)(ii) requires at least 4 feet for interior side and rear setbacks in both High and Very High zones, regardless of ADU height. Confirm with Development Services whether fire-code rules require a larger setback.",
+    sources: [
+      { label: "City ADU/JADU guidance", url: "https://www.sandiego.gov/adu-jadu" },
+      cityAduOrdinance,
+    ],
+  },
   cityDiffers: [
     {
       heading: "What you can build in San Diego",
