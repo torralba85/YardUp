@@ -48,8 +48,8 @@
     "@googlemaps/js-api-loader": "^2.0.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.8.2",
-    "@remotion/google-fonts": "^4.0.545",
-    "@remotion/player": "^4.0.545",
+    "@remotion/google-fonts": "^4.0.546",
+    "@remotion/player": "^4.0.546",
     "@sparkjsdev/spark": "2.4.0",
     "clsx": "^2.1.1",
     "egm96-universal": "^1.1.1",
@@ -61,8 +61,8 @@
     "next": "^16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "remotion": "^4.0.545",
-    "resend": "^6.38.1",
+    "remotion": "^4.0.546",
+    "resend": "^6.39.0",
     "stripe": "22.5.0",
     "tailwind-merge": "^3.7.1",
     "three": "0.187.0",
@@ -93,7 +93,7 @@
     "vitest": "^5.1.0"
   },
   "optionalDependencies": {
-    "@rolldown/binding-linux-x64-gnu": "1.3.2"
+    "@rolldown/binding-linux-x64-gnu": "1.3.3"
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.5",
