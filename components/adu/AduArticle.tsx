@@ -231,7 +231,7 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
             {content.glanceNote.sources.map((source, index) => (
               <span key={source.url}>
                 {index > 0 ? " · " : null}
-                <a href={source.url} className="underline underline-offset-4">
+                <a href={source.url} className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4 hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink">
                   {source.label}
                 </a>
               </span>
