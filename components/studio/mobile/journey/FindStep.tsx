@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, Search } from "lucide-react";
 import { demoPresets, parcelPresets } from "@/lib/feasibility";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { Button } from "@/components/ui/Button";
@@ -148,7 +149,7 @@ export default function FindStep({
           }}
         >
           {hasQuery
-            ? "Check my address"
+            ? PRIMARY_CTA_LABEL
             : keptPreset
               ? `See the ${keptPreset.city.split(",")[0]} example`
               : "See a San Diego example"}

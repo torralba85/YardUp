@@ -144,10 +144,10 @@ test("maquette inspection pins are one radio group that moves with the arrow key
   const last = pins.getByRole("radio").last();
   await expect(last).toBeChecked();
   await expect(last).toBeFocused();
-  await expect(page.getByText("POINT 03 / 03")).toBeVisible();
+  await expect(page.getByText("DETAIL C")).toBeVisible();
   await last.press("ArrowRight");
   await expect(pins.getByRole("radio").first()).toBeChecked();
-  await expect(page.getByText("POINT 01 / 03")).toBeVisible();
+  await expect(page.getByText("DETAIL A")).toBeVisible();
 });
 
 test("actual Studio preview loads and the example opens without an account prompt", async ({

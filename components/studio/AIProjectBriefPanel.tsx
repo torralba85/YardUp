@@ -107,12 +107,10 @@ export default function AIProjectBriefPanel({
             timeline. You&rsquo;ll see a free preview here; the complete brief is recorded in
             your Certificate of Feasibility.
           </p>
-          <div className="mt-3 grid grid-cols-[20px_1fr] gap-x-2 gap-y-1.5 border-t border-lot-line pt-3">
-            <span className="font-sans text-[11px] text-lot-stone">01</span>
-            <span className="text-[11px] leading-4 text-lot-ink">Parcel fit and open questions</span>
-            <span className="font-sans text-[11px] text-lot-stone">02</span>
-            <span className="text-[11px] leading-4 text-lot-ink">Permit track and stage ranges</span>
-          </div>
+          <ul className="mt-3 list-disc space-y-1 border-t border-lot-line pl-4 pt-3 text-xs leading-5 text-lot-ink">
+            <li>Parcel fit and open questions</li>
+            <li>Permit track and stage ranges</li>
+          </ul>
         </div>
       )}
 

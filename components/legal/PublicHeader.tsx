@@ -45,14 +45,14 @@ export function PublicHeader({
         </Link>
 
         <nav
-          aria-label="Primary navigation"
-          className="hidden items-center gap-5 md:flex"
+          aria-label="Main navigation"
+          className="hidden items-center gap-5 min-[800px]:flex"
         >
           {SITE_NAV_LINKS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex min-h-11 items-center text-sm font-medium text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+              className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-medium text-lot-ink motion-safe:transition-colors hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               {item.label}
             </Link>
@@ -63,7 +63,7 @@ export function PublicHeader({
           <Link
             href="/login"
             prefetch={false}
-            className="hidden min-h-11 items-center rounded-control px-2.5 text-sm font-medium text-lot-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink md:inline-flex"
+            className="hidden min-h-11 items-center rounded-control px-2.5 text-sm font-medium text-lot-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink min-[800px]:inline-flex"
           >
             Sign in
           </Link>
@@ -78,11 +78,11 @@ export function PublicHeader({
           <button
             ref={toggleRef}
             type="button"
-            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="public-mobile-nav"
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-lot-line text-lot-ink hover:border-lot-stone md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-lot-line text-lot-ink hover:border-lot-stone min-[800px]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
           >
             {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
@@ -93,7 +93,7 @@ export function PublicHeader({
         <nav
           id="public-mobile-nav"
           aria-label="Mobile navigation"
-          className="border-t border-lot-line bg-lot-chalk px-5 py-3 md:hidden"
+          className="border-t border-lot-line bg-lot-chalk px-5 py-3 min-[800px]:hidden"
         >
           <ul className="divide-y divide-lot-line">
             {SITE_NAV_LINKS.map((item) => (

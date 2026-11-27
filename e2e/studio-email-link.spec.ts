@@ -12,9 +12,9 @@ test("email capture appears on results and stays out of the design flow", async 
   await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
   if (isMobile) {
-    await expect(page.getByRole("button", { name: "Shape your ADU" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Shape your backyard home" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Shape your ADU" }).click();
+    await page.getByRole("button", { name: "Shape your backyard home" }).click();
     await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
     await page.getByRole("button", { name: "Check feasibility" }).click();
     await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();

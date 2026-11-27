@@ -150,19 +150,12 @@
 .ledger {
   min-width: 0;
 }
-.kicker {
-  color: var(--color-lot-stone-on-dark);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
 .ledger h3 {
-  margin-top: 14px !important;
   font-size: clamp(26px, 2.4vw, 34px);
   letter-spacing: -0.045em;
 }
 .lead {
-  margin-top: 12px !important;
+  margin-top: 12px;
   color: var(--color-lot-stone-on-dark);
   font-size: 15px;
   line-height: 1.6;
@@ -253,7 +246,7 @@
   white-space: nowrap;
 }
 .note {
-  margin-top: 18px !important;
+  margin-top: 18px;
   color: var(--color-lot-stone-on-dark);
   font-size: 13px;
 }

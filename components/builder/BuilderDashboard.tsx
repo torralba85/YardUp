@@ -346,6 +346,7 @@ export default function BuilderDashboard({
                 <BillingLedger
                   ledger={ledger}
                   credits={profile.credits}
+                  onViewLeads={() => handleViewChange("inbox")}
                 />
               )}
             </div>

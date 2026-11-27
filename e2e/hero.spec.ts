@@ -52,7 +52,7 @@ test.describe("A lot more landing", () => {
       // banner across this handoff. Resolve it before using the Studio footer.
       const consent = page.getByRole("region", { name: "Cookie consent" });
       if (await consent.isVisible()) await consent.getByRole("button", { name: "Decline" }).click();
-      await page.getByRole("button", { name: "Shape your ADU" }).click();
+      await page.getByRole("button", { name: "Shape your backyard home" }).click();
     }
     await expect(page.locator("canvas").first()).toBeVisible({ timeout: 15_000 });
   });

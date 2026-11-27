@@ -99,7 +99,7 @@ export default function EarnStep({ certificateUnlocked = false, parcelName, resu
           rightIcon={<ArrowRight size={16} />}
           onClick={onContinue}
         >
-          Shape your ADU
+          Shape your backyard home
         </Button>
       </div>
     </section>

@@ -15,6 +15,8 @@ export interface BillingLedgerProps {
   ledger: BuilderLedgerEntry[];
   /** Current available lead unlock credits balance. */
   credits: number;
+  /** Optional navigation back to the lead inbox from the empty ledger state. */
+  onViewLeads?: () => void;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -31,7 +33,7 @@ const TYPE_LABEL: Record<string, string> = {
  * double-rule accounting totals and receipt policy disclosures. Rows read
  * newest first.
  */
-export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
+export default function BillingLedger({ ledger, credits, onViewLeads }: BillingLedgerProps) {
   const [page, setPage] = useState(1);
 
   const totals = useMemo(() => {
@@ -119,6 +121,13 @@ export default function BillingLedger({ ledger, credits }: BillingLedgerProps) {
             <p className="mt-1 text-xs text-lot-stone">
               When you purchase lead unlocks or credit packs, transactions will appear in this ledger.
             </p>
+            {onViewLeads ? (
+              <div className="mt-4">
+                <Button type="button" variant="secondary" size="sm" onClick={onViewLeads}>
+                  Browse matched leads
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <>

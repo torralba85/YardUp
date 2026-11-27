@@ -25,32 +25,28 @@ const FOOTER_LINKS = [
  * own scoped footer in `components/landing/lot-more/` and does not use this.
  */
 export function SiteFooter() {
-  const muted = "text-lot-stone";
-  const hover = "hover:text-lot-ink";
-  const border = "border-lot-line/50";
-
   return (
-    <footer className={`border-t ${border}`}>
-      <div
-        className={`lf-caption mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-3 gap-y-2 px-6 py-8 ${muted}`}
-      >
-        <Link href="/" translate="no" className={`inline-flex min-h-11 min-w-11 items-center justify-center px-1 ${hover}`}>
+    <footer className="border-t border-lot-line bg-lot-chalk">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-8 text-sm text-lot-stone sm:px-6">
+        <Link
+          href="/"
+          translate="no"
+          className="inline-flex min-h-11 items-center font-display text-base font-semibold tracking-[-0.03em] text-lot-ink hover:text-lot-orange-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+        >
           LotFoundry
         </Link>
-        {FOOTER_LINKS.map((link) => (
-          <span key={link.href} className="contents">
-            <span aria-hidden className="text-lot-stone/50">
-              ·
-            </span>
+        <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          {FOOTER_LINKS.map((link) => (
             <Link
+              key={link.href}
               href={link.href}
               prefetch={"firebase" in link ? false : undefined}
-              className={`inline-flex min-h-11 min-w-11 items-center justify-center px-1 ${hover}`}
+              className="inline-flex min-h-11 items-center text-xs font-medium text-lot-stone hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
             >
               {link.label}
             </Link>
-          </span>
-        ))}
+          ))}
+        </nav>
       </div>
     </footer>
   );

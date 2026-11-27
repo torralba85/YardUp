@@ -1,15 +1,18 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import BillingLedger from "./BillingLedger";
 import type { BuilderLedgerEntry } from "@/lib/marketplace-types";
 
 describe("BillingLedger", () => {
   it("renders empty state when ledger has no entries", () => {
-    render(<BillingLedger ledger={[]} credits={3} />);
+    const onViewLeads = vi.fn();
+    render(<BillingLedger ledger={[]} credits={3} onViewLeads={onViewLeads} />);
 
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("Credits")).toBeInTheDocument();
     expect(screen.getByText(/No billing activity recorded yet/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Browse matched leads" }));
+    expect(onViewLeads).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Total spent")).toBeInTheDocument();
     expect(screen.getByText("$0")).toBeInTheDocument();
   });

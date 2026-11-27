@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RefreshCw, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -121,7 +122,7 @@ export function LotAnswerCard({
   inputLabelSrOnly = true,
   inputId,
   placeholder = "Enter a street address (e.g. 418 Coyote Brush Ct, San Diego)…",
-  submitLabel = "Check my address",
+  submitLabel = PRIMARY_CTA_LABEL,
   helperText,
   onLookupStart,
   onAuthGateRequired,

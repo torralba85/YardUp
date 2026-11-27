@@ -192,7 +192,6 @@ export function CostStack({
         </figure>
 
         <div className={styles.ledger}>
-          <p className={styles.kicker}>WHAT THE BUILD COST IS MADE OF</p>
           <h3>Take it apart, layer by layer.</h3>
           <p className={styles.lead}>
             The same Studio engine as the estimate above, split into what you would actually build.

@@ -93,7 +93,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(region).toHaveTextContent("500 Cedar Ave, San Jose, CA");
@@ -125,7 +125,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Narrow Lot, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     // The chip reads evidence-aware scene placement (`describePlacement`), not raw zoningStatus.
@@ -144,7 +144,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(region).toHaveTextContent(/Estimated dimensions/i);
@@ -193,7 +193,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(region).toHaveTextContent("Approximate area");
@@ -212,7 +212,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/couldn't find that address/i);
     expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT);
@@ -235,7 +235,7 @@ describe("LotAnswerCard", () => {
     render(<LotAnswerCard surface="guide" />);
     const input = screen.getByLabelText("Your street address");
     fireEvent.change(input, { target: { value: "100 First St, San Jose, CA" } });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     const busyBtn = screen.getByRole("button", { name: "Checking…" });
     expect(busyBtn).toBeDisabled();
@@ -250,7 +250,7 @@ describe("LotAnswerCard", () => {
     expect(screen.queryByRole("region", { name: "Inline lot feasibility answer" })).not.toBeInTheDocument();
 
     acquireMock.mockResolvedValueOnce(buildLiveParcel({ address: "200 Second St" }));
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
     const region = await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(region).toHaveTextContent("200 Second St");
 
@@ -268,7 +268,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     expect(gtag).not.toHaveBeenCalled();
@@ -281,7 +281,7 @@ describe("LotAnswerCard", () => {
     fireEvent.change(screen.getByLabelText("Your street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
     await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     window.gtag = gtag;
@@ -335,13 +335,13 @@ describe("LotAnswerCard", () => {
 
     for (let i = 1; i <= GUEST_LOOKUP_LIMIT; i += 1) {
       fireEvent.change(input, { target: { value: `${i}00 Cedar Ave, San Jose, CA` } });
-      fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+      fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
       await screen.findByRole("region", { name: "Inline lot feasibility answer" });
     }
     expect(guestLookupsRemaining()).toBe(0);
 
     fireEvent.change(input, { target: { value: "400 Cedar Ave, San Jose, CA" } });
-    fireEvent.click(screen.getByRole("button", { name: "Check my address" }));
+    fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Complete sign in" }));
