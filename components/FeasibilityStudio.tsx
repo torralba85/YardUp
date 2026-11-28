@@ -1922,7 +1922,7 @@ function SceneViewport({
   return (
     <div data-testid="scene-viewport" className={`relative flex flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "h-[58dvh] min-h-[500px]") : (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "min-h-[clamp(460px,65dvh,700px)]")}`}>
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
-      <div className="min-h-0 flex-1">{sceneNode}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{sceneNode}</div>
     </div>
   );
 }
