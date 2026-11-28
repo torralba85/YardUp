@@ -43,9 +43,9 @@ export function SettingsClient() {
     return (
       <div className="min-h-dvh">
         <SiteHeader />
-        <div className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-16" aria-busy="true">
           <p className="lf-body-sm text-lot-stone">Loading account…</p>
-        </div>
+        </main>
       </div>
     );
   }
@@ -54,7 +54,7 @@ export function SettingsClient() {
     return (
       <div className="min-h-dvh">
         <SiteHeader />
-        <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-md px-4 py-16 text-center">
           <h1 className="lf-section-heading">Account settings</h1>
           <p className="lf-body-sm mt-3 text-lot-stone">
             Sign in to manage your profile, security, and data.
@@ -70,7 +70,7 @@ export function SettingsClient() {
               Create account
             </Link>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function SettingsClient() {
         }
       />
 
-      <div className="mx-auto max-w-2xl space-y-8 px-4 py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-2xl space-y-8 px-4 py-10">
         <div>
           <h1 className="lf-section-heading">Settings</h1>
           <p className="lf-body-sm mt-2 text-lot-stone">
@@ -221,7 +221,7 @@ export function SettingsClient() {
             </Button>
           </section>
         </Bezel>
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

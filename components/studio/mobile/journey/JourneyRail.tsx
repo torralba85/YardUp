@@ -23,7 +23,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
   return (
     <nav
       aria-label="Journey progress"
-      className="flex items-center gap-1 border-b border-lot-line bg-lot-chalk px-2 py-1.5"
+      className="flex items-center gap-0.5 border-b border-lot-line bg-lot-chalk px-1 py-1.5 min-[380px]:gap-1 min-[380px]:px-2"
     >
       <button
         type="button"
@@ -38,7 +38,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
       </button>
       {/* Columns take their label's width and labels never wrap: equal fifths
           broke "Certificate" mid-word at 390px (2026-11-27 audit). */}
-      <ol className="flex min-w-0 flex-1 justify-between gap-0.5">
+      <ol className="flex min-w-0 flex-1 justify-between gap-0 min-[380px]:gap-0.5">
         {steps.map((step) => {
           const isCurrent = step.state === "current";
           const isDone = step.state === "done";
@@ -53,7 +53,7 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 disabled={!reachable && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
                 aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : isViewed ? " (visited)" : ""}`}
-                className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-control font-sans text-xs font-semibold motion-safe:transition ${
+                className={`flex min-h-12 min-w-12 flex-1 flex-col items-center justify-center gap-1 rounded-control font-sans text-xs font-semibold motion-safe:transition ${
                   isCurrent
                     ? "text-lot-orange-ink"
                     : isDone
@@ -72,7 +72,12 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
                 />
                 )}
                 <span className="whitespace-nowrap px-0.5 text-center leading-tight">
-                  {step.id === "act" ? (
+                  {step.id === "check" ? (
+                    <>
+                      <span className="min-[380px]:hidden">Rules</span>
+                      <span className="hidden min-[380px]:inline">{step.label}</span>
+                    </>
+                  ) : step.id === "act" ? (
                     <>
                       <span className="min-[380px]:hidden">Cert.</span>
                       <span className="hidden min-[380px]:inline">{step.label}</span>

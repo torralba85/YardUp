@@ -20,8 +20,10 @@ test("neighborhood data is reachable, dated, and usable on this viewport", async
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", `https://lotfoundry.net${new URL(page.url()).pathname}`);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("permit-area.png"), fullPage: true });
-  await page.getByRole("textbox", { name: /street address/i }).fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
-  await page.getByRole("button", { name: "Check my lot" }).click();
+  const lookup = page.getByRole("complementary", { name: "Lot check and tools" });
+  await lookup.locator("summary").click();
+  await lookup.getByRole("textbox", { name: /street address/i }).first().fill(`${SAMPLE_LIVE_PARCEL.address}, ${SAMPLE_LIVE_PARCEL.city}`);
+  await lookup.locator("form").getByRole("button", { name: "Check my lot" }).click();
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await answer.getByRole("link", { name: "Open in 3D" }).click();

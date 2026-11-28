@@ -1640,7 +1640,7 @@ export default function ParcelScene({
           // In the picture itself: people trust a drawing over a notice in the rail.
           <p
             data-testid="provisional-lot-label"
-            className="pointer-events-none absolute left-1/2 top-16 z-(--z-index-scene) max-w-[calc(100%-2rem)] -translate-x-1/2 border border-status-review/40 bg-status-review-soft px-3 py-1.5 text-center text-xs font-semibold text-status-review"
+            className="pointer-events-none absolute left-1/2 top-16 z-(--z-index-scene) max-w-[calc(100%-2rem)] -translate-x-1/2 border border-status-review/40 bg-lot-chalk px-3 py-1.5 text-center text-xs font-semibold text-status-review"
           >
             Sample lot shape · we couldn’t match this address to a parcel record
           </p>

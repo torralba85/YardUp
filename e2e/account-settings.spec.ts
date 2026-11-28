@@ -4,7 +4,7 @@ test.describe("account and support surfaces", () => {
   test("settings page renders guest sign-in CTA", async ({ page }) => {
     await page.goto("/settings");
     await expect(page.getByRole("heading", { name: /account settings|settings/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /sign in/i })).toBeVisible();
+    await expect(page.locator("#main-content").getByRole("link", { name: /sign in/i })).toBeVisible();
   });
 
   test("help and feedback are linked and usable", async ({ page }) => {
