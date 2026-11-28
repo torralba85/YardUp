@@ -77,10 +77,10 @@ afterEach(() => {
 });
 
 describe("registry", () => {
-  it("registers verified address endpoints for King County and California", () => {
+  it("registers verified address endpoints for King County, San Diego County and California", () => {
     expect(
       COUNTY_GIS_SOURCES.filter((source) => source.situs).map((source) => source.county),
-    ).toEqual(["King", "California (statewide)"]);
+    ).toEqual(["King", "San Diego", "California (statewide)"]);
     expect(SITUS_URL).toBe(
       "https://services.arcgis.com/Ej0PsM5Aw677QF1W/arcgis/rest/services/PARCEL_ADDRESS_PUB_AREA_3069/FeatureServer/0/query",
     );
@@ -95,15 +95,57 @@ describe("registry", () => {
   });
 
   it("checks California situs identity without requesting owner attributes", async () => {
-    const point = { lat: 32.7174385, lng: -117.1633851 };
+    // Sacramento: no county address layer, so the statewide layer answers.
+    const point = { lat: 38.5816, lng: -121.4944 };
     const polygon = lot(point.lat, point.lng, 50, 100);
     const fetchMock = vi.fn().mockResolvedValue(featuresResponse([
-      feature(polygon, { PARCEL_APN: "123", SITE_ADDR: "202 C ST", SITE_CITY: "SAN DIEGO", SITE_STATE: "CA", SITE_ZIP: "92101" }),
+      feature(polygon, { PARCEL_APN: "123", SITE_ADDR: "915 I ST", SITE_CITY: "SACRAMENTO", SITE_STATE: "CA", SITE_ZIP: "95814" }),
     ]));
     vi.stubGlobal("fetch", fetchMock);
-    const check = await verifyParcelAddressAtPoint(point.lat, point.lng, parseStreetAddress("202 C Street, San Diego, CA 92101")!, Date.now() + 4000);
+    const check = await verifyParcelAddressAtPoint(point.lat, point.lng, parseStreetAddress("915 I Street, Sacramento, CA 95814")!, Date.now() + 4000);
     expect(check.verdict).toBe("verified");
     expect(new URL(String(fetchMock.mock.calls[0][0])).searchParams.get("outFields")).toBe("PARCEL_APN,SITE_ADDR,SITE_CITY,SITE_ZIP,SITE_STATE");
+  });
+
+  it("verifies a San Diego address against the County's own split situs fields first", async () => {
+    // 2026-11-27: the County point layer found APN 4394423400 (4621 Felton St)
+    // and the statewide layer called it "a different street address", so the
+    // Studio showed a demo lot. The County's own record now decides.
+    const point = { lat: 32.7614893, lng: -117.1216627 };
+    const polygon = lot(point.lat, point.lng, 120, 500);
+    const fetchMock = vi.fn().mockResolvedValue(featuresResponse([
+      feature(polygon, {
+        APN: "4394423400", SITUS_ADDRESS: 4621, SITUS_FRACTION: "", SITUS_PRE_DIR: "",
+        SITUS_STREET: "FELTON", SITUS_SUFFIX: "ST", SITUS_POST_DIR: "", SITUS_ZIP: "92116-3302", ACREAGE: 1.37,
+      }),
+    ]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const check = await verifyParcelAddressAtPoint(point.lat, point.lng, parseStreetAddress("4621 Felton Street, San Diego, CA 92116")!, Date.now() + 4000);
+
+    expect(check.verdict).toBe("verified");
+    expect(check.parcelId).toBe("4394423400");
+    expect(check.localityConfirmed).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(url.href.startsWith("https://gis-public.sandiegocounty.gov/arcgis/rest/services/cosd_warehouse/parcels_all_for_public_use/MapServer/0/query")).toBe(true);
+    expect(url.searchParams.get("outFields")).toBe("APN,SITUS_ADDRESS,SITUS_FRACTION,SITUS_PRE_DIR,SITUS_STREET,SITUS_SUFFIX,SITUS_POST_DIR,SITUS_ZIP,ACREAGE");
+    expect(check.attempts).toEqual([expect.objectContaining({ dataset: "San Diego parcel addresses", outcome: "matched" })]);
+  });
+
+  it("reports a San Diego point parcel published under another number as a mismatch", async () => {
+    const point = { lat: 32.7614893, lng: -117.1216627 };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(featuresResponse([
+      feature(lot(point.lat, point.lng, 50, 100), {
+        APN: "4394423500", SITUS_ADDRESS: 4633, SITUS_FRACTION: "", SITUS_PRE_DIR: "",
+        SITUS_STREET: "FELTON", SITUS_SUFFIX: "ST", SITUS_POST_DIR: "", SITUS_ZIP: "92116", ACREAGE: 0.14,
+      }),
+    ])));
+
+    const check = await verifyParcelAddressAtPoint(point.lat, point.lng, parseStreetAddress("4621 Felton Street, San Diego, CA 92116")!, Date.now() + 4000);
+
+    expect(check.verdict).toBe("mismatch");
+    expect(check.parcelId).toBe("4394423500");
   });
 
   it("keeps the geometry-only point layer as it was", () => {

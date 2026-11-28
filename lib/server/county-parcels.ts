@@ -198,6 +198,23 @@ export const COUNTY_GIS_SOURCES: CountyGisSource[] = [
     areaUnit: "acres",
     jurisdictionField: "SITUS_JURIS",
     jurisdictionCodes: SAN_DIEGO_JURISDICTION_CODES,
+    // The County layer publishes each parcel's own situs address in split
+    // fields, so San Diego addresses are verified against the County's record
+    // before the statewide layer. On 2026-11-27 the statewide layer rejected
+    // the County's correct point hit for 4621 Felton St (APN 4394423400) as
+    // "a different street address", during the live lookup sample. SITUS_JURIS is a code, not a city name,
+    // so locality rests on the ZIP.
+    situs: {
+      queryUrl:
+        "https://gis-public.sandiegocounty.gov/arcgis/rest/services/cosd_warehouse/parcels_all_for_public_use/MapServer/0/query",
+      fields: {
+        id: "APN",
+        line: ["SITUS_ADDRESS", "SITUS_FRACTION", "SITUS_PRE_DIR", "SITUS_STREET", "SITUS_SUFFIX", "SITUS_POST_DIR"],
+        cities: [],
+        zip: "SITUS_ZIP",
+        area: "ACREAGE",
+      },
+    },
   },
   {
     county: "Orange",
