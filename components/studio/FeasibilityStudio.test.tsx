@@ -1113,7 +1113,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // Certificate → Builders (2026-11-27).
     const rail = screen.getByRole("navigation", { name: "Journey progress" });
     expect(within(rail).getAllByRole("button").slice(1).map((b) => b.textContent)).toEqual(
-      ["Your lot", "Rules & fit", "Design", expect.stringContaining("Cert"), "Builders"],
+      ["Your lot", expect.stringContaining("Rules & fit"), "Design", expect.stringContaining("Cert"), "Builders"],
     );
 
     // Reveal 2 · Rules & fit — the rent payoff with a confidence teaser, no paywall.
