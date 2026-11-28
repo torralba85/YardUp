@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import Stripe from "stripe";
 
 const mocks = vi.hoisted(() => ({
   stripe: null as null | {
@@ -85,9 +86,22 @@ function installEvent(
 ) {
   mocks.stripe = {
     webhooks: {
-      constructEvent: vi.fn(() => ({ type, data: { object } })),
+      constructEvent: vi.fn(() => ({ type, livemode: false, data: { object } })),
     },
   };
+}
+
+const stripeWebhooks = new Stripe("sk_test_fixture").webhooks;
+
+function installSignatureVerifier() {
+  mocks.stripe = {
+    webhooks: { constructEvent: vi.fn(stripeWebhooks.constructEvent.bind(stripeWebhooks)) },
+  };
+}
+
+function signedRequest(payload: string) {
+  const signature = stripeWebhooks.generateTestHeaderString({ payload, secret: "whsec_x" });
+  return webhookRequest(payload, signature);
 }
 
 function paidSession(overrides: Record<string, unknown> = {}) {
@@ -107,6 +121,7 @@ function paidSession(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture");
   vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
   mocks.stripe = null;
   mocks.grant.mockReset().mockResolvedValue({ status: "granted" });
@@ -145,6 +160,45 @@ describe("POST /api/stripe/webhook", () => {
     const res = await POST(webhookRequest());
     expect(res.status).toBe(400);
     expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["sk_live_fixture", false],
+    ["rk_test_fixture", true],
+    ["rkcs_test_fixture", true],
+  ])("rejects a correctly signed event in the wrong mode for %s", async (key, livemode) => {
+    vi.stubEnv("STRIPE_SECRET_KEY", key);
+    installSignatureVerifier();
+    const payload = JSON.stringify({
+      id: "evt_wrong_mode", type: "checkout.session.completed", livemode,
+      data: { object: paidSession() },
+    });
+
+    expect((await POST(signedRequest(payload))).status).toBe(400);
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing, mismatched, or stale signature and a modified body", async () => {
+    installSignatureVerifier();
+    const payload = JSON.stringify({
+      id: "evt_signature_test", type: "refund.created", livemode: false,
+      data: { object: { id: "re_fixture" } },
+    });
+    const valid = stripeWebhooks.generateTestHeaderString({ payload, secret: "whsec_x" });
+    const wrong = stripeWebhooks.generateTestHeaderString({ payload, secret: "whsec_wrong" });
+    const stale = stripeWebhooks.generateTestHeaderString({
+      payload, secret: "whsec_x", timestamp: Math.floor(Date.now() / 1000) - 600,
+    });
+
+    for (const request of [
+      webhookRequest(payload, ""), webhookRequest(payload, wrong),
+      webhookRequest(payload, stale), webhookRequest(`${payload}\n`, valid),
+    ]) {
+      expect((await POST(request)).status).toBe(400);
+    }
+    expect(mocks.reconcile).not.toHaveBeenCalled();
+    expect((await POST(webhookRequest(payload, valid))).status).toBe(200);
+    expect(mocks.reconcile).toHaveBeenCalledOnce();
   });
 
   it("grants an explicitly typed, correctly priced lead unlock", async () => {
@@ -221,12 +275,46 @@ describe("POST /api/stripe/webhook", () => {
   it.each(["refund.created", "refund.updated", "refund.failed", "charge.dispute.created", "charge.dispute.closed"])(
     "routes %s to reconciliation after signature verification",
     async (type) => {
-      installEvent({ id: "processor-object" }, type);
-      expect((await POST(webhookRequest())).status).toBe(200);
+      vi.stubEnv("STRIPE_SECRET_KEY", "rkcs_test_fixture");
+      installSignatureVerifier();
+      const payload = JSON.stringify({
+        id: "evt_reversal", type, livemode: false,
+        data: { object: { id: "processor-object" } },
+      });
+
+      expect((await POST(signedRequest(payload))).status).toBe(200);
       expect(mocks.reconcile).toHaveBeenCalledWith(mocks.stripe, expect.objectContaining({ type }));
       expect(mocks.grant).not.toHaveBeenCalled();
     },
   );
+
+  it.each([
+    ["checkout.session.completed", "paid"],
+    ["checkout.session.async_payment_succeeded", "paid"],
+    ["checkout.session.async_payment_failed", "unpaid"],
+  ])("accepts correctly signed %s in live mode", async (type, paymentStatus) => {
+    vi.stubEnv("STRIPE_SECRET_KEY", "rk_live_fixture");
+    installSignatureVerifier();
+    const payload = JSON.stringify({
+      id: "evt_checkout", type, livemode: true,
+      data: { object: paidSession({ payment_status: paymentStatus }) },
+    });
+
+    expect((await POST(signedRequest(payload))).status).toBe(200);
+  });
+
+  it("returns a retryable response until reconciliation can write the event", async () => {
+    installEvent({ id: "re_fixture" }, "refund.updated");
+    mocks.reconcile.mockRejectedValueOnce(new Error("Firestore unavailable"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect((await POST(webhookRequest())).status).toBe(500);
+      expect((await POST(webhookRequest())).status).toBe(200);
+      expect(mocks.reconcile).toHaveBeenCalledTimes(2);
+    } finally {
+      log.mockRestore();
+    }
+  });
 
   it("does not grant a credit pack after its payment was reversed", async () => {
     installEvent(paidSession({

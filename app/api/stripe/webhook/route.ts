@@ -63,7 +63,10 @@ async function rotateReservationForFailedSession(
 export async function POST(request: NextRequest) {
   const stripe = await getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripe || !secret) {
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  // Stripe CLI's temporary claimable sandboxes issue test-only rkcs_ keys.
+  const keyMode = key.startsWith("rkcs_test_") ? "test" : /^(?:sk|rk)_(test|live)_/.exec(key)?.[1];
+  if (!stripe || !secret || !keyMode) {
     return NextResponse.json(
       { error: "Stripe is not configured." },
       { status: 503 },
@@ -78,6 +81,10 @@ export async function POST(request: NextRequest) {
     event = stripe.webhooks.constructEvent(rawBody, signature, secret);
   } catch {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+  if (event.livemode !== (keyMode === "live")) {
+    console.error("[stripe/webhook] Event mode does not match Stripe key", { eventId: event.id });
+    return NextResponse.json({ error: "Stripe event mode mismatch" }, { status: 400 });
   }
 
   try {
