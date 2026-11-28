@@ -82,6 +82,29 @@ test("Rules & Fit stage fills its column and the certificate CTA stays in view",
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.viewportHeight);
 });
 
+for (const viewport of [{ width: 1366, height: 768 }, { width: 1496, height: 874 }]) {
+  test(`sample certificate receives clicks at the bottom of the ${viewport.width}px rail`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
+    await openStep(page, /Rules & fit/);
+    const sample = page.getByTestId("certificate-decision").getByRole("link", { name: /See a sample certificate/ });
+    const scrolled = await sample.evaluate(link => {
+      for (let pane = link.parentElement; pane; pane = pane.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(pane).overflowY) && pane.scrollHeight > pane.clientHeight) {
+          pane.scrollTop = pane.scrollHeight;
+          return pane.scrollTop > 0;
+        }
+      }
+      return false;
+    });
+    expect(scrolled).toBe(true);
+    await expect.poll(() => sample.evaluate(link => {
+      const { left, top, width, height } = link.getBoundingClientRect();
+      return link.contains(document.elementFromPoint(left + width / 2, top + height / 2));
+    })).toBe(true);
+  });
+}
+
 test("a signed-in real lot leaves no blank page below the Studio", async ({ page }) => {
   // The email card's sr-only label had no positioned ancestor, escaped the
   // clipped `main`, and stretched the page by hundreds of pixels of chalk.

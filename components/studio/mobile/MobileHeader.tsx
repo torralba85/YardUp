@@ -28,7 +28,7 @@ export default function MobileHeader({ address, estimated, onReset }: MobileHead
   const { user, profile, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const displayName = profile?.displayName || profile?.email || "Account";
-  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
+  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot owner";
 
   return (
     <header

@@ -34,6 +34,7 @@ export default function CaliforniaAduCostPage() {
       title="ADU Cost in California (2026)"
       kicker={`Build cost · Permit fees · Quote checklist · Reviewed ${CALIFORNIA_COST_GUIDE_AS_OF}`}
       layout="editorial"
+      lotHref="#calculator-address-input"
     >
       <CaliforniaAduCostGuide />
     </LegalPageShell>

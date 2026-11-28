@@ -9,7 +9,7 @@ export interface JourneyRailProps {
   steps: DerivedJourneyStep[];
   /** Navigate back one step; hidden on the first step. */
   onBack?: () => void;
-  /** Jump to a previously completed step (done steps only). */
+  /** Jump back to an earlier step (done or viewed steps only). */
   onStepSelect: (id: MobileJourneyStep) => void;
 }
 
@@ -36,39 +36,46 @@ export default function JourneyRail({ steps, onBack, onStepSelect }: JourneyRail
       >
         <ChevronLeft size={18} aria-hidden="true" />
       </button>
-      <ol className="grid min-w-0 flex-1 grid-cols-5">
+      {/* Columns take their label's width and labels never wrap: equal fifths
+          broke "Certificate" mid-word at 390px (2026-11-27 audit). */}
+      <ol className="flex min-w-0 flex-1 justify-between gap-0.5">
         {steps.map((step) => {
           const isCurrent = step.state === "current";
           const isDone = step.state === "done";
+          // An earlier step opened but not completed (a Certificate not bought).
+          const isViewed = step.state === "viewed";
+          const reachable = isDone || isViewed;
           return (
-            <li key={step.id} className="flex min-w-0">
+            <li key={step.id} className="flex flex-auto">
               <button
                 type="button"
-                onClick={isDone ? () => onStepSelect(step.id) : undefined}
-                disabled={!isDone && !isCurrent}
+                onClick={reachable ? () => onStepSelect(step.id) : undefined}
+                disabled={!reachable && !isCurrent}
                 aria-current={isCurrent ? "step" : undefined}
-                aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : ""}`}
+                aria-label={`${step.label}${isDone ? " (completed)" : isCurrent ? " (current)" : isViewed ? " (visited)" : ""}`}
                 className={`flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-1 rounded-control font-sans text-xs font-semibold motion-safe:transition ${
                   isCurrent
                     ? "text-lot-orange-ink"
                     : isDone
                       ? "cursor-pointer text-status-eligible hover:bg-lot-surface"
-                      : "text-lot-stone"
+                      : isViewed
+                        ? "cursor-pointer text-lot-ink hover:bg-lot-surface"
+                        : "text-lot-stone"
                 }`}
               >
                 {isDone ? <Check size={12} aria-hidden="true" /> : (
                 <span
                   aria-hidden
                   className={`block h-2 w-2 rounded-full ${
-                    isCurrent ? "bg-lot-orange" : isDone ? "bg-status-eligible" : "bg-lot-line"
+                    isCurrent ? "bg-lot-orange" : isViewed ? "bg-lot-ink" : "bg-lot-line"
                   }`}
                 />
                 )}
-                <span className="w-full min-w-0 wrap-anywhere px-0.5 text-center leading-tight">
+                <span className="whitespace-nowrap px-0.5 text-center leading-tight">
                   {step.id === "act" ? (
                     <>
-                      <span className="min-[360px]:hidden">Cert.</span>
-                      <span className="hidden min-[360px]:inline">{step.label}</span>
+                      <span className="min-[380px]:hidden">Cert.</span>
+                      <span className="hidden min-[380px]:inline">{step.label}</span>
                     </>
                   ) : step.label}
                 </span>

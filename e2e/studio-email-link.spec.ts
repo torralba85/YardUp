@@ -12,12 +12,11 @@ test("email capture appears on results and stays out of the design flow", async 
   await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 30_000 });
   if (isMobile) {
-    await expect(page.getByRole("button", { name: "Shape your backyard home" })).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Shape your backyard home" }).click();
-    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Check feasibility" }).click();
+    // The save card sits on Rules & fit, the phone's step 2, as on desktop.
+    await expect(page.getByRole("button", { name: "Design your backyard home" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Save your layout link" })).toBeVisible();
+    await page.getByRole("button", { name: "Design your backyard home" }).click();
+    await expect(page.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveCount(0);
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Rules & fit/ }).click();
     await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
@@ -60,7 +59,7 @@ test("free lot link queues a real design and carries email into the account dial
   await card.getByRole("textbox", { name: "Email address for your 3D lot link" }).fill("layout-owner@example.test");
   await card.screenshot({ path: testInfo.outputPath("email-link-form.png") });
   await expect(card.getByRole("textbox", { name: "Email address for your 3D lot link" })).toHaveValue("layout-owner@example.test");
-  await card.getByRole("button", { name: "Email My 3D Link" }).click();
+  await card.getByRole("button", { name: "Email my 3D link" }).click();
   await expect(card.getByRole("status")).toContainText("couldn't email it right now");
   expect(captured).toMatchObject({ email: "layout-owner@example.test", marketingOptIn: false, address: parcel.address, scenario: { liveParcel: { address: parcel.address } } });
   expect(new URL(captured!.scenarioUrl as string).origin).toBe("https://lotfoundry.net");
@@ -105,6 +104,7 @@ test("emailed layout restores the real parcel without a guest lookup and survive
   await dialog.locator('button[type="submit"]').click();
   await expect(dialog).not.toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(EMAIL_SCENARIO.liveParcel!.address).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("button", { name: "Account menu", exact: true }).filter({ visible: true })).toHaveCount(1);
   expect(parcelLookups).toBe(0);
 });
 
@@ -132,7 +132,7 @@ test("free link form fits a 320px phone with readable inputs and touch targets",
   await card.scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(await card.getByRole("textbox").evaluate((input) => parseFloat(getComputedStyle(input).fontSize))).toBeGreaterThanOrEqual(16);
-  const button = await card.getByRole("button", { name: "Email My 3D Link" }).boundingBox();
+  const button = await card.getByRole("button", { name: "Email my 3D link" }).boundingBox();
   expect(button!.height).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: testInfo.outputPath("email-link-320px.png"), fullPage: true });
 });

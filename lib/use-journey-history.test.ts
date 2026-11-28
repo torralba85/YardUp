@@ -42,11 +42,11 @@ describe("useJourneyHistory", () => {
       { initialProps: { step: "find" as MobileJourneyStep } },
     );
 
-    rerender({ step: "earn" });
+    rerender({ step: "check" });
 
     expect(push).toHaveBeenCalledTimes(1);
     const [state, , url] = push.mock.calls[0];
-    expect(state).toMatchObject({ [JOURNEY_STEP_STATE_KEY]: "earn" });
+    expect(state).toMatchObject({ [JOURNEY_STEP_STATE_KEY]: "check" });
     // Privacy rule (e2e/hero.spec.ts:61): a guest's address must never
     // reach the URL or history. Entries reuse the current URL exactly.
     expect(url).toBe(window.location.href);
@@ -60,9 +60,9 @@ describe("useJourneyHistory", () => {
     );
     rerender({ step: "shape" });
 
-    act(() => popTo("earn"));
+    act(() => popTo("check"));
 
-    expect(onRestore).toHaveBeenCalledWith("earn");
+    expect(onRestore).toHaveBeenCalledWith("check");
   });
 
   it("does not push a new entry for a step arriving from popstate", () => {
@@ -74,9 +74,9 @@ describe("useJourneyHistory", () => {
     rerender({ step: "shape" });
 
     const push = vi.spyOn(window.history, "pushState");
-    act(() => popTo("earn"));
+    act(() => popTo("check"));
     // The consumer reacts to onRestore by setting state, which re-renders.
-    rerender({ step: "earn" });
+    rerender({ step: "check" });
 
     expect(push).not.toHaveBeenCalled();
   });
@@ -93,11 +93,11 @@ describe("useJourneyHistory", () => {
       ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, onRestore),
       { initialProps: { step: "find" as MobileJourneyStep } },
     );
-    rerender({ step: "earn" });
+    rerender({ step: "check" });
     rerender({ step: "shape" });
 
-    act(() => popTo("earn"));
-    rerender({ step: "earn" });
+    act(() => popTo("check"));
+    rerender({ step: "check" });
 
     const push = vi.spyOn(window.history, "pushState");
     rerender({ step: "shape" });
@@ -119,21 +119,21 @@ describe("useJourneyHistory", () => {
       ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, onRestore),
       { initialProps: { step: "find" as MobileJourneyStep } },
     );
-    rerender({ step: "earn" });
+    rerender({ step: "check" });
     rerender({ step: "shape" });
 
-    // popstate delivers "earn", but the consumer refuses it — no rerender
+    // popstate delivers "check", but the consumer refuses it — no rerender
     // follows, so `step` (from the hook's point of view) stays "shape".
-    act(() => popTo("earn"));
-    expect(onRestore).toHaveBeenCalledWith("earn");
+    act(() => popTo("check"));
+    expect(onRestore).toHaveBeenCalledWith("check");
 
     const push = vi.spyOn(window.history, "pushState");
     // A genuine forward move to a different step still occurs afterward.
-    rerender({ step: "check" });
+    rerender({ step: "act" });
 
     expect(push).toHaveBeenCalledTimes(1);
     const [state] = push.mock.calls[0];
-    expect(state).toMatchObject({ [JOURNEY_STEP_STATE_KEY]: "check" });
+    expect(state).toMatchObject({ [JOURNEY_STEP_STATE_KEY]: "act" });
   });
 
   it("ignores a popstate entry with no journey state", () => {
@@ -174,7 +174,7 @@ describe("useJourneyHistory", () => {
       ({ step }: { step: MobileJourneyStep }) => useJourneyHistory(step, onRestore, false),
       { initialProps: { step: "find" as MobileJourneyStep } },
     );
-    rerender({ step: "earn" });
+    rerender({ step: "check" });
 
     // Dispatched directly rather than via the shared popTo() helper: popTo
     // also calls replaceState to model realistic browser semantics for the
@@ -205,11 +205,11 @@ describe("useJourneyHistory", () => {
         useJourneyHistory(step, vi.fn(), enabled),
       { initialProps: { step: "find" as MobileJourneyStep, enabled: false } },
     );
-    rerender({ step: "earn", enabled: false });
+    rerender({ step: "check", enabled: false });
 
     const push = vi.spyOn(window.history, "pushState");
     const replace = vi.spyOn(window.history, "replaceState");
-    rerender({ step: "earn", enabled: true });
+    rerender({ step: "check", enabled: true });
 
     expect(replace).toHaveBeenCalledTimes(1);
     expect(push).not.toHaveBeenCalled();

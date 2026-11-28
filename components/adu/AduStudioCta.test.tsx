@@ -38,22 +38,19 @@ describe("AduStudioCta", () => {
       <AduStudioCta
         city="San Diego"
         slug="san-diego-cost"
-        placement="mid"
-        heading="Test your San Diego lot"
       />,
     );
 
-    expect(screen.getByRole("heading", { level: 2, name: "Test your San Diego lot" })).toBeVisible();
-    expect(screen.getByText(/Free: lot fit, 3D concept, and rent range/)).toBeVisible();
-    expect(screen.getByText(/Certificate of\s+Feasibility: build cost,\s+net income and payback/)).toBeVisible();
-    expect(screen.getByText(/up to 3 addresses/i)).toBeVisible();
+    expect(screen.getByRole("region", { name: "Check your San Diego lot in the Studio" })).toBeVisible();
+    expect(screen.getByText(/estimated rent for up to 3 addresses/i)).toBeVisible();
+    expect(screen.getByText(/build cost, net income and payback estimates/i)).toBeVisible();
 
     fireEvent.change(screen.getByLabelText("Your San Diego street address"), {
       target: { value: "500 Cedar Ave, San Jose, CA" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Check my lot" }));
 
-    expect(trackEventMock).toHaveBeenCalledWith("adu_cta_mid", {
+    expect(trackEventMock).toHaveBeenCalledWith("adu_cta_top", {
       city_slug: "san-diego-cost",
     });
 

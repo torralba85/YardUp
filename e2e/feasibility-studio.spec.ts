@@ -127,7 +127,7 @@ test.describe("Public LotFoundry flows", () => {
     await page.getByRole("button", { name: "See the Seattle example" }).click();
     await expect(page.getByRole("heading", { name: /could rent for/i })).toBeVisible();
 
-    await page.getByRole("button", { name: /Shape your backyard home/i }).click();
+    await page.getByRole("button", { name: /Design your backyard home/i }).click();
     // ShapeStep's own <h2> is "Pick a direction." — the word "Shape" only
     // appears in the section's aria-label and the rail's step chip, neither
     // of which is heading-role, so assert on the actual heading text.

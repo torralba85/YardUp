@@ -13,7 +13,7 @@ const fetchMock = vi.fn();
 const scenarioUrl = buildScenarioShareUrl(EMAIL_SCENARIO, "a".repeat(48));
 function fillAndSubmit() {
   fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "Owner@Example.COM" } });
-  fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
+  fireEvent.click(screen.getByRole("button", { name: "Email my 3D link" }));
 }
 beforeEach(() => {
   vi.clearAllMocks(); window.sessionStorage.clear(); window.localStorage.clear();
@@ -32,15 +32,15 @@ describe("EmailScenarioLinkCard", () => {
     render(<EmailScenarioLinkCard scenario={EMAIL_SCENARIO} />);
     expect(screen.getByRole("checkbox")).not.toBeChecked();
     fillAndSubmit();
-    expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Email my 3D link" })).toBeDisabled();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ marketingOptIn: false, address: EMAIL_SCENARIO.liveParcel!.address });
     await act(async () => resolve({ ok: true, json: async () => ({ ok: true, delivery: "queued", scenarioUrl }) }));
     expect(screen.getByRole("status")).toHaveTextContent("couldn't email it right now");
-    expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Email my 3D link" })).toBeNull();
     expect(window.sessionStorage.getItem("lotfoundry_captured_email")).toBe("owner@example.com");
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
-    fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     const fallback = await screen.findByLabelText("Select and copy your link");
     expect(fallback).toHaveValue(scenarioUrl);
   });
@@ -63,7 +63,7 @@ describe("EmailScenarioLinkCard", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Sent! Check your inbox");
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
-    fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     expect(await screen.findByRole("button", { name: "Copied!" })).toBeVisible();
     expect(writeText).toHaveBeenCalledWith(scenarioUrl);
     unmount();
@@ -71,10 +71,10 @@ describe("EmailScenarioLinkCard", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Sent!");
     again.unmount();
     const differentAddress = render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, liveParcel: { ...EMAIL_SCENARIO.liveParcel!, address: "456 Different Street" } }} />);
-    expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Email my 3D link" })).toBeVisible();
     differentAddress.unmount();
     render(<EmailScenarioLinkCard scenario={{ ...EMAIL_SCENARIO, config: { ...EMAIL_SCENARIO.config, footprint: 800 } }} />);
-    expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Email my 3D link" })).toBeVisible();
   });
   it("retains editable form on API failure without storing the email or firing analytics", async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({ error: "Please try again later." }) });
@@ -82,7 +82,7 @@ describe("EmailScenarioLinkCard", () => {
     render(<EmailScenarioLinkCard scenario={EMAIL_SCENARIO} />);
     fillAndSubmit();
     expect(await screen.findByRole("alert")).toHaveTextContent("Please try again later.");
-    expect(screen.getByRole("button", { name: "Email My 3D Link" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Email my 3D link" })).toBeEnabled();
     expect(window.sessionStorage.getItem("lotfoundry_captured_email")).toBeNull();
     expect(gtag).not.toHaveBeenCalled();
   });

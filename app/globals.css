@@ -433,6 +433,12 @@ html[data-lf-consent="unset"] body {
 }
 
 @media (max-width: 1023px) {
+  html:has(.lf-guide-rail) {
+    scroll-padding-bottom: calc(4rem + var(--lf-consent-height, 0px) + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-lf-consent="unset"] .lf-guide-rail {
+    bottom: var(--lf-consent-height, 6.5rem);
+  }
   html[data-lf-consent="unset"] [data-testid="mobile-journey"] main {
     padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
   }

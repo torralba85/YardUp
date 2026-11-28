@@ -15,7 +15,11 @@ test("feedback explains validation and restores the draft after reload", async (
   await mockTestOwnerAuth(page);
   await page.goto("/feedback");
   const message = page.getByLabel("What happened, or what should we build?");
-  await page.getByRole("button", { name: "Send feedback" }).click();
+  const submit = page.getByRole("button", { name: "Send feedback" });
+  await submit.click();
+  await expect(page.getByLabel("Category")).toBeFocused();
+  await page.getByLabel("Category").selectOption("bug");
+  await submit.click();
   await expect(message).toBeFocused();
   await expect(message).toHaveAttribute("aria-invalid", "true");
   await expect(message).toHaveCSS("box-shadow", /rgb\(196, 55, 8\).*2px/);

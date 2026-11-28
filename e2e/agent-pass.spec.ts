@@ -14,7 +14,7 @@ test("a remembered agent code can be removed and replaced on desktop and mobile"
   await expect(change).toBeVisible({ timeout: 30_000 });
   await change.click();
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem("lf:agent-pass"))).toBeNull();
-  const disclosure = page.locator("summary").filter({ hasText: "Have an agent code?", visible: true }).first();
+  const disclosure = page.locator("summary").filter({ hasText: "Got a code from your real estate agent?", visible: true }).first();
   await disclosure.click();
   const input = page.getByLabel("Agent code", { exact: true }).filter({ visible: true }).first();
   await input.fill("NEW-CODE");

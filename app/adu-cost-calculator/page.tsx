@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
 import { AduCostCalculator } from "@/components/adu/AduCostCalculator";
-import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { calculatorUrl, hubUrl } from "@/lib/adu/content";
 import {
@@ -117,6 +116,8 @@ export default function AduCostCalculatorPage() {
       title="ADU Cost Calculator for California"
       kicker="Build cost · Rental income · Payback"
       layout="editorial"
+      lotHref="#calculator-address-input"
+      facts={[["County markets", aggregates.length], ["Base build / sq ft", "$" + lowFinish], ["High finish / sq ft", "$" + highFinish]]}
       currentPath="/adu-cost-calculator"
     >
       <script
@@ -363,12 +364,6 @@ export default function AduCostCalculatorPage() {
 
       <AduPlanningLinks current="/adu-cost-calculator" />
 
-      <AduStudioCta
-        city="California"
-        slug="adu-cost-calculator"
-        placement="end"
-        heading="Countywide numbers are a start. Check your own lot."
-      />
     </LegalPageShell>
   );
 }

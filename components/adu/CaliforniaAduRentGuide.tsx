@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { AduStudioCta } from "./AduStudioCta";
 import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
   CA_COUNTY_RENTS,
@@ -174,14 +173,6 @@ export function CaliforniaAduRentGuide() {
         </p>
       </div>
 
-      <div className="mt-8">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-rent"
-          placement="top"
-          heading="Estimate monthly rent and payback for your property in 3D"
-        />
-      </div>
 
       <section aria-labelledby="adu-rent-by-county" className="mt-12">
         <h2 id="adu-rent-by-county" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -322,14 +313,6 @@ export function CaliforniaAduRentGuide() {
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-rent"
-          placement="mid"
-          heading="See the rent range for a backyard home on your lot."
-        />
-      </div>
 
       <section aria-labelledby="adu-rent-faq" className="mt-12">
         <h2 id="adu-rent-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -384,14 +367,6 @@ export function CaliforniaAduRentGuide() {
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-rent"
-          placement="end"
-          heading="Check what a backyard home could rent for on your lot."
-        />
-      </div>
     </>
   );
 }

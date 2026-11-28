@@ -21,7 +21,7 @@ export function FeedbackForm() {
 
 function FeedbackFields() {
   const { user } = useAuth();
-  const [category, setCategory] = useState<FeedbackCategory>("bug");
+  const [category, setCategory] = useState<FeedbackCategory | "">("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -29,9 +29,10 @@ function FeedbackFields() {
   const [error, setError] = useState<string | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
 
-  const [invalidField, setInvalidField] = useState<"message" | "email" | null>(null);
+  const [invalidField, setInvalidField] = useState<"category" | "message" | "email" | null>(null);
   const [draftReady, setDraftReady] = useState(false);
   const [draftAvailable, setDraftAvailable] = useState(false);
+  const categoryRef = useRef<HTMLSelectElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,12 @@ function FeedbackFields() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (pending) return;
+    if (!category) {
+      setInvalidField("category");
+      setError("Choose a topic for your feedback.");
+      categoryRef.current?.focus();
+      return;
+    }
     if (message.trim().length < 10) {
       setInvalidField("message");
       setError("Enter at least 10 characters so we can understand your feedback.");
@@ -148,15 +155,24 @@ function FeedbackFields() {
           id="feedback-category"
           name="category"
           autoComplete="off"
+          ref={categoryRef}
+          required
+          aria-invalid={invalidField === "category"}
+          aria-describedby={invalidField === "category" ? "feedback-category-error" : undefined}
           value={category}
-          onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
+          onChange={(e) => {
+            setCategory(e.target.value as FeedbackCategory);
+            if (invalidField === "category") { setInvalidField(null); setError(null); }
+          }}
         >
+          <option value="" disabled>Choose a topic</option>
           {FEEDBACK_CATEGORIES.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
         </Select>
+        {invalidField === "category" && <p id="feedback-category-error" role="alert" className="mt-1 text-sm text-status-blocked">{error}</p>}
       </div>
 
       <div>

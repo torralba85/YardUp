@@ -140,6 +140,10 @@ export default function CertificatePanel({
   // refuses them too. Play Billing charges before the server sees the purchase,
   // so this guard is what keeps a store shell from selling one.
   const demoLot = isPresetCertificateKey(certKey);
+  // A searched address the parcel lookup could not match borrows a demo lot's
+  // size, setbacks and zoning. A Certificate priced on those placeholders would
+  // sell someone else's lot, so the offer becomes "search again" instead.
+  const unmatchedLot = !demoLot && "source" in parcel && parcel.source === "fallback";
   const { purchased, loading, refresh, analyticsOrderId, amount } = recovery.access;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -522,7 +526,7 @@ export default function CertificatePanel({
       await prepareAndOpenCertificate();
       return;
     }
-    if (demoLot) {
+    if (demoLot || unmatchedLot) {
       onSearchAddress?.();
       return;
     }
@@ -609,6 +613,8 @@ export default function CertificatePanel({
     ? "View complete certificate"
     : demoLot
     ? "Search your address"
+    : unmatchedLot
+    ? "Search the address again"
     : !user
       ? certPrice.exact
         ? `${guestPurchaseAction} — ${price}`
@@ -622,10 +628,12 @@ export default function CertificatePanel({
     ? undefined
     : demoLot
     ? "This is a demo lot. A Certificate covers your own property: search its address to get one."
+    : unmatchedLot
+    ? "We couldn’t match this address to an official parcel record, so the lot size, setbacks and zoning shown are placeholders. Try the full street address with its ZIP code. A Certificate needs your real parcel."
     : `${certPrice.exact ? `One-time ${price}` : "One-time purchase"} · No subscription · Includes Certificate access for this property`;
 
   // Web only: a store shell sells digital goods through its own billing.
-  const showPassOffer = !purchased && !demoLot && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
+  const showPassOffer = !purchased && !demoLot && !unmatchedLot && !recoveryPending && profile?.role !== "builder" && certPrice.channel === "web";
   const passOffer = (
     <AgentPassOffer
       linkedCode={linkedPassCode}
@@ -642,7 +650,7 @@ export default function CertificatePanel({
     />
   );
 
-  const guestConsentControl = !purchased && !demoLot && !recoveryPending && !user && isWebChannel ? (
+  const guestConsentControl = !purchased && !demoLot && !unmatchedLot && !recoveryPending && !user && isWebChannel ? (
     <label htmlFor={guestConsentId} className="flex min-h-11 cursor-pointer items-start gap-3 text-xs leading-5 text-lot-stone">
       <Checkbox
         ref={guestConsentRef}
@@ -686,7 +694,7 @@ export default function CertificatePanel({
         <p className="lf-kicker text-lot-orange-ink">{eyebrow}</p>
         <h2 className="lf-section-heading mt-2 text-lot-ink">Your Certificate of Feasibility.</h2>
         <p className="lf-body mx-auto mt-2 max-w-md text-lot-stone">
-          Compare estimated cash flow after operating costs and loan payments. Review itemized cost allowances and the site plan PDF, and use the scope checklist to compare builder quotes.
+          The numbers for this lot and design, in one report you can print, share and take to lenders and builders.
         </p>
       </div>
 
@@ -792,13 +800,15 @@ export default function CertificatePanel({
         feeJurisdiction={feeJurisdiction}
       />
 
-      {showPassOffer && !linkedPassCode && passOffer}
-
       {!purchased && (
         <p className="text-center text-xs leading-5 text-lot-stone">
           Preliminary algorithmic planning estimate; does not constitute a municipal building permit, zoning warranty, or architectural certification.
         </p>
       )}
+
+      {/* Below the decision, not under the pay button: a code field there reads as
+          "go find a discount" and pulls people away from checkout. */}
+      {showPassOffer && !linkedPassCode && passOffer}
 
       {purchased && (
         <div hidden={recoveryPending} className="rounded-none border border-lot-line bg-lot-surface px-6 py-5">

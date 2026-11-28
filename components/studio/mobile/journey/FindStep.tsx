@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { ArrowRight, Search } from "lucide-react";
-import { demoPresets, parcelPresets } from "@/lib/feasibility";
+import { parcelPresets } from "@/lib/feasibility";
 import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
-import { useRadioGroup } from "@/components/ui/useRadioGroup";
 import AddressSearch, { type AddressSearchResult } from "@/components/studio/AddressSearch";
 import { Button } from "@/components/ui/Button";
 
@@ -20,7 +19,7 @@ export interface FindStepProps {
   parcelError: string | null;
   /** The selected demo preset id (when in preset mode). */
   selectedPresetId: string | null;
-  /** A demo lot chip was tapped. */
+  /** Load a demo lot (the CTA's San Diego example, or a lot named by link). */
   onPresetSelect: (id: string) => void;
   /** The one primary action: reveal what the chosen lot could earn. */
   onReveal: () => void;
@@ -33,8 +32,11 @@ export interface FindStepProps {
 }
 
 /**
- * Reveal 1 · Find — enter or select the property. One decision (the address
- * or a demo lot) and one primary action: reveal the backyard's potential.
+ * Reveal 1 · Find — enter the property. One decision (the address, or the
+ * San Diego example) and one primary action: reveal the backyard's potential.
+ * The Seattle, Portland and Austin chips were removed on 2026-11-27: the
+ * product sells San Diego and California, and they invited out-of-market
+ * searches. A demo lot named by link still opens and keeps its name.
  * A live address resolution advances the journey automatically; the CTA
  * covers the demo path and re-reveals.
  */
@@ -49,23 +51,13 @@ export default function FindStep({
   presetChosen = false,
 }: FindStepProps) {
   const [queryText, setQueryText] = useState("");
-  const [userPickedPreset, setUserPickedPreset] = useState(false);
   const trimmedQuery = queryText.trim();
   const hasQuery = trimmedQuery.length > 0;
-  // A lot the visitor picked here or arrived with is kept, and the CTA names
-  // it; otherwise the CTA opens the San Diego example.
-  const keptPreset =
-    userPickedPreset || presetChosen
-      ? parcelPresets.find((preset) => preset.id === selectedPresetId)
-      : undefined;
-  const { groupProps, getRadioProps } = useRadioGroup({
-    value: selectedPresetId ?? "",
-    onChange: (id) => {
-      setUserPickedPreset(true);
-      onPresetSelect(id);
-    },
-    values: demoPresets.map((p) => p.id),
-  });
+  // A lot the visitor arrived with is kept, and the CTA names it; otherwise
+  // the CTA opens the San Diego example.
+  const keptPreset = presetChosen
+    ? parcelPresets.find((preset) => preset.id === selectedPresetId)
+    : undefined;
 
   return (
     <section
@@ -103,27 +95,6 @@ export default function FindStep({
             {parcelError}
           </div>
         )}
-      </div>
-
-      <p className="mt-7 lf-kicker text-lot-stone">
-        Or explore a demo lot
-      </p>
-      <div className="mt-2 flex flex-wrap gap-2" aria-label="Demo lots" {...groupProps}>
-        {demoPresets.map((preset) => {
-          const selected = selectedPresetId === preset.id;
-          return (
-            <Button
-              key={preset.id}
-              type="button"
-              size="md"
-              variant={selected ? "selected" : "secondary"}
-              {...getRadioProps(preset.id)}
-              className="px-4"
-            >
-              {preset.city.split(",")[0]}
-            </Button>
-          );
-        })}
       </div>
 
       <div className="mt-8">

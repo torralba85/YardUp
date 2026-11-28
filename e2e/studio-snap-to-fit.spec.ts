@@ -20,7 +20,7 @@ for (const fallback of [false, true]) {
     await page.route("**/api/studio/scenario-link/*", route => route.fulfill({ json: { scenario } }));
     const url = new URL(buildScenarioShareUrl(scenario, "e".repeat(48)));
     await page.goto(`${url.pathname}${url.search}`, { waitUntil: "domcontentloaded" });
-    if (isMobile) await page.getByRole("button", { name: "Shape your backyard home" }).click();
+    if (isMobile) await page.getByRole("button", { name: "Design your backyard home" }).click();
     const snap = page.getByRole("button", { name: "Snap to fit", exact: true }).filter({ visible: true }).first();
     await expect(snap).toBeVisible({ timeout: 30_000 });
     await snap.click();

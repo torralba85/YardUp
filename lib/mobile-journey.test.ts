@@ -5,23 +5,30 @@ import {
   journeyIndex,
   nextJourneyStep,
   prevJourneyStep,
+  type MobileJourneyStep,
 } from "./mobile-journey";
+import { STUDIO_STEPS } from "./studio-steps";
 
 describe("mobile journey order", () => {
   it("walks the five reveals in order", () => {
     expect(MOBILE_JOURNEY_STEPS.map((s) => s.id)).toEqual([
       "find",
-      "earn",
-      "shape",
       "check",
+      "shape",
       "act",
+      "builders",
     ]);
-    expect(nextJourneyStep("find")).toBe("earn");
-    expect(nextJourneyStep("check")).toBe("act");
-    expect(nextJourneyStep("act")).toBeNull();
-    expect(prevJourneyStep("earn")).toBe("find");
+    expect(nextJourneyStep("find")).toBe("check");
+    expect(nextJourneyStep("act")).toBe("builders");
+    expect(nextJourneyStep("builders")).toBeNull();
+    expect(prevJourneyStep("check")).toBe("find");
     expect(prevJourneyStep("find")).toBeNull();
     expect(journeyIndex("shape")).toBe(2);
+  });
+
+  it("uses the desktop step names in the desktop order", () => {
+    // One journey on every device (2026-11-27 UX audit, Andrew's decision).
+    expect(MOBILE_JOURNEY_STEPS.map((s) => s.label)).toEqual(STUDIO_STEPS.map((s) => s.label));
   });
 });
 
@@ -33,7 +40,7 @@ describe("deriveJourneySteps", () => {
   });
 
   it("marks earlier steps done and later steps upcoming once found", () => {
-    const steps = deriveJourneySteps("check", { found: true });
+    const steps = deriveJourneySteps("act", { found: true });
     expect(steps.map((s) => s.state)).toEqual([
       "done",
       "done",
@@ -41,5 +48,13 @@ describe("deriveJourneySteps", () => {
       "current",
       "upcoming",
     ]);
+  });
+
+  it("shows a Certificate passed without buying as viewed, not done", () => {
+    const steps = deriveJourneySteps("builders", {
+      found: true,
+      completed: new Set<MobileJourneyStep>(["find", "check", "shape"]),
+    });
+    expect(steps.map((s) => s.state)).toEqual(["done", "done", "done", "viewed", "current"]);
   });
 });

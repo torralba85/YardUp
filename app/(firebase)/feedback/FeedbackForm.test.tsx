@@ -10,6 +10,7 @@ it("explains short feedback and focuses the message without sending a request", 
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
   render(<FeedbackForm />);
+  await userEvent.selectOptions(screen.getByLabelText("Category"), "bug");
   await userEvent.click(screen.getByRole("button", { name: "Send feedback" }));
   const message = screen.getByLabelText("What happened, or what should we build?");
   expect(message).toHaveFocus();
@@ -25,6 +26,7 @@ it("restores this tab's draft and clears it after successful submission", async 
   first.unmount();
   const second = render(<FeedbackForm />);
   expect(screen.getByLabelText("What happened, or what should we build?")).toHaveValue("The map needs a clearer legend.");
+  await userEvent.selectOptions(screen.getByLabelText("Category"), "bug");
   await userEvent.click(screen.getByRole("button", { name: "Send feedback" }));
   await screen.findByText("ticket-1");
   second.unmount();

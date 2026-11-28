@@ -9,12 +9,8 @@ test("county GIS uncertainty survives the parcel handoff into Rules & Fit", asyn
     lat: 47.6, lng: -122.3, source: "county-gis", state: "WA", zip: "98101",
   })));
   await page.goto("/studio");
-  if (viewport && viewport.width < 1024) {
-    // A resolved live parcel starts at Earn; Find is already complete.
-    await page.getByRole("button", { name: /shape your backyard home/i }).click();
-    await page.getByRole("button", { name: /check feasibility/i }).click();
-  }
-  await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
+  const mobile = viewport && viewport.width < 1024;
+  await expect(page.getByRole("region", { name: mobile ? "Rent and fit" : "Free property preview" })).toBeVisible();
   await expect(page.getByText(/Not permit approval or guaranteed income/).first()).toBeVisible();
   await expect(page.getByText(/Existing building footprint is unknown/).first()).toBeVisible();
   await expect(page.getByText(/ADU appears permitted under current rules/)).toHaveCount(0);

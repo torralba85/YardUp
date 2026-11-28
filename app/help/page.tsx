@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function HelpPage() {
   return (
-    <LegalPageShell title="Help center" kicker="Support for owners and builders">
+    <LegalPageShell title="Help center" kicker="Support for owners and builders" layout="editorial">
       <LegalSection title="Getting started">
         <p>
           From the{" "}
@@ -28,7 +28,7 @@ export default function HelpPage() {
           <Link href="/studio" prefetch={false} className="font-medium text-lot-orange-ink underline motion-safe:transition-colors hover:text-lot-ink">
             studio
           </Link>
-          . You can explore demo lots without an account; sign in to save concepts and purchase a
+          . You can explore demo lots without an account; sign in to save concepts. You can also check out as a guest for a
           Certificate of Feasibility.
         </p>
       </LegalSection>

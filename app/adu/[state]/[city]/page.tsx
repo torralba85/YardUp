@@ -42,7 +42,9 @@ export default async function AduCityPage({
   const content = getCity(state, city);
   if (!content) notFound();
   return (
-    <LegalPageShell title={content.h1 ?? `ADU Rules in ${content.city} (2026)`} layout="editorial">
+    <LegalPageShell title={content.h1 ?? `ADU Rules in ${content.city} (2026)`} layout="editorial"
+      lotCheck={{ city: content.city, slug: content.slug }}
+      facts={[["Permit steps", content.processSteps.length], ["Rules at a glance", content.glance.filter(row => row.confidence !== "unverified").length], ["Sources", content.sources.length]]}>
       <AduArticle content={content} />
     </LegalPageShell>
   );

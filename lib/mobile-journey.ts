@@ -1,15 +1,16 @@
 /**
  * Mobile-only journey state for the five-reveal studio (issue #130).
  *
- * The phone studio is a sequence of five short reveals — find, earn, shape,
- * check, act — instead of the desktop's guided spine. This module is the pure
- * state helper: step order, labels, and per-step lifecycle derivation. It is
- * deliberately separate from the desktop `StudioStep` in `lib/studio-steps.ts`;
- * desktop navigation is untouched by the mobile journey.
+ * The phone studio is a sequence of five short reveals instead of the
+ * desktop's guided spine. Since 2026-11-27 it follows the desktop order and
+ * names exactly (Andrew's decision after the UX audit): Your lot → Rules & fit
+ * → Design → Certificate → Builders, so a person who switches devices meets
+ * the same journey. The ids stay mobile-specific (`find`, `check`, `shape`,
+ * `act`, `builders`); `lib/studio-steps.ts` holds the desktop twin.
  */
 
 /** The ordered mobile journey. One decision, one reveal per step. */
-export type MobileJourneyStep = "find" | "earn" | "shape" | "check" | "act";
+export type MobileJourneyStep = "find" | "check" | "shape" | "act" | "builders";
 
 /** Static metadata for a journey step. */
 export interface MobileJourneyStepMeta {
@@ -18,21 +19,25 @@ export interface MobileJourneyStepMeta {
   label: string;
 }
 
-/** Lifecycle state of a step relative to the current position. */
-export type MobileJourneyStepState = "current" | "done" | "upcoming" | "locked";
+/**
+ * Lifecycle of a step relative to the current position. `viewed` is an
+ * earlier step the visitor opened but has not completed (a Certificate looked
+ * at but not bought): reachable from the rail, but never shown as done.
+ */
+export type MobileJourneyStepState = "current" | "done" | "viewed" | "upcoming" | "locked";
 
 /** A journey step plus its derived lifecycle state. */
 export interface DerivedJourneyStep extends MobileJourneyStepMeta {
   state: MobileJourneyStepState;
 }
 
-/** The ordered five reveals — the single source of truth for the journey. */
+/** The ordered five reveals: the single source of truth for the journey. */
 export const MOBILE_JOURNEY_STEPS: MobileJourneyStepMeta[] = [
   { id: "find", label: "Your lot" },
-  { id: "earn", label: "Rent" },
-  { id: "shape", label: "Design" },
   { id: "check", label: "Rules & fit" },
+  { id: "shape", label: "Design" },
   { id: "act", label: "Certificate" },
+  { id: "builders", label: "Builders" },
 ];
 
 /** Index of a step in the journey order. */
@@ -54,16 +59,23 @@ export function prevJourneyStep(step: MobileJourneyStep): MobileJourneyStep | nu
 /** Inputs that influence which journey steps are reachable. */
 export interface JourneyStateInput {
   /**
-   * Whether the find decision has been made — an address resolved or a demo
+   * Whether the find decision has been made: an address resolved or a demo
    * lot explicitly chosen. Every reveal past "find" is locked until then.
    */
   found: boolean;
+  /**
+   * Steps actually completed. An earlier step outside this set is `viewed`,
+   * not `done`, so passing the paywall never reads as buying the Certificate.
+   * Omit to treat every earlier step as done.
+   */
+  completed?: ReadonlySet<MobileJourneyStep>;
 }
 
 /**
  * Compute each step's lifecycle state for the current position. The active
- * step is `current`; earlier steps are `done`; later steps are `upcoming`
- * unless the find decision hasn't been made yet, which locks them.
+ * step is `current`; earlier steps are `done` (or `viewed` when not completed);
+ * later steps are `upcoming` unless the find decision hasn't been made yet,
+ * which locks them.
  */
 export function deriveJourneySteps(
   active: MobileJourneyStep,
@@ -75,7 +87,7 @@ export function deriveJourneySteps(
     if (index === activeIndex) {
       state = "current";
     } else if (index < activeIndex) {
-      state = "done";
+      state = !input.completed || input.completed.has(meta.id) ? "done" : "viewed";
     } else if (!input.found) {
       state = "locked";
     } else {

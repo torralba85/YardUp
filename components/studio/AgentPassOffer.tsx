@@ -24,7 +24,7 @@ export interface AgentPassOfferProps {
 /**
  * The real estate agent pass on the Certificate step. A visitor who arrived on
  * an agent's link sees the complimentary offer outright; anyone else can open
- * "Have an agent code?" and type one. The server decides whether the code
+ * "Got a code from your real estate agent?" and type one. The server decides whether the code
  * covers this property.
  */
 export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRedeem, onClear }: AgentPassOfferProps) {
@@ -70,7 +70,7 @@ export default function AgentPassOffer({ linkedCode, busy, error, signedIn, onRe
   return (
     <details className="group border-t border-lot-line">
       <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-2 py-3 text-sm font-semibold text-lot-stone hover:text-lot-ink motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-lot-orange-ink">
-        Have an agent code?
+        Got a code from your real estate agent?
         <span aria-hidden="true" className="group-open:rotate-45">+</span>
       </summary>
       <form

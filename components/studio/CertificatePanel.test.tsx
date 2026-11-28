@@ -368,6 +368,31 @@ describe("CertificatePanel", () => {
     expect(mocks.auth.ensureCheckoutUser).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["a guest", null],
+    ["a signed-in homeowner", { uid: "owner-1" }],
+  ])("never sells %s a certificate for an address the parcel lookup could not match", (_who, signedIn) => {
+    mocks.access.purchased = false;
+    mocks.auth.user = signedIn ? { ...signedIn, getIdToken: mocks.getIdToken } : null;
+    const onSearchAddress = vi.fn();
+    const unmatched = { ...SAMPLE_LIVE_PARCEL, source: "fallback" as const };
+    render(
+      <CertificatePanel
+        {...createProps({ parcel: unmatched, parcelName: `${unmatched.address}, ${unmatched.city}`, onSearchAddress })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /checkout|Get your Certificate/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /18 or older/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/code from your real estate agent/)).not.toBeInTheDocument();
+    expect(screen.getByText(/couldn’t match this address to an official parcel record/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Search the address again" }));
+
+    expect(onSearchAddress).toHaveBeenCalledTimes(1);
+    expect(mocks.startCertificateCheckout).not.toHaveBeenCalled();
+    expect(mocks.auth.ensureCheckoutUser).not.toHaveBeenCalled();
+  });
+
   it("offers access retry instead of another Purchase after recovery remains unverified", () => {
     mocks.access.purchased = false;
     mocks.intent = { kind: "checkout", certKey: certificateKey(parcel) };
@@ -401,7 +426,7 @@ describe("CertificatePanel", () => {
       await screen.findByText("This code has expired.");
       fireEvent.click(screen.getByRole("button", { name: "Change agent code" }));
       expect(readAgentPass()).toBeNull();
-      fireEvent.click(screen.getByText("Have an agent code?"));
+      fireEvent.click(screen.getByText("Got a code from your real estate agent?"));
       fireEvent.change(screen.getByLabelText("Agent code"), { target: { value: "NEW-CODE" } });
       fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
       await waitFor(() => expect(mocks.redeemAgentPass).toHaveBeenLastCalledWith(expect.objectContaining({ code: "NEW-CODE" })));
@@ -454,7 +479,7 @@ describe("CertificatePanel", () => {
 
       clearAgentPass();
       render(<CertificatePanel {...createProps()} />);
-      const typed = screen.getByText("Have an agent code?");
+      const typed = screen.getByText("Got a code from your real estate agent?");
       const buyAgain = screen.getByRole("button", { name: "Get your Certificate — $29" });
       expect(buyAgain.compareDocumentPosition(typed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
@@ -496,7 +521,7 @@ describe("CertificatePanel", () => {
 
     it("accepts a typed code and rejects a malformed one before calling the server", async () => {
       render(<CertificatePanel {...createProps()} />);
-      fireEvent.click(screen.getByText("Have an agent code?"));
+      fireEvent.click(screen.getByText("Got a code from your real estate agent?"));
       const field = screen.getByLabelText("Agent code");
       fireEvent.change(field, { target: { value: "!!" } });
       fireEvent.click(screen.getByRole("button", { name: "Apply code" }));
@@ -548,7 +573,7 @@ describe("CertificatePanel", () => {
       for (const text of ["Rear setback", "4 ranked risks to verify", "6-stage permit path", "12–18 week typical approval timeline"]) {
         expect(screen.queryByText(text)).not.toBeInTheDocument();
       }
-      expect(screen.getByText(/fee and permit checks to confirm locally, and a site plan PDF/)).toBeInTheDocument();
+      expect(screen.getByText(/fee and permit checks, a builder scope checklist and a site plan PDF/)).toBeInTheDocument();
     });
 
     it("uses one transaction CTA for the blurred preview", async () => {
@@ -1489,7 +1514,7 @@ describe("CertificatePanel", () => {
     render(<CertificatePanel {...createProps()} />);
 
     expect(
-      screen.getByText(/use the scope checklist to compare builder quotes/i),
+      screen.getByText(/print, share and take to lenders and builders/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(

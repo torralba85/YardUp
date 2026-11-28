@@ -326,7 +326,7 @@ export function LotAnswerCard({
     : "";
 
   const builtInForm = (
-    <form onSubmit={handleBuiltInSubmit} className="space-y-2.5" noValidate>
+    <form onSubmit={handleBuiltInSubmit} className="@container space-y-2.5" noValidate>
       <label
         htmlFor={resolvedInputId}
         className={
@@ -337,7 +337,7 @@ export function LotAnswerCard({
       >
         {inputLabel}
       </label>
-      <div className="flex flex-col gap-2.5 sm:flex-row">
+      <div className="flex flex-col gap-2.5 @min-[28rem]:flex-row">
         <Input
           ref={inputRef}
           id={resolvedInputId}

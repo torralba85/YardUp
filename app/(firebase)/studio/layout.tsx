@@ -87,9 +87,10 @@ export default function StudioLayout({
               <div>
                 <h2 className="font-display text-lg font-medium text-lot-ink">What the address check covers</h2>
                 <p className="mt-2">
-                  Search an address or open the sample parcel, place a modeled ADU, and compare
-                  estimated build cost, rent, payback, setbacks and lot coverage. Change the unit
-                  dimensions and assumptions to compare a smaller or larger project before ordering plans.
+                  Search an address or open the sample parcel, place a modeled ADU, and see whether
+                  it fits the modeled setbacks, plus an estimated rent range. Change the unit
+                  dimensions to compare a smaller or larger project. The paid Certificate adds build
+                  cost, net income, payback and financing for your lot.
                   Parcel and zoning coverage varies by location; finding an address does not mean every
                   local rule or property record is available.
                 </p>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { AduStudioCta } from "./AduStudioCta";
 import { CostBreakdownDiagram } from "./CostBreakdownDiagram";
 import { HUD_FMR_FY2027_URL, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { aduArticleJsonLd, hubUrl, opengraphImageUrl, stateCostUrl } from "@/lib/adu/content";
@@ -171,14 +170,6 @@ export function CaliforniaAduCostGuide() {
         </p>
       </div>
 
-      <div className="mt-8">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-cost"
-          placement="top"
-          heading="Model a backyard home footprint and budget for your lot in 3D"
-        />
-      </div>
 
       <section aria-labelledby="california-adu-cost-by-size" className="mt-12">
         <h2
@@ -351,14 +342,6 @@ export function CaliforniaAduCostGuide() {
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-cost"
-          placement="mid"
-          heading="Move from a statewide range to the buildable area on your lot."
-        />
-      </div>
 
       <section aria-labelledby="adu-cost-faq" className="mt-12">
         <h2 id="adu-cost-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -440,14 +423,6 @@ export function CaliforniaAduCostGuide() {
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-adu-cost"
-          placement="end"
-          heading="Check what an ADU budget means for your lot."
-        />
-      </div>
     </>
   );
 }

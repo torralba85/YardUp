@@ -82,7 +82,7 @@ describe("calculateFeasibility", () => {
     );
     // Default 600 sf footprint → 1br → the LA county conservative anchor.
     expect(result.monthlyRent).toBe(2328);
-    expect(result.rentBasis).toBe("HUD FMR · Los Angeles County, CA · 1-bed");
+    expect(result.rentBasis).toBe("HUD fair market rent · Los Angeles County, CA · 1-bed");
     expect(result.market.verified).toBe(true);
     expect(result.warnings.join(" ")).not.toMatch(/market data is unavailable/i);
   });

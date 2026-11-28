@@ -215,6 +215,7 @@ describe("POST /api/stripe/checkout-certificate", () => {
   // Demo-lot slugs live in constants: Gitleaks reads `certKey: "<long slug>"` as an API key.
   const SAN_DIEGO_DEMO = "1234-coyote-brush-court-san-diego-ca-92117";
   const SEATTLE_DEMO = "1234-oak-street-seattle-wa-98115";
+  const UNMATCHED_LOT = "4621-felton-st-san-diego-ca-92116";
 
   it.each([SAN_DIEGO_DEMO, SEATTLE_DEMO])("refuses to sell a certificate for the demo lot %s", async (certKey) => {
     const create = vi.fn();
@@ -226,6 +227,22 @@ describe("POST /api/stripe/checkout-certificate", () => {
     expect(await res.json()).toEqual({
       error: "Demo lots can't be purchased. Search your own address to get its certificate.",
     });
+    expect(create).not.toHaveBeenCalled();
+    expect(mocks.grant).not.toHaveBeenCalled();
+  });
+
+  it("refuses to sell a certificate for an address the parcel lookup could not match", async () => {
+    const create = vi.fn();
+    mocks.stripe = { checkout: { sessions: { create } } };
+
+    const res = await POST(postRequest({
+      certKey: UNMATCHED_LOT,
+      checkoutAttemptId: "attempt-1",
+      parcelData: { source: "fallback", address: "4621 Felton St" },
+    }));
+
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/couldn't match this address/);
     expect(create).not.toHaveBeenCalled();
     expect(mocks.grant).not.toHaveBeenCalled();
   });

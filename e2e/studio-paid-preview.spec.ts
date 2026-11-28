@@ -9,9 +9,10 @@ test("free Studio shows the rent range while cost, income and payback stay paid"
   if (mobile) {
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await expect(page.getByText("$2,335–$2,919")).toBeVisible();
-    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
+    await page.getByRole("button", { name: /Design your backyard home/ }).click();
     await expect(page.getByRole("radiogroup", { name: "ADU size", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Check feasibility" }).click();
+    // The phone paywall is the Certificate step, as on desktop (2026-11-27).
+    await page.getByRole("button", { name: "See your Certificate" }).click();
   }
   const preview = page.getByRole("region", { name: "Free property preview" });
   await expect(preview.getByText("$2,335–$2,919")).toBeVisible();
@@ -24,7 +25,7 @@ test("free Studio shows the rent range while cost, income and payback stay paid"
   for (const figure of ["$231K–$289K", "$19K /yr", "13.3 yrs"]) {
     await expect(preview.getByText(figure, { exact: true })).toHaveCount(0);
   }
-  await preview.getByRole("button", { name: "See what’s behind the numbers" }).click();
+  if (!mobile) await preview.getByRole("button", { name: "See what’s behind the numbers" }).click();
   await expect(page.getByRole("button", { name: "Search your address" }).filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByRole("region", { name: "Free property preview" }).locator('[data-locked-metric="true"]')).toHaveCount(4);
   await page.screenshot({ path: testInfo.outputPath("studio-paid-preview.png"), fullPage: true });

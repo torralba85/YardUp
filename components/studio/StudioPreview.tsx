@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/Button";
 
 export { rentRangeLabel } from "@/lib/feasibility-disclosure";
 
+const LOCKED_METRICS = ["Build cost", "Annual net income", "Payback period", "Financed cash flow"] as const;
+
 /**
  * The free preview names what the Certificate adds; paid figures are never in the DOM.
- * `stickyCta` pins the unlock button to the bottom of the scrolling pane while
- * the preview is on screen (the desktop rail), so it never sits below the fold.
- * Sticky offsets are measured inside the pane's padding, so a -1.25rem bottom
- * cancels the rail's `p-5` and the bar sits flush with the pane edge.
+ *
+ * The decision block (button, terms note and sample link) is one unit. With
+ * `stickyCta` it docks to the bottom of the scrolling pane (the desktop rail),
+ * so the price and the proof of what it buys never fall below the fold. It must
+ * stay the section's last child: its negative bottom margin cancels the
+ * section's padding so the bar sits flush, and anything placed after it would
+ * be pulled up underneath the bar (the 2026-11-27 sample-link overlap).
  */
 export default function StudioPreview({ result, onUnlock, ctaLabel = "See what’s behind the numbers", busy = false, ctaNote, consentControl, error, stickyCta = false }: {
   result: FeasibilityResult;
@@ -45,39 +50,53 @@ export default function StudioPreview({ result, onUnlock, ctaLabel = "See what�
       </div>
       <div>
         <h2 className="font-display text-xl font-medium text-lot-ink">What’s behind your rental potential?</h2>
-        <p className="mt-1.5 text-sm leading-6 text-lot-stone">Explore the 3D concept for free. The Certificate of Feasibility adds property-specific cost estimates, payback, and financing scenarios.</p>
+        <p className="mt-1.5 text-sm leading-6 text-lot-stone">The 3D concept and rent range are free. Your Certificate of Feasibility prices this lot and this design.</p>
       </div>
-      <div className="grid grid-cols-2 gap-px border border-lot-line bg-lot-line">
-        {/* A plain label, not blurred placeholder glyphs, which read as a rendering fault. */}
-        {["Build cost", "Annual net income", "Payback period", "Financed cash flow"].map((label) => (
-          <div key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface p-3.5">
-            <p className="flex items-center gap-2 text-xs text-lot-stone"><Lock size={13} aria-hidden="true" />{label}</p>
-            <span aria-hidden="true" className="mt-2 block text-sm font-semibold leading-tight text-lot-ink">In your Certificate</span>
-            <span className="sr-only">{label} locked in the certificate</span>
-          </div>
-        ))}
+      {/* One locked panel: the four figures are named once, not each stamped "In your Certificate". */}
+      <div className="border border-lot-line bg-lot-surface">
+        <p className="flex items-center gap-2 border-b border-lot-line px-3.5 py-2.5 text-xs font-semibold text-lot-ink">
+          <Lock size={13} aria-hidden="true" />
+          In your Certificate
+        </p>
+        <ul className="grid grid-cols-2 gap-px bg-lot-line">
+          {LOCKED_METRICS.map((label) => (
+            <li key={label} data-locked-metric="true" className="min-w-0 bg-lot-surface px-3.5 py-3 text-sm font-semibold leading-tight text-lot-ink">
+              <span aria-hidden="true">{label}</span>
+              <span className="sr-only">{label} locked in the certificate</span>
+            </li>
+          ))}
+        </ul>
+        <p className="border-t border-lot-line px-3.5 py-2.5 text-xs leading-5 text-lot-stone">
+          Plus itemized cost allowances, fee and permit checks, a builder scope checklist and a site plan PDF. The free cost calculator shows county averages; the Certificate uses your lot.
+        </p>
       </div>
-      <p className="text-sm leading-6 text-lot-stone">Compare estimated cash flow after operating costs and loan payments. Use the scope checklist to see what each builder’s quote includes. The Certificate also includes cost allowances, fee and permit checks to confirm locally, and a site plan PDF.</p>
       {conflict && <p role="alert" className="border-l-2 border-status-blocked pl-3 text-sm leading-5 text-status-blocked"><strong>Current layout conflict.</strong> {conflict}</p>}
       {result.heightReviewRequired && <p role="alert" className="text-sm leading-5 text-status-review">Modeled roof height needs confirmation against local limits. Lower the design or confirm the allowed height.</p>}
       <p className="pb-1 text-xs leading-5 text-lot-stone">Early planning estimates. {caveat} Not permit approval or guaranteed income.</p>
       {consentControl}
       {error && <p role="alert" className="text-sm text-status-blocked">{error}</p>}
-      <div className={stickyCta ? "sticky bottom-[-1.25rem] -mx-5 -mb-5 border-t border-lot-line bg-lot-chalk px-5 py-4 sm:-mx-6 sm:-mb-6 sm:px-6" : undefined}>
+      {/* The carbon top rule marks a docked bar that content scrolls beneath, so a
+          line cut at its edge reads as "more above" rather than a clipping fault. */}
+      <div
+        data-testid="certificate-decision"
+        className={stickyCta
+          ? "sticky bottom-[-1.25rem] z-10 -mx-5 -mb-5 border-t border-lot-ink bg-lot-chalk px-5 pb-2 pt-4 sm:-mx-6 sm:-mb-6 sm:px-6"
+          : "space-y-1"}
+      >
         <Button fullWidth variant="primary" onClick={onUnlock} loading={busy} leftIcon={<Lock size={14} />}>{ctaLabel}</Button>
+        {ctaNote && <p className="mt-2 text-center text-xs leading-5 text-lot-stone">{ctaNote}</p>}
+        {/* The report format is visible before paying, beside the decision rather than only in the page footer. */}
+        <p className="text-center">
+          <a
+            href="/sample-certificate/san-diego"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
+          >
+            See a sample certificate<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </p>
       </div>
-      {ctaNote && <p className="text-center text-xs leading-5 text-lot-stone">{ctaNote}</p>}
-      {/* The report format is visible before paying, beside the decision rather than only in the page footer. */}
-      <p className="text-center">
-        <a
-          href="/sample-certificate/san-diego"
-          target="_blank"
-          rel="noopener"
-          className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-        >
-          See a sample certificate<span className="sr-only"> (opens in a new tab)</span>
-        </a>
-      </p>
     </section>
   );
 }

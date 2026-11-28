@@ -99,7 +99,7 @@ test("unverified aerial is context only, without invented house, ADU or setback 
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {
-    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
+    await page.getByRole("button", { name: /Design your backyard home/ }).click();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }
@@ -126,7 +126,7 @@ test("imagery credits stay visible below the context notice at desktop and 320px
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {
-    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
+    await page.getByRole("button", { name: /Design your backyard home/ }).click();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }

@@ -101,7 +101,7 @@ describe("LotAnswerCard", () => {
     expect(region).toHaveTextContent(/backyard home fits this lot/);
     expect(region).toHaveTextContent(/Early planning estimates only/);
     expect(screen.getByRole("link", { name: "Open in 3D" })).toHaveAttribute("href", "/studio");
-    for (const detail of ["5,600 sq ft", "44′ × 127′", "R-1", "Fits the estimated model", "$2,500", "$266K", "14.2 yrs", "HUD FMR"]) {
+    for (const detail of ["5,600 sq ft", "44′ × 127′", "R-1", "Fits the estimated model", "$2,500", "$266K", "14.2 yrs", "HUD fair market rent"]) {
       expect(region).not.toHaveTextContent(detail);
     }
     expect(guestLookupsRemaining()).toBe(GUEST_LOOKUP_LIMIT - 1);

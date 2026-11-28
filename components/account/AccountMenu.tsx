@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { DeleteAccountButton } from "@/components/studio/DeleteAccountButton";
 import { cn } from "@/lib/utils";
+import { initialsFor } from "@/lib/initials";
 
 export interface AccountMenuProps {
   displayName: string;
@@ -72,13 +73,7 @@ export function AccountMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const initials =
-    displayName
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "U";
+  const initials = initialsFor(displayName);
 
   // Measure trigger → fixed coords. Layout effect is intentional: position must
   // sync from DOM geometry (viewport collision), not from React state alone.

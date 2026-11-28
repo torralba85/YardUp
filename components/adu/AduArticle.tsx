@@ -19,7 +19,6 @@ import {
 } from "@/lib/adu/content";
 import { cityLastModified } from "@/lib/adu/dates";
 import type { JurisdictionContent } from "@/lib/adu/types";
-import { AduStudioCta } from "./AduStudioCta";
 import { AduConceptFigure } from "./AduConceptFigure";
 import { AduPlanningLinks } from "./AduPlanningLinks";
 import { AduPreapprovedPlans } from "./AduPreapprovedPlans";
@@ -175,21 +174,13 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         </section>
       ) : null}
 
-      <div className="mt-6">
-        <AduStudioCta
-          city={content.city}
-          slug={content.slug}
-          placement="top"
-          compactHeading={content.slug === "san-diego-county" ? "Check whether an ADU could fit on your lot" : undefined}
-        />
-      </div>
 
       <section aria-labelledby="adu-glance" className="mt-12">
         <h2 id="adu-glance" className="lf-card-heading scroll-mt-20 text-lot-ink">
           {content.city} ADU rules at a glance
         </h2>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="w-full border-collapse border-y-2 border-lot-ink text-left text-sm [&_tr:nth-child(odd)]:bg-lot-surface [&_td]:px-3 [&_th]:px-3">
             <caption className="sr-only">
               Key ADU size, setback, height, parking, and approval rules for{" "}
               {content.city}
@@ -387,9 +378,6 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         </section>
       ) : null}
 
-      <div className="mt-12">
-        <AduStudioCta city={content.city} slug={content.slug} placement="mid" />
-      </div>
 
       <section aria-labelledby="adu-faq" className="mt-12">
         <h2 id="adu-faq" className="lf-card-heading text-lot-ink">
@@ -471,9 +459,6 @@ export function AduArticle({ content }: { content: JurisdictionContent }) {
         </ul>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta city={content.city} slug={content.slug} placement="end" />
-      </div>
     </>
   );
 }

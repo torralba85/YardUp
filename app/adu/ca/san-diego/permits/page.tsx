@@ -42,6 +42,8 @@ export default function SanDiegoAduPermitsPage() {
       title="San Diego ADU Permits by Neighborhood"
       kicker={`City of San Diego permit data · ${shortDate(coverage.from)} to ${shortDate(coverage.to)} · Updated ${generatedAt}`}
       layout="editorial"
+      lotCheck={{ city: "San Diego", slug: "san-diego-adu-permits" }}
+      facts={[["Permitted homes", SAN_DIEGO_PERMIT_STUDY.totals.units.toLocaleString("en-US")], ["Approvals", SAN_DIEGO_PERMIT_STUDY.totals.approvals.toLocaleString("en-US")], ["Planning areas", SAN_DIEGO_PERMIT_STUDY.byArea.length]]}
       currentPath="/adu/ca/san-diego/permits"
     >
       <SanDiegoAduPermitStudy />

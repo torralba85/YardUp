@@ -19,13 +19,13 @@ test("Android navigation and signup expose only the homeowner flow", async ({ pa
     });
   });
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Register as a builder" })).toHaveCount(0);
   const menu = page.getByRole("button", { name: "Open menu" });
   if (await menu.isVisible()) {
     await menu.click();
     await expect(page.getByRole("link", { name: "Register as a builder" })).toHaveCount(0);
   }
+  await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
   await page.goto("/signup?role=builder");
   await expect(page.getByLabel("Full name")).toBeVisible();
   await expect(page.getByRole("radio", { name: /Builder/ })).toHaveCount(0);

@@ -1,5 +1,22 @@
 import type { BedroomClass, MarketProvenance, MarketSource } from "./market-types";
 
+/**
+ * Plain words for the federal benchmark. "HUD FMR" read as jargon to
+ * homeowners (2026-11-27 audit); the source stays named, the acronym goes.
+ */
+const HUD_LABEL = "HUD fair market rent";
+
+/**
+ * "HUD FY2027 FMR (effective 2026-10-01)" → "fiscal 2027 figures, effective
+ * 2026-10-01". Any other vintage string passes through unchanged.
+ */
+function plainVintage(asOf: string): string {
+  const match = asOf.match(/^HUD FY(\d{4}) FMR(?: \(effective (\d{4}-\d{2}-\d{2})\))?(.*)$/);
+  if (!match) return asOf;
+  const [, year, effective, rest] = match;
+  return `fiscal ${year} figures${effective ? `, effective ${effective}` : ""}${rest}`;
+}
+
 const BEDROOM_LABEL: Record<BedroomClass, string> = {
   studio: "studio",
   "1br": "1-bed",
@@ -24,7 +41,7 @@ export function marketBasisLabel(input: {
     case "hud-county":
     case "state":
     case "national":
-      return area ? `HUD FMR · ${area} · ${bed}` : `HUD FMR · ${bed}`;
+      return area ? `${HUD_LABEL} · ${area} · ${bed}` : `${HUD_LABEL} · ${bed}`;
     case "preset":
       return "Curated demo estimate";
     case "heuristic":
@@ -51,9 +68,9 @@ export function marketProvenanceLine(market: MarketProvenance): string {
     return "Rough lot-size estimate · Not a market source";
   }
   const parts = [
-    market.source === "live" ? `Live comps · ${market.area}` : `HUD FMR · ${market.area}`,
+    market.source === "live" ? `Live comps · ${market.area}` : `${HUD_LABEL} · ${market.area}`,
   ];
-  if (market.asOf) parts.push(market.asOf);
+  if (market.asOf) parts.push(plainVintage(market.asOf));
   if (market.comparableCount) parts.push(`${market.comparableCount} comps`);
   parts.push(CONFIDENCE_LABEL[market.confidence]);
   if (

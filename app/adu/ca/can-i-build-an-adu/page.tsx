@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
-import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import {
   ADU_CITIES,
@@ -165,6 +164,7 @@ export default function CaliforniaAduEligibilityPage() {
       title="Can I Build an ADU on My Property in California?"
       kicker={`Statewide checklist · Gov. Code §§66314–66342 · Checked ${ELIGIBILITY_GUIDE_AS_OF}`}
       layout="editorial"
+      lotCheck={{ city: "California", slug: "can-i-build-an-adu" }}
     >
       {[articleJsonLd, breadcrumbJsonLd, faqJsonLd].map((json, index) => (
         <script
@@ -191,14 +191,6 @@ export default function CaliforniaAduEligibilityPage() {
         </p>
       </div>
 
-      <div className="mt-8">
-        <AduStudioCta
-          city="California"
-          slug="can-i-build-an-adu"
-          placement="top"
-          heading="Check setbacks and buildable yard on your parcel in 3D"
-        />
-      </div>
 
       <section aria-labelledby="adu-eligibility-checklist" className="mt-12">
         <h2 id="adu-eligibility-checklist" className="lf-card-heading scroll-mt-20 text-lot-ink">
@@ -251,14 +243,6 @@ export default function CaliforniaAduEligibilityPage() {
         </ul>
       </section>
 
-      <div className="mt-10">
-        <AduStudioCta
-          city="California"
-          slug="can-i-build-an-adu"
-          placement="mid"
-          heading="See your parcel boundaries, modeled setbacks, and budget in the studio."
-        />
-      </div>
 
       <section aria-labelledby="adu-eligibility-faq" className="mt-12">
         <h2 id="adu-eligibility-faq" className="lf-card-heading scroll-mt-20 text-lot-ink">
@@ -304,14 +288,6 @@ export default function CaliforniaAduEligibilityPage() {
         </ul>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="can-i-build-an-adu"
-          placement="end"
-          heading="Ready to test a backyard home footprint on your lot?"
-        />
-      </div>
     </LegalPageShell>
   );
 }

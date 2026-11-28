@@ -127,7 +127,7 @@ test.describe("Studio Neighborhood 3D", () => {
       await page.setViewportSize({ width, height: 900 });
       if (width < 1024) {
         await page.getByRole("button", { name: "See a San Diego example" }).click();
-        await page.getByRole("button", { name: /shape your backyard home/i }).click();
+        await page.getByRole("button", { name: /design your backyard home/i }).click();
       }
       await expect(credits).toBeVisible({ timeout: 60_000 });
       await expect(page.getByText(/Streaming 3D globe/)).toHaveCount(0, { timeout: 30_000 });
