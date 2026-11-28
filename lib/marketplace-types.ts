@@ -75,6 +75,7 @@ export interface BuilderLedgerEntry {
   creditsChange: number;
   amountPaid: number;
   referenceId: string;
+  stripeRefundStatus?: string;
   description: string;
   createdAt: string;
 }
@@ -228,4 +229,5 @@ export interface BuilderInboxItem {
   response: BuilderResponse;
   /** True if this builder already holds a `leadUnlocks` grant for the lead. */
   unlocked: boolean;
+  unlockStripeSessionId?: string;
 }

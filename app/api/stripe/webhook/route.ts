@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { grantLeadUnlock } from "@/lib/server/lead-unlocks";
+import { settlePaidLeadCheckout } from "@/lib/server/stripe-paid-lead";
+import { reconcileStripeReversal } from "@/lib/server/stripe-reversals";
+import { stripeCheckoutRecord } from "@/lib/server/stripe-checkout-record";
 import { fulfillPaidCertificateSession } from "@/lib/server/certificate-purchases";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
 import { CERTIFICATE_PRICE_CENTS } from "@/lib/certificate-pricing";
@@ -79,6 +81,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    if (
+      event.type === "refund.created" ||
+      event.type === "refund.updated" ||
+      event.type === "refund.failed" ||
+      event.type === "charge.dispute.created" ||
+      event.type === "charge.dispute.closed"
+    ) {
+      await reconcileStripeReversal(stripe, event);
+      return NextResponse.json({ received: true });
+    }
+
     // A delayed payment that failed can never become paid, but the reservation
     // still holds its Session. Rotate it so the buyer can start a fresh checkout
     // instead of being handed the dead one on every retry.
@@ -142,6 +155,9 @@ export async function POST(request: NextRequest) {
         .doc(`${builderId}_${session.id}`);
 
       await adminDb.runTransaction(async (transaction) => {
+        const reconciliation = await transaction.get(stripeCheckoutRecord(adminDb, session.id));
+        if (reconciliation.data()?.reversedAt) return;
+
         const ledgerSnap = await transaction.get(ledgerRef);
         if (ledgerSnap.exists) {
           return;
@@ -176,12 +192,7 @@ export async function POST(request: NextRequest) {
       const builderId = session.metadata?.builderId;
       const requestId = session.metadata?.requestId;
       if (builderId && requestId) {
-        await grantLeadUnlock({
-          builderId,
-          requestId,
-          stripeSessionId: session.id,
-          amount: LEAD_UNLOCK_PRICE_CENTS,
-        });
+        await settlePaidLeadCheckout(stripe, session, builderId, requestId);
       } else {
         console.error(
           `[stripe/webhook] Missing builderId or requestId in lead unlock metadata for session ${session.id}`,
@@ -193,9 +204,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Refunds / bad-lead credits are handled manually in the Stripe Dashboard for
-    // now; there is intentionally no charge.refunded handler, so a refund does not
-    // auto-revoke a fulfilled purchase.
     return NextResponse.json({ received: true });
   } catch (err) {
     console.error(`[stripe/webhook] Fulfilment failed for event ${event.id}:`, err);

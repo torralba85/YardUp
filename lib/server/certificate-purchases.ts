@@ -6,6 +6,7 @@ import { getStripe } from "../stripe";
 import { getAdminApp, getAdminDb } from "./firebase-admin";
 import { purchaseId } from "../certificate-purchases-id";
 import { hasExpectedPayment } from "./stripe-payment-guard";
+import { stripeCheckoutRecord } from "./stripe-checkout-record";
 
 const CERTIFICATE_PURCHASES = "certificatePurchases";
 const CERTIFICATE_TRANSFERS = "certificateTransfers";
@@ -135,6 +136,10 @@ export async function grantCertificate(
     .collection(CERTIFICATE_PURCHASES)
     .where("stripeSessionId", "==", input.stripeSessionId);
   return db.runTransaction(async (tx) => {
+    if (input.stripeSessionId.startsWith("cs_")) {
+      const reversal = await tx.get(stripeCheckoutRecord(db, input.stripeSessionId));
+      if (reversal.data()?.reversedAt) return false;
+    }
     const [grant, transfer, sessionGrants] = await Promise.all([
       tx.get(ref),
       tx.get(transferRef),

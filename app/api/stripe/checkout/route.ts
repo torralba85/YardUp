@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/active-checkout-sessions";
 import { getAdminDb } from "@/lib/server/firebase-admin";
 import { grantLeadUnlock, isLeadUnlocked } from "@/lib/server/lead-unlocks";
+import { settlePaidLeadCheckout } from "@/lib/server/stripe-paid-lead";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { isSafeDocumentId } from "@/lib/server/request-validation";
 import { LEAD_UNLOCK_PRICE_CENTS, getStripe } from "@/lib/stripe";
@@ -126,13 +127,16 @@ export async function POST(request: NextRequest) {
         { status: 503 },
       );
     }
-    await grantLeadUnlock({
+    const grant = await grantLeadUnlock({
       builderId,
       requestId,
       stripeSessionId: `demo_${requestId}`,
       amount: LEAD_UNLOCK_PRICE_CENTS,
       demo: true,
     });
+    if (grant.status === "blocked") {
+      return NextResponse.json({ error: "This lead is no longer available to unlock." }, { status: 409 });
+    }
     return NextResponse.json({ status: "granted", demo: true });
   }
 
@@ -162,7 +166,7 @@ export async function POST(request: NextRequest) {
     accountId: builderId,
     purchaseId: requestId,
     attemptId: checkoutAttemptId,
-    parameters: { origin, previewSerial: String(previewSerial) },
+    parameters: { origin, previewSerial: String(previewSerial), includeSessionId: "true" },
   };
 
   try {
@@ -188,7 +192,8 @@ export async function POST(request: NextRequest) {
           // price exactly as the webhook checks it.
           if (
             existing.payment_status === "paid" &&
-            existing.metadata?.builderId === builderId &&
+            existing.metadata?.purchaseType === "lead_unlock" &&
+            existing.metadata.builderId === builderId &&
             existing.metadata?.requestId === requestId &&
             hasExpectedPayment(
               existing,
@@ -196,12 +201,13 @@ export async function POST(request: NextRequest) {
               "stripe/checkout",
             )
           ) {
-            await grantLeadUnlock({
-              builderId,
-              requestId,
-              stripeSessionId: existing.id,
-              amount: LEAD_UNLOCK_PRICE_CENTS,
-            });
+            const status = await settlePaidLeadCheckout(stripe, existing, builderId, requestId);
+            if (status !== "granted") {
+              const error = status === "refund_needs_review"
+                ? "This lead could not be unlocked. Contact support about your payment."
+                : "This lead was not unlocked. Your payment is being refunded or has been reversed.";
+              return NextResponse.json({ error }, { status: 409 });
+            }
             return NextResponse.json({ status: "granted", reconciled: true });
           }
 
@@ -275,7 +281,7 @@ export async function POST(request: NextRequest) {
             },
           ],
           metadata: { purchaseType: "lead_unlock", builderId, requestId },
-          success_url: `${reservedOrigin}/builder?lead=${encodeURIComponent(requestId)}&unlocked=1`,
+          success_url: `${reservedOrigin}/builder?lead=${encodeURIComponent(requestId)}&unlocked=1${reservation.parameters.includeSessionId === "true" ? "&session_id={CHECKOUT_SESSION_ID}" : ""}`,
           cancel_url: `${reservedOrigin}/builder?lead=${encodeURIComponent(requestId)}`,
         },
         {
