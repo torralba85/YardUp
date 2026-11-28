@@ -31,6 +31,9 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ### Fixed
 
+- The two source links under the San Diego ADU guide's rules-at-a-glance
+  table now have 44px touch targets, like the official-resource links above them.
+
 - The Studio places a California backyard home against ADU setbacks, not the
   house's assumed zoning setbacks. Live California lots held it 20 ft from the
   rear line and 5 ft from the sides, although state law caps an ADU's side and
