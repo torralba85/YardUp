@@ -236,7 +236,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(new URLSearchParams(window.location.search).get("layout")).toHaveLength(48);
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
-    fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
+    fireEvent.click(screen.getByRole("button", { name: "Email my 3D link" }));
     // These suites render the whole Studio, which is slow under parallel CI load.
     await waitFor(() => expect(fetch).toHaveBeenCalled(), { timeout: 5000 });
     const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
@@ -257,7 +257,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(await screen.findByText("Email this layout for later"));
     fireEvent.change(screen.getByRole("textbox", { name: "Email address for your 3D lot link" }), { target: { value: "owner@example.com" } });
     const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ ok: false, error: "Test only" }), { status: 503 }));
-    fireEvent.click(screen.getByRole("button", { name: "Email My 3D Link" }));
+    fireEvent.click(screen.getByRole("button", { name: "Email my 3D link" }));
     // These suites render the whole Studio, which is slow under parallel CI load.
     await waitFor(() => expect(fetch).toHaveBeenCalled(), { timeout: 5000 });
     const body = JSON.parse(String(fetch.mock.calls.find(([url]) => String(url).includes("email-scenario-link"))![1]!.body));
@@ -341,8 +341,8 @@ describe("FeasibilityStudio (guided spine)", () => {
     stashInitialParcel(EMAIL_SCENARIO.liveParcel!);
     window.history.replaceState(null, "", "/studio");
     render(<AuthProvider><FeasibilityStudio /></AuthProvider>);
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
+    // A resolved lot opens on Rules & fit (step 2), where the save card lives.
+    expect(await screen.findByRole("region", { name: "Rent and fit" })).toBeInTheDocument();
     expect(await screen.findByRole("region", { name: "Save your layout link" })).toBeInTheDocument();
   });
 
@@ -353,7 +353,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Certificate.*upcoming/i }));
     await screen.findByRole("heading", { name: "Your Certificate of Feasibility." });
     expect(screen.queryByText("Email this layout for later")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Email My 3D Link" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Email my 3D link" })).toBeNull();
   });
 
   it("uses a plan's real footprint, keeps placement and style, shares, saves and clears it on lot change", async () => {
@@ -537,7 +537,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     window.history.replaceState(null, "", "/studio?parcel=coyote-brush");
     const initial = { id: "shared", name: "Shared study", createdAt: "2026-11-06T00:00:00Z", parcelId: "coyote-brush", config: defaultAduConfig, assumptions: defaultFinancialAssumptions, preapprovedPlan: { planId: "san-diego-city-plan-f", jurisdictionId: "ca-san-diego" } };
     render(<FeasibilityStudio demoChosen initialScenario={initial} />, { wrapper: TestWrapper });
-    fireEvent.click(await screen.findByRole("button", { name: "Shape your backyard home" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Design your backyard home" }));
     expect(screen.getByRole("region", { name: "Selected plan reference" })).toHaveTextContent("County Standard Plan F");
   });
 
@@ -851,8 +851,8 @@ describe("FeasibilityStudio (guided spine)", () => {
 
       await screen.findByText(/We couldn't find that address/);
       await user.click(screen.getByRole("button", { name: "See the Seattle example" }));
-      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: Seattle");
-      expect(screen.getByRole("region", { name: "What a backyard home could rent for" })).toBeInTheDocument();
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo lot: Seattle");
+      expect(screen.getByRole("region", { name: "Rent and fit" })).toBeInTheDocument();
     });
 
     it("withholds a previous live result when a different address fails", async () => {
@@ -935,7 +935,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       await waitFor(() => expect(screen.getAllByText(/Parcel data is unavailable/).length).toBeGreaterThan(0));
       expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
       expect(screen.queryByRole("region", { name: "Free property preview" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("region", { name: "What a backyard home could rent for" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Rent and fit" })).not.toBeInTheDocument();
       expect(screen.queryByText("1234 Coyote Brush Court")).not.toBeInTheDocument();
       expect(screen.queryByText(/Demo mode will be used/)).not.toBeInTheDocument();
 
@@ -943,7 +943,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       await user.click(screen.getByRole("button", { name: "Retry lookup" }));
       await waitFor(() => expect(screen.queryByTestId("property-lookup-error")).not.toBeInTheDocument());
       expect(screen.queryByTestId("demo-mode-banner")).not.toBeInTheDocument();
-      expect(screen.getByRole("region", { name: layout === "mobile" ? "What a backyard home could rent for" : "Free property preview" })).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: layout === "mobile" ? "Rent and fit" : "Free property preview" })).toBeInTheDocument();
       expect(screen.getAllByText(new RegExp(SAMPLE_LIVE_PARCEL.address)).length).toBeGreaterThan(0);
     });
 
@@ -1015,7 +1015,7 @@ describe("FeasibilityStudio (guided spine)", () => {
       await user.click(screen.getByRole("button", { name: "Explore demo lot" }));
       expect(screen.getByTestId("parcel-scene")).toBeInTheDocument();
       expect(screen.getByText("1234 Coyote Brush Court")).toBeInTheDocument();
-      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo Mode: San Diego");
+      expect(screen.getByTestId("demo-mode-banner")).toHaveTextContent("Demo lot: San Diego");
       expect(screen.getByRole("region", { name: "Free property preview" })).toBeInTheDocument();
 
       // Now Neighborhood view works for the demo lot
@@ -1109,31 +1109,39 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(screen.getByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
 
-    // Reveal 2 · Earn — the money payoff with a confidence teaser.
+    // The phone runs the desktop order: Your lot → Rules & fit → Design →
+    // Certificate → Builders (2026-11-27).
+    const rail = screen.getByRole("navigation", { name: "Journey progress" });
+    expect(within(rail).getAllByRole("button").slice(1).map((b) => b.textContent)).toEqual(
+      ["Your lot", expect.stringContaining("Rules & fit"), "Design", expect.stringContaining("Cert"), "Builders"],
+    );
+
+    // Reveal 2 · Rules & fit — the rent payoff with a confidence teaser, no paywall.
     expect(
       await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("earn-confidence")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Shape your backyard home/i }));
+    expect(screen.queryByRole("button", { name: /See what’s behind the numbers/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Design your backyard home/i }));
 
-    // Reveal 3 · Shape — broad size/style choices only, one primary CTA.
+    // Reveal 3 · Design — broad size/style choices only, one primary CTA.
     const sizeGroup = await screen.findByRole("radiogroup", { name: "ADU size" });
     fireEvent.click(within(sizeGroup).getByRole("radio", { name: /2 Bedroom/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Check feasibility/i }));
+    fireEvent.click(screen.getByRole("button", { name: /See your Certificate/i }));
 
-    // Reveal 4 · Check — plain-language verdict before any permit detail.
-    expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /See what’s behind the numbers/i }));
-
-    // Reveal 5 · Act — the completion artifact plus the two next actions.
+    // Reveal 4 · Certificate — the paywall, with save/share kept secondary.
     expect(
-      await screen.findByRole("heading", { name: /Your feasibility study is ready/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /Connect with matched builders/i }),
+      await screen.findByRole("heading", { name: "Your Certificate of Feasibility." }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Save scenario/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Share link/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Next: connect with builders/i }));
+
+    // Reveal 5 · Builders. Looking at the Certificate is not buying it, so the
+    // rail shows it as visited, not completed.
+    expect(await screen.findByRole("heading", { name: "Connect with local builders." })).toBeInTheDocument();
+    expect(within(rail).getByRole("button", { name: "Certificate (visited)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Connect with builders" })).toBeInTheDocument();
   });
 
   it("opens the fine-tune drawer from the Shape reveal", async () => {
@@ -1150,7 +1158,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Design your backyard home/i }));
     fireEvent.click(
       await screen.findByRole("button", { name: /Fine-tune dimensions & assumptions/i }),
     );
@@ -1472,7 +1480,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     expect(document.getElementById("builder-lead-email")).toHaveValue("jane@example.com");
   });
 
-  it("opens the builder connect form as a focused Act destination on mobile", async () => {
+  it("opens the builder connect form as a focused Builders destination on mobile", async () => {
     vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("prefers-reduced-motion"),
       media: query,
@@ -1486,20 +1494,16 @@ describe("FeasibilityStudio (guided spine)", () => {
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
-    fireEvent.click(
-      await screen.findByRole("button", { name: /Connect with matched builders/i }),
-    );
+    fireEvent.click(await screen.findByRole("button", { name: /Design your backyard home/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See your Certificate/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Next: connect with builders/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "Connect with builders" }));
 
     expect(
       await screen.findByRole("button", { name: /Close builder connection form/i }),
     ).toBeInTheDocument();
-    // The form replaces the Act content — a focused destination, not an append.
-    expect(
-      screen.queryByRole("heading", { name: /Your feasibility study is ready/i }),
-    ).not.toBeInTheDocument();
+    // The form replaces the Builders content — a focused destination, not an append.
+    expect(screen.queryByText(/Step 5 · Builders/)).not.toBeInTheDocument();
   });
 
   it("keeps lead money figures neutral", () => {
@@ -1524,11 +1528,10 @@ describe("FeasibilityStudio (guided spine)", () => {
 
     // Walk the full journey to Act, pushing a real history entry per reveal.
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /See what’s behind the numbers/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Design your backyard home/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See your Certificate/i }));
     expect(
-      await screen.findByRole("heading", { name: /Your feasibility study is ready/i }),
+      await screen.findByRole("heading", { name: "Your Certificate of Feasibility." }),
     ).toBeInTheDocument();
 
     // Start over: resetScenario() sends journeyStep back to "find" and the
@@ -1536,7 +1539,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // "check" entry pushed earlier is still sitting in the stack underneath.
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     fireEvent.click(screen.getByRole("button", { name: "Reset scenario" }));
-    expect(screen.getByRole("heading", { name: /Your feasibility study is ready/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your Certificate of Feasibility." })).toBeInTheDocument();
     confirm.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Reset scenario" }));
     expect(
@@ -1550,18 +1553,18 @@ describe("FeasibilityStudio (guided spine)", () => {
     act(() => popToJourneyStep("check"));
 
     expect(screen.getByRole("heading", { name: "Start with your address." })).toBeInTheDocument();
-    expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Rent and fit" })).not.toBeInTheDocument();
   });
 
   it("never lets Back move forward past a rail jump to a done step", async () => {
     stubMobileMatchMedia();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
 
-    // Walk forward to Check, pushing find -> earn -> shape -> check.
+    // Walk forward to the Certificate, pushing find -> check -> shape -> act.
     fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Shape your backyard home/i }));
-    fireEvent.click(await screen.findByRole("button", { name: /Check feasibility/i }));
-    expect(await screen.findByText(/What’s behind your rental potential/)).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: /Design your backyard home/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /See your Certificate/i }));
+    expect(await screen.findByRole("heading", { name: "Your Certificate of Feasibility." })).toBeInTheDocument();
 
     // Jump backward via the rail's completed "Rent" chip. JourneyRail only
     // makes done chips clickable and calls onStepSelect (setJourneyStep)
@@ -1569,7 +1572,7 @@ describe("FeasibilityStudio (guided spine)", () => {
     // concerned, so it pushes a *new* entry, leaving the "check" entry
     // pushed a moment ago still sitting ahead of it in the stack.
     const rail = screen.getByRole("navigation", { name: "Journey progress" });
-    fireEvent.click(within(rail).getByRole("button", { name: "Rent (completed)" }));
+    fireEvent.click(within(rail).getByRole("button", { name: "Rules & fit (completed)" }));
     expect(
       await screen.findByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
@@ -1578,12 +1581,12 @@ describe("FeasibilityStudio (guided spine)", () => {
     // to the new position (Earn), "check" derives as "upcoming" (found is
     // still true, so nothing is locked) rather than "done" - so the guard
     // must refuse it: Back must never move the user forward.
-    act(() => popToJourneyStep("check"));
+    act(() => popToJourneyStep("act"));
 
     expect(
       screen.getByRole("heading", { name: /What it could rent for/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/Verify before permit/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Your Certificate of Feasibility." })).not.toBeInTheDocument();
   });
 
   it("does not let the scenario URL sync effect erase the journey's history-state key", async () => {
@@ -1595,49 +1598,46 @@ describe("FeasibilityStudio (guided spine)", () => {
     // collision: selecting a preset, resizing the ADU, or changing
     // finish/roof all trigger it.
     //
-    // This test triggers the real effect via a real interaction (selecting
-    // a different demo preset while still on Find, changing parcelId) so
-    // its outcome is actually driven by FeasibilityStudio.tsx's own
-    // replaceState(null, ...) line rather than by an assumption baked into
-    // the test. A hook-level test cannot reproduce this: the hook's own
-    // sync effect has always correctly spread existing state
+    // This test triggers the real effect via a real interaction (resizing
+    // the ADU on the Design step, changing config) so its outcome is
+    // actually driven by FeasibilityStudio.tsx's own URL sync line rather
+    // than by an assumption baked into the test. (The original repro tapped
+    // a demo-lot chip on Find; those chips were removed on 2026-11-27.) A
+    // hook-level test cannot reproduce this: the hook's own sync effect has
+    // always correctly spread existing state
     // (`{ ...window.history.state, [KEY]: step }`); the bug is a second,
     // unrelated effect in FeasibilityStudio.tsx overwriting that state with
     // `null` entirely, which only exists at the studio level.
     stubMobileMatchMedia();
     render(<FeasibilityStudio />, { wrapper: TestWrapper });
+    fireEvent.click(screen.getByRole("button", { name: /See a San Diego example/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Design your backyard home/i }));
+    const sizeGroup = await screen.findByRole("radiogroup", { name: "ADU size" });
+    fireEvent.click(within(sizeGroup).getByRole("radio", { name: /2 Bedroom/i }));
 
-    // Select a different demo preset while still on Find — changes
-    // parcelId, which is one of the scenario-URL sync effect's deps. This
-    // is the exact action from the live-browser repro that found this bug.
-    fireEvent.click(screen.getByRole("radio", { name: /Portland/i }));
+    // Capture what that effect actually left on the current (Design) entry's
+    // state, right before burying it under a new push below. This is what a
+    // real Back press will deliver once the journey advances past it —
+    // reading it here (rather than assuming its shape) is what makes the
+    // assertion below depend on the real source line under test.
+    const designEntryState = window.history.state as { lfJourneyStep?: string } | null;
 
-    // Capture what that effect actually left on the current (launch)
-    // entry's state, right before burying it under a new push below. This
-    // is what a real Back press will deliver once the journey advances
-    // past it — reading it here (rather than assuming its shape) is what
-    // makes the assertion below depend on the real source line under test.
-    const launchEntryState = window.history.state as { lfJourneyStep?: string } | null;
-
-    // Advance the journey one step: pushes a new entry for "earn", burying
-    // the (possibly now-stateless) launch entry beneath it. The CTA names the
-    // lot picked above rather than promising San Diego.
-    fireEvent.click(screen.getByRole("button", { name: "See the Portland example" }));
+    // Advance the journey one step: pushes a new entry for "act", burying
+    // the (possibly now-stateless) Design entry beneath it.
+    fireEvent.click(screen.getByRole("button", { name: /See your Certificate/i }));
     expect(
-      await screen.findByRole("heading", { name: /What it could rent for/i }),
+      await screen.findByRole("heading", { name: "Your Certificate of Feasibility." }),
     ).toBeInTheDocument();
 
-    // Simulate a real Back press landing on the launch entry, carrying
+    // Simulate a real Back press landing on the Design entry, carrying
     // whatever state it actually holds.
-    act(() => popToRawState(launchEntryState));
+    act(() => popToRawState(designEntryState));
 
     // Back must actually navigate. Against the unfixed
-    // replaceState(null, ...), the launch entry has no lfJourneyStep key,
+    // replaceState(null, ...), the Design entry has no lfJourneyStep key,
     // so handlePopState's (correct, unchanged) `restored === undefined`
-    // guard silently no-ops and the screen stays on Earn — the browser
-    // moves, the UI does not.
-    expect(
-      screen.getByRole("heading", { name: "Start with your address." }),
-    ).toBeInTheDocument();
+    // guard silently no-ops and the screen stays on the Certificate — the
+    // browser moves, the UI does not.
+    expect(await screen.findByRole("radiogroup", { name: "ADU size" })).toBeInTheDocument();
   });
 });

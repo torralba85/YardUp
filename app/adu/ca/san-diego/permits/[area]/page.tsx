@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { DataReuseNote } from "@/components/adu/DataReuseNote";
 import { PERMIT_DATASET_URL, PLAN_AREAS_DATASET_URL, SAN_DIEGO_PERMIT_STUDY as study } from "@/content/adu/ca/san-diego-permits";
 import { aduArticleJsonLd, hubUrl, opengraphImageUrl, permitStudyPath, permitStudyUrl, permitStudyCsvPath } from "@/lib/adu/content";
@@ -50,14 +49,15 @@ export default async function PermitAreaPage({ params }: Props) {
     ],
   };
   return (
-    <LegalPageShell title={`${area.name} ADU Permits`} kicker={`San Diego community planning area · ${formatUtcDate(study.coverage.from, "short")} to ${formatUtcDate(study.coverage.to, "short")}`} layout="editorial">
+    <LegalPageShell title={`${area.name} ADU Permits`} kicker={`San Diego community planning area · ${formatUtcDate(study.coverage.from, "short")} to ${formatUtcDate(study.coverage.to, "short")}`} layout="editorial"
+      lotCheck={{ city: area.name, slug: "san-diego" }}
+      facts={[["Permitted homes", number(area.units)], ["Approvals", number(area.approvals)], ["Junior units", number(area.jaduUnits)]]}>
       {[article, breadcrumbs].map((json) => <script key={json["@type"]} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json).replace(/</g, "\\u003c") }} />)}
       <p className="lf-body text-lg leading-relaxed text-lot-ink">
         {area.name} recorded {number(area.approvals)} building permits adding {number(area.units)} backyard homes during this period: {number(area.aduUnits)} ADUs and {number(area.jaduUnits)} junior ADUs.
         It ranks {rank} of {study.byArea.length} community planning areas by permitted units, accounting for {percent(area.units / study.totals.units)} of San Diego&apos;s {number(study.totals.units)} units.
       </p>
       <p className="lf-body mt-4 text-lot-stone">These are issued permits, not completed homes or a prediction of approval for your property. Community planning areas follow City boundaries and may differ from informal neighborhood names.</p>
-      <div className="mt-8"><AduStudioCta city={area.name} slug="san-diego" placement="top" /></div>
       <section aria-labelledby="area-years" className="mt-12">
         <h2 id="area-years" className="lf-card-heading scroll-mt-20">{area.name} permitted units by year</h2>
         <table className="mt-4 w-full max-w-sm border-collapse text-left text-sm">

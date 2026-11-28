@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("mobile studio journey", () => {
   test.skip(({ viewport }) => !viewport || viewport.width >= 1024, "mobile-only suite");
 
-  test("golden path: five reveals from find to act", async ({ page }) => {
+  test("golden path: five reveals in the desktop order, Your lot to Builders", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
 
     // Reveal 1 · Find — the journey replaces the old sheet composition.
@@ -15,40 +15,37 @@ test.describe("mobile studio journey", () => {
     // With no address typed, the single primary action opens the San Diego example.
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
 
-    // Reveal 2 · Earn — the money figure appears immediately with a
-    // confidence teaser citing the market basis.
+    // Reveal 2 · Rules & fit — the money figure appears immediately with a
+    // confidence teaser citing the market basis; no paywall here.
     await expect(
       page.getByRole("heading", { name: /what it could rent for/i }),
     ).toBeVisible();
     await expect(page.getByTestId("earn-confidence")).toBeVisible();
-    await page.getByRole("button", { name: /shape your backyard home/i }).click();
+    await page.getByRole("button", { name: /design your backyard home/i }).click();
 
-    // Reveal 3 · Shape — broad size/style directions only by default.
+    // Reveal 3 · Design — broad size/style directions only by default.
     await page.getByRole("radio", { name: /2 bedroom/i }).click();
     await page.getByRole("radio", { name: /stucco/i }).click();
-    await page.getByRole("button", { name: /check feasibility/i }).click();
+    await page.getByRole("button", { name: /see your certificate/i }).click();
     await expect(page.getByRole("main")).toBeFocused();
     await expect.poll(() => page.getByRole("main").evaluate((el) => el.scrollTop)).toBe(0);
 
-    // Reveal 4 · Check — the plain-language verdict leads, then the
-    // verification items follow it.
+    // Reveal 4 · Certificate — the paywall, as on desktop step 4.
+    await expect(page.getByRole("heading", { name: "Your Certificate of Feasibility." })).toBeVisible();
     await expect(page.getByRole("region", { name: "Free property preview" })).toBeVisible();
-    await page.getByRole("button", { name: /See what’s behind the numbers/i }).click();
-
-    // Reveal 5 · Act — completion artifact plus the two next actions.
-    await expect(
-      page.getByRole("heading", { name: /your feasibility study is ready/i }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /connect with matched builders/i }),
-    ).toBeVisible();
     await expect(page.getByRole("button", { name: /save scenario/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /share link/i })).toBeVisible();
+    await page.getByRole("button", { name: /next: connect with builders/i }).click();
+
+    // Reveal 5 · Builders.
+    await expect(page.getByRole("heading", { name: "Connect with local builders." })).toBeVisible();
+    await page.getByRole("button", { name: "Connect with builders" }).click();
+    await expect(page.getByRole("button", { name: "Sign in to send" })).toBeVisible();
   });
 
   test("progress targets stay labeled and at least 44px at narrow widths", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
-    for (const width of [320, 390, 440, 768]) {
+    for (const width of [320, 360, 375, 390, 440, 768]) {
       await page.setViewportSize({ width, height: 844 });
       const rail = page.getByRole("navigation", { name: "Journey progress" });
       const buttons = rail.locator("ol button");
@@ -60,7 +57,12 @@ test.describe("mobile studio journey", () => {
       }
       await expect(rail.getByText("Your lot", { exact: true })).toBeVisible();
       await expect(rail.getByRole("button", { name: "Certificate", exact: true })).toBeVisible();
-      await expect(rail.getByText(width < 360 ? "Cert." : "Certificate", { exact: true })).toBeVisible();
+      await expect(rail.getByText(width < 380 ? "Cert." : "Certificate", { exact: true })).toBeVisible();
+      // Labels never wrap mid-word ("Certificat / e" at 390px, 2026-11-27 audit).
+      for (const button of await buttons.all()) {
+        const lines = await button.locator("span").last().evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
+        expect(lines).toBeLessThanOrEqual(1);
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
   });
@@ -68,7 +70,7 @@ test.describe("mobile studio journey", () => {
   test("fine-tune is optional progressive disclosure on the Shape reveal", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
-    await page.getByRole("button", { name: /shape your backyard home/i }).click();
+    await page.getByRole("button", { name: /design your backyard home/i }).click();
 
     await page.getByRole("button", { name: /fine-tune dimensions/i }).click();
     const drawer = page.getByTestId("fine-tune-drawer");
@@ -87,14 +89,14 @@ test.describe("mobile studio journey", () => {
     await page.keyboard.press("Escape");
     await expect(drawer).toHaveCount(0);
     await expect(page.getByRole("button", { name: /fine-tune dimensions/i })).toBeFocused();
-    // Closing the drawer lands back on the Shape reveal's default path.
-    await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
+    // Closing the drawer lands back on the Design reveal's default path.
+    await expect(page.getByRole("button", { name: /see your certificate/i })).toBeVisible();
   });
 
   test("closing fine-tune restores focus when exit animation events are lost", async ({ page }) => {
     await page.goto("/studio", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
-    await page.getByRole("button", { name: /shape your backyard home/i }).click();
+    await page.getByRole("button", { name: /design your backyard home/i }).click();
     const trigger = page.getByRole("button", { name: /fine-tune dimensions/i });
     await trigger.click();
     const drawer = page.getByTestId("fine-tune-drawer");
@@ -127,7 +129,7 @@ test.describe("mobile studio journey", () => {
     // rail's upcoming steps are inert.
     await expect(
       page.getByRole("navigation", { name: "Journey progress" }).getByRole("button", {
-        name: /rules & fit/i,
+        name: /design/i,
       }),
     ).toBeDisabled();
   });

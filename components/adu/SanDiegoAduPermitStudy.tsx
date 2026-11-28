@@ -1,7 +1,6 @@
 import { PERMIT_AREA_MIN_APPROVALS, permitAreaPath } from "@/lib/adu/permit-areas";
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { AduStudioCta } from "./AduStudioCta";
 import { DATA_LICENSE, DataReuseNote } from "./DataReuseNote";
 import {
   PERMIT_DATASET_URL,
@@ -323,14 +322,6 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="San Diego"
-          slug="san-diego-adu-permits"
-          placement="mid"
-          heading="See what a backyard home could look like on your San Diego lot."
-        />
-      </div>
 
       <section aria-labelledby="sd-permit-faq" className="mt-12">
         <h2 id="sd-permit-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -416,14 +407,6 @@ export function SanDiegoAduPermitStudy({ study = SAN_DIEGO_PERMIT_STUDY }: { stu
         <AduPlanningLinks current={permitStudyPath()} />
       </div>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="San Diego"
-          slug="san-diego-adu-permits"
-          placement="end"
-          heading="Check what fits on your San Diego lot."
-        />
-      </div>
     </>
   );
 }

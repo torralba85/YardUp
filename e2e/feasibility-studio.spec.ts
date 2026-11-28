@@ -75,7 +75,7 @@ test.describe("Public LotFoundry flows", () => {
     test.skip(!viewport || viewport.width < 1024, "desktop-only");
     await page.goto("/studio");
     // Navigating via sidebar navigation button
-    await page.getByRole("button", { name: /Design/i }).click();
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
     await page.getByText("Browse designs").click();
     await expect(page.getByRole("heading", { name: /A small home, considered/i })).toBeVisible({ timeout: 10000 });
     await expect(page.getByRole("heading", { name: "Courtyard Studio" })).toBeVisible();
@@ -123,11 +123,10 @@ test.describe("Public LotFoundry flows", () => {
     test.skip(!isMobile, "The five-reveal journey is the mobile layout only");
 
     await page.goto("/studio");
-    await page.getByRole("radio", { name: /Seattle/i }).click();
-    await page.getByRole("button", { name: "See the Seattle example" }).click();
+    await page.getByRole("button", { name: /See (?:a|the) San Diego example/i }).click();
     await expect(page.getByRole("heading", { name: /could rent for/i })).toBeVisible();
 
-    await page.getByRole("button", { name: /Shape your backyard home/i }).click();
+    await page.getByRole("button", { name: /Design your backyard home/i }).click();
     // ShapeStep's own <h2> is "Pick a direction." — the word "Shape" only
     // appears in the section's aria-label and the rail's step chip, neither
     // of which is heading-role, so assert on the actual heading text.

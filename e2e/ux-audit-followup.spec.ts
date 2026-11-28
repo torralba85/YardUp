@@ -50,16 +50,16 @@ test("mobile journey labels and provenance remain readable at narrow widths", as
     await page.screenshot({ path: testInfo.outputPath(`earn-${width}.png`) });
   }
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.getByRole("button", { name: /shape your backyard home/i }).click();
+  await page.getByRole("button", { name: /design your backyard home/i }).click();
   await expect(page.getByText("Projected rent / mo", { exact: true })).toHaveCSS("font-size", "12px");
-  await expect(page.getByRole("button", { name: /check feasibility/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /see your certificate/i })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test("support text stays readable on hover", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "hover-capable pointer");
   await page.goto("/help");
-  const openStudio = page.getByRole("banner").getByRole("link", { name: "Check my lot", exact: true });
+  const openStudio = page.getByRole("complementary", { name: "Lot check and tools" }).getByRole("link", { name: "Check my lot", exact: true });
   await openStudio.hover();
   await expect(openStudio).toHaveCSS("color", "rgb(22, 22, 22)");
 });

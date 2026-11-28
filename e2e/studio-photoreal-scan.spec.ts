@@ -149,7 +149,7 @@ test.describe("Studio photoreal scan (beta)", () => {
   test("ADU design choices survive a 3D to Scan round trip", async ({ page }) => {
     test.setTimeout(60_000);
     await page.goto("/studio?parcel=oak-street", { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: /Design/i }).click();
+    await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
 
     const sizes = page.getByRole("radiogroup", { name: "ADU footprint size" });
     const large = sizes.getByRole("radio", { name: /800 sf/ });

@@ -6,7 +6,7 @@ import {
   PARCEL_AFTER,
   PARCEL_BEFORE,
 } from "@/components/landing/lot-more/landing-images";
-import { PublicHeader } from "@/components/legal/PublicHeader";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 import { SiteFooter } from "@/components/legal/SiteFooter";
 import { Bezel } from "@/components/ui/Bezel";
 import { sanDiego } from "@/content/adu/ca/san-diego";
@@ -151,7 +151,7 @@ export function BackyardHomeLanding() {
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-lot-chalk text-lot-ink">
-      <PublicHeader />
+      <SiteHeader />
 
       <main id="main-content">
         <section

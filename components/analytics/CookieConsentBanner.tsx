@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { CONSENT_STORAGE_KEY, CONSENT_VERSION, writeConsent } from "@/lib/analytics/consent";
@@ -45,6 +46,21 @@ const CONSENT_PREPAINT_SCRIPT = `(function(){var unset=true;try{var r=JSON.parse
 export function CookieConsentBanner() {
   const consent = useConsent();
 
+  const bannerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const banner = bannerRef.current;
+    if (!banner || typeof ResizeObserver === "undefined") return;
+    const style = document.documentElement.style;
+    const measure = () => style.setProperty("--lf-consent-height", banner.getBoundingClientRect().height + "px");
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      style.removeProperty("--lf-consent-height");
+    };
+  }, [consent]);
+
   if (!isAnalyticsConfigured()) return null;
   const pending = consent === "pending";
   if (!pending && consent !== "unset") return null;
@@ -56,6 +72,7 @@ export function CookieConsentBanner() {
         <script dangerouslySetInnerHTML={{ __html: CONSENT_PREPAINT_SCRIPT }} />
       ) : null}
       <section
+        ref={bannerRef}
         aria-label="Cookie consent"
         data-consent-banner=""
         data-pending={pending ? "" : undefined}

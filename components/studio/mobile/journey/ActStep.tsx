@@ -1,12 +1,12 @@
 "use client";
 
-import type { ReactNode, Ref } from "react";
-import { Bookmark, Share2, Sparkles, Users } from "lucide-react";
+import type { ReactNode } from "react";
+import { ArrowRight, Bookmark, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 /** Props for {@link ActStep}. */
 export interface ActStepProps {
-  /** "Address, City" line under the completion heading. */
+  /** "Address, City" line under the heading. */
   parcelName: string;
   /** The certificate artifact (CertificatePanel with its own unlock flow). */
   certificate: ReactNode;
@@ -20,17 +20,16 @@ export interface ActStepProps {
   onShare: () => void;
   /** Transient share feedback ("Link copied"). */
   shareNotice: string | null;
-  /** Open the connect-with-builders flow. */
-  onConnectBuilders: () => void;
-  /** The connect button, so focus can return to it when the form closes. */
-  connectRef?: Ref<HTMLButtonElement>;
+  /** Move on to the Builders step. */
+  onContinue: () => void;
 }
 
 /**
- * Reveal 5 · Act — completion. Celebrates the finished study with the
- * feasibility certificate as the artifact, then offers exactly two next
- * actions: save/share the scenario, or connect with matched builders. The
- * visual language stays restrained — a settle, not a confetti cannon.
+ * Reveal 4 · Certificate. The certificate panel owns the one primary action
+ * here (buy, or open it once bought), so save/share stay secondary and the way
+ * on to Builders sits after it, as step 5 does on desktop. Before 2026-11-27 a
+ * "Connect with matched builders" button sat above the price and competed
+ * with it.
  */
 export default function ActStep({
   parcelName,
@@ -40,69 +39,60 @@ export default function ActStep({
   saveNotice,
   onShare,
   shareNotice,
-  onConnectBuilders,
-  connectRef,
+  onContinue,
 }: ActStepProps) {
   return (
     <section
-      aria-label="Your study is complete"
+      aria-label="Your Certificate"
       className="flex min-h-full flex-col"
       style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
     >
-      <div className="border-b border-lot-line bg-lot-surface px-5 pb-6 pt-7">
-        <p className="lf-kicker flex items-center gap-1.5 text-status-eligible">
-          <Sparkles size={13} aria-hidden="true" />
-          Step 5 · Certificate
-        </p>
-        <h2 className="mt-2 font-display text-[clamp(1.65rem,7vw,1.95rem)] font-semibold leading-[1.1] text-balance text-lot-ink">
-          Your feasibility study is ready.
-        </h2>
-        <p className="mt-1 font-sans text-[11px] text-lot-stone">{parcelName}</p>
-
-        <div className="mt-5 flex flex-col gap-2.5">
+      <div className="border-b border-lot-line bg-lot-surface px-5 pb-5 pt-7">
+        <p className="lf-kicker text-lot-orange-ink">Step 4 · Certificate</p>
+        <p className="mt-1 font-sans text-xs text-lot-stone">{parcelName}</p>
+        <div className="mt-4 flex gap-2.5">
           <Button
             type="button"
-            variant="commit"
-            size="lg"
+            variant="secondary"
+            size="md"
             fullWidth
-            leftIcon={<Users size={16} />}
-            onClick={onConnectBuilders}
-            ref={connectRef}
+            leftIcon={<Bookmark size={15} />}
+            loading={savingScenario}
+            onClick={onSaveScenario}
           >
-            Connect with matched builders
+            {saveNotice ?? (savingScenario ? "Saving…" : "Save scenario")}
           </Button>
-          <div className="flex gap-2.5">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              fullWidth
-              leftIcon={<Bookmark size={15} />}
-              loading={savingScenario}
-              onClick={onSaveScenario}
-            >
-              {saveNotice ?? (savingScenario ? "Saving…" : "Save scenario")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              fullWidth
-              leftIcon={<Share2 size={15} />}
-              onClick={onShare}
-            >
-              {shareNotice ?? "Share link"}
-            </Button>
-          </div>
-          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-            {saveNotice && <span>Save status: {saveNotice}</span>}
-            {shareNotice && <span>Share status: {shareNotice}</span>}
-          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            fullWidth
+            leftIcon={<Share2 size={15} />}
+            onClick={onShare}
+          >
+            {shareNotice ?? "Share link"}
+          </Button>
+        </div>
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {saveNotice && <span>Save status: {saveNotice}</span>}
+          {shareNotice && <span>Share status: {shareNotice}</span>}
         </div>
       </div>
 
-      {/* The completion artifact: the certificate, with its own unlock flow. */}
       <div className="flex-1">{certificate}</div>
+
+      <div className="px-5 pt-2">
+        <Button
+          type="button"
+          variant="commit"
+          size="lg"
+          fullWidth
+          rightIcon={<ArrowRight size={16} />}
+          onClick={onContinue}
+        >
+          Next: connect with builders
+        </Button>
+      </div>
     </section>
   );
 }

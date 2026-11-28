@@ -36,14 +36,12 @@ describe("AduPreapprovedPlans", () => {
     expect(unverified).toBeEmptyDOMElement();
   });
 
-  it("places the plans inside the full city article, ahead of the closing address CTA", () => {
+  it("places the plans inside the full city article before the sources", () => {
     render(<AduArticle content={sanDiego} />);
     const section = screen.getByRole("region", { name: "Official pre-approved ADU plans for San Diego" });
     expect(within(section).getAllByRole("listitem").length).toBeGreaterThan(0);
-    const ctas = screen.getAllByRole("region", { name: "Check your San Diego lot in the Studio" });
-    const closingCta = ctas.at(-1);
-    expect(closingCta).toBeDefined();
-    expect(section.compareDocumentPosition(closingCta as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const sources = screen.getByRole("heading", { name: "Sources and as-of date" });
+    expect(section.compareDocumentPosition(sources) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps guide copy consistent with the catalog: no guide calls its curated plans unavailable", () => {

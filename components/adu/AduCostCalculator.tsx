@@ -630,7 +630,7 @@ export function AduCostCalculator({
             </div>
 
             <form onSubmit={handleAddressSubmit} className="mt-5 space-y-3" noValidate>
-              <label htmlFor="calculator-address-input" className="sr-only">
+              <label htmlFor="calculator-address-input" className="block text-sm font-medium text-lot-ink">
                 Your California street address
               </label>
               <Input

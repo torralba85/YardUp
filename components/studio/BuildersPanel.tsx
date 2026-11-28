@@ -107,11 +107,14 @@ export default function BuildersPanel({
 
       {!user ? (
         <div className="flex flex-col items-center gap-3 rounded-none border border-lot-line bg-lot-chalk p-6 text-center">
+          {/* Guests get one action, "Connect with builders" below: the form keeps
+              what they type and asks them to sign in when they send. A second
+              primary "Sign in" button here competed with it (2026-11-27 audit). */}
           <p className="lf-body-sm text-lot-stone">
-            Sign in to see the builders who serve your area and send them your concept.
+            Fill in the short form below and sign in when you send it. It&apos;s free, and what you type is kept.
           </p>
-          <Button variant="primary" onClick={() => setAuthOpen(true)}>
-            Sign in to see matched builders
+          <Button variant="ghost" size="sm" onClick={() => setAuthOpen(true)} className="text-lot-orange-ink underline underline-offset-4 hover:bg-transparent hover:text-lot-ink">
+            Already have an account? Sign in to see matched builders
           </Button>
         </div>
       ) : loading ? (

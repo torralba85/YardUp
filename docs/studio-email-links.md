@@ -1,6 +1,6 @@
 # Studio email links
 
-The free layout-link form appears only below the Certificate offer, inside a closed-by-default "Email this layout for later" disclosure on desktop and mobile. It does not interrupt Rules & Fit or the mobile Earn reveal. It is hidden for demo/estimated parcels and addresses already saved or purchased by the current user. A separate unchecked marketing option is independent of the requested transactional email and analytics consent.
+The free layout-link form appears only below the Certificate offer, inside a closed-by-default "Email this layout for later" disclosure on desktop and mobile. It does not interrupt Rules & Fit or the mobile Rules & fit step. It is hidden for demo/estimated parcels and addresses already saved or purchased by the current user. A separate unchecked marketing option is independent of the requested transactional email and analytics consent.
 
 ## Delivery queue and Resend transport
 

@@ -81,7 +81,7 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
         <Mail size={19} className="mt-0.5 shrink-0 text-lot-orange-ink" aria-hidden="true" />
         <div className="min-w-0">
           <h3 id={`${id}-heading`} className="font-display text-base font-medium leading-snug text-lot-ink">Save your layout link</h3>
-          <p className="mt-1 text-xs leading-5 text-lot-stone">Get a free link to return to this design. Itemized cost allowances, loan scenarios, and the permit and bid-leveling checklist are included with the paid Certificate.</p>
+          <p className="mt-1 text-xs leading-5 text-lot-stone">We’ll email you a free link that reopens this lot and design, so you can pick up where you left off.</p>
         </div>
       </div>
       {receipt ? (
@@ -90,14 +90,14 @@ export default function EmailScenarioLinkCard({ scenario, initialEmail = "" }: {
             <CheckCircle2 size={18} className="shrink-0" aria-hidden="true" />
             {receipt.delivery === "sent" ? "Sent! Check your inbox for your 3D lot link (plus a quick-copy link button below)." : "Saved! We couldn't email it right now, so copy your 3D lot link below to keep it."}
           </p>
-          <Button type="button" variant="secondary" className="bg-lot-chalk text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink" onClick={() => void copyLink()} leftIcon={<Copy size={15} />}>{copied ? "Copied!" : "Copy Link"}</Button>
+          <Button type="button" variant="secondary" className="bg-lot-chalk text-lot-ink hover:bg-lot-surface focus-visible:ring-lot-orange-ink" onClick={() => void copyLink()} leftIcon={<Copy size={15} />}>{copied ? "Copied!" : "Copy link"}</Button>
           {copyFallback && <div><label htmlFor={`${id}-copy`} className="block text-xs text-lot-stone">Select and copy your link</label><Input id={`${id}-copy`} className="bg-lot-chalk text-lot-ink focus-visible:ring-lot-orange-ink" readOnly value={receipt.scenarioUrl} onFocus={(event) => event.target.select()} /></div>}
         </div>
       ) : (
         <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-3">
           <div className="flex flex-col gap-2 @min-[440px]:flex-row">
             <div className="min-w-0 flex-1"><FieldLabel htmlFor={`${id}-email`} className="sr-only">Email address for your 3D lot link</FieldLabel><Input id={`${id}-email`} name="email" spellCheck={false} className="w-full bg-lot-chalk text-lot-ink placeholder:text-lot-stone focus-visible:ring-lot-orange-ink" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy} /></div>
-            <Button type="submit" variant="secondary" className="w-full shrink-0 border-lot-ink bg-lot-ink text-lot-chalk hover:bg-lot-ink/90 @min-[440px]:w-auto focus-visible:ring-lot-orange-ink" loading={busy} disabled={busy}>Email My 3D Link</Button>
+            <Button type="submit" variant="secondary" className="w-full shrink-0 border-lot-ink bg-lot-ink text-lot-chalk hover:bg-lot-ink/90 @min-[440px]:w-auto focus-visible:ring-lot-orange-ink" loading={busy} disabled={busy}>Email my 3D link</Button>
           </div>
           <div className="hidden" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
           <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-xs leading-5 text-lot-stone"><Checkbox checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} disabled={busy} />Also send me San Diego / California ADU permit &amp; fee waiver updates.</label>

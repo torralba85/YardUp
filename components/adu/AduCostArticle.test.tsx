@@ -26,7 +26,7 @@ describe("AduCostArticle", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/simple payback is about\s+13\.3\s+years/)).toBeInTheDocument();
     // Beside the rent table and again under "What the estimate includes".
-    expect(screen.getAllByText(/HUD FMR · San Diego County, CA/)).toHaveLength(2);
+    expect(screen.getAllByText(/HUD fair market rent · San Diego County, CA/)).toHaveLength(2);
   });
 
   it("tables build cost per size with per-square-foot ranges", () => {

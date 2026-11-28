@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function openShape(page: Page) {
   await page.goto("/studio");
   await page.getByRole("button", { name: "See a San Diego example" }).click();
-  await page.getByRole("button", { name: /shape your backyard home/i }).click();
+  await page.getByRole("button", { name: /design your backyard home/i }).click();
   await expect(page.getByRole("heading", { name: /pick a direction/i })).toBeVisible();
 }
 
@@ -21,8 +21,8 @@ test.describe("T08 mobile accessibility verification", () => {
     const cameraActions = page.getByRole("radiogroup", { name: "Camera view" }).getByRole("radio");
     await expect(cameraActions).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath("shape-camera-controls.png"), fullPage: true });
-    await expect(cameraActions.nth(0)).toHaveAccessibleName("Frame lot");
-    await expect(cameraActions.nth(1)).toHaveAccessibleName("Frame ADU");
+    await expect(cameraActions.nth(0)).toHaveAccessibleName("View lot");
+    await expect(cameraActions.nth(1)).toHaveAccessibleName("View ADU");
     await expect(cameraActions.nth(2)).toHaveAccessibleName("Plan");
   });
 

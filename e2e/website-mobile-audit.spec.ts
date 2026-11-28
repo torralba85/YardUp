@@ -79,7 +79,7 @@ test("native guest gets three successful lookups, preserves Back, and is asked t
     if (index > 0) await page.goBack();
     await expect(addressStep).toBeVisible();
     await search(freeLookups[index]);
-    await expect(page.getByRole("heading", { name: /What it could rent for/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /could rent for/i })).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     expect(calls).toEqual({ geocode: index + 1, parcel: index + 1 });
     if (index === 0) await page.screenshot({ path: testInfo.outputPath("native-guest-first-lookup.png"), fullPage: true });
@@ -99,7 +99,7 @@ test("unverified aerial is context only, without invented house, ADU or setback 
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {
-    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
+    await page.getByRole("button", { name: /Design your backyard home/ }).click();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }
@@ -126,7 +126,7 @@ test("imagery credits stay visible below the context notice at desktop and 320px
   await page.getByRole("searchbox", { name: "Search property address" }).fill("1421 NE 88th St, Seattle, WA");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   if (isMobile) {
-    await page.getByRole("button", { name: /Shape your backyard home/ }).click();
+    await page.getByRole("button", { name: /Design your backyard home/ }).click();
   } else {
     await page.getByRole("navigation", { name: "Studio steps" }).getByRole("button", { name: /Design/ }).click();
   }

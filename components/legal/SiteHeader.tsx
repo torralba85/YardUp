@@ -2,14 +2,12 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useRef, useState, useSyncExternalStore, type MouseEventHandler, type ReactNode } from "react";
+import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
 import { Button } from "@/components/ui/Button";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-import { SITE_NAV_LINKS } from "@/lib/site-nav";
+import { PRIMARY_CTA_LABEL, SITE_NAV_LINKS } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
-
-// The same links and labels as PublicHeader and the landing (lib/site-nav). The
-// logo links home; the page's own action reaches the Studio.
 
 // The header is page-level chrome, so it remounts on every navigation and the
 // path only needs reading once per mount. Reading `location` directly (rather
@@ -26,8 +24,8 @@ function isCurrent(pathname: string | null, href: string): boolean {
 }
 
 /**
- * Shared site header for every page outside the marketing landing: the brand
- * lockup links home, the main menu sits inline from 800px and behind a menu
+ * Shared site header for the landing, editorial pages and account flows. The brand
+ * lockup links home, the main menu sits inline from 1100px and behind a menu
  * button below it (design-system §7 Nav: `aria-expanded`/`aria-controls`,
  * Escape closes and returns focus to the trigger).
  *
@@ -36,10 +34,20 @@ function isCurrent(pathname: string | null, href: string): boolean {
  */
 export function SiteHeader({
   actions,
-  width = "max-w-4xl",
+  width = "max-w-6xl",
+  landing = false,
+  member,
+  onStart,
+  showLotAction = true,
+  signInHref = "/login",
 }: {
   actions?: ReactNode;
   width?: string;
+  landing?: boolean;
+  member?: ReactNode;
+  showLotAction?: boolean;
+  signInHref?: string;
+  onStart?: MouseEventHandler<HTMLAnchorElement>;
 }) {
   const pathname = useSyncExternalStore(noSubscribe, readPathname, serverPathname);
   const [open, setOpen] = useState(false);
@@ -52,9 +60,18 @@ export function SiteHeader({
       current ? "font-semibold text-lot-ink underline decoration-lot-orange-ink underline-offset-4" : "font-medium text-lot-ink",
     );
 
+  const builderLink = (
+    <WebBuilderOnly>
+      <li><Link href="/signup?role=builder" prefetch={false} className={linkClass(false)} onClick={() => setOpen(false)}>Register as a builder</Link></li>
+    </WebBuilderOnly>
+  );
+  const signIn = !actions && !member && pathname !== "/login" && (
+    <Link href={signInHref} prefetch={false} className={linkClass(false)} onClick={() => setOpen(false)}>Sign in</Link>
+  );
+
   return (
     <header
-      className="border-b border-lot-line bg-lot-chalk"
+      className={cn("relative border-b border-lot-line bg-lot-chalk", landing && "absolute inset-x-0 top-0 z-20 border-lot-chalk/30 bg-transparent [&>div]:text-lot-chalk [&>div>nav_a]:text-inherit [&>div>div>span>a]:text-inherit [&>div>div>button]:text-inherit")}
       onKeyDown={(event) => {
         if (event.key === "Escape" && open) {
           setOpen(false);
@@ -62,16 +79,16 @@ export function SiteHeader({
         }
       }}
     >
-      <div className={cn("mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-6", width)}>
+      <div className={cn("mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:px-6", width)}>
         <Link
           href="/"
           aria-label="LotFoundry home"
           className="flex min-h-11 shrink-0 items-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
         >
-          <BrandLockup className="h-7 w-auto" />
+          <BrandLockup inverse={landing} className="h-5 w-auto min-[360px]:h-6 sm:h-7" />
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden min-[800px]:block">
+        <nav aria-label="Main navigation" className="hidden min-[1100px]:block">
           <ul className="flex items-center gap-1">
             {SITE_NAV_LINKS.map((link) => {
               const current = isCurrent(pathname, link.href);
@@ -87,17 +104,24 @@ export function SiteHeader({
                 </li>
               );
             })}
+            {builderLink}
           </ul>
         </nav>
 
         <div className="flex min-w-0 items-center gap-2">
-          {actions}
+          {member || actions || <span className="hidden min-[1100px]:inline-flex">{signIn}</span>}
+          {showLotAction && (!actions || member) && (
+            <Link href={landing ? "#start" : "/studio"} prefetch={false} onClick={onStart}
+              className={cn("inline-flex min-h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-control bg-lot-orange px-3 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2", member && "max-[439px]:hidden")}>
+              {PRIMARY_CTA_LABEL}
+            </Link>
+          )}
           <Button
             ref={trigger}
             type="button"
             variant="ghost"
             size="sm"
-            className="min-w-11 px-2 min-[800px]:hidden"
+            className="min-w-11 px-2 min-[1100px]:hidden"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls={menuId}
@@ -112,7 +136,7 @@ export function SiteHeader({
         <nav
           id={menuId}
           aria-label="Mobile navigation"
-          className="border-t border-lot-line bg-lot-chalk min-[800px]:hidden"
+          className="border-t border-lot-line bg-lot-chalk min-[1100px]:hidden"
         >
           <ul className={cn("mx-auto flex flex-col divide-y divide-lot-line px-4 py-2 sm:px-6", width)}>
             {SITE_NAV_LINKS.map((link) => {
@@ -130,6 +154,14 @@ export function SiteHeader({
                 </li>
               );
             })}
+            {builderLink}
+            {signIn && <li>{signIn}</li>}
+            {member && showLotAction && (
+              <li className="min-[440px]:hidden">
+                <Link href={landing ? "#start" : "/studio"} prefetch={false} className={linkClass(false)}
+                  onClick={event => { setOpen(false); onStart?.(event); }}>{PRIMARY_CTA_LABEL}</Link>
+              </li>
+            )}
           </ul>
         </nav>
       ) : null}

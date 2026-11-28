@@ -79,7 +79,7 @@ describe("CertificatesClient", () => {
     authState.user = null;
     render(<CertificatesClient />);
     expect(screen.getByRole("heading", { name: /certificates of feasibility/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sign in to find my certificates" })).toHaveAttribute(
       "href",
       "/login?next=/certificates",
     );

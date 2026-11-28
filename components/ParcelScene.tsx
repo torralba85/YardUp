@@ -3,7 +3,7 @@
 import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree, type RootState } from "@react-three/fiber";
 import { Line, OrbitControls } from "@react-three/drei";
-import { Box, Home, Ruler, Sun } from "lucide-react";
+import { Box, Home, MapPin, Ruler, Sun } from "lucide-react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -39,6 +39,9 @@ import { SceneVisibility } from "@/components/studio/SceneVisibility";
 import GaussianSplatLayer, { type SplatLayerStatus } from "@/components/studio/GaussianSplatLayer";
 import type { SplatSceneDefinition, SplatTransform } from "@/lib/splat-scene";
 import { COLOR } from "@/lib/design-tokens";
+import { aduPositionLabel } from "@/lib/adu-position-label";
+import { formatDecimal } from "@/lib/intl-format";
+import { useStudioEnhancements } from "@/lib/studio-enhancements-store";
 
 
 /** Minimal error boundary that falls back to a render function. */
@@ -275,7 +278,12 @@ function ContactShadow({
  * signaled elsewhere (ADU ring, callout, constraints rail); the boundary only
  * shifts to review amber when the placement breaks the declared envelope.
  */
-function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: boolean }) {
+/**
+ * The lot boundary. A provisional lot (an address the parcel lookup could not
+ * match, drawn from a demo preset) is dashed and lighter, so the picture never
+ * reads as the searched property's real boundary (2026-11-27 audit).
+ */
+function BoundaryLines({ parcel, isCompliant, provisional = false }: { parcel: Parcel; isCompliant: boolean; provisional?: boolean }) {
   const y = 0.14;
   const color = isCompliant ? SCENE.ink : SCENE.review;
   const { loop, ticks } = useMemo(() => {
@@ -308,8 +316,12 @@ function BoundaryLines({ parcel, isCompliant }: { parcel: Parcel; isCompliant: b
 
   return (
     <group>
-      <Line points={loop} color={color} lineWidth={2.5} />
-      {ticks.map((segment, i) => (
+      {provisional ? (
+        <Line points={loop} color={color} lineWidth={2} dashed dashSize={3} gapSize={2} transparent opacity={0.7} />
+      ) : (
+        <Line points={loop} color={color} lineWidth={2.5} />
+      )}
+      {!provisional && ticks.map((segment, i) => (
         <Line key={i} points={segment} color={color} lineWidth={2} />
       ))}
     </group>
@@ -1057,7 +1069,22 @@ export default function ParcelScene({
   const [quality, setQuality] = useState<SceneQuality>("balanced");
   const [utilityMode, setUtilityMode] = useState(false);
   const [showClearances, setShowClearances] = useState(false);
+  const { utilityEstimate } = useStudioEnhancements();
+  const sceneViewportRef = useRef<HTMLDivElement>(null);
   const restoreTimer = useRef<number | null>(null);
+
+  const handleUtilityModeChange = useCallback((active: boolean) => {
+    setUtilityMode(active);
+    if (!active) return;
+    const node = sceneViewportRef.current;
+    if (!node || typeof window === "undefined") return;
+    for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(parent).overflowY) && parent.scrollHeight > parent.clientHeight) {
+        parent.scrollTo?.({ top: 0, behavior: "smooth" });
+        break;
+      }
+    }
+  }, []);
 
   // --- Pose ---------------------------------------------------------------
   // `pose` is the committed scenario value when the studio owns it. `preview`
@@ -1105,6 +1132,8 @@ export default function ParcelScene({
   // current view button bumps `frameCommand` to reframe deliberately.
   const existingHouse = useMemo(() => buildExistingHouseSceneModel(parcel), [parcel]);
   const parcelOutline = useMemo(() => buildParcelOutline(parcel), [parcel]);
+  // A searched address the parcel lookup could not match borrows a demo lot.
+  const provisionalLot = "source" in parcel && parcel.source === "fallback";
   const aduModel = useMemo(() => buildAduSceneModel(config, activePose), [config, activePose]);
   const existingHouseMaxY = existingHouse.boundsLocal?.maxY;
   const aduMaxY = aduModel.roofBoundsLocal?.maxY;
@@ -1381,9 +1410,10 @@ export default function ParcelScene({
   const shadowHalfExtent = computeShadowFrustumHalfExtent(parcel.lotWidth, parcel.lotLength);
 
   return (
-    <div className={`flex min-h-0 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "h-full"}`}>
+    <div className={`flex min-h-0 flex-1 flex-col bg-lot-chalk ${flowLayout ? "h-auto" : "min-h-full"}`}>
       <div
-        className={`relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[clamp(340px,54dvh,560px)] flex-1 lg:min-h-0"}`}
+        ref={sceneViewportRef}
+        className={`relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-lot-orange-ink ${flowLayout ? "h-[36dvh] min-h-[260px] max-h-[400px] shrink-0" : "min-h-[clamp(340px,48dvh,540px)] flex-1 shrink-0"}`}
         style={{ backgroundColor: SCENE_BACKDROP }}
         tabIndex={0}
         role="group"
@@ -1393,21 +1423,22 @@ export default function ParcelScene({
         onKeyUp={handleSceneKeyUp}
         onBlur={stopKeyboardMovement}
       >
-        <ErrorBoundary
-          fallbackRender={() => {
-            setWebglAvailable(false);
-            return null;
-          }}
-        >
-          <Canvas
-            shadows
-            frameloop="demand"
-            dpr={budget.dpr}
-            gl={{ alpha: true, antialias: true }}
-            onCreated={handleCreated}
-            className="relative z-0 h-full w-full"
-            style={{ background: "transparent" }}
+        <div className="absolute inset-0 z-0">
+          <ErrorBoundary
+            fallbackRender={() => {
+              setWebglAvailable(false);
+              return null;
+            }}
           >
+            <Canvas
+              shadows
+              frameloop="demand"
+              dpr={budget.dpr}
+              gl={{ alpha: true, antialias: true }}
+              onCreated={handleCreated}
+              className="h-full w-full"
+              style={{ background: "transparent" }}
+            >
             {process.env.NEXT_PUBLIC_PROFILE_STUDIO === "true" && measurement && (
               <StudioMeasurementAdapter {...measurement} />
             )}
@@ -1540,7 +1571,7 @@ export default function ParcelScene({
 
             {!(scanMode && splatOnly) && (
               <>
-                <BoundaryLines parcel={parcel} isCompliant={isCompliant} />
+                <BoundaryLines parcel={parcel} isCompliant={isCompliant} provisional={provisionalLot} />
                 <SetbackLines parcel={parcel} setbacks={envelopeSetbacks} />
                 {viewMode === "setbacks" && <SetbackDimensions parcel={parcel} setbacks={envelopeSetbacks} />}
                 <ProposedAdu
@@ -1556,7 +1587,8 @@ export default function ParcelScene({
               </>
             )}
           </Canvas>
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </div>
 
         {/* Compact top-left architectural instrument HUD: live clearance toggle & solar time step */}
         <div className="pointer-events-auto absolute left-3 top-3 z-(--z-index-scene) flex items-center gap-1 rounded-none border border-lot-line bg-lot-chalk/95 p-1">
@@ -1569,7 +1601,7 @@ export default function ParcelScene({
             className="h-11 gap-1.5 px-2.5 leading-none aria-[pressed=false]:text-lot-ink aria-[pressed=false]:hover:bg-lot-ink/5"
           >
             <Ruler className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="whitespace-nowrap text-xs font-medium">Clearances</span>
+            <span className="whitespace-nowrap text-xs font-medium">Distances</span>
           </Button>
           <Button
             type="button"
@@ -1588,7 +1620,7 @@ export default function ParcelScene({
             aria-live="polite"
             className="hidden border-l border-lot-line px-2.5 font-sans text-xs font-medium tabular-nums text-lot-stone sm:inline-block"
           >
-            {Math.round(activePose.x)}′ E · {Math.round(activePose.z)}′ S · {Math.round(activePose.rotationDeg)}°
+            {aduPositionLabel(activePose)}
           </span>
         </div>
 
@@ -1600,8 +1632,8 @@ export default function ParcelScene({
           {...cameraGroupProps}
         >
           {[
-            { mode: "overview" as const, label: "Frame lot", icon: Home },
-            { mode: "adu" as const, label: "Frame ADU", icon: Box },
+            { mode: "overview" as const, label: "View lot", icon: Home },
+            { mode: "adu" as const, label: "View ADU", icon: Box },
             { mode: "setbacks" as const, label: "Plan", icon: Ruler },
           ].map(({ mode, label, icon: Icon }) => {
             const active = viewMode === mode;
@@ -1624,7 +1656,46 @@ export default function ParcelScene({
         <div className="pointer-events-none absolute right-4 top-4 z-(--z-index-scene) rounded-none border border-lot-line-dark bg-lot-ink px-2.5 py-1 text-xs font-sans font-bold tracking-[0.08em] text-lot-chalk">
           N
         </div>
+        {provisionalLot && (
+          // In the picture itself: people trust a drawing over a notice in the rail.
+          <p
+            data-testid="provisional-lot-label"
+            className="pointer-events-none absolute left-1/2 top-16 z-(--z-index-scene) max-w-[calc(100%-2rem)] -translate-x-1/2 border border-status-review/40 bg-lot-chalk px-3 py-1.5 text-center text-xs font-semibold text-status-review"
+          >
+            Sample lot shape · we couldn’t match this address to a parcel record
+          </p>
+        )}
       </div>
+
+      {utilityMode && (
+        <div
+          data-testid="utility-mode-bar"
+          role="status"
+          className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-lot-line-dark bg-lot-ink px-3 py-2 text-xs text-lot-chalk"
+        >
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control bg-lot-orange text-lot-ink"
+              aria-hidden="true"
+            >
+              <MapPin size={14} />
+            </span>
+            <span className="leading-5">
+              <strong className="font-semibold">Utility planning:</strong> select a tie-in point on the primary house in the 3D model
+              {utilityEstimate ? ` · ${formatDecimal(utilityEstimate.distanceFt, 1)} ft run` : "."}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => setUtilityMode(false)}
+            className="min-h-11 shrink-0 border border-lot-line-dark bg-lot-surface-dark px-3 text-xs font-semibold text-lot-chalk hover:bg-lot-surface-dark-hover focus-visible:ring-lot-chalk focus-visible:ring-offset-lot-ink"
+          >
+            Done
+          </Button>
+        </div>
+      )}
 
       {/* Status and editing sit below the viewport instead of floating over it —
           the audit measured phone overlays covering 40.4% of the scene (U3). */}
@@ -1642,7 +1713,7 @@ export default function ParcelScene({
 
       <SceneTools
         utilityMode={utilityMode}
-        onUtilityModeChange={setUtilityMode}
+        onUtilityModeChange={handleUtilityModeChange}
         parcel={parcel}
         config={config}
         pose={activePose}

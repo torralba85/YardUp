@@ -26,7 +26,6 @@ import {
 import { marketProvenanceLine } from "@/lib/market/market-basis";
 import { AduCostCalculator } from "./AduCostCalculator";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { AduStudioCta } from "./AduStudioCta";
 import { CostBreakdownDiagram } from "./CostBreakdownDiagram";
 import { RentAndPayback } from "./RentAndPayback";
 
@@ -125,7 +124,6 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
     datePublished: cost.published,
     dateModified: costPageLastModified(cost.asOf),
   });
-  const ctaSlug = `${cost.slug}-cost`;
 
   return (
     <>
@@ -162,14 +160,6 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         ))}
       </div>
 
-      <div className="mt-8">
-        <AduStudioCta
-          city={city.city}
-          slug={ctaSlug}
-          placement="top"
-          compactHeading={city.slug === "san-diego" ? "Check what could fit on your San Diego lot" : undefined}
-        />
-      </div>
 
       <section aria-labelledby="adu-cost-by-size" className="mt-12">
         <h2 id="adu-cost-by-size" className="lf-card-heading text-lot-ink">
@@ -232,14 +222,6 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         Have a lender offer? Compare the monthly payment with modeled rent after operating expenses
         in the <Link href="/adu-cost-calculator#financing" className={linkClass}>ADU loan and cash-flow calculator</Link>.
       </p>
-      <div className="mt-12">
-        <AduStudioCta
-          city={city.city}
-          slug={ctaSlug}
-          placement="mid"
-          heading="These are countywide estimates. Here is what they mean for your lot."
-        />
-      </div>
 
       <section aria-labelledby="adu-fees" className="mt-12">
         <h2 id="adu-fees" className="lf-card-heading text-lot-ink">
@@ -404,14 +386,6 @@ export function AduCostArticle({ cost }: { cost: JurisdictionCostContent }) {
         </ul>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city={city.city}
-          slug={ctaSlug}
-          placement="end"
-          heading="These are countywide estimates. Here is what they mean for your lot."
-        />
-      </div>
     </>
   );
 }

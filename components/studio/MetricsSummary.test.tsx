@@ -64,7 +64,7 @@ describe("MetricsSummary", () => {
   it("cites the market provenance with source, vintage, and confidence", () => {
     render(<MetricsSummary result={baseResult()} />);
     expect(screen.getByTestId("market-provenance")).toHaveTextContent(
-      "HUD FMR · King County, WA · HUD FY2026 FMR · Medium confidence",
+      "HUD fair market rent · King County, WA · fiscal 2026 figures · Medium confidence",
     );
   });
 

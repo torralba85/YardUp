@@ -92,7 +92,6 @@ import { useMediaQuery } from "@/lib/use-media-query";
 import MobileHeader from "./studio/mobile/MobileHeader";
 import MobileJourney from "./studio/mobile/journey/MobileJourney";
 import FindStep from "./studio/mobile/journey/FindStep";
-import EarnStep from "./studio/mobile/journey/EarnStep";
 import ShapeStep, { MODEL_STAGE_ID } from "./studio/mobile/journey/ShapeStep";
 import CheckStep from "./studio/mobile/journey/CheckStep";
 import ActStep from "./studio/mobile/journey/ActStep";
@@ -564,15 +563,16 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       : null,
   );
 
-  // ── Mobile five-reveal journey (find → earn → shape → check → act) ──────
-  // Separate from the desktop StudioStep spine by design (issue #130). An
-  // already-resolved parcel (signed-in handoff) starts at the Earn reveal.
+  // ── Mobile five-reveal journey (find → check → shape → act → builders) ──
+  // The phone's own screens, in the desktop spine's order and names
+  // (2026-11-27). An already-resolved parcel (signed-in handoff) starts at
+  // the Rules & fit reveal, where the rent range lands.
   const [journeyStep, setJourneyStep] = useState<MobileJourneyStep>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
       if (p.has("cert") || p.get("step") === "certificate" || hasCertificatePurchaseIntent() || hasAgentPassRedeemIntent()) return "act";
     }
-    return parcelMode !== "preset" || demoChosen ? "earn" : "find";
+    return parcelMode !== "preset" || demoChosen ? "check" : "find";
   });
   // A demo lot counts as the find decision only once the user commits to it.
   const [demoCommitted, setDemoCommitted] = useState(demoChosen);
@@ -591,7 +591,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // untouched — the hook observes the resulting state instead. Disabled on
   // desktop (`enabled: !isDesktop`): desktop never renders the journey and
   // must not observe any of this hook's side effects either — a live address
-  // search still flips `journeyStep` from "find" to "earn" behind the scenes
+  // search still flips `journeyStep` from "find" to "check" behind the scenes
   // (the render-phase adjustment below is not itself gated to mobile), and an
   // enabled hook would push a history entry desktop's own Back button would
   // then have to silently consume, with no visible change, before it could
@@ -608,12 +608,15 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // so nothing is "locked"), and "upcoming" is reachable going forward but
   // must never become reachable via Back. Do not relax this back to "not
   // locked" — that reopens exactly this hole.
+  //
+  // "viewed" counts as earlier too: it is a step behind the current one that
+  // was opened but not completed (a Certificate looked at but not bought).
   const handleJourneyRestore = useCallback(
     (restored: MobileJourneyStep) => {
       const restoredState = deriveJourneySteps(journeyStep, { found }).find(
         (candidate) => candidate.id === restored,
       )?.state;
-      if (restoredState !== "done") return;
+      if (restoredState !== "done" && restoredState !== "viewed") return;
       setJourneyStep(restored);
     },
     [journeyStep, found],
@@ -623,14 +626,14 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   // Render-phase adjustment (not an effect): the money reveal must appear
   // immediately after address resolution, so a newly resolved non-demo parcel
-  // while on Find advances the journey to Earn in the same pass. Keyed on the
+  // while on Find advances the journey to Rules & fit in the same pass. Keyed on the
   // parcel itself, not parcelMode: a second lookup after Back stays "live", and
   // keying on the mode left the guest on Find with the new lot already loaded.
   const [prevParcel, setPrevParcel] = useState(liveParcel);
   if (liveParcel !== prevParcel) {
     setPrevParcel(liveParcel);
     if (parcelMode !== "preset" && journeyStep === "find") {
-      setJourneyStep("earn");
+      setJourneyStep("check");
     }
   }
 
@@ -706,12 +709,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       setPendingAddressQuery(incomingAddress);
     }
     // A restored or shared non-default scenario proves the find decision was
-    // already made — start the mobile journey at the Earn reveal instead of
-    // the onboarding plate. A pending address handoff owns its own advance
+    // already made — start the mobile journey at the Rules & fit reveal instead
+    // of the onboarding plate. A pending address handoff owns its own advance
     // (the parcel render adjustment fires when the search resolves).
     if (!incomingAddress && isNonDefaultScenario(parsed)) {
       setDemoCommitted(true);
-      setJourneyStep((step) => (step === "find" ? "earn" : step));
+      setJourneyStep((step) => (step === "find" ? "check" : step));
     }
 
     if (parsedView) {
@@ -1118,6 +1121,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   const builderMatches = useBuilderMatches(Boolean(user), activeParcel, builderLeadOpen);
   // Kept here, not in the form, so closing it or leaving the step loses nothing.
   const [builderLeadDraft, setBuilderLeadDraft] = useState<BuilderLeadDraft | null>(null);
+  // Builders counts as done only once a request is sent, never for a visit.
+  const [sentBuilderLeads, setSentBuilderLeads] = useState<ReadonlySet<string>>(() => new Set());
+  const activeLeadKey = JSON.stringify([user?.uid, certificateKey(activeParcel)]);
+  const builderLeadSent = sentBuilderLeads.has(activeLeadKey);
   const leadDraft = builderLeadDraft ?? { name: user?.displayName || "", email: user?.email || "", phone: "", message: "" };
   // The connect button remounts when the form closes; hand focus back to it.
   const connectTriggerRef = useRef<HTMLButtonElement>(null);
@@ -1156,6 +1163,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
       ownerVerified: Boolean(user.emailVerified),
     });
     setBuilderLeadDraft(null);
+    setSentBuilderLeads(previous => new Set(previous).add(activeLeadKey));
 
     const summary = summarizeFeasibility(activeParcel, result, config, result.placement);
     trackBuilderConnectionSubmitted({
@@ -1373,7 +1381,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   if (!isDesktop) {
     // The five-reveal journey (issue #130): one decision and one payoff per
     // screen, with the advanced inspector behind an optional fine-tune drawer.
-    const journeySteps = deriveJourneySteps(journeyStep, { found });
+    // Viewing a step is completing it, except the two that ask for something:
+    // the Certificate (bought) and Builders (a request sent).
+    const journeyCompleted = new Set<MobileJourneyStep>(["find", "check", "shape"]);
+    if (certificateUnlocked) journeyCompleted.add("act");
+    if (builderLeadSent) journeyCompleted.add("builders");
+    const journeySteps = deriveJourneySteps(journeyStep, { found, completed: journeyCompleted });
     const previousStep = prevJourneyStep(journeyStep);
     const mobileParcelName = isRealAddressActive
       ? displayAddress
@@ -1401,19 +1414,23 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onPresetSelect={handleMobilePresetSelect}
           onReveal={() => {
             setDemoCommitted(true);
-            setJourneyStep("earn");
+            setJourneyStep("check");
           }}
         />
       );
-    } else if (journeyStep === "earn") {
+    } else if (journeyStep === "check") {
       stepContent = (
-        <EarnStep
-          parcelNotice={<ParcelDataNotice parcel={activeParcel} />}
+        <CheckStep
+          certificateUnlocked={certificateUnlocked}
+          parcel={activeParcel}
           parcelName={mobileParcelName}
           result={result}
+          config={config}
           estimated={parcelMode !== "live"}
-          certificateUnlocked={certificateUnlocked}
+          onFineTune={() => setFineTuneOpen(true)}
           onContinue={() => setJourneyStep("shape")}
+          onCreateAccount={!user ? () => openSignup("post_result") : undefined}
+          emailLinkCard={emailLinkCard}
         />
       );
     } else if (journeyStep === "shape") {
@@ -1441,26 +1458,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               finish: config.finish,
               feasibility_status: mapFeasibilityVerdict(summary.verdict),
             });
-            setJourneyStep("check");
+            setJourneyStep("act");
           }}
         />
       );
-    } else if (journeyStep === "check") {
-      stepContent = (
-        <CheckStep
-          certificateUnlocked={certificateUnlocked}
-          parcel={activeParcel}
-          result={result}
-          config={config}
-          onFineTune={() => setFineTuneOpen(true)}
-          onContinue={() => setJourneyStep("act")}
-          onCreateAccount={!user ? () => openSignup("post_result") : undefined}
-          emailLinkCard={emailLinkCard}
-        />
-      );
-    } else {
-      // The connect form takes over the Act screen as a focused destination —
-      // never content appended below the journey.
+    } else if (journeyStep === "builders") {
+      // The connect form takes over the Builders screen as a focused
+      // destination — never content appended below the journey.
       stepContent = builderLeadOpen ? (
         <BuilderLeadPanel
           open
@@ -1478,6 +1482,17 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           onRequestSignIn={() => openSignup("builder_connect")}
         />
       ) : (
+        <BuildersPanel
+          parcelCity={activeParcel.city}
+          parcelState={"state" in activeParcel ? String(activeParcel.state) : undefined}
+          parcelCounty={"county" in activeParcel ? String(activeParcel.county) : undefined}
+          feasibilityStatus={feasibilityStatus}
+          onConnect={() => setBuilderLeadOpen(true)}
+          connectRef={connectTriggerRef}
+        />
+      );
+    } else {
+      stepContent = (
         <ActStep
           parcelName={mobileParcelName}
           certificate={
@@ -1504,8 +1519,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
           saveNotice={saveNotice}
           onShare={() => void handleShareLink()}
           shareNotice={shareNotice}
-          onConnectBuilders={() => setBuilderLeadOpen(true)}
-          connectRef={connectTriggerRef}
+          onContinue={() => setJourneyStep("builders")}
         />
       );
     }
@@ -1537,15 +1551,11 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-5 py-2.5 text-xs text-lot-ink"
             >
               <span className="font-semibold">
-                Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
+                Demo lot: {activeParcel.city.replace(/\s+\d{5}$/, "")}
               </span>
-              <button
-                type="button"
-                onClick={() => setJourneyStep("find")}
-                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-              >
+              <Button type="button" variant="primary" size="xs" onClick={() => setJourneyStep("find")}>
                 Check my lot
-              </button>
+              </Button>
             </div>
           )}
           {stepContent}
@@ -1590,10 +1600,10 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             onExportCsv={exportCsv}
             onShare={handleShareLink}
             onConnectBuilders={() => {
-              // The connect form lives on the Act screen — close the report
-              // and land there with the form open.
+              // The connect form lives on the Builders screen — close the
+              // report and land there with the form open.
               setReportOpen(false);
-              setJourneyStep("act");
+              setJourneyStep("builders");
               setBuilderLeadOpen(true);
             }}
             shareNotice={shareNotice}
@@ -1621,7 +1631,12 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
   // P1 keeps the whole journey explorable on any loaded lot (presets included);
   // the paid preconditions (certificate purchase, builder charge) are enforced
   // at those actions in later phases, not as navigation locks.
-  const steps = deriveStepStates(activeStep, { hasParcel: true, visited: visitedSteps });
+  // A visit completes the exploring steps; the Certificate needs a purchase and
+  // Builders a sent request before the rail shows them done.
+  const completedSteps = new Set<StudioStep>(["lot", "feasibility", "design"]);
+  if (certificateUnlocked) completedSteps.add("certificate");
+  if (builderLeadSent) completedSteps.add("builders");
+  const steps = deriveStepStates(activeStep, { hasParcel: true, visited: visitedSteps, completed: completedSteps });
   const currentStepMeta = STUDIO_STEPS.find((s) => s.id === activeStep)!;
   // Project context follows the lot step; detailed figures open on demand.
   const showsVerdictBand = activeStep !== "lot";
@@ -1654,16 +1669,13 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
             className="flex flex-wrap items-center justify-between gap-2 border-b border-lot-line bg-lot-surface px-6 py-2.5 text-xs text-lot-ink"
           >
             <span className="font-semibold">
-              Demo Mode: {activeParcel.city.replace(/\s+\d{5}$/, "")}
+              Demo lot: {activeParcel.city.replace(/\s+\d{5}$/, "")}
             </span>
             {(activeStep !== "feasibility" || certificateUnlocked) && (
-              <button
-                type="button"
-                onClick={handleChangeAddress}
-                className="rounded-control font-semibold text-lot-orange-ink underline underline-offset-4 motion-safe:transition-colors hover:text-lot-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lot-orange-ink"
-              >
+              // The one action that matters on a demo is a real button, not a small text link.
+              <Button type="button" variant="primary" size="xs" onClick={handleChangeAddress}>
                 Check my lot
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -1735,7 +1747,7 @@ function FeasibilityStudioInner({ demoChosen, nativeShell, initialScenario }: { 
               {parcelError && <p role="alert" className="text-xs text-status-blocked">{parcelError}</p>}
               <ParcelDataNotice parcel={activeParcel} />
               <StudioPreview result={result} onUnlock={() => setActiveStep("certificate")} stickyCta />
-              <Button fullWidth variant="secondary" onClick={() => setActiveStep("design")}>Explore the 3D concept</Button>
+              <Button fullWidth variant="secondary" rightIcon={<ArrowRight size={16} />} onClick={() => setActiveStep("design")}>Next: design your backyard home</Button>
               {!user && <Button fullWidth variant="secondary" onClick={() => openSignup("post_result")}>Save this property — free account</Button>}
               {emailLinkCard}
             </div>}
@@ -1910,7 +1922,7 @@ function SceneViewport({
   return (
     <div data-testid="scene-viewport" className={`relative flex flex-1 flex-col ${flowLayout ? (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "h-[58dvh] min-h-[500px]") : (viewMode === "3d" || viewMode === "scan" ? "h-auto min-h-0" : "min-h-[clamp(460px,65dvh,700px)]")}`}>
       <SceneViewToggle mode={viewMode} onChange={onViewModeChange} hasScan={hasScan} />
-      <div className="min-h-0 flex-1">{sceneNode}</div>
+      <div className="flex min-h-0 flex-1 flex-col">{sceneNode}</div>
     </div>
   );
 }

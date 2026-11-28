@@ -223,7 +223,7 @@ test.describe("web certificate checkout", () => {
   test("a web guest on a real address lands directly in Checkout after accepting terms", async ({ page }) => {
     const lot = {
       address: "1421 NE 88th St", city: "Seattle, WA 98115", state: "WA", zip: "98115",
-      lat: 47.69217, lng: -122.31232, source: "fallback", zoning: "R-1 (estimated)",
+      lat: 47.69217, lng: -122.31232, source: "county-gis", zoning: "R-1",
       boundaryGeoJson: null, lotArea: 5000, lotWidth: 40, lotLength: 125,
       existingHouseSqft: 0, maxLotCoveragePercent: 40,
       setbacks: { front: 20, rear: 20, side: 5 },

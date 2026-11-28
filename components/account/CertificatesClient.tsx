@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { SiteHeader } from "@/components/legal/SiteHeader";
-import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import {
   useUserPurchasedCertificates,
   formatCertKeyFallback,
@@ -31,6 +30,16 @@ function formatDate(date: Date | null): string {
 
 function formatPrice(cents: number): string {
   return formatDollars(Math.round(cents / 100));
+}
+
+function SampleCertificateCard() {
+  return (
+    <Link href="/sample-certificate/san-diego" prefetch={false} className="mt-6 flex items-center justify-between gap-4 border-y border-lot-line py-4 text-left text-lot-ink hover:text-lot-orange-ink">
+      <span><span className="lf-kicker block text-lot-stone">San Diego example</span>
+        <span className="mt-1 block font-semibold">View a sample certificate</span></span>
+      <ArrowRight size={18} aria-hidden="true" />
+    </Link>
+  );
 }
 
 export function CertificatesClient() {
@@ -76,7 +85,7 @@ export function CertificatesClient() {
   if (authLoading) {
     return (
       <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-        <SiteHeader />
+        <SiteHeader signInHref="/login?next=/certificates" />
         <div className="mx-auto max-w-3xl px-4 py-20 text-center" aria-busy="true">
           <p className="lf-body-sm text-lot-stone">Loading your certificates…</p>
         </div>
@@ -87,16 +96,7 @@ export function CertificatesClient() {
   if (!user) {
     return (
       <div className="min-h-dvh bg-lot-chalk text-lot-ink">
-        <SiteHeader
-          actions={
-            <Link
-              href="/studio"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink hover:underline"
-            >
-              {PRIMARY_CTA_LABEL}
-            </Link>
-          }
-        />
+        <SiteHeader signInHref="/login?next=/certificates" />
 
         <div className="mx-auto max-w-md px-4 py-16 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-lot-line bg-lot-chalk">
@@ -114,7 +114,7 @@ export function CertificatesClient() {
               href="/login?next=/certificates"
               className="inline-flex h-11 w-full items-center justify-center rounded-control bg-lot-orange px-5 text-sm font-semibold text-lot-ink hover:bg-lot-orange-hover"
             >
-              Sign in
+              Sign in to find my certificates
             </Link>
           </div>
           <div className="mt-4">
@@ -125,6 +125,7 @@ export function CertificatesClient() {
               Create free account
             </Link>
           </div>
+          <SampleCertificateCard />
         </div>
       </div>
     );
@@ -133,21 +134,13 @@ export function CertificatesClient() {
   return (
     <div className="min-h-dvh bg-lot-chalk text-lot-ink">
       <SiteHeader
-        actions={
-          <>
-            <Link
-              href="/studio"
-              className="hidden min-h-11 items-center text-sm font-semibold text-lot-orange-ink hover:underline sm:inline-flex"
-            >
-              {PRIMARY_CTA_LABEL}
-            </Link>
-            <AccountMenu
-              displayName={displayName}
-              roleLabel={roleLabel}
-              onSignOut={() => void logout()}
-              tone="light"
-            />
-          </>
+        member={
+          <AccountMenu
+            displayName={displayName}
+            roleLabel={roleLabel}
+            onSignOut={() => void logout()}
+            tone="light"
+          />
         }
       />
 
@@ -156,7 +149,7 @@ export function CertificatesClient() {
           <p className="lf-kicker-dense text-lot-stone">RECORDS · UNLOCKED PROPERTIES</p>
           <h1 className="lf-panel-heading mt-2 text-2xl sm:text-3xl">Certificates of Feasibility</h1>
           <p className="lf-body-sm mt-2 max-w-2xl text-lot-stone">
-            Official feasibility records and verified property analyses unlocked for your lots.
+            Planning estimates and property records for the lots you have unlocked.
             Every certificate remains unlocked permanently and can be reopened in the 3D Studio anytime.
           </p>
         </div>
@@ -282,6 +275,7 @@ export function CertificatesClient() {
                 Explore 3D Studio
               </Link>
             </div>
+            <SampleCertificateCard />
           </div>
         ) : (
           <div className="mt-8 space-y-6">

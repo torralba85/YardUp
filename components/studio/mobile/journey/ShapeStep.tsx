@@ -45,7 +45,7 @@ export interface ShapeStepProps {
   scene: ReactNode;
   /** Open the advanced fine-tune drawer (progressive disclosure). */
   onFineTune: () => void;
-  /** The one primary action: move on to the feasibility check. */
+  /** The one primary action: move on to the Certificate step. */
   onContinue: () => void;
 }
 
@@ -178,7 +178,7 @@ export default function ShapeStep({
             rightIcon={<ArrowRight size={16} />}
             onClick={onContinue}
           >
-            Check feasibility
+            See your Certificate
           </Button>
         </div>
       </div>

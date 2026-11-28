@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CaliforniaAduRentGuide } from "@/components/adu/CaliforniaAduRentGuide";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { CA_RENT_VERIFIED, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
+import { CA_COUNTY_RENTS, fmrAreas, CA_RENT_VERIFIED, HUD_FMR_YEAR } from "@/content/adu/ca/rent";
 import { rentUrl } from "@/lib/adu/content";
 import { SITE_NAME } from "@/lib/site-identity";
 
@@ -32,6 +32,8 @@ export default function CaliforniaAduRentPage() {
       title="ADU Rent in California by County"
       kicker={`HUD ${HUD_FMR_YEAR} Fair Market Rents · 12 counties · Verified ${CA_RENT_VERIFIED}`}
       layout="editorial"
+      lotCheck={{ city: "California", slug: "california-adu-rent" }}
+      facts={[["Counties", CA_COUNTY_RENTS.length], ["Rent areas", fmrAreas().length], ["Rent benchmark", HUD_FMR_YEAR]]}
     >
       <CaliforniaAduRentGuide />
     </LegalPageShell>

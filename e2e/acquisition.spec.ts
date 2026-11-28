@@ -53,8 +53,10 @@ test("tagged rent resource leads to a recorded parcel result in Studio", async (
   const configured = await banner.waitFor({ state: "visible", timeout: 5_000 }).then(() => true, () => false);
   test.skip(!configured, "no measurement ID in this build");
   await page.getByRole("button", { name: /^accept$/i }).click();
-  await page.getByRole("textbox", { name: /street address/i }).first().fill(parcel.address);
-  await page.getByRole("button", { name: "Check my lot" }).first().click();
+  const lookup = page.getByRole("complementary", { name: "Lot check and tools" });
+  await lookup.locator("summary").click();
+  await lookup.getByRole("textbox", { name: /street address/i }).first().fill(parcel.address);
+  await lookup.locator("form").getByRole("button", { name: "Check my lot" }).click();
   const answer = page.getByRole("region", { name: "Inline lot feasibility answer" });
   await expect(answer).toBeVisible();
   await answer.getByRole("link", { name: "Open in 3D" }).click();
@@ -94,19 +96,22 @@ for (const guide of [
   {
     path: "/adu/ca/san-diego-county",
     opening: /generally need 4 feet of clearance/i,
-    callToAction: "Check whether an ADU could fit on your lot",
+    action: "summary",
   },
   {
     path: "/adu/ca/san-diego/cost",
     opening: /Use the City of San Diego fee schedule below/i,
-    callToAction: "Check what could fit on your San Diego lot",
+    action: "a",
   },
 ]) {
   test(`San Diego guide renders its answer and lot check at ${guide.path}`, async ({ page }) => {
     await page.goto(guide.path);
     await expect(page.getByText(guide.opening)).toBeVisible();
-    await expect(page.getByText(guide.callToAction, { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Check my lot" }).first()).toBeVisible();
+    const action = page.getByRole("complementary", { name: "Lot check and tools" }).locator(guide.action).filter({ hasText: "Check my lot" });
+    await action.click();
+    const address = page.getByRole("textbox", { name: /street address/i });
+    await expect(address).toBeVisible();
+    if (guide.action === "a") await expect(address).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }

@@ -45,6 +45,8 @@ describe("BuildersPanel", () => {
   it("asks a guest to sign in before showing matched builders", () => {
     render(<BuildersPanel parcelCity="Seattle, WA" onConnect={() => {}} />);
     expect(screen.getByRole("button", { name: /sign in to see matched builders/i })).toBeInTheDocument();
+    // One primary action for guests: the connect form, which asks for sign-in at Submit.
+    expect(screen.getAllByRole("button", { name: /connect with builders/i })).toHaveLength(1);
     expect(mocks.fetchActiveBuilders).not.toHaveBeenCalled();
   });
 

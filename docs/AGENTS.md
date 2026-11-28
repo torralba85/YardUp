@@ -94,7 +94,7 @@ Without API keys the app runs in demo mode with 4 presets (Seattle, Portland, Au
 | `components/studio/ReportPreview.tsx` | Expandable report export panel: print/PDF, download text/CSV, share link |
 | `components/studio/AerialView.tsx` | Satellite aerial view with parcel boundary + ADU SVG overlay (live mode) |
 | `components/studio/AddressSearch.tsx` | Google Places Autocomplete address input |
-| `components/studio/mobile/journey/MobileJourney.tsx` | Five-reveal mobile journey: step ids find → earn → shape → check → act, labelled Your lot → Rent → Design → Rules & fit → Certificate (the desktop rail's words, in the mobile rent-first order) |
+| `components/studio/mobile/journey/MobileJourney.tsx` | Mobile steps: find → check → shape → act → builders (Your lot, Rules & fit, Design, Certificate, Builders) |
 
 ### Library Modules
 
@@ -236,8 +236,8 @@ _Last updated 2026-07-18 (accessible color roles, mobile release configuration, 
 | Brand/Identity | ✅ Complete | LotFoundry fully integrated; A LOT MORE design system (`docs/design/`) |
 | Core Feasibility Logic | ✅ Complete | 3 presets + live parcels from Regrid or public county/state GIS, with Census geography and USA Structures footprints; address-specific market rents/costs/opex use the HUD FMR index + key-gated live seam in `lib/server/market/` |
 | 3D Visualization | ✅ Enhanced | Trees, fences, driveway, drag + arrow-key placement |
-| Guided Spine (P0–P4) | ✅ Landed | Desktop: Lot → Feasibility → Design → Certificate → Builders rail. Mobile: five-reveal journey find → earn → shape → check → act, labelled Your lot → Rent → Design → Rules & fit → Certificate since 2026-11-24 (`components/studio/mobile/journey/`, issue #130) — replaced the bottom sheet + first-run wizard |
-| Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; a handed-off address resolves straight into the journey's Earn reveal; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
+| Guided Spine (P0–P4) | ✅ Landed | Desktop and mobile share Your lot → Rules & fit → Design → Certificate → Builders. The mobile journey replaced the bottom sheet + first-run wizard |
+| Landing handoff (P5) | ✅ Landed | Session-storage address handoff + dawn ramp; a handed-off address resolves straight into the journey's Rules & fit step; arrival plate keeps money-in-3s; certificate specimen extends the landing arc to steps 04–05 |
 | Monetization | ✅ Implemented | Stripe paid certificate purchase (P3) + builder lead-unlock marketplace; `LOTFOUNDRY_DEMO_UNLOCKS` for dev |
 | AI Panels | ✅ Implemented | Parcel insights + style-matched ADU concepts (auth + rate-limited server routes) |
 | Testing | ✅ Vitest + Playwright desktop/mobile | Use the current branch's GitHub `verify` job for release evidence |

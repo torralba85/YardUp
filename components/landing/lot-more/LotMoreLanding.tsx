@@ -11,17 +11,16 @@ import {
   type MouseEvent,
 } from "react";
 import dynamic from "next/dynamic";
+import { SiteHeader } from "@/components/legal/SiteHeader";
 import { WebBuilderOnly } from "@/components/builder/WebBuilderOnly";
-import { PRIMARY_CTA_LABEL, SITE_NAV_LINKS } from "@/lib/site-nav";
+import { PRIMARY_CTA_LABEL } from "@/lib/site-nav";
 import Link from "next/link";
 import {
   ArrowRight,
   ArrowUp,
   ArrowUpRight,
   MapPin,
-  Menu,
   Plus,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -265,7 +264,9 @@ function LandingAddressForm({
           autoComplete="street-address"
           type="text"
           value={value}
-          placeholder="1234 Coyote Brush Ct, San Diego"
+          // An instruction, not a sample address: on the hero photo a sample read
+          // as a value already filled in (2026-11-27 audit).
+          placeholder="Enter your street address"
           aria-invalid={hasError}
           aria-describedby={`${id}-note${hasError ? ` ${id}-error` : ""}`}
           onChange={(event) => {
@@ -370,7 +371,6 @@ export function LotMoreLanding({
   const reportTab = rawReport === "0" ? 0 : rawReport === "2" ? 2 : 1;
   const [sampleOpen, setSampleOpen] = useState(false);
   const [mobileCta, setMobileCta] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [activeHotspot, setActiveHotspot] = useState<number>(0);
   const [activeStep, setActiveStep] = useState<number>(0);
   const rawFootprint = searchParams.get("footprint");
@@ -390,7 +390,6 @@ export function LotMoreLanding({
   const closingRef = useRef<HTMLElement>(null);
   const pendingAddress = useRef("");
   const submitButton = useRef<HTMLButtonElement | null>(null);
-  const menuButton = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const scenario = scenarios[scenarioIndex];
   const sample = scenarios.find((item) => item.id === "market") ?? scenarios[0];
@@ -571,84 +570,7 @@ export function LotMoreLanding({
   return (
     <>
       <div className={styles.page} data-theme="a-lot-more">
-        <header
-          className={styles.header}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && menuOpen) {
-              setMenuOpen(false);
-              menuButton.current?.focus();
-            }
-          }}
-        >
-          <Link href="/" translate="no" className={styles.brand} aria-label="LotFoundry home">
-            <ParcelMark />
-            LotFoundry
-            <span className={styles.brandDot} aria-hidden="true" />
-          </Link>
-          <nav className={styles.desktopNav} aria-label="Main navigation">
-            {SITE_NAV_LINKS.map((link) => (
-              <Link key={link.href} href={link.href}>
-                {link.label}
-              </Link>
-            ))}
-            <WebBuilderOnly>
-              <Link href="/signup?role=builder" prefetch={false}>
-                Register as a builder
-              </Link>
-            </WebBuilderOnly>
-          </nav>
-          <div className={styles.headerActions}>
-            {hasMemberSession ? (
-              <LandingMemberNav />
-            ) : (
-              <Link href="/login" prefetch={false} className={styles.signIn}>
-                Sign in
-              </Link>
-            )}
-            <a className={styles.headerCta} href="#start" onClick={focusHeroAddress}>
-              {PRIMARY_CTA_LABEL}
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
-            <button
-              ref={menuButton}
-              type="button"
-              className={styles.menuButton}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={menuOpen}
-              aria-controls="landing-mobile-menu"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? (
-                <X aria-hidden="true" />
-              ) : (
-                <Menu aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          {menuOpen && (
-            <nav
-              id="landing-mobile-menu"
-              aria-label="Mobile navigation"
-              className={styles.mobileMenu}
-            >
-              {SITE_NAV_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
-              <WebBuilderOnly>
-                <Link
-                  href="/signup?role=builder"
-                  prefetch={false}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Register as a builder
-                </Link>
-              </WebBuilderOnly>
-            </nav>
-          )}
-        </header>
-
+        <SiteHeader landing member={hasMemberSession ? <LandingMemberNav /> : undefined} onStart={focusHeroAddress} />
         <main id="main-content">
           <section
             ref={heroRef}
@@ -1639,12 +1561,12 @@ export function LotMoreLanding({
                 </ul>
               </div>
               <div className={styles.footerGroup}>
-                <h3>Demo lots</h3>
+                {/* San Diego only: the out-of-state demos invited out-of-market
+                    searches (2026-11-24 and 11-27 audits). Their pages still resolve. */}
+                <h3>See an example</h3>
                 <ul>
                   <li><Link href="/san-diego">{landingDemos["san-diego"].name} demo, {landingDemos["san-diego"].city}</Link></li>
-                  <li><Link href="/seattle">{landingDemos.seattle.name} demo, {landingDemos.seattle.city}</Link></li>
-                  <li><Link href="/portland">{landingDemos.portland.name} demo, {landingDemos.portland.city}</Link></li>
-                  <li><Link href="/austin">{landingDemos.austin.name} demo, {landingDemos.austin.city}</Link></li>
+                  <li><Link href="/sample-certificate/san-diego">Sample Certificate of Feasibility</Link></li>
                 </ul>
               </div>
               <div className={styles.footerGroup}>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AduPlanningLinks } from "@/components/adu/AduPlanningLinks";
-import { AduStudioCta } from "@/components/adu/AduStudioCta";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { ADU_CITIES, aduCounties, cityUrl, eligibilityPath, hubUrl, jaduPath } from "@/lib/adu/content";
 import {
@@ -114,6 +113,7 @@ export default function AduCaliforniaHubPage() {
       title="Building an ADU in California: Laws and Rules (2026)"
       kicker="San Diego, Sacramento and Santa Clara counties · City-by-city guides"
       layout="editorial"
+      lotCheck={{ city: "California", slug: "california" }}
     >
       <script
         type="application/ld+json"
@@ -170,14 +170,6 @@ export default function AduCaliforniaHubPage() {
         before picking a floor plan.
       </p>
 
-      <div className="mt-6">
-        <AduStudioCta
-          city="California"
-          slug="california"
-          placement="top"
-          heading="Check setbacks and buildable yard area on your lot in 3D"
-        />
-      </div>
 
       <section aria-labelledby="adu-start">
         <h2 id="adu-start" className="lf-card-heading scroll-mt-20 text-lot-ink">
@@ -267,9 +259,6 @@ export default function AduCaliforniaHubPage() {
         </p>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta city="California" slug="california" placement="end" />
-      </div>
     </LegalPageShell>
   );
 }

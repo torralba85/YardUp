@@ -82,6 +82,57 @@ test("Rules & Fit stage fills its column and the certificate CTA stays in view",
   expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.viewportHeight);
 });
 
+test("utility planning keeps the 3D model visible and clickable on desktop", async ({ page }) => {
+  await page.goto("/studio?parcel=coyote-brush");
+  await openStep(page, /Design/);
+  await page.getByText("Tools", { exact: true }).click();
+  await page.getByRole("button", { name: "Plan utilities" }).click();
+
+  const model = page.getByRole("group", { name: "Interactive ADU placement model" });
+  const bar = page.getByTestId("utility-mode-bar");
+  await expect(bar).toBeVisible();
+
+  // Wait for smooth scroll back to top of the center column, then verify the
+  // 3D canvas has usable height and its top/bottom HUD toolbars never collide.
+  await expect.poll(async () => (await model.boundingBox())?.y ?? -1).toBeGreaterThanOrEqual(0);
+  const modelBox = (await model.boundingBox())!;
+  const canvasBox = (await model.locator("canvas").boundingBox())!;
+  const topHudBox = (await page.getByRole("button", { name: "Distances" }).boundingBox())!;
+  const bottomHudBox = (await page.getByRole("radio", { name: "View lot" }).boundingBox())!;
+  expect(modelBox.height).toBeGreaterThanOrEqual(320);
+  expect(canvasBox.height).toBeGreaterThanOrEqual(320);
+  expect(topHudBox.y + topHudBox.height).toBeLessThan(bottomHudBox.y);
+
+  const geometry = await stepGeometry(page);
+  expect(geometry.documentHeight).toBeLessThanOrEqual(geometry.viewportHeight);
+
+  await bar.getByRole("button", { name: "Done" }).click();
+  await expect(bar).toHaveCount(0);
+});
+
+for (const viewport of [{ width: 1366, height: 768 }, { width: 1496, height: 874 }]) {
+  test(`sample certificate receives clicks at the bottom of the ${viewport.width}px rail`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/studio?parcel=coyote-brush", { waitUntil: "domcontentloaded" });
+    await openStep(page, /Rules & fit/);
+    const sample = page.getByTestId("certificate-decision").getByRole("link", { name: /See a sample certificate/ });
+    const scrolled = await sample.evaluate(link => {
+      for (let pane = link.parentElement; pane; pane = pane.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(pane).overflowY) && pane.scrollHeight > pane.clientHeight) {
+          pane.scrollTop = pane.scrollHeight;
+          return pane.scrollTop > 0;
+        }
+      }
+      return false;
+    });
+    expect(scrolled).toBe(true);
+    await expect.poll(() => sample.evaluate(link => {
+      const { left, top, width, height } = link.getBoundingClientRect();
+      return link.contains(document.elementFromPoint(left + width / 2, top + height / 2));
+    })).toBe(true);
+  });
+}
+
 test("a signed-in real lot leaves no blank page below the Studio", async ({ page }) => {
   // The email card's sr-only label had no positioned ancestor, escaped the
   // clipped `main`, and stretched the page by hundreds of pixels of chalk.

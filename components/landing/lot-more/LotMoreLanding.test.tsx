@@ -145,9 +145,13 @@ describe("landing address handoff", () => {
     expect(sample).toHaveTextContent(`${demo.name} demo, ${demo.city} · market rent · open it in 3D`);
     expect(screen.getByText(`${demo.name.toUpperCase()} DEMO, ${demo.city.toUpperCase()} · 600 SQ FT · 1 BED CONCEPT`)).toBeVisible();
     expect(screen.getByText(`${demo.name} demo, ${demo.city}`, { selector: "span" })).toBeVisible();
+    // The footer links only the San Diego demo and the sample certificate:
+    // out-of-state demos invited out-of-market searches (2026-11-27 audit).
     const footer = screen.getByRole("contentinfo");
-    for (const item of Object.values(landingDemos)) {
-      expect(within(footer).getByRole("link", { name: `${item.name} demo, ${item.city}` })).toHaveAttribute("href", `/${item.city.toLowerCase().replaceAll(" ", "-")}`);
+    const sanDiego = landingDemos["san-diego"];
+    expect(within(footer).getByRole("link", { name: `${sanDiego.name} demo, ${sanDiego.city}` })).toHaveAttribute("href", "/san-diego");
+    for (const item of [landingDemos.seattle, landingDemos.portland, landingDemos.austin]) {
+      expect(within(footer).queryByRole("link", { name: `${item.name} demo, ${item.city}` })).not.toBeInTheDocument();
     }
   });
 

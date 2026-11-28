@@ -203,6 +203,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // An address the parcel lookup could not match carries a demo preset's lot
+  // size, setbacks and zoning. The Studio offers "search again" instead; this
+  // also stops a page loaded before that change from selling a placeholder lot.
+  if (parcelData?.source === "fallback") {
+    return NextResponse.json(
+      { error: "We couldn't match this address to a parcel record. Search the full address with its ZIP code, then try again." },
+      { status: 409 },
+    );
+  }
+
   const stripe = await getStripe();
 
   if (!stripe) {

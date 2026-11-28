@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AduPlanningLinks } from "./AduPlanningLinks";
-import { AduStudioCta } from "./AduStudioCta";
 import { JaduComparisonDiagram } from "./JaduComparisonDiagram";
 import {
   JADU_AS_OF,
@@ -86,14 +85,6 @@ export function CaliforniaJaduGuide() {
         </p>
       </div>
 
-      <div className="mt-8">
-        <AduStudioCta
-          city="California"
-          slug="california-jadu"
-          placement="top"
-          heading="Check how a JADU and detached ADU fit together on your lot"
-        />
-      </div>
 
       <section aria-labelledby="jadu-glance" className="mt-12">
         <h2 id="jadu-glance" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -194,14 +185,6 @@ export function CaliforniaJaduGuide() {
         .
       </p>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-jadu"
-          placement="mid"
-          heading="See whether a backyard home also fits beside your JADU."
-        />
-      </div>
 
       <section aria-labelledby="jadu-faq" className="mt-12">
         <h2 id="jadu-faq" className="scroll-mt-20 lf-card-heading text-lot-ink">
@@ -294,14 +277,6 @@ export function CaliforniaJaduGuide() {
         </ul>
       </section>
 
-      <div className="mt-12">
-        <AduStudioCta
-          city="California"
-          slug="california-jadu"
-          placement="end"
-          heading="Check your lot for a JADU, an ADU, or both."
-        />
-      </div>
     </>
   );
 }

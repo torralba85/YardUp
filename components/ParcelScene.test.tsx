@@ -189,7 +189,7 @@ describe("ParcelScene controls", () => {
       />,
     );
 
-    const clearancesBtn = screen.getByRole("button", { name: "Clearances" });
+    const clearancesBtn = screen.getByRole("button", { name: "Distances" });
     expect(clearancesBtn).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(clearancesBtn);
     expect(clearancesBtn).toHaveAttribute("aria-pressed", "true");

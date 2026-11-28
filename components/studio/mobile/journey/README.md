@@ -8,8 +8,6 @@
 - `ActStep.tsx:ActStep` - Exported Function (default)
 - `CheckStep.tsx:CheckStepProps` - TypeScript Interface
 - `CheckStep.tsx:CheckStep` - Exported Function (default)
-- `EarnStep.tsx:EarnStepProps` - TypeScript Interface
-- `EarnStep.tsx:EarnStep` - Exported Function (default)
 - `FindStep.tsx:FindStepProps` - TypeScript Interface
 - `FindStep.tsx:FindStep` - Exported Function (default)
 - `FineTuneDrawer.tsx:FineTuneDrawerProps` - TypeScript Interface

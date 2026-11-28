@@ -65,14 +65,7 @@ export default function StudioShell({
   const [scenariosOpen, setScenariosOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const displayName = profile?.displayName || profile?.email?.split("@")[0] || "User";
-  const initials =
-    displayName
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "U";
-  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot Owner";
+  const roleLabel = profile?.role === "builder" ? "Builder" : "Lot owner";
 
   return (
     // Desktop is one locked viewport. The route layout's planning-guide bar sets
@@ -202,11 +195,10 @@ export default function StudioShell({
             )}
 
             {user ? (
+              // One avatar: the account menu's trigger. A second, round initials
+              // badge beside it showed the same letters twice (2026-11-27 audit).
               <div className="flex items-center gap-2 rounded-none border border-lot-line-dark bg-lot-surface-dark p-2">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lot-ink text-sm font-semibold text-lot-chalk">
-                  {initials}
-                </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 pl-1">
                   <div className="truncate text-sm font-medium text-lot-chalk">{displayName}</div>
                   <div className="text-xs text-lot-stone-on-dark">{roleLabel}</div>
                 </div>

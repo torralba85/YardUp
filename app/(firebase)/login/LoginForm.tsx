@@ -149,7 +149,7 @@ export default function LoginForm() {
             </label>
             <Link
               href="/forgot-password"
-              className="relative lf-body-sm text-lot-orange-ink motion-safe:transition-colors hover:text-lot-ink before:absolute before:-inset-x-2 before:-inset-y-2.5 before:content-['']"
+              className="inline-flex min-h-11 items-center lf-body-sm text-lot-orange-ink hover:text-lot-ink"
             >
               Forgot password?
             </Link>

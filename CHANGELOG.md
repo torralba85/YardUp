@@ -6,6 +6,8 @@ All notable changes to LotFoundry are documented here. Format follows
 
 ## [Unreleased]
 
+- Aligned the five Studio steps on phone and desktop, kept sample reports reachable, blocked checkout on unmatched lots, and streamlined guide, account and feedback navigation.
+
 ### Added
 
 - The Signup Canary now fails when Google sign-in is broken, not only email

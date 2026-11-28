@@ -42,6 +42,12 @@ export interface StepStateInput {
    * earlier step as done.
    */
   visited?: ReadonlySet<StudioStep>;
+  /**
+   * Steps actually completed. A visited earlier step outside this set stays
+   * `upcoming`, so looking at the Certificate never shows a check mark as if
+   * it had been bought (2026-11-27 audit). Omit to treat visits as completion.
+   */
+  completed?: ReadonlySet<StudioStep>;
 }
 
 /**
@@ -59,7 +65,9 @@ export function deriveStepStates(activeStep: StudioStep, input: StepStateInput):
     if (index === activeIndex) {
       state = "current";
     } else if (index < activeIndex) {
-      state = !input.visited || input.visited.has(step.id) ? "done" : "upcoming";
+      const visited = !input.visited || input.visited.has(step.id);
+      const completed = !input.completed || input.completed.has(step.id);
+      state = visited && completed ? "done" : "upcoming";
     } else if (step.requiresParcel && !input.hasParcel) {
       state = "locked";
     } else {
