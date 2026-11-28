@@ -165,6 +165,7 @@ describe("POST /api/stripe/webhook", () => {
   it.each([
     ["sk_live_fixture", false],
     ["rk_test_fixture", true],
+    ["rkcs_test_fixture", true],
   ])("rejects a correctly signed event in the wrong mode for %s", async (key, livemode) => {
     vi.stubEnv("STRIPE_SECRET_KEY", key);
     installSignatureVerifier();
@@ -274,6 +275,7 @@ describe("POST /api/stripe/webhook", () => {
   it.each(["refund.created", "refund.updated", "refund.failed", "charge.dispute.created", "charge.dispute.closed"])(
     "routes %s to reconciliation after signature verification",
     async (type) => {
+      vi.stubEnv("STRIPE_SECRET_KEY", "rkcs_test_fixture");
       installSignatureVerifier();
       const payload = JSON.stringify({
         id: "evt_reversal", type, livemode: false,
