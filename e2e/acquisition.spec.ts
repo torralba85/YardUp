@@ -109,7 +109,9 @@ for (const guide of [
     await expect(page.getByText(guide.opening)).toBeVisible();
     const action = page.getByRole("complementary", { name: "Lot check and tools" }).locator(guide.action).filter({ hasText: "Check my lot" });
     await action.click();
-    await expect(page.getByRole("textbox", { name: /street address/i })).toBeVisible();
+    const address = page.getByRole("textbox", { name: /street address/i });
+    await expect(address).toBeVisible();
+    if (guide.action === "a") await expect(address).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }

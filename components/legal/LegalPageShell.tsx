@@ -40,6 +40,8 @@ export function LegalPageShell({
   currentPath?: string;
   children: ReactNode;
 }) {
+  // A native fragment link transfers keyboard focus to the existing calculator input.
+  const LotLink = lotHref.startsWith("#") ? "a" : Link;
   return (
     <div className="min-h-dvh bg-lot-chalk text-lot-ink">
       <SiteHeader showLotAction={layout !== "editorial"} />
@@ -79,9 +81,9 @@ export function LegalPageShell({
                   </div>
                 </details>
               ) : (
-                <Link href={lotHref} prefetch={false} className="flex min-h-11 items-center justify-between rounded-control bg-lot-orange px-4 font-semibold hover:bg-lot-orange-hover">
+                <LotLink href={lotHref} prefetch={LotLink === Link ? false : undefined} className="flex min-h-11 items-center justify-between rounded-control bg-lot-orange px-4 font-semibold hover:bg-lot-orange-hover">
                   {PRIMARY_CTA_LABEL}<ArrowRight size={18} aria-hidden="true" />
-                </Link>
+                </LotLink>
               )}
               <nav aria-label="Quick planning tools" className="mt-4 hidden border-t border-lot-line pt-2 lg:block">
                 {TOOL_LINKS.filter(link => link.href !== currentPath).map(link => (

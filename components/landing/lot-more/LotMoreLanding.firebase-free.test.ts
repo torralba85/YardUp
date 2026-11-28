@@ -75,7 +75,7 @@ describe("landing stays outside the Firebase route group", () => {
     expect(
       source,
       "LandingMemberNav must render behind hasMemberSessionHint, or every signed-out landing visit downloads the Firebase SDK.",
-    ).toMatch(/hasMemberSession \? \(\s*<LandingMemberNav \/>/);
+    ).toMatch(/hasMemberSession\s*\?\s*\(?\s*<LandingMemberNav \/>/);
     expect(source).toMatch(/hasMemberSessionHint/);
   });
 });
