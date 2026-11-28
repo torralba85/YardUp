@@ -63,7 +63,9 @@ async function rotateReservationForFailedSession(
 export async function POST(request: NextRequest) {
   const stripe = await getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  const keyMode = /^(?:sk|rk)_(test|live)_/.exec(process.env.STRIPE_SECRET_KEY ?? "")?.[1];
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  // Stripe CLI's temporary claimable sandboxes issue test-only rkcs_ keys.
+  const keyMode = key.startsWith("rkcs_test_") ? "test" : /^(?:sk|rk)_(test|live)_/.exec(key)?.[1];
   if (!stripe || !secret || !keyMode) {
     return NextResponse.json(
       { error: "Stripe is not configured." },
